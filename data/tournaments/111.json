@@ -1,0 +1,68 @@
+{
+  "id": "111",
+  "name": "111",
+  "abbreviation": "111",
+  "keyCount": 4,
+  "year": 2026,
+  "tags": [
+    "111"
+  ],
+  "rounds": [
+    {
+      "id": "round-1",
+      "name": "Qualifiers",
+      "abbreviation": "Qual",
+      "order": 1,
+      "difficulty": {
+        "min": 0,
+        "max": 0,
+        "average": 0
+      },
+      "maps": [],
+      "isQualifier": true,
+      "typeDifficulties": {
+        "RC": {
+          "rf": 1
+        },
+        "HB": {
+          "rf": 1
+        },
+        "LN": {
+          "ln": 1
+        },
+        "SV": {
+          "rf": 1
+        }
+      }
+    },
+    {
+      "id": "round-2",
+      "name": "Grand Finals",
+      "abbreviation": "GF",
+      "order": 2,
+      "difficulty": {
+        "min": 0,
+        "max": 0,
+        "average": 0
+      },
+      "maps": [],
+      "typeDifficulties": {
+        "RC": {
+          "rf": 1
+        },
+        "HB": {
+          "rf": 1
+        },
+        "LN": {
+          "ln": 1
+        },
+        "SV": {
+          "rf": 1
+        }
+      }
+    }
+  ],
+  "customTypes": [],
+  "wikiUrl": "111",
+  "forumUrl": "111"
+}

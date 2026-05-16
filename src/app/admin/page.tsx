@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { TournamentForm } from '@/components/admin/TournamentForm'
 import { JsonPreview } from '@/components/admin/JsonPreview'
+import { ReferencesEditor } from '@/components/admin/ReferencesEditor'
 import type { Tournament } from '@/lib/types'
 import inviteData from '@data/invite-codes.json'
 
@@ -22,7 +23,7 @@ export default function AdminPage() {
   const [editInitialData, setEditInitialData] = useState<Tournament | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [submitStatus, setSubmitStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
-  const [tab, setTab] = useState<'create' | 'manage'>('create')
+  const [tab, setTab] = useState<'create' | 'manage' | 'references'>('create')
   const [loadingList, setLoadingList] = useState(false)
 
   const handleVerify = () => {
@@ -184,6 +185,12 @@ export default function AdminPage() {
           >
             管理已有比赛 ({existingList.length})
           </button>
+          <button
+            onClick={() => setTab('references')}
+            className={`px-4 py-2 rounded-md text-sm font-medium ${tab === 'references' ? 'bg-purple-600 text-white' : 'bg-white text-gray-700 border border-gray-200'}`}
+          >
+            参考点管理
+          </button>
         </div>
 
         {tab === 'create' && (
@@ -241,6 +248,10 @@ export default function AdminPage() {
               </div>
             )}
           </div>
+        )}
+
+        {tab === 'references' && (
+          <ReferencesEditor />
         )}
 
         {submitStatus && (

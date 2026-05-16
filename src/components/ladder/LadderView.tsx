@@ -220,112 +220,23 @@ interface RefPoint {
   difficulty: number
 }
 
-function useReferencePoints() {
-  const [points, setPoints] = useState<RefPoint[]>(() => {
-    if (typeof window === 'undefined') return referencesData.points
-    const saved = localStorage.getItem('ladder-references')
-    return saved ? JSON.parse(saved) : referencesData.points
-  })
-
-  const save = useCallback((pts: RefPoint[]) => {
-    setPoints(pts)
-    localStorage.setItem('ladder-references', JSON.stringify(pts))
-  }, [])
-
-  const reset = useCallback(() => {
-    setPoints(referencesData.points)
-    localStorage.removeItem('ladder-references')
-  }, [])
-
-  return { points, save, reset }
-}
-
 const RightRefInner = forwardRef<HTMLDivElement, { containerHeight: number }>(
   function RightRefInner({ containerHeight }, ref) {
-    const { points, save, reset } = useReferencePoints()
-    const [editing, setEditing] = useState(false)
-    const [newLabel, setNewLabel] = useState('')
-    const [newDiff, setNewDiff] = useState('')
-
-    const addPoint = () => {
-      const diff = parseFloat(newDiff)
-      if (!newLabel.trim() || isNaN(diff)) return
-      const updated = [...points, { label: newLabel.trim(), difficulty: diff }]
-        .sort((a, b) => b.difficulty - a.difficulty)
-      save(updated)
-      setNewLabel('')
-      setNewDiff('')
-    }
-
-    const removePoint = (index: number) => {
-      save(points.filter((_, i) => i !== index))
-    }
+    const points: RefPoint[] = referencesData.points
 
     return (
-      <div className="w-[180px] border-l border-gray-200 overflow-hidden shrink-0 flex flex-col" ref={ref}>
-        <div className="flex items-center justify-between px-2 py-1 border-b border-gray-100 shrink-0">
-          <span className="text-xs text-gray-400">参考</span>
-          <button
-            onClick={() => setEditing(!editing)}
-            className="text-xs text-purple-500 hover:text-purple-700"
-          >
-            {editing ? '完成' : '编辑'}
-          </button>
-        </div>
-
-        {editing && (
-          <div className="px-2 py-1.5 border-b border-gray-100 space-y-1 shrink-0">
-            <div className="flex gap-1">
-              <input
-                type="text"
-                value={newLabel}
-                onChange={(e) => setNewLabel(e.target.value)}
-                placeholder="名称"
-                className="flex-1 min-w-0 px-1 py-0.5 border border-gray-200 rounded text-xs focus:outline-none focus:border-purple-400"
-              />
-              <input
-                type="number"
-                step="0.5"
-                value={newDiff}
-                onChange={(e) => setNewDiff(e.target.value)}
-                placeholder="难度"
-                className="w-12 px-1 py-0.5 border border-gray-200 rounded text-xs focus:outline-none focus:border-purple-400"
-              />
-              <button
-                onClick={addPoint}
-                className="px-1.5 py-0.5 bg-purple-600 text-white rounded text-xs hover:bg-purple-700"
-              >
-                +
-              </button>
-            </div>
-            <button
-              onClick={reset}
-              className="text-xs text-gray-400 hover:text-red-500"
-            >
-              恢复默认
-            </button>
-          </div>
-        )}
-
-        <div className="relative flex-1 overflow-hidden" style={{ height: containerHeight }}>
+      <div className="w-[160px] border-l border-gray-200 overflow-hidden shrink-0" ref={ref}>
+        <div className="relative" style={{ height: containerHeight }}>
           {points.map((point, i) => {
             const y = d2y(point.difficulty, containerHeight, DIFFICULTY_RANGE)
             return (
               <div
                 key={`${point.label}-${i}`}
-                className="absolute left-0 right-0 flex items-center group"
+                className="absolute left-0 right-0 flex items-center"
                 style={{ top: y - 8 }}
               >
                 <div className="w-3 h-px bg-purple-300 mr-1" />
-                <span className="text-xs text-gray-600 truncate flex-1">{point.label}</span>
-                {editing && (
-                  <button
-                    onClick={() => removePoint(i)}
-                    className="text-xs text-red-400 hover:text-red-600 pr-1 opacity-0 group-hover:opacity-100"
-                  >
-                    x
-                  </button>
-                )}
+                <span className="text-xs text-gray-600 truncate">{point.label}</span>
               </div>
             )
           })}

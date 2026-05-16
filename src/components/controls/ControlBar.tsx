@@ -1,0 +1,83 @@
+'use client'
+
+import { useViewStore } from '@/stores/viewStore'
+
+export function ControlBar() {
+  const {
+    zoom, setZoom,
+    columnWidth, setColumnWidth,
+    rowHeight, setRowHeight,
+    rfLnOffset, setRfLnOffset,
+  } = useViewStore()
+
+  return (
+    <footer className="h-14 border-t border-gray-200 flex items-center px-4 gap-4 shrink-0 bg-gray-50">
+      <div className="flex items-center gap-1.5">
+        <span className="text-xs text-gray-500">缩放</span>
+        <button
+          onClick={() => setZoom(Math.max(0.5, +(zoom - 0.1).toFixed(1)))}
+          className="w-6 h-6 rounded bg-gray-200 text-sm flex items-center justify-center hover:bg-gray-300"
+        >
+          -
+        </button>
+        <span className="text-xs w-10 text-center font-mono">{Math.round(zoom * 100)}%</span>
+        <button
+          onClick={() => setZoom(Math.min(3, +(zoom + 0.1).toFixed(1)))}
+          className="w-6 h-6 rounded bg-gray-200 text-sm flex items-center justify-center hover:bg-gray-300"
+        >
+          +
+        </button>
+      </div>
+
+      <div className="w-px h-6 bg-gray-300" />
+
+      <div className="flex items-center gap-1.5">
+        <span className="text-xs text-gray-500">列宽</span>
+        <input
+          type="range"
+          min={80}
+          max={280}
+          value={columnWidth}
+          onChange={(e) => setColumnWidth(Number(e.target.value))}
+          className="w-20 h-1 accent-purple-600"
+        />
+        <span className="text-xs font-mono text-gray-600 w-8">{columnWidth}</span>
+      </div>
+
+      <div className="flex items-center gap-1.5">
+        <span className="text-xs text-gray-500">行高</span>
+        <input
+          type="range"
+          min={20}
+          max={100}
+          value={rowHeight}
+          onChange={(e) => setRowHeight(Number(e.target.value))}
+          className="w-20 h-1 accent-purple-600"
+        />
+        <span className="text-xs font-mono text-gray-600 w-6">{rowHeight}</span>
+      </div>
+
+      <div className="w-px h-6 bg-gray-300" />
+
+      <div className="flex items-center gap-1.5">
+        <span className="text-xs text-gray-500">RF/LN 对齐</span>
+        <input
+          type="range"
+          min={-3}
+          max={3}
+          step={1}
+          value={rfLnOffset}
+          onChange={(e) => setRfLnOffset(Number(e.target.value))}
+          className="w-16 h-1 accent-indigo-500"
+        />
+        <span className="text-xs font-mono text-indigo-600">
+          rf10=ln{10 + rfLnOffset}
+        </span>
+      </div>
+
+      <div className="ml-auto text-xs text-gray-400">
+        osu!mania Ladder v0.1
+      </div>
+    </footer>
+  )
+}

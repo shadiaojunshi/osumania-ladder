@@ -1,0 +1,85 @@
+{
+  "id": "gbc-2024-spring",
+  "name": "GBC 2024 Spring",
+  "abbreviation": "GBC 2024S",
+  "keyCount": 4,
+  "year": 2024,
+  "tags": ["community", "4k"],
+  "rounds": [
+    {
+      "id": "gbc24s-qual", "name": "Qualifiers", "abbreviation": "Qual", "order": 0, "isQualifier": true,
+      "difficulty": { "min": 5.5, "max": 8.5, "average": 7.0 },
+      "maps": [
+        { "slot": "ST1", "type": "RC", "realType": "JS", "name": "Stage 1", "difficulty": 5.5 },
+        { "slot": "ST2", "type": "RC", "realType": "SA", "name": "Stage 2", "difficulty": 6.0 },
+        { "slot": "ST3", "type": "HB", "realType": "HB1", "name": "Stage 3", "difficulty": 6.5 },
+        { "slot": "ST4", "type": "LN", "realType": "CO", "name": "Stage 4", "difficulty": 7.0 },
+        { "slot": "ST5", "type": "RC", "realType": "CJ", "name": "Stage 5", "difficulty": 7.5 },
+        { "slot": "ST6", "type": "SV", "realType": "SV1", "name": "Stage 6", "difficulty": 8.0 },
+        { "slot": "ST7", "type": "LN", "realType": "RE", "name": "Stage 7", "difficulty": 8.5 }
+      ]
+    },
+    {
+      "id": "gbc24s-r1", "name": "Round 1", "abbreviation": "R1", "order": 1, "bestOf": 9,
+      "difficulty": { "min": 6.0, "max": 9.0, "average": 7.5 },
+      "maps": [
+        { "slot": "RC1", "type": "RC", "realType": "SS", "name": "RC1", "difficulty": 6.5 },
+        { "slot": "RC2", "type": "RC", "realType": "JS", "name": "RC2", "difficulty": 7.0 },
+        { "slot": "RC3", "type": "RC", "realType": "CJ", "name": "RC3", "difficulty": 6.0 },
+        { "slot": "HB1", "type": "HB", "realType": "HB1", "name": "HB1", "difficulty": 7.5 },
+        { "slot": "LN1", "type": "LN", "realType": "CO", "name": "LN1", "difficulty": 8.0 },
+        { "slot": "LN2", "type": "LN", "realType": "RE", "name": "LN2", "difficulty": 8.2 },
+        { "slot": "SV1", "type": "SV", "realType": "SV1", "name": "SV1", "difficulty": 7.5 },
+        { "slot": "TB", "type": "TB", "realType": "TB", "name": "TB", "difficulty": 9.0 }
+      ]
+    },
+    {
+      "id": "gbc24s-r2", "name": "Round 2", "abbreviation": "R2", "order": 2, "bestOf": 9,
+      "difficulty": { "min": 7.0, "max": 10.0, "average": 8.5 },
+      "maps": [
+        { "slot": "RC1", "type": "RC", "realType": "SS", "name": "RC1", "difficulty": 7.5 },
+        { "slot": "RC2", "type": "RC", "realType": "JS", "name": "RC2", "difficulty": 8.0 },
+        { "slot": "RC3", "type": "RC", "realType": "SA", "name": "RC3", "difficulty": 7.0 },
+        { "slot": "HB1", "type": "HB", "realType": "HB1", "name": "HB1", "difficulty": 8.5 },
+        { "slot": "HB2", "type": "HB", "realType": "HB2", "name": "HB2", "difficulty": 8.8 },
+        { "slot": "LN1", "type": "LN", "realType": "CO", "name": "LN1", "difficulty": 9.0 },
+        { "slot": "LN2", "type": "LN", "realType": "RE", "name": "LN2", "difficulty": 9.2 },
+        { "slot": "SV1", "type": "SV", "realType": "SV1", "name": "SV1", "difficulty": 8.5 },
+        { "slot": "TB", "type": "TB", "realType": "TB", "name": "TB", "difficulty": 10.0 }
+      ]
+    },
+    {
+      "id": "gbc24s-r3", "name": "Round 3", "abbreviation": "R3", "order": 3, "bestOf": 11,
+      "difficulty": { "min": 8.0, "max": 11.0, "average": 9.5 },
+      "maps": [
+        { "slot": "RC1", "type": "RC", "realType": "SS", "name": "RC1", "difficulty": 8.5 },
+        { "slot": "RC2", "type": "RC", "realType": "JS", "name": "RC2", "difficulty": 9.0 },
+        { "slot": "RC3", "type": "RC", "realType": "CJ", "name": "RC3", "difficulty": 8.0 },
+        { "slot": "HB1", "type": "HB", "realType": "HB1", "name": "HB1", "difficulty": 9.5 },
+        { "slot": "HB2", "type": "HB", "realType": "HB2", "name": "HB2", "difficulty": 9.8 },
+        { "slot": "LN1", "type": "LN", "realType": "CO", "name": "LN1", "difficulty": 10.0 },
+        { "slot": "LN2", "type": "LN", "realType": "RE", "name": "LN2", "difficulty": 10.2 },
+        { "slot": "LN3", "type": "LN", "realType": "DE", "name": "LN3", "difficulty": 10.5 },
+        { "slot": "SV1", "type": "SV", "realType": "SV1", "name": "SV1", "difficulty": 9.5 },
+        { "slot": "TB", "type": "TB", "realType": "TB", "name": "TB", "difficulty": 11.0 }
+      ]
+    },
+    {
+      "id": "gbc24s-r4", "name": "Round 4", "abbreviation": "R4", "order": 4, "bestOf": 11,
+      "difficulty": { "min": 9.0, "max": 12.0, "average": 10.5 },
+      "maps": [
+        { "slot": "RC1", "type": "RC", "realType": "SS", "name": "RC1", "difficulty": 9.5 },
+        { "slot": "RC2", "type": "RC", "realType": "JS", "name": "RC2", "difficulty": 10.0 },
+        { "slot": "RC3", "type": "RC", "realType": "SA", "name": "RC3", "difficulty": 9.0 },
+        { "slot": "HB1", "type": "HB", "realType": "HB1", "name": "HB1", "difficulty": 10.5 },
+        { "slot": "HB2", "type": "HB", "realType": "HB3", "name": "HB2", "difficulty": 10.8 },
+        { "slot": "LN1", "type": "LN", "realType": "CO", "name": "LN1", "difficulty": 11.0 },
+        { "slot": "LN2", "type": "LN", "realType": "RE", "name": "LN2", "difficulty": 11.2 },
+        { "slot": "LN3", "type": "LN", "realType": "DE", "name": "LN3", "difficulty": 11.5 },
+        { "slot": "SV1", "type": "SV", "realType": "SV1", "name": "SV1", "difficulty": 10.5 },
+        { "slot": "TB", "type": "TB", "realType": "TB", "name": "TB", "difficulty": 12.0 }
+      ]
+    }
+  ],
+  "customTypes": []
+}

@@ -1,0 +1,81 @@
+{
+  "id": "lnc-2024",
+  "name": "LN Cup 2024",
+  "abbreviation": "LNC 2024",
+  "keyCount": 4,
+  "year": 2024,
+  "tags": ["community", "4k", "ln"],
+  "rounds": [
+    {
+      "id": "lnc24-ro16", "name": "Round of 16", "abbreviation": "RO16", "order": 1, "bestOf": 9,
+      "difficulty": { "min": 6.0, "max": 9.5, "average": 7.8 },
+      "maps": [
+        { "slot": "LN1", "type": "LN", "realType": "CO", "name": "LN1", "difficulty": 6.0 },
+        { "slot": "LN2", "type": "LN", "realType": "RE", "name": "LN2", "difficulty": 6.5 },
+        { "slot": "LN3", "type": "LN", "realType": "DE", "name": "LN3", "difficulty": 7.0 },
+        { "slot": "LN4", "type": "LN", "realType": "IN", "name": "LN4", "difficulty": 7.5 },
+        { "slot": "HB1", "type": "HB", "realType": "HB1", "name": "HB1", "difficulty": 8.0 },
+        { "slot": "HB2", "type": "HB", "realType": "HB2", "name": "HB2", "difficulty": 8.5 },
+        { "slot": "RC1", "type": "RC", "realType": "SS", "name": "RC1", "difficulty": 7.0 },
+        { "slot": "TB", "type": "TB", "realType": "TB", "name": "TB", "difficulty": 9.5 }
+      ]
+    },
+    {
+      "id": "lnc24-qf", "name": "Quarterfinals", "abbreviation": "QF", "order": 2, "bestOf": 11,
+      "difficulty": { "min": 7.0, "max": 10.5, "average": 8.8 },
+      "maps": [
+        { "slot": "LN1", "type": "LN", "realType": "CO", "name": "LN1", "difficulty": 7.0 },
+        { "slot": "LN2", "type": "LN", "realType": "RE", "name": "LN2", "difficulty": 7.5 },
+        { "slot": "LN3", "type": "LN", "realType": "DE", "name": "LN3", "difficulty": 8.0 },
+        { "slot": "LN4", "type": "LN", "realType": "IN", "name": "LN4", "difficulty": 8.5 },
+        { "slot": "HB1", "type": "HB", "realType": "HB1", "name": "HB1", "difficulty": 9.0 },
+        { "slot": "HB2", "type": "HB", "realType": "HB2", "name": "HB2", "difficulty": 9.5 },
+        { "slot": "RC1", "type": "RC", "realType": "SS", "name": "RC1", "difficulty": 8.0 },
+        { "slot": "TB", "type": "TB", "realType": "TB", "name": "TB", "difficulty": 10.5 }
+      ]
+    },
+    {
+      "id": "lnc24-sf", "name": "Semifinals", "abbreviation": "SF", "order": 3, "bestOf": 11,
+      "difficulty": { "min": 8.0, "max": 11.5, "average": 9.8 },
+      "maps": [
+        { "slot": "LN1", "type": "LN", "realType": "CO", "name": "LN1", "difficulty": 8.0 },
+        { "slot": "LN2", "type": "LN", "realType": "RE", "name": "LN2", "difficulty": 8.5 },
+        { "slot": "LN3", "type": "LN", "realType": "DE", "name": "LN3", "difficulty": 9.0 },
+        { "slot": "LN4", "type": "LN", "realType": "IN", "name": "LN4", "difficulty": 9.5 },
+        { "slot": "HB1", "type": "HB", "realType": "HB1", "name": "HB1", "difficulty": 10.0 },
+        { "slot": "HB2", "type": "HB", "realType": "HB2", "name": "HB2", "difficulty": 10.5 },
+        { "slot": "RC1", "type": "RC", "realType": "SS", "name": "RC1", "difficulty": 9.0 },
+        { "slot": "TB", "type": "TB", "realType": "TB", "name": "TB", "difficulty": 11.5 }
+      ]
+    },
+    {
+      "id": "lnc24-f", "name": "Finals", "abbreviation": "F", "order": 4, "bestOf": 13,
+      "difficulty": { "min": 9.0, "max": 12.5, "average": 10.8 },
+      "maps": [
+        { "slot": "LN1", "type": "LN", "realType": "CO", "name": "LN1", "difficulty": 9.0 },
+        { "slot": "LN2", "type": "LN", "realType": "RE", "name": "LN2", "difficulty": 9.5 },
+        { "slot": "LN3", "type": "LN", "realType": "DE", "name": "LN3", "difficulty": 10.0 },
+        { "slot": "LN4", "type": "LN", "realType": "IN", "name": "LN4", "difficulty": 10.5 },
+        { "slot": "HB1", "type": "HB", "realType": "HB1", "name": "HB1", "difficulty": 11.0 },
+        { "slot": "HB2", "type": "HB", "realType": "HB2", "name": "HB2", "difficulty": 11.5 },
+        { "slot": "RC1", "type": "RC", "realType": "SS", "name": "RC1", "difficulty": 10.0 },
+        { "slot": "TB", "type": "TB", "realType": "TB", "name": "TB", "difficulty": 12.5 }
+      ]
+    },
+    {
+      "id": "lnc24-gf", "name": "Grand Finals", "abbreviation": "GF", "order": 5, "bestOf": 13,
+      "difficulty": { "min": 10.0, "max": 13.5, "average": 11.8 },
+      "maps": [
+        { "slot": "LN1", "type": "LN", "realType": "CO", "name": "LN1", "difficulty": 10.0 },
+        { "slot": "LN2", "type": "LN", "realType": "RE", "name": "LN2", "difficulty": 10.5 },
+        { "slot": "LN3", "type": "LN", "realType": "DE", "name": "LN3", "difficulty": 11.0 },
+        { "slot": "LN4", "type": "LN", "realType": "IN", "name": "LN4", "difficulty": 11.5 },
+        { "slot": "HB1", "type": "HB", "realType": "HB1", "name": "HB1", "difficulty": 12.0 },
+        { "slot": "HB2", "type": "HB", "realType": "HB2", "name": "HB2", "difficulty": 12.5 },
+        { "slot": "RC1", "type": "RC", "realType": "SS", "name": "RC1", "difficulty": 11.0 },
+        { "slot": "TB", "type": "TB", "realType": "TB", "name": "TB", "difficulty": 13.5 }
+      ]
+    }
+  ],
+  "customTypes": []
+}

@@ -1,0 +1,14 @@
+{
+  "points": [
+    { "label": "MWC 2025 GF", "difficulty": 16.2 },
+    { "label": "MWC 2025 F", "difficulty": 15.2 },
+    { "label": "MWC 2025 SF", "difficulty": 14.2 },
+    { "label": "MWC 2025 QF", "difficulty": 13.2 },
+    { "label": "MWC 2025 RO16", "difficulty": 12.2 },
+    { "label": "MWC 2025 RO32", "difficulty": 11.2 },
+    { "label": "GBC 2025 Spring R4", "difficulty": 11.0 },
+    { "label": "GBC 2025 Spring R3", "difficulty": 10.0 },
+    { "label": "GBC 2025 Spring R2", "difficulty": 9.0 },
+    { "label": "GBC 2025 Spring R1", "difficulty": 8.0 }
+  ]
+}

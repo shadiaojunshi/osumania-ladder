@@ -1,0 +1,100 @@
+{
+  "id": "mwc-4k-2022",
+  "name": "osu!mania 4K World Cup 2022",
+  "abbreviation": "MWC 2022",
+  "wikiUrl": "https://osu.ppy.sh/wiki/en/Tournaments/MWC/2022_4K",
+  "keyCount": 4,
+  "year": 2022,
+  "tags": ["official", "4k", "world-cup"],
+  "rounds": [
+    {
+      "id": "mwc22-ro32", "name": "Round of 32", "abbreviation": "RO32", "order": 1, "bestOf": 9,
+      "difficulty": { "min": 8.0, "max": 11.5, "average": 9.8 },
+      "maps": [
+        { "slot": "RC1", "type": "RC", "realType": "SS", "name": "RC1", "difficulty": 8.5 },
+        { "slot": "RC2", "type": "RC", "realType": "JS", "name": "RC2", "difficulty": 9.0 },
+        { "slot": "RC3", "type": "RC", "realType": "CJ", "name": "RC3", "difficulty": 8.0 },
+        { "slot": "HB1", "type": "HB", "realType": "HB1", "name": "HB1", "difficulty": 10.0 },
+        { "slot": "LN1", "type": "LN", "realType": "CO", "name": "LN1", "difficulty": 10.5 },
+        { "slot": "LN2", "type": "LN", "realType": "RE", "name": "LN2", "difficulty": 10.8 },
+        { "slot": "SV1", "type": "SV", "realType": "SV1", "name": "SV1", "difficulty": 9.5 },
+        { "slot": "TB", "type": "TB", "realType": "TB", "name": "TB", "difficulty": 11.5 }
+      ]
+    },
+    {
+      "id": "mwc22-ro16", "name": "Round of 16", "abbreviation": "RO16", "order": 2, "bestOf": 9,
+      "difficulty": { "min": 9.0, "max": 12.5, "average": 10.8 },
+      "maps": [
+        { "slot": "RC1", "type": "RC", "realType": "SS", "name": "RC1", "difficulty": 9.5 },
+        { "slot": "RC2", "type": "RC", "realType": "JS", "name": "RC2", "difficulty": 10.0 },
+        { "slot": "RC3", "type": "RC", "realType": "SA", "name": "RC3", "difficulty": 9.0 },
+        { "slot": "HB1", "type": "HB", "realType": "HB1", "name": "HB1", "difficulty": 11.0 },
+        { "slot": "LN1", "type": "LN", "realType": "CO", "name": "LN1", "difficulty": 11.5 },
+        { "slot": "LN2", "type": "LN", "realType": "RE", "name": "LN2", "difficulty": 11.8 },
+        { "slot": "SV1", "type": "SV", "realType": "SV1", "name": "SV1", "difficulty": 10.5 },
+        { "slot": "TB", "type": "TB", "realType": "TB", "name": "TB", "difficulty": 12.5 }
+      ]
+    },
+    {
+      "id": "mwc22-qf", "name": "Quarterfinals", "abbreviation": "QF", "order": 3, "bestOf": 11,
+      "difficulty": { "min": 10.0, "max": 13.5, "average": 11.8 },
+      "maps": [
+        { "slot": "RC1", "type": "RC", "realType": "SS", "name": "RC1", "difficulty": 10.5 },
+        { "slot": "RC2", "type": "RC", "realType": "JS", "name": "RC2", "difficulty": 11.0 },
+        { "slot": "RC3", "type": "RC", "realType": "CJ", "name": "RC3", "difficulty": 10.0 },
+        { "slot": "HB1", "type": "HB", "realType": "HB1", "name": "HB1", "difficulty": 12.0 },
+        { "slot": "HB2", "type": "HB", "realType": "HB2", "name": "HB2", "difficulty": 12.5 },
+        { "slot": "LN1", "type": "LN", "realType": "CO", "name": "LN1", "difficulty": 12.5 },
+        { "slot": "LN2", "type": "LN", "realType": "RE", "name": "LN2", "difficulty": 12.8 },
+        { "slot": "SV1", "type": "SV", "realType": "SV1", "name": "SV1", "difficulty": 11.5 },
+        { "slot": "TB", "type": "TB", "realType": "TB", "name": "TB", "difficulty": 13.5 }
+      ]
+    },
+    {
+      "id": "mwc22-sf", "name": "Semifinals", "abbreviation": "SF", "order": 4, "bestOf": 11,
+      "difficulty": { "min": 11.0, "max": 14.5, "average": 12.8 },
+      "maps": [
+        { "slot": "RC1", "type": "RC", "realType": "SS", "name": "RC1", "difficulty": 11.5 },
+        { "slot": "RC2", "type": "RC", "realType": "JS", "name": "RC2", "difficulty": 12.0 },
+        { "slot": "RC3", "type": "RC", "realType": "SA", "name": "RC3", "difficulty": 11.0 },
+        { "slot": "HB1", "type": "HB", "realType": "HB1", "name": "HB1", "difficulty": 13.0 },
+        { "slot": "HB2", "type": "HB", "realType": "HB2", "name": "HB2", "difficulty": 13.5 },
+        { "slot": "LN1", "type": "LN", "realType": "CO", "name": "LN1", "difficulty": 13.5 },
+        { "slot": "LN2", "type": "LN", "realType": "RE", "name": "LN2", "difficulty": 13.8 },
+        { "slot": "SV1", "type": "SV", "realType": "SV1", "name": "SV1", "difficulty": 12.5 },
+        { "slot": "TB", "type": "TB", "realType": "TB", "name": "TB", "difficulty": 14.5 }
+      ]
+    },
+    {
+      "id": "mwc22-f", "name": "Finals", "abbreviation": "F", "order": 5, "bestOf": 13,
+      "difficulty": { "min": 12.0, "max": 15.5, "average": 13.8 },
+      "maps": [
+        { "slot": "RC1", "type": "RC", "realType": "SS", "name": "RC1", "difficulty": 12.5 },
+        { "slot": "RC2", "type": "RC", "realType": "JS", "name": "RC2", "difficulty": 13.0 },
+        { "slot": "RC3", "type": "RC", "realType": "CJ", "name": "RC3", "difficulty": 12.0 },
+        { "slot": "HB1", "type": "HB", "realType": "HB1", "name": "HB1", "difficulty": 14.0 },
+        { "slot": "HB2", "type": "HB", "realType": "HB2", "name": "HB2", "difficulty": 14.5 },
+        { "slot": "LN1", "type": "LN", "realType": "CO", "name": "LN1", "difficulty": 14.5 },
+        { "slot": "LN2", "type": "LN", "realType": "RE", "name": "LN2", "difficulty": 14.8 },
+        { "slot": "SV1", "type": "SV", "realType": "SV1", "name": "SV1", "difficulty": 13.5 },
+        { "slot": "TB", "type": "TB", "realType": "TB", "name": "TB", "difficulty": 15.5 }
+      ]
+    },
+    {
+      "id": "mwc22-gf", "name": "Grand Finals", "abbreviation": "GF", "order": 6, "bestOf": 13,
+      "difficulty": { "min": 12.5, "max": 16.0, "average": 14.2 },
+      "maps": [
+        { "slot": "RC1", "type": "RC", "realType": "SS", "name": "RC1", "difficulty": 13.0 },
+        { "slot": "RC2", "type": "RC", "realType": "JS", "name": "RC2", "difficulty": 13.5 },
+        { "slot": "RC3", "type": "RC", "realType": "CJ", "name": "RC3", "difficulty": 12.5 },
+        { "slot": "HB1", "type": "HB", "realType": "HB1", "name": "HB1", "difficulty": 14.5 },
+        { "slot": "HB2", "type": "HB", "realType": "HB2", "name": "HB2", "difficulty": 15.0 },
+        { "slot": "LN1", "type": "LN", "realType": "CO", "name": "LN1", "difficulty": 15.0 },
+        { "slot": "LN2", "type": "LN", "realType": "RE", "name": "LN2", "difficulty": 15.5 },
+        { "slot": "SV1", "type": "SV", "realType": "SV1", "name": "SV1", "difficulty": 14.0 },
+        { "slot": "TB", "type": "TB", "realType": "TB", "name": "TB", "difficulty": 16.0 }
+      ]
+    }
+  ],
+  "customTypes": []
+}

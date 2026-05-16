@@ -1,0 +1,201 @@
+{
+  "id": "chinese-extraterrestrial-tournament-4k-2026",
+  "name": "Chinese Extraterrestrial Tournament 4K 2026",
+  "abbreviation": "CET 4K 2026",
+  "keyCount": 4,
+  "year": 2026,
+  "tags": [],
+  "rounds": [
+    {
+      "id": "round-1",
+      "name": "Finals",
+      "abbreviation": "F",
+      "order": 1,
+      "difficulty": {
+        "min": 14,
+        "max": 15.5,
+        "average": 14.4
+      },
+      "maps": [
+        {
+          "slot": "RC1",
+          "type": "RC",
+          "realType": "SS",
+          "name": "RC1",
+          "difficulty": 14
+        },
+        {
+          "slot": "RC2",
+          "type": "RC",
+          "realType": "SS",
+          "name": "RC2",
+          "difficulty": 14
+        },
+        {
+          "slot": "RC3",
+          "type": "RC",
+          "realType": "SS",
+          "name": "RC3",
+          "difficulty": 14
+        },
+        {
+          "slot": "RC4",
+          "type": "RC",
+          "realType": "SS",
+          "name": "RC4",
+          "difficulty": 14
+        },
+        {
+          "slot": "RC5",
+          "type": "RC",
+          "realType": "SS",
+          "name": "RC5",
+          "difficulty": 14
+        },
+        {
+          "slot": "HB1",
+          "type": "HB",
+          "realType": "HB1",
+          "name": "HB1",
+          "difficulty": 14,
+          "difficultyLn": 14
+        },
+        {
+          "slot": "HB2",
+          "type": "HB",
+          "realType": "HB1",
+          "name": "HB2",
+          "difficulty": 14,
+          "difficultyLn": 14
+        },
+        {
+          "slot": "HB3",
+          "type": "HB",
+          "realType": "HB1",
+          "name": "HB3",
+          "difficulty": 14.2,
+          "difficultyLn": 14
+        },
+        {
+          "slot": "HB4",
+          "type": "HB",
+          "realType": "HB1",
+          "name": "HB4",
+          "difficulty": 15,
+          "difficultyLn": 9.5
+        },
+        {
+          "slot": "LN1",
+          "type": "LN",
+          "realType": "RE",
+          "name": "LN1",
+          "difficulty": 15
+        },
+        {
+          "slot": "LN2",
+          "type": "LN",
+          "realType": "RE",
+          "name": "LN2",
+          "difficulty": 15
+        },
+        {
+          "slot": "SV1",
+          "type": "SV",
+          "realType": "SV1",
+          "name": "SV1",
+          "difficulty": 14
+        },
+        {
+          "slot": "SV2",
+          "type": "SV",
+          "realType": "SV1",
+          "name": "SV2",
+          "difficulty": 14
+        },
+        {
+          "slot": "EX1",
+          "type": "RC",
+          "realType": "SS",
+          "name": "EX1",
+          "difficulty": 15.5
+        },
+        {
+          "slot": "TB1",
+          "type": "TB",
+          "realType": "TB",
+          "name": "TB1",
+          "difficulty": 15.5,
+          "difficultyLn": 15.5
+        }
+      ],
+      "bestOf": 15,
+      "typeDifficulties": {
+        "RC": {
+          "rf": 15
+        },
+        "HB": {
+          "rf": 15
+        },
+        "LN": {
+          "ln": 15
+        },
+        "SV": {
+          "rf": 14
+        }
+      }
+    },
+    {
+      "id": "round-2",
+      "name": "Grand Finals",
+      "abbreviation": "GF",
+      "order": 2,
+      "difficulty": {
+        "min": 15,
+        "max": 15,
+        "average": 15
+      },
+      "maps": [
+        {
+          "slot": "RC1",
+          "type": "RC",
+          "realType": "SS",
+          "name": "RC1",
+          "difficulty": 15
+        },
+        {
+          "slot": "RC2",
+          "type": "RC",
+          "realType": "JS",
+          "name": "RC2",
+          "difficulty": 15
+        },
+        {
+          "slot": "RC3",
+          "type": "RC",
+          "realType": "CJ",
+          "name": "RC3",
+          "difficulty": 15
+        },
+        {
+          "slot": "RC4",
+          "type": "RC",
+          "realType": "WTC",
+          "name": "RC4",
+          "difficulty": 15
+        }
+      ],
+      "bestOf": 17,
+      "typeDifficulties": {
+        "RC": {
+          "rf": 16
+        },
+        "HB": {
+          "rf": 16
+        },
+        "LN": {},
+        "SV": {}
+      }
+    }
+  ],
+  "customTypes": []
+}

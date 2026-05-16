@@ -1,0 +1,378 @@
+'use client'
+
+import { useViewStore } from '@/stores/viewStore'
+import { difficultyToY, getGradientForRange, getDifficultyColor } from '@/lib/difficulty'
+import type { Tournament, Round } from '@/lib/types'
+import mwc2024 from '@data/tournaments/mwc-4k-2024.json'
+import mwc2023 from '@data/tournaments/mwc-4k-2023.json'
+import mwc2022 from '@data/tournaments/mwc-4k-2022.json'
+import gbc2025 from '@data/tournaments/gbc-2025-spring.json'
+import gbc2024a from '@data/tournaments/gbc-2024-autumn.json'
+import gbc2024s from '@data/tournaments/gbc-2024-spring.json'
+import oc4k2024 from '@data/tournaments/oc4k-2024.json'
+import ycm2024 from '@data/tournaments/ycm-2024.json'
+import emt2024 from '@data/tournaments/emt-2024.json'
+import cot2024 from '@data/tournaments/cot-2024.json'
+import sot2024 from '@data/tournaments/sot-2024.json'
+import lnc2024 from '@data/tournaments/lnc-2024.json'
+import cet4k2026 from '@data/tournaments/chinese-extraterrestrial-tournament-4k-2026.json'
+import { useState, useRef, useCallback, useEffect } from 'react'
+import { HoverCard } from './HoverCard'
+
+const tournaments = [
+  mwc2024, mwc2023, mwc2022,
+  gbc2025, gbc2024a, gbc2024s,
+  oc4k2024, ycm2024, emt2024,
+  cot2024, sot2024, lnc2024,
+  cet4k2026,
+] as unknown as Tournament[]
+
+const DIFFICULTY_RANGE = { min: 0.5, max: 17.5 }
+const BOX_HEIGHT_TYPE = 28
+
+export function LadderView() {
+  const { mode, zoom, columnWidth, rowHeight, rfLnOffset, activeFilter, searchQuery } = useViewStore()
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const leftRef = useRef<HTMLDivElement>(null)
+  const rightRef = useRef<HTMLDivElement>(null)
+
+  const [hoveredRound, setHoveredRound] = useState<{ round: Round; tournament: Tournament; x: number; y: number } | null>(null)
+  const hideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const diffRange = DIFFICULTY_RANGE.max - DIFFICULTY_RANGE.min
+  const containerHeight = diffRange * rowHeight * zoom
+
+  const filteredTournaments = tournaments.filter((t) => {
+    if (!searchQuery) return true
+    return t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      t.abbreviation.toLowerCase().includes(searchQuery.toLowerCase())
+  })
+
+  const handleScroll = useCallback(() => {
+    const el = scrollContainerRef.current
+    if (!el) return
+    const scrollTop = el.scrollTop
+    if (leftRef.current) leftRef.current.scrollTop = scrollTop
+    if (rightRef.current) rightRef.current.scrollTop = scrollTop
+  }, [])
+
+  const showHover = useCallback((round: Round, tournament: Tournament, x: number, y: number) => {
+    if (hideTimeoutRef.current) {
+      clearTimeout(hideTimeoutRef.current)
+      hideTimeoutRef.current = null
+    }
+    setHoveredRound({ round, tournament, x, y })
+  }, [])
+
+  const scheduleHide = useCallback(() => {
+    hideTimeoutRef.current = setTimeout(() => {
+      setHoveredRound(null)
+    }, 150)
+  }, [])
+
+  const cancelHide = useCallback(() => {
+    if (hideTimeoutRef.current) {
+      clearTimeout(hideTimeoutRef.current)
+      hideTimeoutRef.current = null
+    }
+  }, [])
+
+  useEffect(() => {
+    return () => { if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current) }
+  }, [])
+
+  return (
+    <div className="flex-1 flex overflow-hidden">
+      <LeftScaleInner ref={leftRef} containerHeight={containerHeight} />
+
+      <div
+        className="flex-1 overflow-auto"
+        ref={scrollContainerRef}
+        onScroll={handleScroll}
+      >
+        <div
+          className="relative flex gap-2 px-2 pt-2"
+          style={{
+            height: containerHeight,
+            minWidth: filteredTournaments.length * (columnWidth + 8),
+          }}
+        >
+          {filteredTournaments.map((tournament) => (
+            <TournamentColumn
+              key={tournament.id}
+              tournament={tournament}
+              mode={mode}
+              containerHeight={containerHeight}
+              columnWidth={columnWidth}
+              activeFilter={activeFilter}
+              rfLnOffset={rfLnOffset}
+              onHover={(round, x, y) => showHover(round, tournament, x, y)}
+              onLeave={scheduleHide}
+            />
+          ))}
+        </div>
+      </div>
+
+      <RightRefInner ref={rightRef} containerHeight={containerHeight} />
+
+      {hoveredRound && (
+        <HoverCard
+          round={hoveredRound.round}
+          tournament={hoveredRound.tournament}
+          x={hoveredRound.x}
+          y={hoveredRound.y}
+          onMouseEnter={cancelHide}
+          onMouseLeave={() => setHoveredRound(null)}
+        />
+      )}
+    </div>
+  )
+}
+
+/* Inline left scale that scrolls in sync */
+import { forwardRef } from 'react'
+import { difficultyToY as d2y } from '@/lib/difficulty'
+import reformDanData from '@data/scales/reform-dan.json'
+import lnDanData from '@data/scales/ln-dan.json'
+import type { DanLevel } from '@/lib/types'
+
+const reformLevels = reformDanData.levels as DanLevel[]
+const lnLevels = lnDanData.levels as DanLevel[]
+
+const MAJOR_RF = new Set([
+  'eta', 'zeta', 'epsilon', 'delta', 'gamma', 'beta', 'alpha',
+  'rf10', 'rf9', 'rf8', 'rf7', 'rf6', 'rf5', 'rf4', 'rf3', 'rf2', 'rf1',
+  'intro3', 'intro2', 'intro1',
+])
+
+const MAJOR_LN = new Set(
+  lnLevels.filter((l) => !l.id.includes('+') && !l.id.includes('-')).map((l) => l.id)
+)
+
+const LeftScaleInner = forwardRef<HTMLDivElement, { containerHeight: number }>(
+  function LeftScaleInner({ containerHeight }, ref) {
+    const { activeFilter, rfLnOffset } = useViewStore()
+    const showOnlyLn = activeFilter === 'LN' || activeFilter === 'HB'
+    const showOnlyRf = activeFilter === 'RC' || activeFilter === 'SV'
+    const showBoth = !showOnlyLn && !showOnlyRf
+
+    const totalWidth = showBoth ? 140 : 100
+
+    return (
+      <div className={`border-r border-gray-200 overflow-hidden shrink-0`} style={{ width: totalWidth }} ref={ref}>
+        <div className="relative" style={{ height: containerHeight }}>
+          {/* RF scale - show when not filtering LN/HB only */}
+          {!showOnlyLn && reformLevels.map((level) => {
+            const y = d2y(level.numericValue, containerHeight, DIFFICULTY_RANGE)
+            const isMajor = MAJOR_RF.has(level.id)
+            return (
+              <div
+                key={level.id}
+                className="absolute flex items-center"
+                style={{ top: y - 8, left: 0, width: showBoth ? 70 : 100 }}
+              >
+                <span
+                  className="scale-label pl-2"
+                  style={{
+                    color: level.color,
+                    fontSize: isMajor ? '12px' : '9px',
+                    opacity: isMajor ? 1 : 0.4,
+                  }}
+                >
+                  {level.name}
+                </span>
+              </div>
+            )
+          })}
+
+          {/* LN scale - show when not filtering RC/SV only */}
+          {!showOnlyRf && lnLevels.map((level) => {
+            const lnY = d2y(level.numericValue - rfLnOffset, containerHeight, DIFFICULTY_RANGE)
+            const isMajor = MAJOR_LN.has(level.id)
+            return (
+              <div
+                key={level.id}
+                className="absolute flex items-center"
+                style={{ top: lnY - 8, right: 0, width: showBoth ? 65 : 100 }}
+              >
+                <span
+                  className="scale-label text-right w-full pr-2"
+                  style={{
+                    color: '#6366f1',
+                    fontSize: isMajor ? '11px' : '9px',
+                    opacity: isMajor ? 0.9 : 0.35,
+                  }}
+                >
+                  {level.name}
+                </span>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    )
+  }
+)
+
+import referencesData from '@data/references.json'
+
+const RightRefInner = forwardRef<HTMLDivElement, { containerHeight: number }>(
+  function RightRefInner({ containerHeight }, ref) {
+    return (
+      <div className="w-[180px] border-l border-gray-200 overflow-hidden shrink-0" ref={ref}>
+        <div className="relative" style={{ height: containerHeight }}>
+          {referencesData.points.map((point) => {
+            const y = d2y(point.difficulty, containerHeight, DIFFICULTY_RANGE)
+            return (
+              <div
+                key={point.label}
+                className="absolute left-0 right-0 flex items-center"
+                style={{ top: y - 8 }}
+              >
+                <div className="w-3 h-px bg-purple-300 mr-1" />
+                <span className="text-xs text-gray-600 truncate">{point.label}</span>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    )
+  }
+)
+
+function TournamentColumn({
+  tournament,
+  mode,
+  containerHeight,
+  columnWidth,
+  activeFilter,
+  rfLnOffset,
+  onHover,
+  onLeave,
+}: {
+  tournament: Tournament
+  mode: string
+  containerHeight: number
+  columnWidth: number
+  activeFilter: string | null
+  rfLnOffset: number
+  onHover: (round: Round, x: number, y: number) => void
+  onLeave: () => void
+}) {
+  if (mode === 'tournament') {
+    const allDiffs = tournament.rounds.flatMap((r) =>
+      r.maps.map((m) => (m.type === 'LN' || m.type === 'HB') ? m.difficulty - rfLnOffset : m.difficulty)
+    )
+    const minDiff = Math.min(...allDiffs)
+    const maxDiff = Math.max(...allDiffs)
+    const top = difficultyToY(maxDiff, containerHeight, DIFFICULTY_RANGE)
+    const bottom = difficultyToY(minDiff, containerHeight, DIFFICULTY_RANGE)
+    const height = Math.max(bottom - top, 40)
+
+    return (
+      <div className="relative shrink-0" style={{ width: columnWidth }}>
+        <div className="text-xs text-center text-gray-500 truncate mb-1 font-medium sticky top-0 bg-white z-20">
+          {tournament.abbreviation}
+        </div>
+        <div
+          className="round-box absolute left-0 right-0"
+          style={{ top: top + 20, height, background: getGradientForRange(minDiff, maxDiff) }}
+          onMouseEnter={(e) => onHover(tournament.rounds[tournament.rounds.length - 1], e.clientX, e.clientY)}
+          onMouseLeave={onLeave}
+        >
+          {tournament.abbreviation}
+        </div>
+      </div>
+    )
+  }
+
+  if (mode === 'round') {
+    return (
+      <div className="relative shrink-0" style={{ width: columnWidth }}>
+        <div className="text-xs text-center text-gray-500 truncate mb-1 font-medium sticky top-0 bg-white z-20">
+          {tournament.abbreviation}
+        </div>
+        {tournament.rounds.map((round) => {
+          const adjustedDiffs = round.maps.map((m) =>
+            (m.type === 'LN' || m.type === 'HB') ? m.difficulty - rfLnOffset : m.difficulty
+          )
+          const minDiff = Math.min(...adjustedDiffs)
+          const maxDiff = Math.max(...adjustedDiffs)
+          const top = difficultyToY(maxDiff, containerHeight, DIFFICULTY_RANGE)
+          const bottom = difficultyToY(minDiff, containerHeight, DIFFICULTY_RANGE)
+          const boxH = Math.max(bottom - top, 24)
+          const isDimmed = activeFilter && !round.maps.some((m) => m.type === activeFilter)
+
+          return (
+            <div
+              key={round.id}
+              className={`round-box absolute left-1 right-1 ${isDimmed ? 'dimmed' : ''}`}
+              style={{
+                top,
+                height: boxH,
+                background: getGradientForRange(minDiff, maxDiff),
+              }}
+              onMouseEnter={(e) => onHover(round, e.clientX, e.clientY)}
+              onMouseLeave={onLeave}
+            >
+              <span className="truncate block w-full text-center">
+                {tournament.abbreviation} {round.abbreviation}
+              </span>
+            </div>
+          )
+        })}
+      </div>
+    )
+  }
+
+  // mode === 'type'
+  return (
+    <div className="relative shrink-0" style={{ width: columnWidth }}>
+      <div className="text-xs text-center text-gray-500 truncate mb-1 font-medium sticky top-0 bg-white z-20">
+        {tournament.abbreviation}
+      </div>
+      {tournament.rounds.map((round) => {
+        const types = getUniqueTypes(round)
+        return types.map((type) => {
+          const typeMaps = round.maps.filter((m) => m.type === type)
+          const typeAvg = typeMaps.reduce((s, m) => s + m.difficulty, 0) / typeMaps.length
+          const adjustedAvg = (type === 'LN' || type === 'HB') ? typeAvg - rfLnOffset : typeAvg
+          const y = difficultyToY(adjustedAvg, containerHeight, DIFFICULTY_RANGE)
+          const boxH = BOX_HEIGHT_TYPE
+          const isDimmed = activeFilter && activeFilter !== type
+          const color = getDifficultyColor(adjustedAvg)
+
+          return (
+            <div
+              key={`${round.id}-${type}`}
+              className={`round-box absolute left-1 right-1 ${isDimmed ? 'dimmed' : ''}`}
+              style={{
+                top: y - boxH / 2,
+                height: boxH,
+                background: color,
+                fontSize: '10px',
+              }}
+              onMouseEnter={(e) => onHover(round, e.clientX, e.clientY)}
+              onMouseLeave={onLeave}
+            >
+              <span className="truncate block w-full text-center">
+                {tournament.abbreviation} {round.abbreviation} {type}
+              </span>
+            </div>
+          )
+        })
+      })}
+    </div>
+  )
+}
+
+function getUniqueTypes(round: Round): string[] {
+  const seen = new Set<string>()
+  return round.maps
+    .map((m) => m.type)
+    .filter((t) => {
+      if (seen.has(t)) return false
+      seen.add(t)
+      return true
+    })
+}

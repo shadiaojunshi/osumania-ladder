@@ -1,0 +1,84 @@
+{
+  "id": "sot-2024",
+  "name": "Speed osu!mania Tournament 2024",
+  "abbreviation": "SOT 2024",
+  "keyCount": 4,
+  "year": 2024,
+  "tags": ["community", "4k", "speed"],
+  "rounds": [
+    {
+      "id": "sot24-ro16", "name": "Round of 16", "abbreviation": "RO16", "order": 1, "bestOf": 9,
+      "difficulty": { "min": 9.0, "max": 12.0, "average": 10.5 },
+      "maps": [
+        { "slot": "RC1", "type": "RC", "realType": "SS", "name": "RC1", "difficulty": 9.5 },
+        { "slot": "RC2", "type": "RC", "realType": "JS", "name": "RC2", "difficulty": 10.0 },
+        { "slot": "RC3", "type": "RC", "realType": "CJ", "name": "RC3", "difficulty": 9.0 },
+        { "slot": "RC4", "type": "RC", "realType": "SA", "name": "RC4", "difficulty": 10.5 },
+        { "slot": "HB1", "type": "HB", "realType": "HB1", "name": "HB1", "difficulty": 11.0 },
+        { "slot": "LN1", "type": "LN", "realType": "CO", "name": "LN1", "difficulty": 11.5 },
+        { "slot": "SV1", "type": "SV", "realType": "SV1", "name": "SV1", "difficulty": 10.5 },
+        { "slot": "TB", "type": "TB", "realType": "TB", "name": "TB", "difficulty": 12.0 }
+      ]
+    },
+    {
+      "id": "sot24-qf", "name": "Quarterfinals", "abbreviation": "QF", "order": 2, "bestOf": 11,
+      "difficulty": { "min": 10.0, "max": 13.0, "average": 11.5 },
+      "maps": [
+        { "slot": "RC1", "type": "RC", "realType": "SS", "name": "RC1", "difficulty": 10.5 },
+        { "slot": "RC2", "type": "RC", "realType": "JS", "name": "RC2", "difficulty": 11.0 },
+        { "slot": "RC3", "type": "RC", "realType": "CJ", "name": "RC3", "difficulty": 10.0 },
+        { "slot": "RC4", "type": "RC", "realType": "SA", "name": "RC4", "difficulty": 11.5 },
+        { "slot": "HB1", "type": "HB", "realType": "HB1", "name": "HB1", "difficulty": 12.0 },
+        { "slot": "LN1", "type": "LN", "realType": "CO", "name": "LN1", "difficulty": 12.5 },
+        { "slot": "SV1", "type": "SV", "realType": "SV1", "name": "SV1", "difficulty": 11.5 },
+        { "slot": "TB", "type": "TB", "realType": "TB", "name": "TB", "difficulty": 13.0 }
+      ]
+    },
+    {
+      "id": "sot24-sf", "name": "Semifinals", "abbreviation": "SF", "order": 3, "bestOf": 11,
+      "difficulty": { "min": 11.0, "max": 14.0, "average": 12.5 },
+      "maps": [
+        { "slot": "RC1", "type": "RC", "realType": "SS", "name": "RC1", "difficulty": 11.5 },
+        { "slot": "RC2", "type": "RC", "realType": "JS", "name": "RC2", "difficulty": 12.0 },
+        { "slot": "RC3", "type": "RC", "realType": "CJ", "name": "RC3", "difficulty": 11.0 },
+        { "slot": "RC4", "type": "RC", "realType": "SA", "name": "RC4", "difficulty": 12.5 },
+        { "slot": "HB1", "type": "HB", "realType": "HB1", "name": "HB1", "difficulty": 13.0 },
+        { "slot": "HB2", "type": "HB", "realType": "HB2", "name": "HB2", "difficulty": 13.2 },
+        { "slot": "LN1", "type": "LN", "realType": "CO", "name": "LN1", "difficulty": 13.5 },
+        { "slot": "SV1", "type": "SV", "realType": "SV1", "name": "SV1", "difficulty": 12.5 },
+        { "slot": "TB", "type": "TB", "realType": "TB", "name": "TB", "difficulty": 14.0 }
+      ]
+    },
+    {
+      "id": "sot24-f", "name": "Finals", "abbreviation": "F", "order": 4, "bestOf": 13,
+      "difficulty": { "min": 12.0, "max": 15.0, "average": 13.5 },
+      "maps": [
+        { "slot": "RC1", "type": "RC", "realType": "SS", "name": "RC1", "difficulty": 12.5 },
+        { "slot": "RC2", "type": "RC", "realType": "JS", "name": "RC2", "difficulty": 13.0 },
+        { "slot": "RC3", "type": "RC", "realType": "CJ", "name": "RC3", "difficulty": 12.0 },
+        { "slot": "RC4", "type": "RC", "realType": "SA", "name": "RC4", "difficulty": 13.5 },
+        { "slot": "HB1", "type": "HB", "realType": "HB1", "name": "HB1", "difficulty": 14.0 },
+        { "slot": "HB2", "type": "HB", "realType": "HB2", "name": "HB2", "difficulty": 14.2 },
+        { "slot": "LN1", "type": "LN", "realType": "CO", "name": "LN1", "difficulty": 14.5 },
+        { "slot": "SV1", "type": "SV", "realType": "SV1", "name": "SV1", "difficulty": 13.5 },
+        { "slot": "TB", "type": "TB", "realType": "TB", "name": "TB", "difficulty": 15.0 }
+      ]
+    },
+    {
+      "id": "sot24-gf", "name": "Grand Finals", "abbreviation": "GF", "order": 5, "bestOf": 13,
+      "difficulty": { "min": 13.0, "max": 16.0, "average": 14.5 },
+      "maps": [
+        { "slot": "RC1", "type": "RC", "realType": "SS", "name": "RC1", "difficulty": 13.5 },
+        { "slot": "RC2", "type": "RC", "realType": "JS", "name": "RC2", "difficulty": 14.0 },
+        { "slot": "RC3", "type": "RC", "realType": "CJ", "name": "RC3", "difficulty": 13.0 },
+        { "slot": "RC4", "type": "RC", "realType": "SA", "name": "RC4", "difficulty": 14.5 },
+        { "slot": "HB1", "type": "HB", "realType": "HB1", "name": "HB1", "difficulty": 15.0 },
+        { "slot": "HB2", "type": "HB", "realType": "HB2", "name": "HB2", "difficulty": 15.2 },
+        { "slot": "LN1", "type": "LN", "realType": "CO", "name": "LN1", "difficulty": 15.5 },
+        { "slot": "SV1", "type": "SV", "realType": "SV1", "name": "SV1", "difficulty": 14.5 },
+        { "slot": "TB", "type": "TB", "realType": "TB", "name": "TB", "difficulty": 16.0 }
+      ]
+    }
+  ],
+  "customTypes": []
+}

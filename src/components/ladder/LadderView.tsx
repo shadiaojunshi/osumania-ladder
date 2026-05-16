@@ -3,29 +3,9 @@
 import { useViewStore } from '@/stores/viewStore'
 import { difficultyToY, getGradientForRange, getDifficultyColor } from '@/lib/difficulty'
 import type { Tournament, Round } from '@/lib/types'
-import mwc2024 from '@data/tournaments/mwc-4k-2024.json'
-import mwc2023 from '@data/tournaments/mwc-4k-2023.json'
-import mwc2022 from '@data/tournaments/mwc-4k-2022.json'
-import gbc2025 from '@data/tournaments/gbc-2025-spring.json'
-import gbc2024a from '@data/tournaments/gbc-2024-autumn.json'
-import gbc2024s from '@data/tournaments/gbc-2024-spring.json'
-import oc4k2024 from '@data/tournaments/oc4k-2024.json'
-import ycm2024 from '@data/tournaments/ycm-2024.json'
-import emt2024 from '@data/tournaments/emt-2024.json'
-import cot2024 from '@data/tournaments/cot-2024.json'
-import sot2024 from '@data/tournaments/sot-2024.json'
-import lnc2024 from '@data/tournaments/lnc-2024.json'
-import cet4k2026 from '@data/tournaments/chinese-extraterrestrial-tournament-4k-2026.json'
+import { tournaments } from '@/generated/tournaments'
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { HoverCard } from './HoverCard'
-
-const tournaments = [
-  mwc2024, mwc2023, mwc2022,
-  gbc2025, gbc2024a, gbc2024s,
-  oc4k2024, ycm2024, emt2024,
-  cot2024, sot2024, lnc2024,
-  cet4k2026,
-] as unknown as Tournament[]
 
 const DIFFICULTY_RANGE = { min: 0.5, max: 17.5 }
 const BOX_HEIGHT_TYPE = 28

@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
+    "dev": "node scripts/generate-tournaments.js && next dev",
+    "build": "node scripts/generate-tournaments.js && next build",
     "start": "next start",
     "lint": "next lint"
   },

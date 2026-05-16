@@ -3,9 +3,11 @@
 import { useState, useCallback, useEffect } from 'react'
 import type { Tournament, Round } from '@/lib/types'
 import { RoundEditor, type RoundWithMeta } from './RoundEditor'
+import type { MapCategory, ExtendedMap } from './MapSlotEditor'
 
 interface Props {
   onUpdate: (tournament: Tournament | null) => void
+  initialData?: Tournament | null
 }
 
 const EMPTY_TOURNAMENT: Tournament = {
@@ -19,10 +21,22 @@ const EMPTY_TOURNAMENT: Tournament = {
   customTypes: [],
 }
 
-export function TournamentForm({ onUpdate }: Props) {
+export function TournamentForm({ onUpdate, initialData }: Props) {
   const [step, setStep] = useState(0)
   const [tournament, setTournament] = useState<Tournament>(EMPTY_TOURNAMENT)
   const [rounds, setRounds] = useState<RoundWithMeta[]>([])
+
+  useEffect(() => {
+    if (initialData) {
+      setTournament(initialData)
+      setRounds(initialData.rounds.map(roundToMeta))
+      setStep(1)
+    } else {
+      setTournament(EMPTY_TOURNAMENT)
+      setRounds([])
+      setStep(0)
+    }
+  }, [initialData])
 
   useEffect(() => {
     const outputRounds = rounds.map(roundWithMetaToOutput)
@@ -73,6 +87,30 @@ function roundWithMetaToOutput(r: RoundWithMeta): Round {
       HB: { rf: _typeDiffs.hb || undefined },
       LN: { ln: _typeDiffs.ln || undefined },
       SV: { rf: _typeDiffs.sv || undefined },
+    },
+  }
+}
+
+function roundToMeta(r: Round): RoundWithMeta {
+  const STANDARD_CATEGORIES = ['RC', 'LN', 'HB', 'SV', 'TB']
+  const maps: ExtendedMap[] = r.maps.map((m) => {
+    let category: MapCategory
+    if (STANDARD_CATEGORIES.includes(m.type)) {
+      category = m.type as MapCategory
+    } else {
+      category = 'SPECIAL'
+    }
+    return { ...m, category }
+  })
+  const td = r.typeDifficulties || {}
+  return {
+    ...r,
+    _maps: maps,
+    _typeDiffs: {
+      rc: td.RC?.rf || 0,
+      hb: td.HB?.rf || 0,
+      ln: td.LN?.ln || 0,
+      sv: td.SV?.rf || 0,
     },
   }
 }

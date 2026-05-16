@@ -1,0 +1,68 @@
+{
+  "id": "shadiaojunshinb",
+  "name": "shadiaojunshinb!",
+  "abbreviation": "JSNB",
+  "keyCount": 4,
+  "year": 1970,
+  "tags": [
+    "军师，牛逼，军师牛逼"
+  ],
+  "rounds": [
+    {
+      "id": "round-1",
+      "name": "Qualifiers",
+      "abbreviation": "Qual",
+      "order": 1,
+      "difficulty": {
+        "min": 0,
+        "max": 0,
+        "average": 0
+      },
+      "maps": [],
+      "isQualifier": true,
+      "typeDifficulties": {
+        "RC": {
+          "rf": 999
+        },
+        "HB": {
+          "rf": 999
+        },
+        "LN": {
+          "ln": 999
+        },
+        "SV": {
+          "rf": 999
+        }
+      }
+    },
+    {
+      "id": "round-2",
+      "name": "Grand Finals",
+      "abbreviation": "GF",
+      "order": 2,
+      "difficulty": {
+        "min": 0,
+        "max": 0,
+        "average": 0
+      },
+      "maps": [],
+      "typeDifficulties": {
+        "RC": {
+          "rf": 111
+        },
+        "HB": {
+          "rf": 111
+        },
+        "LN": {
+          "ln": 111
+        },
+        "SV": {
+          "rf": 111
+        }
+      }
+    }
+  ],
+  "customTypes": [],
+  "forumUrl": "https://www.pixiv.net/",
+  "wikiUrl": "https://www.pixiv.net/"
+}

@@ -1,6 +1,7 @@
 'use client'
 
 import { useViewStore } from '@/stores/viewStore'
+import { tournaments } from '@/generated/tournaments'
 
 const VIEW_MODES = [
   { key: 'tournament' as const, label: '整场比赛', num: '0' },
@@ -8,10 +9,25 @@ const VIEW_MODES = [
   { key: 'type' as const, label: '每轮键型', num: '2' },
 ]
 
-const TYPE_FILTERS = ['全部', 'RC', 'HB', 'LN', 'SV', 'TB']
+const STANDARD_TYPES = ['RC', 'HB', 'LN', 'SV', 'TB']
+
+function getAllTypes(): string[] {
+  const seen = new Set<string>()
+  for (const t of tournaments) {
+    for (const r of t.rounds) {
+      for (const m of r.maps) {
+        seen.add(m.type)
+      }
+    }
+  }
+  const standard = STANDARD_TYPES.filter((t) => seen.has(t))
+  const custom = [...seen].filter((t) => !STANDARD_TYPES.includes(t)).sort()
+  return [...standard, ...custom]
+}
 
 export function Header() {
   const { mode, setMode, activeFilter, setActiveFilter, searchQuery, setSearchQuery } = useViewStore()
+  const allTypes = getAllTypes()
 
   return (
     <header className="h-14 border-b border-gray-200 flex items-center px-4 gap-4 shrink-0">
@@ -36,14 +52,26 @@ export function Header() {
       </div>
 
       <div className="flex items-center gap-1 ml-4">
-        {TYPE_FILTERS.map((f) => (
+        <button
+          onClick={() => setActiveFilter(null)}
+          className={`px-2.5 py-1 rounded text-sm transition-colors ${
+            !activeFilter
+              ? 'bg-orange-500 text-white'
+              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+          }`}
+        >
+          全部
+        </button>
+        {allTypes.map((f) => (
           <button
             key={f}
-            onClick={() => setActiveFilter(f === '全部' ? null : f)}
+            onClick={() => setActiveFilter(f)}
             className={`px-2.5 py-1 rounded text-sm transition-colors ${
-              (f === '全部' && !activeFilter) || activeFilter === f
+              activeFilter === f
                 ? 'bg-orange-500 text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                : STANDARD_TYPES.includes(f)
+                  ? 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
             }`}
           >
             {f}

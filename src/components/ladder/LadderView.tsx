@@ -11,12 +11,12 @@ const DIFFICULTY_RANGE = { min: 0.5, max: 17.5 }
 const BOX_HEIGHT_TYPE = 28
 
 export function LadderView() {
-  const { mode, zoom, columnWidth, rowHeight, rfLnOffset, activeFilter, searchQuery } = useViewStore()
+  const { mode, zoom, columnWidth, rowHeight, rfLnOffset, activeFilter, searchQuery, sortMode, customOrder } = useViewStore()
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const leftRef = useRef<HTMLDivElement>(null)
   const rightRef = useRef<HTMLDivElement>(null)
 
-  const [hoveredRound, setHoveredRound] = useState<{ round: Round; tournament: Tournament; x: number; y: number } | null>(null)
+  const [hoveredRound, setHoveredRound] = useState<{ round: Round; tournament: Tournament; x: number; y: number; type?: string } | null>(null)
   const hideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const diffRange = DIFFICULTY_RANGE.max - DIFFICULTY_RANGE.min
@@ -28,6 +28,24 @@ export function LadderView() {
       t.abbreviation.toLowerCase().includes(searchQuery.toLowerCase())
   })
 
+  const sortedTournaments = (() => {
+    if (customOrder) {
+      return [...filteredTournaments].sort((a, b) => {
+        const ai = customOrder.indexOf(a.id)
+        const bi = customOrder.indexOf(b.id)
+        return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi)
+      })
+    }
+    if (sortMode === 'default') return filteredTournaments
+    const getAvg = (t: Tournament) => {
+      const allDiffs = t.rounds.flatMap((r) => r.maps.map((m) => m.difficulty))
+      return allDiffs.length > 0 ? allDiffs.reduce((s, d) => s + d, 0) / allDiffs.length : 0
+    }
+    return [...filteredTournaments].sort((a, b) =>
+      sortMode === 'difficulty-desc' ? getAvg(b) - getAvg(a) : getAvg(a) - getAvg(b)
+    )
+  })()
+
   const handleScroll = useCallback(() => {
     const el = scrollContainerRef.current
     if (!el) return
@@ -36,12 +54,12 @@ export function LadderView() {
     if (rightRef.current) rightRef.current.scrollTop = scrollTop
   }, [])
 
-  const showHover = useCallback((round: Round, tournament: Tournament, x: number, y: number) => {
+  const showHover = useCallback((round: Round, tournament: Tournament, x: number, y: number, type?: string) => {
     if (hideTimeoutRef.current) {
       clearTimeout(hideTimeoutRef.current)
       hideTimeoutRef.current = null
     }
-    setHoveredRound({ round, tournament, x, y })
+    setHoveredRound({ round, tournament, x, y, type })
   }, [])
 
   const scheduleHide = useCallback(() => {
@@ -74,10 +92,10 @@ export function LadderView() {
           className="relative flex gap-2 px-2 pt-2"
           style={{
             height: containerHeight,
-            minWidth: filteredTournaments.length * (columnWidth + 8),
+            minWidth: sortedTournaments.length * (columnWidth + 8),
           }}
         >
-          {filteredTournaments.map((tournament) => (
+          {sortedTournaments.map((tournament) => (
             <TournamentColumn
               key={tournament.id}
               tournament={tournament}
@@ -86,7 +104,7 @@ export function LadderView() {
               columnWidth={columnWidth}
               activeFilter={activeFilter}
               rfLnOffset={rfLnOffset}
-              onHover={(round, x, y) => showHover(round, tournament, x, y)}
+              onHover={(round, x, y, type) => showHover(round, tournament, x, y, type)}
               onLeave={scheduleHide}
             />
           ))}
@@ -99,6 +117,7 @@ export function LadderView() {
         <HoverCard
           round={hoveredRound.round}
           tournament={hoveredRound.tournament}
+          hoveredType={hoveredRound.type}
           x={hoveredRound.x}
           y={hoveredRound.y}
           onMouseEnter={cancelHide}
@@ -136,7 +155,7 @@ const LeftScaleInner = forwardRef<HTMLDivElement, { containerHeight: number }>(
     const showOnlyRf = activeFilter === 'RC' || activeFilter === 'SV'
     const showBoth = !showOnlyLn && !showOnlyRf
 
-    const totalWidth = showBoth ? 140 : 100
+    const totalWidth = showBoth ? 110 : 70
 
     return (
       <div className={`border-r border-gray-200 overflow-hidden shrink-0`} style={{ width: totalWidth }} ref={ref}>
@@ -149,7 +168,7 @@ const LeftScaleInner = forwardRef<HTMLDivElement, { containerHeight: number }>(
               <div
                 key={level.id}
                 className="absolute flex items-center"
-                style={{ top: y - 8, left: 0, width: showBoth ? 70 : 100 }}
+                style={{ top: y - 8, left: 0, width: showBoth ? 55 : 70 }}
               >
                 <span
                   className="scale-label pl-2"
@@ -173,7 +192,7 @@ const LeftScaleInner = forwardRef<HTMLDivElement, { containerHeight: number }>(
               <div
                 key={level.id}
                 className="absolute flex items-center"
-                style={{ top: lnY - 8, right: 0, width: showBoth ? 65 : 100 }}
+                style={{ top: lnY - 8, right: 0, width: showBoth ? 50 : 70 }}
               >
                 <span
                   className="scale-label text-right w-full pr-2"
@@ -196,21 +215,117 @@ const LeftScaleInner = forwardRef<HTMLDivElement, { containerHeight: number }>(
 
 import referencesData from '@data/references.json'
 
+interface RefPoint {
+  label: string
+  difficulty: number
+}
+
+function useReferencePoints() {
+  const [points, setPoints] = useState<RefPoint[]>(() => {
+    if (typeof window === 'undefined') return referencesData.points
+    const saved = localStorage.getItem('ladder-references')
+    return saved ? JSON.parse(saved) : referencesData.points
+  })
+
+  const save = useCallback((pts: RefPoint[]) => {
+    setPoints(pts)
+    localStorage.setItem('ladder-references', JSON.stringify(pts))
+  }, [])
+
+  const reset = useCallback(() => {
+    setPoints(referencesData.points)
+    localStorage.removeItem('ladder-references')
+  }, [])
+
+  return { points, save, reset }
+}
+
 const RightRefInner = forwardRef<HTMLDivElement, { containerHeight: number }>(
   function RightRefInner({ containerHeight }, ref) {
+    const { points, save, reset } = useReferencePoints()
+    const [editing, setEditing] = useState(false)
+    const [newLabel, setNewLabel] = useState('')
+    const [newDiff, setNewDiff] = useState('')
+
+    const addPoint = () => {
+      const diff = parseFloat(newDiff)
+      if (!newLabel.trim() || isNaN(diff)) return
+      const updated = [...points, { label: newLabel.trim(), difficulty: diff }]
+        .sort((a, b) => b.difficulty - a.difficulty)
+      save(updated)
+      setNewLabel('')
+      setNewDiff('')
+    }
+
+    const removePoint = (index: number) => {
+      save(points.filter((_, i) => i !== index))
+    }
+
     return (
-      <div className="w-[180px] border-l border-gray-200 overflow-hidden shrink-0" ref={ref}>
-        <div className="relative" style={{ height: containerHeight }}>
-          {referencesData.points.map((point) => {
+      <div className="w-[180px] border-l border-gray-200 overflow-hidden shrink-0 flex flex-col" ref={ref}>
+        <div className="flex items-center justify-between px-2 py-1 border-b border-gray-100 shrink-0">
+          <span className="text-xs text-gray-400">参考</span>
+          <button
+            onClick={() => setEditing(!editing)}
+            className="text-xs text-purple-500 hover:text-purple-700"
+          >
+            {editing ? '完成' : '编辑'}
+          </button>
+        </div>
+
+        {editing && (
+          <div className="px-2 py-1.5 border-b border-gray-100 space-y-1 shrink-0">
+            <div className="flex gap-1">
+              <input
+                type="text"
+                value={newLabel}
+                onChange={(e) => setNewLabel(e.target.value)}
+                placeholder="名称"
+                className="flex-1 min-w-0 px-1 py-0.5 border border-gray-200 rounded text-xs focus:outline-none focus:border-purple-400"
+              />
+              <input
+                type="number"
+                step="0.5"
+                value={newDiff}
+                onChange={(e) => setNewDiff(e.target.value)}
+                placeholder="难度"
+                className="w-12 px-1 py-0.5 border border-gray-200 rounded text-xs focus:outline-none focus:border-purple-400"
+              />
+              <button
+                onClick={addPoint}
+                className="px-1.5 py-0.5 bg-purple-600 text-white rounded text-xs hover:bg-purple-700"
+              >
+                +
+              </button>
+            </div>
+            <button
+              onClick={reset}
+              className="text-xs text-gray-400 hover:text-red-500"
+            >
+              恢复默认
+            </button>
+          </div>
+        )}
+
+        <div className="relative flex-1 overflow-hidden" style={{ height: containerHeight }}>
+          {points.map((point, i) => {
             const y = d2y(point.difficulty, containerHeight, DIFFICULTY_RANGE)
             return (
               <div
-                key={point.label}
-                className="absolute left-0 right-0 flex items-center"
+                key={`${point.label}-${i}`}
+                className="absolute left-0 right-0 flex items-center group"
                 style={{ top: y - 8 }}
               >
                 <div className="w-3 h-px bg-purple-300 mr-1" />
-                <span className="text-xs text-gray-600 truncate">{point.label}</span>
+                <span className="text-xs text-gray-600 truncate flex-1">{point.label}</span>
+                {editing && (
+                  <button
+                    onClick={() => removePoint(i)}
+                    className="text-xs text-red-400 hover:text-red-600 pr-1 opacity-0 group-hover:opacity-100"
+                  >
+                    x
+                  </button>
+                )}
               </div>
             )
           })}
@@ -236,7 +351,7 @@ function TournamentColumn({
   columnWidth: number
   activeFilter: string | null
   rfLnOffset: number
-  onHover: (round: Round, x: number, y: number) => void
+  onHover: (round: Round, x: number, y: number, type?: string) => void
   onLeave: () => void
 }) {
   if (mode === 'tournament') {
@@ -332,7 +447,7 @@ function TournamentColumn({
                 background: color,
                 fontSize: '10px',
               }}
-              onMouseEnter={(e) => onHover(round, e.clientX, e.clientY)}
+              onMouseEnter={(e) => onHover(round, e.clientX, e.clientY, type)}
               onMouseLeave={onLeave}
             >
               <span className="truncate block w-full text-center">

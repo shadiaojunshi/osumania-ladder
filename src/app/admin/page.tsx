@@ -19,6 +19,7 @@ export default function AdminPage() {
   const [existingList, setExistingList] = useState<TournamentListItem[]>([])
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editingSha, setEditingSha] = useState<string | null>(null)
+  const [editInitialData, setEditInitialData] = useState<Tournament | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [submitStatus, setSubmitStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
   const [tab, setTab] = useState<'create' | 'manage'>('create')
@@ -90,7 +91,7 @@ export default function AdminPage() {
       const { tournament: data, sha } = await res.json()
       setEditingId(id)
       setEditingSha(sha)
-      setTournament(data)
+      setEditInitialData(data)
       setTab('create')
     } catch {
       alert('加载比赛数据失败')
@@ -116,6 +117,7 @@ export default function AdminPage() {
   const handleNewTournament = () => {
     setEditingId(null)
     setEditingSha(null)
+    setEditInitialData(null)
     setTournament(null)
     setSubmitStatus(null)
   }
@@ -193,7 +195,7 @@ export default function AdminPage() {
               </div>
             )}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <TournamentForm onUpdate={setTournament} initialData={editingId ? tournament : undefined} />
+              <TournamentForm onUpdate={setTournament} initialData={editInitialData} />
               <JsonPreview
                 tournament={tournament}
                 onSubmit={handleSubmit}

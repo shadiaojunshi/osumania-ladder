@@ -114,7 +114,7 @@
         },
         {
           "slot": "EX1",
-          "type": "RC",
+          "type": "EX",
           "realType": "SS",
           "name": "EX1",
           "difficulty": 15.5

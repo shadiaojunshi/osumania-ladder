@@ -137,6 +137,17 @@ export function MapSlotEditor({ map, onChange, onRemove }: Props) {
             ))}
           </select>
 
+          {map.category === 'SPECIAL' && (
+            <input
+              type="text"
+              value={map.type}
+              onChange={(e) => updateField('type', e.target.value.toUpperCase())}
+              placeholder="类型名 (如 EX)"
+              className="w-16 px-1.5 py-1 border border-gray-200 rounded text-xs font-mono text-center focus:outline-none focus:border-purple-400"
+              title="在天梯榜中显示的类型名"
+            />
+          )}
+
           {realTypeOptions.length > 0 && (
             <select
               value={map.realType}

@@ -1,6 +1,7 @@
 'use client'
 
 import { useViewStore } from '@/stores/viewStore'
+import type { SortMode } from '@/stores/viewStore'
 
 export function ControlBar() {
   const {
@@ -8,7 +9,18 @@ export function ControlBar() {
     columnWidth, setColumnWidth,
     rowHeight, setRowHeight,
     rfLnOffset, setRfLnOffset,
+    sortMode, setSortMode,
   } = useViewStore()
+
+  const cycleSortMode = () => {
+    const modes: SortMode[] = ['default', 'difficulty-desc', 'difficulty-asc']
+    const idx = modes.indexOf(sortMode)
+    setSortMode(modes[(idx + 1) % modes.length])
+  }
+
+  const sortLabel = sortMode === 'default' ? '默认排序'
+    : sortMode === 'difficulty-desc' ? '难度↓'
+    : '难度↑'
 
   return (
     <footer className="h-14 border-t border-gray-200 flex items-center px-4 gap-4 shrink-0 bg-gray-50">
@@ -65,7 +77,7 @@ export function ControlBar() {
           type="range"
           min={-3}
           max={3}
-          step={1}
+          step={0.5}
           value={rfLnOffset}
           onChange={(e) => setRfLnOffset(Number(e.target.value))}
           className="w-16 h-1 accent-indigo-500"
@@ -74,6 +86,19 @@ export function ControlBar() {
           rf10=ln{10 + rfLnOffset}
         </span>
       </div>
+
+      <div className="w-px h-6 bg-gray-300" />
+
+      <button
+        onClick={cycleSortMode}
+        className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
+          sortMode !== 'default'
+            ? 'bg-purple-100 text-purple-700'
+            : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+        }`}
+      >
+        {sortLabel}
+      </button>
 
       <div className="ml-auto text-xs text-gray-400">
         osu!mania Ladder v0.1

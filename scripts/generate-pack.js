@@ -9,6 +9,11 @@ const R2_ACCESS_KEY = process.env.R2_ACCESS_KEY
 const R2_SECRET_KEY = process.env.R2_SECRET_KEY
 const R2_BUCKET = process.env.R2_BUCKET || 'osumania-ladder-maps'
 
+if (!R2_ACCOUNT_ID || !R2_ACCESS_KEY || !R2_SECRET_KEY) {
+  console.error('Missing R2 credentials. Set R2_ACCOUNT_ID, R2_ACCESS_KEY, R2_SECRET_KEY.')
+  process.exit(1)
+}
+
 const s3 = new S3Client({
   region: 'auto',
   endpoint: `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,

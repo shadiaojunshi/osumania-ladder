@@ -1,0 +1,88 @@
+{
+  "id": "contest-test",
+  "name": "Contest test",
+  "abbreviation": "TEST",
+  "keyCount": 4,
+  "year": 2026,
+  "tags": [],
+  "rounds": [
+    {
+      "id": "round-1",
+      "name": "Qualifiers",
+      "abbreviation": "Qual",
+      "order": 1,
+      "difficulty": {
+        "min": 7.4,
+        "max": 9.5,
+        "average": 8.4
+      },
+      "maps": [
+        {
+          "slot": "RC1",
+          "type": "RC",
+          "realType": "ORC",
+          "name": "RC1",
+          "difficulty": 8
+        },
+        {
+          "slot": "RC2",
+          "type": "RC",
+          "realType": "ORC",
+          "name": "RC2",
+          "difficulty": 9
+        },
+        {
+          "slot": "RC3",
+          "type": "RC",
+          "realType": "ORC",
+          "name": "RC3",
+          "difficulty": 7.4
+        },
+        {
+          "slot": "HB1",
+          "type": "HB",
+          "realType": "OHB",
+          "name": "HB1",
+          "difficulty": 8,
+          "difficultyLn": 9
+        },
+        {
+          "slot": "HB2",
+          "type": "HB",
+          "realType": "OHB",
+          "name": "HB2",
+          "difficulty": 8,
+          "difficultyLn": 9
+        },
+        {
+          "slot": "LN1",
+          "type": "LN",
+          "realType": "RE",
+          "name": "LN1",
+          "difficulty": 9.5
+        },
+        {
+          "slot": "LN2",
+          "type": "LN",
+          "realType": "RE",
+          "name": "LN2",
+          "difficulty": 9
+        }
+      ],
+      "isQualifier": true,
+      "typeDifficulties": {
+        "RC": {
+          "rf": 8.1
+        },
+        "HB": {
+          "ln": 9
+        },
+        "LN": {
+          "ln": 9.3
+        },
+        "SV": {}
+      }
+    }
+  ],
+  "customTypes": []
+}

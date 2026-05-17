@@ -15,7 +15,9 @@
       "mapCount": 3,
       "totalMaps": 3,
       "lastUpdated": "2026-05-17",
-      "links": {},
+      "links": {
+        "googleDrive": "https://drive.google.com/file/d/1Z_jQfbvoKF9MrnYVRuyoJIqkNiehc6cy/view?usp=drive_link"
+      },
       "sizeMB": 13
     },
     {
@@ -24,7 +26,9 @@
       "mapCount": 2,
       "totalMaps": 2,
       "lastUpdated": "2026-05-17",
-      "links": {},
+      "links": {
+        "googleDrive": "https://drive.google.com/file/d/1338kG6KEW34cW_91pbZyZyvUuYeXn0kD/view?usp=drive_link"
+      },
       "sizeMB": 9
     }
   ],

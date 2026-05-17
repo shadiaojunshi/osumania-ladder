@@ -247,6 +247,36 @@ function RoundUploadSection({
   )
 }
 
+interface OsuDiffInfo {
+  fileName: string
+  version: string
+  artist: string
+  title: string
+  audioFilename: string
+  bgFile: string
+}
+
+function parseOsuMeta(content: string): OsuDiffInfo {
+  let version = '', audioFilename = '', bgFile = '', artist = '', title = ''
+  let section = ''
+  for (const line of content.split('\n')) {
+    const t = line.trim()
+    if (t.startsWith('[') && t.endsWith(']')) { section = t.slice(1, -1); continue }
+    if (section === 'Metadata') {
+      if (t.startsWith('Version:')) version = t.slice(8).trim()
+      if (t.startsWith('Artist:')) artist = t.slice(7).trim()
+      if (t.startsWith('Title:')) title = t.slice(6).trim()
+    }
+    if (section === 'General' && t.startsWith('AudioFilename:'))
+      audioFilename = t.slice(14).trim()
+    if (section === 'Events' && !bgFile) {
+      const m = t.match(/"([^"]+\.(jpg|jpeg|png))"/i)
+      if (m) bgFile = m[1]
+    }
+  }
+  return { fileName: '', version, audioFilename, bgFile, artist, title }
+}
+
 function MapUploadRow({
   slot,
   roundId,
@@ -270,24 +300,128 @@ function MapUploadRow({
   const [osuFile, setOsuFile] = useState<File | null>(null)
   const [audioFile, setAudioFile] = useState<File | null>(null)
   const [bgFile, setBgFile] = useState<File | null>(null)
+  const [pendingZip, setPendingZip] = useState<JSZip | null>(null)
+  const [availableDiffs, setAvailableDiffs] = useState<OsuDiffInfo[]>([])
+  const [selectedDiff, setSelectedDiff] = useState<number>(0)
+
+  const handleOszFile = async (file: File) => {
+    if (!file.name.endsWith('.osz')) return
+    if (file.size > 25 * 1024 * 1024) {
+      alert('文件超过 25MB 限制')
+      return
+    }
+
+    const zip = await JSZip.loadAsync(file)
+    const osuFiles = Object.keys(zip.files).filter(f => f.endsWith('.osu'))
+
+    if (osuFiles.length === 0) {
+      alert('该 .osz 中没有 .osu 文件')
+      return
+    }
+
+    if (osuFiles.length === 1) {
+      onUploadOsz(roundId, slot, file)
+      return
+    }
+
+    const diffs: OsuDiffInfo[] = []
+    for (const f of osuFiles) {
+      const content = await zip.files[f].async('string')
+      const meta = parseOsuMeta(content)
+      meta.fileName = f
+      diffs.push(meta)
+    }
+    setPendingZip(zip)
+    setAvailableDiffs(diffs)
+    setSelectedDiff(0)
+  }
 
   const handleOszDrop = (e: React.DragEvent) => {
     e.preventDefault()
     const file = e.dataTransfer.files[0]
-    if (file && file.name.endsWith('.osz')) {
-      onUploadOsz(roundId, slot, file)
-    }
+    if (file) handleOszFile(file)
   }
 
   const handleOszSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (file) onUploadOsz(roundId, slot, file)
+    if (file) handleOszFile(file)
+  }
+
+  const confirmDiffUpload = async () => {
+    if (!pendingZip || availableDiffs.length === 0) return
+    const diff = availableDiffs[selectedDiff]
+
+    const newZip = new JSZip()
+    const osuContent = await pendingZip.files[diff.fileName].async('uint8array')
+    newZip.file(diff.fileName, osuContent)
+
+    if (diff.audioFilename && pendingZip.files[diff.audioFilename]) {
+      const audio = await pendingZip.files[diff.audioFilename].async('uint8array')
+      newZip.file(diff.audioFilename, audio)
+    }
+    if (diff.bgFile && pendingZip.files[diff.bgFile]) {
+      const bg = await pendingZip.files[diff.bgFile].async('uint8array')
+      newZip.file(diff.bgFile, bg)
+    }
+
+    const blob = await newZip.generateAsync({ type: 'blob' })
+    const oszFile = new File([blob], `${slot}.osz`, { type: 'application/octet-stream' })
+    onUploadOsz(roundId, slot, oszFile)
+    setPendingZip(null)
+    setAvailableDiffs([])
+  }
+
+  const cancelDiffSelect = () => {
+    setPendingZip(null)
+    setAvailableDiffs([])
   }
 
   const handleThreeUpload = () => {
     if (osuFile && audioFile && bgFile) {
       onUploadThree(roundId, slot, osuFile, audioFile, bgFile)
     }
+  }
+
+  if (availableDiffs.length > 0) {
+    return (
+      <div className="p-2 bg-yellow-50 rounded border border-yellow-200">
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-xs font-mono text-gray-600">{slot}</span>
+          <span className="text-xs text-yellow-700">检测到 {availableDiffs.length} 个难度，请选择：</span>
+        </div>
+        <div className="space-y-1 mb-2">
+          {availableDiffs.map((diff, i) => (
+            <label key={diff.fileName} className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                name={`diff-${roundId}-${slot}`}
+                checked={selectedDiff === i}
+                onChange={() => setSelectedDiff(i)}
+                className="text-purple-600"
+              />
+              <span className="text-xs text-gray-700">[{diff.version}]</span>
+              {diff.artist && diff.title && (
+                <span className="text-xs text-gray-400">{diff.artist} - {diff.title}</span>
+              )}
+            </label>
+          ))}
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={confirmDiffUpload}
+            className="px-3 py-1 text-xs bg-purple-600 text-white rounded hover:bg-purple-700"
+          >
+            确认上传
+          </button>
+          <button
+            onClick={cancelDiffSelect}
+            className="px-3 py-1 text-xs text-gray-500 border border-gray-300 rounded hover:bg-gray-100"
+          >
+            取消
+          </button>
+        </div>
+      </div>
+    )
   }
 
   return (

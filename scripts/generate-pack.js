@@ -59,7 +59,7 @@ function parseOsu(content) {
       if (key === 'BeatmapSetID') meta.beatmapSetId = value
     }
     if (currentSection === 'Events') {
-      const match = trimmed.match(/^0,0,"(.+?)"/)
+      const match = trimmed.match(/"([^"]+\.(jpg|jpeg|png))"/i)
       if (match) meta.backgroundFile = match[1]
     }
   }

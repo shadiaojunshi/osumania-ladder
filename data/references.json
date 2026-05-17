@@ -35,6 +35,24 @@
     {
       "label": "MWC 2025 QF RC",
       "difficulty": 10.4
+    },
+    {
+      "label": "MWC 2025 Ro16 RC",
+      "difficulty": 9.5
+    },
+    {
+      "label": "MWC 2025 Ro16 LN",
+      "difficulty": 9.5,
+      "type": "ln"
+    },
+    {
+      "label": "MWC 2025 Ro32 RC",
+      "difficulty": 8.7
+    },
+    {
+      "label": "MWC 2025 Ro32 LN",
+      "difficulty": 8.5,
+      "type": "ln"
     }
   ]
 }

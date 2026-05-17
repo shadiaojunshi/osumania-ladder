@@ -296,12 +296,12 @@ function autoCalcTypeDiffs(
   locked: RoundWithMeta['_typeDiffsLocked']
 ): RoundWithMeta['_typeDiffs'] {
   const result = { ...current }
-  const avg = (type: string) => {
-    const diffs = maps.filter((m) => m.type === type && m.difficulty > 0).map((m) => m.difficulty)
+  const avg = (type: string, field: 'difficulty' | 'difficultyLn' = 'difficulty') => {
+    const diffs = maps.filter((m) => m.type === type).map((m) => m[field] || 0).filter((d) => d > 0)
     return diffs.length > 0 ? +(diffs.reduce((s, d) => s + d, 0) / diffs.length).toFixed(1) : 0
   }
   if (!locked.rc) result.rc = avg('RC')
-  if (!locked.hb) result.hb = avg('HB')
+  if (!locked.hb) result.hb = avg('HB', 'difficultyLn')
   if (!locked.ln) result.ln = avg('LN')
   if (!locked.sv) result.sv = avg('SV')
   return result

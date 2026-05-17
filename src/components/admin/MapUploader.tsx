@@ -124,6 +124,23 @@ export function MapUploader() {
     }
   }, [selectedTournament])
 
+  const deleteFile = useCallback(async (roundId: string, slot: string) => {
+    const key = `${roundId}/${slot}`
+    if (!confirm(`确定删除 ${slot} 的谱面文件？`)) return
+    try {
+      const res = await fetch('/api/maps/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tournamentId: selectedTournament, roundId, slot }),
+      })
+      if (!res.ok) throw new Error()
+      setUploadedSlots(prev => { const n = new Set(prev); n.delete(key); return n })
+      setStatus(prev => { const n = { ...prev }; delete n[key]; return n })
+    } catch {
+      alert('删除失败')
+    }
+  }, [selectedTournament])
+
   const totalMaps = tournamentData?.rounds.reduce((s, r) => s + r.maps.length, 0) || 0
   const uploadedCount = uploadedSlots.size
 
@@ -166,6 +183,7 @@ export function MapUploader() {
                 status={status}
                 onUploadOsz={uploadFile}
                 onUploadThree={uploadThreeFiles}
+                onDelete={deleteFile}
               />
             ))}
           </div>
@@ -182,6 +200,7 @@ function RoundUploadSection({
   status,
   onUploadOsz,
   onUploadThree,
+  onDelete,
 }: {
   round: { id: string; abbreviation: string; maps: { slot: string }[] }
   uploadedSlots: Set<string>
@@ -189,6 +208,7 @@ function RoundUploadSection({
   status: Record<string, 'success' | 'error'>
   onUploadOsz: (roundId: string, slot: string, file: File) => void
   onUploadThree: (roundId: string, slot: string, osu: File, audio: File, bg: File) => void
+  onDelete: (roundId: string, slot: string) => void
 }) {
   const [expanded, setExpanded] = useState(false)
   const uploadedInRound = round.maps.filter(m => uploadedSlots.has(`${round.id}/${m.slot}`)).length
@@ -218,6 +238,7 @@ function RoundUploadSection({
               uploadStatus={status[`${round.id}/${map.slot}`]}
               onUploadOsz={onUploadOsz}
               onUploadThree={onUploadThree}
+              onDelete={onDelete}
             />
           ))}
         </div>
@@ -234,6 +255,7 @@ function MapUploadRow({
   uploadStatus,
   onUploadOsz,
   onUploadThree,
+  onDelete,
 }: {
   slot: string
   roundId: string
@@ -242,6 +264,7 @@ function MapUploadRow({
   uploadStatus?: 'success' | 'error'
   onUploadOsz: (roundId: string, slot: string, file: File) => void
   onUploadThree: (roundId: string, slot: string, osu: File, audio: File, bg: File) => void
+  onDelete: (roundId: string, slot: string) => void
 }) {
   const [mode, setMode] = useState<'osz' | 'three'>('osz')
   const [osuFile, setOsuFile] = useState<File | null>(null)
@@ -277,6 +300,13 @@ function MapUploadRow({
             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
           </svg>
           已上传
+          <button
+            onClick={() => onDelete(roundId, slot)}
+            className="ml-1 text-red-400 hover:text-red-600"
+            title="删除文件"
+          >
+            ✕
+          </button>
         </span>
       )}
 

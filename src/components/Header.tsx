@@ -88,6 +88,12 @@ export function Header() {
           className="px-3 py-1.5 border border-gray-300 rounded text-sm w-48 focus:outline-none focus:border-purple-400"
         />
         <a
+          href="/download"
+          className="px-3 py-1.5 text-sm text-gray-500 hover:text-purple-600 border border-gray-200 rounded hover:border-purple-300"
+        >
+          下载合包
+        </a>
+        <a
           href="/admin"
           className="px-3 py-1.5 text-sm text-gray-500 hover:text-purple-600 border border-gray-200 rounded hover:border-purple-300"
         >

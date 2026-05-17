@@ -226,7 +226,7 @@ const LABEL_HEIGHT = 16
 const RightRefInner = forwardRef<HTMLDivElement, { containerHeight: number }>(
   function RightRefInner({ containerHeight }, ref) {
     const { rfLnOffset } = useViewStore()
-    const points: RefPoint[] = referencesData.points
+    const points = referencesData.points as RefPoint[]
 
     const positioned = points
       .map((point) => {

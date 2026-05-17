@@ -221,28 +221,42 @@ interface RefPoint {
   type?: 'rice' | 'ln' | 'both'
 }
 
+const LABEL_HEIGHT = 16
+
 const RightRefInner = forwardRef<HTMLDivElement, { containerHeight: number }>(
   function RightRefInner({ containerHeight }, ref) {
     const { rfLnOffset } = useViewStore()
     const points: RefPoint[] = referencesData.points
 
+    const positioned = points
+      .map((point) => {
+        const adjustedDiff = point.type === 'ln' ? point.difficulty - rfLnOffset : point.difficulty
+        const y = d2y(adjustedDiff, containerHeight, DIFFICULTY_RANGE)
+        return { ...point, rawY: y, displayY: y }
+      })
+      .sort((a, b) => a.rawY - b.rawY)
+
+    for (let i = 1; i < positioned.length; i++) {
+      const prev = positioned[i - 1]
+      const curr = positioned[i]
+      if (curr.displayY - prev.displayY < LABEL_HEIGHT) {
+        curr.displayY = prev.displayY + LABEL_HEIGHT
+      }
+    }
+
     return (
       <div className="w-[160px] border-l border-gray-200 overflow-hidden shrink-0" ref={ref}>
         <div className="relative" style={{ height: containerHeight }}>
-          {points.map((point, i) => {
-            const adjustedDiff = point.type === 'ln' ? point.difficulty - rfLnOffset : point.difficulty
-            const y = d2y(adjustedDiff, containerHeight, DIFFICULTY_RANGE)
-            return (
-              <div
-                key={`${point.label}-${i}`}
-                className="absolute left-0 right-0 flex items-center"
-                style={{ top: y - 8 }}
-              >
-                <div className={`w-3 h-px mr-1 ${point.type === 'ln' ? 'bg-indigo-400' : 'bg-purple-300'}`} />
-                <span className={`text-xs truncate ${point.type === 'ln' ? 'text-indigo-600' : 'text-gray-600'}`}>{point.label}</span>
-              </div>
-            )
-          })}
+          {positioned.map((point, i) => (
+            <div
+              key={`${point.label}-${i}`}
+              className="absolute left-0 right-0 flex items-center"
+              style={{ top: point.displayY - 8 }}
+            >
+              <div className={`w-3 h-px mr-1 ${point.type === 'ln' ? 'bg-indigo-400' : 'bg-purple-300'}`} />
+              <span className={`text-xs truncate ${point.type === 'ln' ? 'text-indigo-600' : 'text-gray-600'}`}>{point.label}</span>
+            </div>
+          ))}
         </div>
       </div>
     )

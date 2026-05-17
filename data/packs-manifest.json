@@ -1,4 +1,32 @@
 {
-  "packs": [],
-  "lastGenerated": ""
+  "packs": [
+    {
+      "realType": "RE",
+      "name": "4K Contest Release Pack",
+      "mapCount": 2,
+      "totalMaps": 58,
+      "lastUpdated": "2026-05-17",
+      "links": {},
+      "sizeMB": 8
+    },
+    {
+      "realType": "ORC",
+      "name": "4K Contest Otherrice Pack",
+      "mapCount": 3,
+      "totalMaps": 3,
+      "lastUpdated": "2026-05-17",
+      "links": {},
+      "sizeMB": 13
+    },
+    {
+      "realType": "OHB",
+      "name": "4K Contest OtherHybrid Pack",
+      "mapCount": 2,
+      "totalMaps": 2,
+      "lastUpdated": "2026-05-17",
+      "links": {},
+      "sizeMB": 9
+    }
+  ],
+  "lastGenerated": "2026-05-17T12:47:09.425Z"
 }

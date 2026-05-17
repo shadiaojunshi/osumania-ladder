@@ -1,6 +1,6 @@
 const { S3Client, ListObjectsV2Command, GetObjectCommand, PutObjectCommand } = require('@aws-sdk/client-s3')
 const JSZip = require('jszip')
-const archiver = require('archiver')
+const { ZipArchive } = require('archiver')
 const fs = require('fs')
 const path = require('path')
 
@@ -212,7 +212,7 @@ async function generatePack(targetType) {
   const packName = `4K Contest ${REAL_TYPE_NAMES[targetType] || targetType} Pack`
   const outputPath = path.join(outputDir, `${targetType}.osz`)
   const output = fs.createWriteStream(outputPath)
-  const archive = archiver('zip', { zlib: { level: 5 } })
+  const archive = new ZipArchive({ zlib: { level: 5 } })
   archive.pipe(output)
 
   let processed = 0

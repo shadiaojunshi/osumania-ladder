@@ -218,25 +218,28 @@ import referencesData from '@data/references.json'
 interface RefPoint {
   label: string
   difficulty: number
+  type?: 'rice' | 'ln' | 'both'
 }
 
 const RightRefInner = forwardRef<HTMLDivElement, { containerHeight: number }>(
   function RightRefInner({ containerHeight }, ref) {
+    const { rfLnOffset } = useViewStore()
     const points: RefPoint[] = referencesData.points
 
     return (
       <div className="w-[160px] border-l border-gray-200 overflow-hidden shrink-0" ref={ref}>
         <div className="relative" style={{ height: containerHeight }}>
           {points.map((point, i) => {
-            const y = d2y(point.difficulty, containerHeight, DIFFICULTY_RANGE)
+            const adjustedDiff = point.type === 'ln' ? point.difficulty - rfLnOffset : point.difficulty
+            const y = d2y(adjustedDiff, containerHeight, DIFFICULTY_RANGE)
             return (
               <div
                 key={`${point.label}-${i}`}
                 className="absolute left-0 right-0 flex items-center"
                 style={{ top: y - 8 }}
               >
-                <div className="w-3 h-px bg-purple-300 mr-1" />
-                <span className="text-xs text-gray-600 truncate">{point.label}</span>
+                <div className={`w-3 h-px mr-1 ${point.type === 'ln' ? 'bg-indigo-400' : 'bg-purple-300'}`} />
+                <span className={`text-xs truncate ${point.type === 'ln' ? 'text-indigo-600' : 'text-gray-600'}`}>{point.label}</span>
               </div>
             )
           })}
@@ -267,7 +270,7 @@ function TournamentColumn({
 }) {
   if (mode === 'tournament') {
     const allDiffs = tournament.rounds.flatMap((r) =>
-      r.maps.map((m) => (m.type === 'LN' || m.type === 'HB') ? m.difficulty - rfLnOffset : m.difficulty)
+      r.maps.map((m) => (m.type !== 'RC' && m.type !== 'SV') ? m.difficulty - rfLnOffset : m.difficulty)
     )
     const minDiff = Math.min(...allDiffs)
     const maxDiff = Math.max(...allDiffs)
@@ -293,12 +296,13 @@ function TournamentColumn({
   }
 
   if (mode === 'round') {
+    const totalRounds = tournament.rounds.length
     return (
       <div className="relative shrink-0" style={{ width: columnWidth }}>
         <div className="text-xs text-center text-gray-500 truncate mb-1 font-medium sticky top-0 bg-white z-20">
           {tournament.abbreviation}
         </div>
-        {tournament.rounds.map((round) => {
+        {tournament.rounds.map((round, idx) => {
           const adjustedDiffs = round.maps.map((m) =>
             (m.type === 'LN' || m.type === 'HB') ? m.difficulty - rfLnOffset : m.difficulty
           )
@@ -317,6 +321,7 @@ function TournamentColumn({
                 top,
                 height: boxH,
                 background: getGradientForRange(minDiff, maxDiff),
+                zIndex: totalRounds - idx,
               }}
               onMouseEnter={(e) => onHover(round, e.clientX, e.clientY)}
               onMouseLeave={onLeave}
@@ -332,41 +337,65 @@ function TournamentColumn({
   }
 
   // mode === 'type'
+  const allTypeBoxes: { round: Round; type: string; adjustedAvg: number }[] = []
+  for (const round of tournament.rounds) {
+    const types = getUniqueTypes(round)
+    for (const type of types) {
+      const typeMaps = round.maps.filter((m) => m.type === type)
+      const typeAvg = typeMaps.reduce((s, m) => s + m.difficulty, 0) / typeMaps.length
+      const adjustedAvg = (type !== 'RC' && type !== 'SV') ? typeAvg - rfLnOffset : typeAvg
+      allTypeBoxes.push({ round, type, adjustedAvg })
+    }
+  }
+
+  const overlapGroups = new Map<string, number>()
+  for (let i = 0; i < allTypeBoxes.length; i++) {
+    const a = allTypeBoxes[i]
+    for (let j = i + 1; j < allTypeBoxes.length; j++) {
+      const b = allTypeBoxes[j]
+      if (Math.abs(a.adjustedAvg - b.adjustedAvg) < 0.05) {
+        const keyA = `${a.round.id}-${a.type}`
+        const keyB = `${b.round.id}-${b.type}`
+        if (!overlapGroups.has(keyA)) overlapGroups.set(keyA, 0)
+        if (!overlapGroups.has(keyB)) overlapGroups.set(keyB, 1)
+      }
+    }
+  }
+
   return (
     <div className="relative shrink-0" style={{ width: columnWidth }}>
       <div className="text-xs text-center text-gray-500 truncate mb-1 font-medium sticky top-0 bg-white z-20">
         {tournament.abbreviation}
       </div>
-      {tournament.rounds.map((round) => {
-        const types = getUniqueTypes(round)
-        return types.map((type) => {
-          const typeMaps = round.maps.filter((m) => m.type === type)
-          const typeAvg = typeMaps.reduce((s, m) => s + m.difficulty, 0) / typeMaps.length
-          const adjustedAvg = (type === 'LN' || type === 'HB') ? typeAvg - rfLnOffset : typeAvg
-          const y = difficultyToY(adjustedAvg, containerHeight, DIFFICULTY_RANGE)
-          const boxH = BOX_HEIGHT_TYPE
-          const isDimmed = activeFilter && activeFilter !== type
-          const color = getDifficultyColor(adjustedAvg)
+      {allTypeBoxes.map(({ round, type, adjustedAvg }) => {
+        const y = difficultyToY(adjustedAvg, containerHeight, DIFFICULTY_RANGE)
+        const boxH = BOX_HEIGHT_TYPE
+        const isDimmed = activeFilter && activeFilter !== type
+        const color = getDifficultyColor(adjustedAvg)
+        const key = `${round.id}-${type}`
+        const overlapIdx = overlapGroups.get(key)
+        const hasOverlap = overlapIdx !== undefined
 
-          return (
-            <div
-              key={`${round.id}-${type}`}
-              className={`round-box absolute left-1 right-1 ${isDimmed ? 'dimmed' : ''}`}
-              style={{
-                top: y - boxH / 2,
-                height: boxH,
-                background: color,
-                fontSize: '10px',
-              }}
-              onMouseEnter={(e) => onHover(round, e.clientX, e.clientY, type)}
-              onMouseLeave={onLeave}
-            >
-              <span className="truncate block w-full text-center">
-                {tournament.abbreviation} {round.abbreviation} {type}
-              </span>
-            </div>
-          )
-        })
+        return (
+          <div
+            key={key}
+            className={`round-box absolute ${isDimmed ? 'dimmed' : ''}`}
+            style={{
+              top: y - boxH / 2,
+              height: boxH,
+              background: color,
+              fontSize: '10px',
+              left: hasOverlap ? (overlapIdx === 0 ? '2px' : '50%') : '4px',
+              right: hasOverlap ? (overlapIdx === 0 ? '50%' : '2px') : '4px',
+            }}
+            onMouseEnter={(e) => onHover(round, e.clientX, e.clientY, type)}
+            onMouseLeave={onLeave}
+          >
+            <span className="truncate block w-full text-center">
+              {tournament.abbreviation} {round.abbreviation} {type}
+            </span>
+          </div>
+        )
       })}
     </div>
   )

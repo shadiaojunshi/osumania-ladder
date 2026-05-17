@@ -6,6 +6,7 @@ import { difficultyToY, getDifficultyColor } from '@/lib/difficulty'
 interface RefPoint {
   label: string
   difficulty: number
+  type?: 'rice' | 'ln' | 'both'
 }
 
 interface ReferencesData {
@@ -23,6 +24,7 @@ export function ReferencesEditor() {
   const [status, setStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
   const [newLabel, setNewLabel] = useState('')
   const [newDiff, setNewDiff] = useState('')
+  const [newType, setNewType] = useState<'rice' | 'ln'>('rice')
 
   useEffect(() => {
     fetchRefs()
@@ -46,11 +48,13 @@ export function ReferencesEditor() {
   const addPoint = () => {
     const diff = parseFloat(newDiff)
     if (!newLabel.trim() || isNaN(diff)) return
-    const updated = [...points, { label: newLabel.trim(), difficulty: diff }]
-      .sort((a, b) => b.difficulty - a.difficulty)
+    const point: RefPoint = { label: newLabel.trim(), difficulty: diff }
+    if (newType === 'ln') point.type = 'ln'
+    const updated = [...points, point].sort((a, b) => b.difficulty - a.difficulty)
     setPoints(updated)
     setNewLabel('')
     setNewDiff('')
+    setNewType('rice')
   }
 
   const removePoint = (index: number) => {
@@ -103,6 +107,14 @@ export function ReferencesEditor() {
             placeholder="难度"
             className="w-20 px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:border-purple-400"
           />
+          <select
+            value={newType}
+            onChange={(e) => setNewType(e.target.value as 'rice' | 'ln')}
+            className="px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:border-purple-400"
+          >
+            <option value="rice">RF</option>
+            <option value="ln">LN</option>
+          </select>
           <button
             onClick={addPoint}
             className="px-3 py-1.5 bg-green-600 text-white rounded text-sm hover:bg-green-700"
@@ -121,6 +133,9 @@ export function ReferencesEditor() {
                 />
                 <span className="text-sm text-gray-700">{point.label}</span>
                 <span className="text-xs text-gray-400 font-mono">{point.difficulty}</span>
+                {point.type === 'ln' && (
+                  <span className="text-xs bg-indigo-50 text-indigo-600 px-1.5 py-0.5 rounded">LN</span>
+                )}
               </div>
               <button
                 onClick={() => removePoint(i)}
@@ -149,17 +164,19 @@ export function ReferencesEditor() {
 
       <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-4">
         <h3 className="text-sm font-medium text-gray-900 mb-3">预览</h3>
+        <p className="text-xs text-gray-400 mb-2">紫色=RF参考点，蓝色=LN参考点（跟随对齐滑条）</p>
         <div className="relative border border-gray-100 rounded overflow-hidden" style={{ height: PREVIEW_HEIGHT }}>
           {points.map((point, i) => {
             const y = difficultyToY(point.difficulty, PREVIEW_HEIGHT, DIFFICULTY_RANGE)
+            const isLn = point.type === 'ln'
             return (
               <div
                 key={i}
                 className="absolute left-0 right-0 flex items-center px-2"
                 style={{ top: y - 8 }}
               >
-                <div className="w-4 h-px bg-purple-400 mr-2" />
-                <span className="text-xs text-gray-600">{point.label}</span>
+                <div className={`w-4 h-px mr-2 ${isLn ? 'bg-indigo-400' : 'bg-purple-400'}`} />
+                <span className={`text-xs ${isLn ? 'text-indigo-600' : 'text-gray-600'}`}>{point.label}</span>
                 <span className="text-xs text-gray-300 ml-auto font-mono">{point.difficulty}</span>
               </div>
             )

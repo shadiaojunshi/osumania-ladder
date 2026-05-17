@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react'
 import { TournamentForm } from '@/components/admin/TournamentForm'
 import { JsonPreview } from '@/components/admin/JsonPreview'
 import { ReferencesEditor } from '@/components/admin/ReferencesEditor'
+import { MapUploader } from '@/components/admin/MapUploader'
+import { PackLinksEditor } from '@/components/admin/PackLinksEditor'
 import type { Tournament } from '@/lib/types'
 import inviteData from '@data/invite-codes.json'
 
@@ -23,7 +25,7 @@ export default function AdminPage() {
   const [editInitialData, setEditInitialData] = useState<Tournament | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [submitStatus, setSubmitStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
-  const [tab, setTab] = useState<'create' | 'manage' | 'references'>('create')
+  const [tab, setTab] = useState<'create' | 'manage' | 'references' | 'upload' | 'packs'>('create')
   const [loadingList, setLoadingList] = useState(false)
 
   const handleVerify = () => {
@@ -191,6 +193,18 @@ export default function AdminPage() {
           >
             参考点管理
           </button>
+          <button
+            onClick={() => setTab('upload')}
+            className={`px-4 py-2 rounded-md text-sm font-medium ${tab === 'upload' ? 'bg-purple-600 text-white' : 'bg-white text-gray-700 border border-gray-200'}`}
+          >
+            上传谱面
+          </button>
+          <button
+            onClick={() => setTab('packs')}
+            className={`px-4 py-2 rounded-md text-sm font-medium ${tab === 'packs' ? 'bg-purple-600 text-white' : 'bg-white text-gray-700 border border-gray-200'}`}
+          >
+            合包管理
+          </button>
         </div>
 
         {tab === 'create' && (
@@ -252,6 +266,14 @@ export default function AdminPage() {
 
         {tab === 'references' && (
           <ReferencesEditor />
+        )}
+
+        {tab === 'upload' && (
+          <MapUploader />
+        )}
+
+        {tab === 'packs' && (
+          <PackLinksEditor />
         )}
 
         {submitStatus && (

@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 4, "column": 0}, "map": {"version":3,"sources":["file:///D:/osumania%20ladder/src/app/layout.tsx"],"sourcesContent":["import type { Metadata } from 'next'\nimport './globals.css'\n\nexport const metadata: Metadata = {\n  title: 'osu!mania 难度天梯榜',\n  description: 'osu!mania 比赛难度对比天梯榜',\n}\n\nexport default function RootLayout({ children }: { children: React.ReactNode }) {\n  return (\n    <html lang=\"zh-CN\">\n      <body className=\"bg-white text-gray-900\">\n        {children}\n      </body>\n    </html>\n  )\n}\n"],"names":["metadata","title","description","RootLayout","children","lang","className"],"mappings":";;;;;;;;;AAGO,MAAMA,WAAqB;IAChCC,OAAO;IACPC,aAAa;AACf;AAEe,SAASC,WAAW,EAAEC,QAAQ,EAAiC;IAC5E,qBACE,8OAAC;QAAKC,MAAK;kBACT,cAAA,8OAAC;YAAKC,WAAU;sBACbF;;;;;;;;;;;AAIT"}},
-    {"offset": {"line": 42, "column": 0}, "map": {"version":3,"sources":["file:///D:/osumania%20ladder/node_modules/next/src/server/route-modules/app-page/vendored/rsc/react-jsx-dev-runtime.ts"],"sourcesContent":["module.exports = (\n  require('../../module.compiled') as typeof import('../../module.compiled')\n).vendored['react-rsc']!.ReactJsxDevRuntime\n"],"names":["module","exports","require","vendored","ReactJsxDevRuntime"],"mappings":"AAAAA,OAAOC,OAAO,GACZC,QAAQ,4HACRC,QAAQ,CAAC,YAAY,CAAEC,kBAAkB","ignoreList":[0]}}]
-}

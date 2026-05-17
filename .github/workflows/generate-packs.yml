@@ -1,0 +1,43 @@
+name: Generate Map Packs
+
+on:
+  workflow_dispatch:
+    inputs:
+      realType:
+        description: '指定 realType（留空=全部类型）'
+        required: false
+        default: ''
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - run: npm ci
+
+      - name: Generate packs
+        run: node scripts/generate-pack.js --type=${{ github.event.inputs.realType }}
+        env:
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY: ${{ secrets.R2_ACCESS_KEY }}
+          R2_SECRET_KEY: ${{ secrets.R2_SECRET_KEY }}
+          R2_BUCKET: osumania-ladder-maps
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: packs
+          path: output/*.osz
+          retention-days: 7
+
+      - name: Commit manifest
+        if: github.event.inputs.realType == ''
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/packs-manifest.json
+          git diff --cached --quiet || git commit -m "Update packs manifest" && git push

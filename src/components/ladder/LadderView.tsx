@@ -284,7 +284,7 @@ function TournamentColumn({
 }) {
   if (mode === 'tournament') {
     const allDiffs = tournament.rounds.flatMap((r) =>
-      r.maps.map((m) => (m.type !== 'RC' && m.type !== 'SV') ? m.difficulty - rfLnOffset : m.difficulty)
+      r.maps.map((m) => (m.type === 'LN' || m.type === 'HB') ? m.difficulty - rfLnOffset : m.difficulty)
     )
     const minDiff = Math.min(...allDiffs)
     const maxDiff = Math.max(...allDiffs)
@@ -357,7 +357,7 @@ function TournamentColumn({
     for (const type of types) {
       const typeMaps = round.maps.filter((m) => m.type === type)
       const typeAvg = typeMaps.reduce((s, m) => s + m.difficulty, 0) / typeMaps.length
-      const adjustedAvg = (type !== 'RC' && type !== 'SV') ? typeAvg - rfLnOffset : typeAvg
+      const adjustedAvg = (type === 'LN' || type === 'HB') ? typeAvg - rfLnOffset : typeAvg
       allTypeBoxes.push({ round, type, adjustedAvg })
     }
   }

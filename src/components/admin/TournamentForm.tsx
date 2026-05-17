@@ -79,12 +79,12 @@ export function TournamentForm({ onUpdate, initialData }: Props) {
 }
 
 function roundWithMetaToOutput(r: RoundWithMeta): Round {
-  const { _maps, _typeDiffs, ...rest } = r
+  const { _maps, _typeDiffs, _typeDiffsLocked, ...rest } = r
   return {
     ...rest,
     typeDifficulties: {
       RC: { rf: _typeDiffs.rc || undefined },
-      HB: { rf: _typeDiffs.hb || undefined },
+      HB: { ln: _typeDiffs.hb || undefined },
       LN: { ln: _typeDiffs.ln || undefined },
       SV: { rf: _typeDiffs.sv || undefined },
     },
@@ -108,9 +108,15 @@ function roundToMeta(r: Round): RoundWithMeta {
     _maps: maps,
     _typeDiffs: {
       rc: td.RC?.rf || 0,
-      hb: td.HB?.rf || 0,
+      hb: td.HB?.ln || td.HB?.rf || 0,
       ln: td.LN?.ln || 0,
       sv: td.SV?.rf || 0,
+    },
+    _typeDiffsLocked: {
+      rc: !!(td.RC?.rf),
+      hb: !!(td.HB?.ln || td.HB?.rf),
+      ln: !!(td.LN?.ln),
+      sv: !!(td.SV?.rf),
     },
   }
 }
@@ -288,6 +294,7 @@ function RoundsStep({
       maps: [],
       _maps: [],
       _typeDiffs: { rc: 0, hb: 0, ln: 0, sv: 0 },
+      _typeDiffsLocked: { rc: false, hb: false, ln: false, sv: false },
     }
     onUpdate([...rounds, newRound])
   }

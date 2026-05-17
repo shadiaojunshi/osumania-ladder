@@ -19,6 +19,7 @@ const STANDARD_TYPES = ['RC', 'HB', 'LN', 'SV', 'TB'] as const
 interface RoundWithMeta extends Round {
   _maps: ExtendedMap[]
   _typeDiffs: { rc: number; hb: number; ln: number; sv: number }
+  _typeDiffsLocked: { rc: boolean; hb: boolean; ln: boolean; sv: boolean }
 }
 
 interface Props {
@@ -53,7 +54,8 @@ export function RoundEditor({ round, index, onChange, onRemove }: Props) {
       category,
     }
     const maps = [...round._maps, newMap]
-    onChange({ ...round, _maps: maps, maps: mapsToOutput(maps), difficulty: recalcDifficulty(maps) })
+    const typeDiffs = autoCalcTypeDiffs(maps, round._typeDiffs, round._typeDiffsLocked)
+    onChange({ ...round, _maps: maps, _typeDiffs: typeDiffs, maps: mapsToOutput(maps), difficulty: recalcDifficulty(maps) })
   }
 
   const addCustomMap = () => {
@@ -65,16 +67,19 @@ export function RoundEditor({ round, index, onChange, onRemove }: Props) {
   const updateMap = (mapIndex: number, map: ExtendedMap) => {
     const maps = [...round._maps]
     maps[mapIndex] = map
-    onChange({ ...round, _maps: maps, maps: mapsToOutput(maps), difficulty: recalcDifficulty(maps) })
+    const typeDiffs = autoCalcTypeDiffs(maps, round._typeDiffs, round._typeDiffsLocked)
+    onChange({ ...round, _maps: maps, _typeDiffs: typeDiffs, maps: mapsToOutput(maps), difficulty: recalcDifficulty(maps) })
   }
 
   const removeMap = (mapIndex: number) => {
     const maps = round._maps.filter((_, i) => i !== mapIndex)
-    onChange({ ...round, _maps: maps, maps: mapsToOutput(maps), difficulty: recalcDifficulty(maps) })
+    const typeDiffs = autoCalcTypeDiffs(maps, round._typeDiffs, round._typeDiffsLocked)
+    onChange({ ...round, _maps: maps, _typeDiffs: typeDiffs, maps: mapsToOutput(maps), difficulty: recalcDifficulty(maps) })
   }
 
   const updateTypeDiff = (key: keyof RoundWithMeta['_typeDiffs'], value: number) => {
-    onChange({ ...round, _typeDiffs: { ...round._typeDiffs, [key]: value } })
+    const locked = { ...round._typeDiffsLocked, [key]: value > 0 }
+    onChange({ ...round, _typeDiffs: { ...round._typeDiffs, [key]: value }, _typeDiffsLocked: locked })
   }
 
   const applyPreset = (preset: typeof ROUND_PRESETS[number]) => {
@@ -176,7 +181,7 @@ export function RoundEditor({ round, index, onChange, onRemove }: Props) {
                 />
               </div>
               <div>
-                <label className="block text-xs text-purple-600 mb-0.5">HB (rf)</label>
+                <label className="block text-xs text-purple-600 mb-0.5">HB (ln)</label>
                 <input
                   type="number"
                   step="0.5"
@@ -283,6 +288,23 @@ function recalcDifficulty(maps: ExtendedMap[]): Round['difficulty'] {
   const max = Math.max(...diffs)
   const average = +(diffs.reduce((s, d) => s + d, 0) / diffs.length).toFixed(1)
   return { min, max, average }
+}
+
+function autoCalcTypeDiffs(
+  maps: ExtendedMap[],
+  current: RoundWithMeta['_typeDiffs'],
+  locked: RoundWithMeta['_typeDiffsLocked']
+): RoundWithMeta['_typeDiffs'] {
+  const result = { ...current }
+  const avg = (type: string) => {
+    const diffs = maps.filter((m) => m.type === type && m.difficulty > 0).map((m) => m.difficulty)
+    return diffs.length > 0 ? +(diffs.reduce((s, d) => s + d, 0) / diffs.length).toFixed(1) : 0
+  }
+  if (!locked.rc) result.rc = avg('RC')
+  if (!locked.hb) result.hb = avg('HB')
+  if (!locked.ln) result.ln = avg('LN')
+  if (!locked.sv) result.sv = avg('SV')
+  return result
 }
 
 export type { RoundWithMeta }

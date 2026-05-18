@@ -98,8 +98,8 @@
       "order": 2,
       "difficulty": {
         "min": 15,
-        "max": 15,
-        "average": 15
+        "max": 16,
+        "average": 15.7
       },
       "maps": [
         {
@@ -109,12 +109,30 @@
           "name": "TB1",
           "difficulty": 15,
           "difficultyLn": 15
+        },
+        {
+          "slot": "CO1",
+          "type": "LN",
+          "realType": "CO",
+          "name": "CO1",
+          "difficulty": 16
+        },
+        {
+          "slot": "DF1",
+          "type": "RC",
+          "realType": "JS",
+          "name": "DF1",
+          "difficulty": 16
         }
       ],
       "typeDifficulties": {
-        "RC": {},
+        "RC": {
+          "rf": 16
+        },
         "HB": {},
-        "LN": {},
+        "LN": {
+          "ln": 16
+        },
         "SV": {}
       }
     }

@@ -10,6 +10,13 @@ import { HoverCard } from './HoverCard'
 const DIFFICULTY_RANGE = { min: 0.5, max: 17.5 }
 const BOX_HEIGHT_TYPE = 28
 
+const LN_REAL_TYPES = new Set(['RE', 'CO', 'TE', 'DE', 'SW', 'JW', 'IN', 'LNMX', 'OLN'])
+const HB_REAL_TYPES = new Set(['HB1', 'HB2', 'HB3', 'HB4', 'HB5', 'OHB'])
+
+function isLnBased(m: { type: string; realType: string }): boolean {
+  return m.type === 'LN' || m.type === 'HB' || LN_REAL_TYPES.has(m.realType) || HB_REAL_TYPES.has(m.realType)
+}
+
 export function LadderView() {
   const { mode, zoom, columnWidth, rowHeight, rfLnOffset, activeFilter, searchQuery, sortMode, customOrder } = useViewStore()
   const scrollContainerRef = useRef<HTMLDivElement>(null)
@@ -284,7 +291,7 @@ function TournamentColumn({
 }) {
   if (mode === 'tournament') {
     const allDiffs = tournament.rounds.flatMap((r) =>
-      r.maps.map((m) => (m.type === 'LN' || m.type === 'HB') ? m.difficulty - rfLnOffset : m.difficulty)
+      r.maps.map((m) => isLnBased(m) ? m.difficulty - rfLnOffset : m.difficulty)
     )
     const minDiff = Math.min(...allDiffs)
     const maxDiff = Math.max(...allDiffs)
@@ -318,7 +325,7 @@ function TournamentColumn({
         </div>
         {tournament.rounds.map((round, idx) => {
           const adjustedDiffs = round.maps.map((m) =>
-            (m.type === 'LN' || m.type === 'HB') ? m.difficulty - rfLnOffset : m.difficulty
+            isLnBased(m) ? m.difficulty - rfLnOffset : m.difficulty
           )
           const minDiff = Math.min(...adjustedDiffs)
           const maxDiff = Math.max(...adjustedDiffs)
@@ -357,7 +364,7 @@ function TournamentColumn({
     for (const type of types) {
       const typeMaps = round.maps.filter((m) => m.type === type)
       const typeAvg = typeMaps.reduce((s, m) => s + m.difficulty, 0) / typeMaps.length
-      const adjustedAvg = (type === 'LN' || type === 'HB') ? typeAvg - rfLnOffset : typeAvg
+      const adjustedAvg = typeMaps.some((m) => isLnBased(m)) ? typeAvg - rfLnOffset : typeAvg
       allTypeBoxes.push({ round, type, adjustedAvg })
     }
   }

@@ -93,7 +93,11 @@ function getDiffLabel(category: MapCategory): string {
 
 export function MapSlotEditor({ map, onChange, onRemove }: Props) {
   const dual = needsDualDifficulty(map.category)
-  const realTypeOptions = REAL_TYPES[map.category] || []
+  const realTypeOptions = map.category === 'SPECIAL'
+    ? Object.entries(REAL_TYPES).flatMap(([cat, types]) =>
+        cat === 'SPECIAL' ? [] : types.map((t) => ({ ...t, group: cat }))
+      )
+    : (REAL_TYPES[map.category] || [])
 
   const updateField = <K extends keyof ExtendedMap>(key: K, value: ExtendedMap[K]) => {
     onChange({ ...map, [key]: value })

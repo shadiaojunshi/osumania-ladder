@@ -289,9 +289,9 @@
       "abbreviation": "TEST",
       "order": 4,
       "difficulty": {
-        "min": 6,
-        "max": 7,
-        "average": 6.5
+        "min": 4,
+        "max": 6.8,
+        "average": 5.2
       },
       "maps": [
         {
@@ -299,56 +299,56 @@
           "type": "RC",
           "realType": "SS",
           "name": "RC1",
-          "difficulty": 0
+          "difficulty": 6.5
         },
         {
           "slot": "RC2",
           "type": "RC",
           "realType": "JS",
           "name": "RC2",
-          "difficulty": 0
+          "difficulty": 6.5
         },
         {
           "slot": "RC3",
           "type": "RC",
           "realType": "TC",
           "name": "RC3",
-          "difficulty": 0
+          "difficulty": 6.5
         },
         {
           "slot": "RC4",
           "type": "RC",
           "realType": "TC",
           "name": "RC4",
-          "difficulty": 0
+          "difficulty": 6.5
         },
         {
           "slot": "HB1",
           "type": "HB",
           "realType": "HB1",
           "name": "HB1",
-          "difficulty": 0
+          "difficulty": 5
         },
         {
           "slot": "HB2",
           "type": "HB",
           "realType": "HB2",
           "name": "HB2",
-          "difficulty": 0
+          "difficulty": 5
         },
         {
           "slot": "LN1",
           "type": "LN",
           "realType": "RE",
           "name": "LN1",
-          "difficulty": 0
+          "difficulty": 4
         },
         {
           "slot": "LN2",
           "type": "LN",
           "realType": "DE",
           "name": "LN2",
-          "difficulty": 0
+          "difficulty": 4
         },
         {
           "slot": "TB1",
@@ -365,13 +365,27 @@
           "name": "TB2",
           "difficulty": 7,
           "difficultyLn": 7
+        },
+        {
+          "slot": "AC1",
+          "type": "AC",
+          "realType": "MX",
+          "name": "AC1",
+          "difficulty": 8,
+          "difficultyLn": 8
         }
       ],
       "bestOf": 7,
       "typeDifficulties": {
-        "RC": {},
-        "HB": {},
-        "LN": {},
+        "RC": {
+          "rf": 6.5
+        },
+        "HB": {
+          "ln": 5
+        },
+        "LN": {
+          "ln": 4
+        },
         "SV": {}
       }
     }

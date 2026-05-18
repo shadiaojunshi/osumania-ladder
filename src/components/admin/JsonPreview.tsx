@@ -35,7 +35,7 @@ export function JsonPreview({ tournament, onSubmit, submitting, submitStatus, is
   }
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 shadow-sm flex flex-col lg:sticky top-6">
+    <div className="bg-white rounded-lg border border-gray-200 shadow-sm flex flex-col max-h-[calc(100vh-180px)] sticky top-6">
       <div className="border-b border-gray-200 px-4 py-3 flex items-center justify-between shrink-0">
         <div>
           <h3 className="text-sm font-medium text-gray-900">JSON 预览</h3>

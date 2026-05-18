@@ -115,8 +115,14 @@ const STANDARD_TYPES = ['RC', 'HB', 'LN', 'SV', 'TB'] as const
 
 interface RoundWithMeta extends Round {
   _maps: ExtendedMap[]
-  _typeDiffs: { rc: number; hbRf: number; hbLn: number; ln: number; sv: number }
+  _typeDiffs: {
+    rc: number; rcMin: number; rcMax: number
+    hbRf: number; hbLn: number; hbMin: number; hbMax: number
+    ln: number; lnMin: number; lnMax: number
+    sv: number; svMin: number; svMax: number
+  }
   _typeDiffsLocked: { rc: boolean; hbRf: boolean; hbLn: boolean; ln: boolean; sv: boolean }
+  _diffMode: 'perMap' | 'summary'
 }
 
 interface Props {
@@ -304,59 +310,85 @@ export function RoundEditor({ round, index, onChange, onRemove }: Props) {
           )}
 
           <div className="border-t border-gray-100 pt-3">
-            <label className="block text-xs font-medium text-gray-700 mb-2">各键型平均难度</label>
-            <div className="grid grid-cols-5 gap-2">
-              <div>
-                <label className="block text-xs text-blue-600 mb-0.5">RC (rf)</label>
-                <input
-                  type="number"
-                  step="0.5"
-                  value={round._typeDiffs.rc || ''}
-                  onChange={(e) => updateTypeDiff('rc', Number(e.target.value))}
-                  className="w-full px-2 py-1 border border-gray-200 rounded text-xs text-center focus:outline-none focus:border-blue-400"
-                />
-              </div>
-              <div>
-                <label className="block text-xs text-purple-600 mb-0.5">HB (rf)</label>
-                <input
-                  type="number"
-                  step="0.5"
-                  value={round._typeDiffs.hbRf || ''}
-                  onChange={(e) => updateTypeDiff('hbRf', Number(e.target.value))}
-                  className="w-full px-2 py-1 border border-gray-200 rounded text-xs text-center focus:outline-none focus:border-purple-400"
-                />
-              </div>
-              <div>
-                <label className="block text-xs text-purple-600 mb-0.5">HB (ln)</label>
-                <input
-                  type="number"
-                  step="0.5"
-                  value={round._typeDiffs.hbLn || ''}
-                  onChange={(e) => updateTypeDiff('hbLn', Number(e.target.value))}
-                  className="w-full px-2 py-1 border border-gray-200 rounded text-xs text-center focus:outline-none focus:border-purple-400"
-                />
-              </div>
-              <div>
-                <label className="block text-xs text-indigo-600 mb-0.5">LN (ln)</label>
-                <input
-                  type="number"
-                  step="0.5"
-                  value={round._typeDiffs.ln || ''}
-                  onChange={(e) => updateTypeDiff('ln', Number(e.target.value))}
-                  className="w-full px-2 py-1 border border-gray-200 rounded text-xs text-center focus:outline-none focus:border-indigo-400"
-                />
-              </div>
-              <div>
-                <label className="block text-xs text-amber-600 mb-0.5">SV (rf)</label>
-                <input
-                  type="number"
-                  step="0.5"
-                  value={round._typeDiffs.sv || ''}
-                  onChange={(e) => updateTypeDiff('sv', Number(e.target.value))}
-                  className="w-full px-2 py-1 border border-gray-200 rounded text-xs text-center focus:outline-none focus:border-amber-400"
-                />
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-xs font-medium text-gray-700">难度输入</label>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => updateField('_diffMode', 'perMap')}
+                  className={`px-2 py-0.5 text-xs rounded ${round._diffMode === 'perMap' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-600'}`}
+                >
+                  逐图填写
+                </button>
+                <button
+                  onClick={() => updateField('_diffMode', 'summary')}
+                  className={`px-2 py-0.5 text-xs rounded ${round._diffMode === 'summary' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-600'}`}
+                >
+                  只填范围
+                </button>
               </div>
             </div>
+
+            {round._diffMode === 'summary' ? (
+              <div className="space-y-2">
+                <div className="grid grid-cols-4 gap-2 items-end">
+                  <div className="text-xs text-gray-500 font-medium"></div>
+                  <div className="text-xs text-gray-400 text-center">最低</div>
+                  <div className="text-xs text-gray-400 text-center">最高</div>
+                  <div className="text-xs text-gray-400 text-center">平均</div>
+                </div>
+                <div className="grid grid-cols-4 gap-2 items-center">
+                  <span className="text-xs text-blue-600 font-medium">RC (rf)</span>
+                  <input type="number" step="0.5" value={round._typeDiffs.rcMin || ''} onChange={(e) => updateTypeDiff('rcMin', Number(e.target.value))} className="w-full px-1.5 py-1 border border-gray-200 rounded text-xs text-center focus:outline-none focus:border-blue-400" />
+                  <input type="number" step="0.5" value={round._typeDiffs.rcMax || ''} onChange={(e) => updateTypeDiff('rcMax', Number(e.target.value))} className="w-full px-1.5 py-1 border border-gray-200 rounded text-xs text-center focus:outline-none focus:border-blue-400" />
+                  <input type="number" step="0.5" value={round._typeDiffs.rc || ''} onChange={(e) => updateTypeDiff('rc', Number(e.target.value))} className="w-full px-1.5 py-1 border border-gray-200 rounded text-xs text-center focus:outline-none focus:border-blue-400" />
+                </div>
+                <div className="grid grid-cols-4 gap-2 items-center">
+                  <span className="text-xs text-purple-600 font-medium">HB (ln)</span>
+                  <input type="number" step="0.5" value={round._typeDiffs.hbMin || ''} onChange={(e) => updateTypeDiff('hbMin', Number(e.target.value))} className="w-full px-1.5 py-1 border border-gray-200 rounded text-xs text-center focus:outline-none focus:border-purple-400" />
+                  <input type="number" step="0.5" value={round._typeDiffs.hbMax || ''} onChange={(e) => updateTypeDiff('hbMax', Number(e.target.value))} className="w-full px-1.5 py-1 border border-gray-200 rounded text-xs text-center focus:outline-none focus:border-purple-400" />
+                  <input type="number" step="0.5" value={round._typeDiffs.hbLn || ''} onChange={(e) => updateTypeDiff('hbLn', Number(e.target.value))} className="w-full px-1.5 py-1 border border-gray-200 rounded text-xs text-center focus:outline-none focus:border-purple-400" />
+                </div>
+                <div className="grid grid-cols-4 gap-2 items-center">
+                  <span className="text-xs text-indigo-600 font-medium">LN (ln)</span>
+                  <input type="number" step="0.5" value={round._typeDiffs.lnMin || ''} onChange={(e) => updateTypeDiff('lnMin', Number(e.target.value))} className="w-full px-1.5 py-1 border border-gray-200 rounded text-xs text-center focus:outline-none focus:border-indigo-400" />
+                  <input type="number" step="0.5" value={round._typeDiffs.lnMax || ''} onChange={(e) => updateTypeDiff('lnMax', Number(e.target.value))} className="w-full px-1.5 py-1 border border-gray-200 rounded text-xs text-center focus:outline-none focus:border-indigo-400" />
+                  <input type="number" step="0.5" value={round._typeDiffs.ln || ''} onChange={(e) => updateTypeDiff('ln', Number(e.target.value))} className="w-full px-1.5 py-1 border border-gray-200 rounded text-xs text-center focus:outline-none focus:border-indigo-400" />
+                </div>
+                <div className="grid grid-cols-4 gap-2 items-center">
+                  <span className="text-xs text-amber-600 font-medium">SV (rf)</span>
+                  <input type="number" step="0.5" value={round._typeDiffs.svMin || ''} onChange={(e) => updateTypeDiff('svMin', Number(e.target.value))} className="w-full px-1.5 py-1 border border-gray-200 rounded text-xs text-center focus:outline-none focus:border-amber-400" />
+                  <input type="number" step="0.5" value={round._typeDiffs.svMax || ''} onChange={(e) => updateTypeDiff('svMax', Number(e.target.value))} className="w-full px-1.5 py-1 border border-gray-200 rounded text-xs text-center focus:outline-none focus:border-amber-400" />
+                  <input type="number" step="0.5" value={round._typeDiffs.sv || ''} onChange={(e) => updateTypeDiff('sv', Number(e.target.value))} className="w-full px-1.5 py-1 border border-gray-200 rounded text-xs text-center focus:outline-none focus:border-amber-400" />
+                </div>
+                <p className="text-xs text-gray-400">只填范围模式下，每张谱面的难度会自动设为对应键型的平均值</p>
+              </div>
+            ) : (
+              <div>
+                <label className="block text-xs text-gray-500 mb-2">各键型平均难度（留空自动计算）</label>
+                <div className="grid grid-cols-5 gap-2">
+                  <div>
+                    <label className="block text-xs text-blue-600 mb-0.5">RC (rf)</label>
+                    <input type="number" step="0.5" value={round._typeDiffs.rc || ''} onChange={(e) => updateTypeDiff('rc', Number(e.target.value))} className="w-full px-2 py-1 border border-gray-200 rounded text-xs text-center focus:outline-none focus:border-blue-400" />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-purple-600 mb-0.5">HB (rf)</label>
+                    <input type="number" step="0.5" value={round._typeDiffs.hbRf || ''} onChange={(e) => updateTypeDiff('hbRf', Number(e.target.value))} className="w-full px-2 py-1 border border-gray-200 rounded text-xs text-center focus:outline-none focus:border-purple-400" />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-purple-600 mb-0.5">HB (ln)</label>
+                    <input type="number" step="0.5" value={round._typeDiffs.hbLn || ''} onChange={(e) => updateTypeDiff('hbLn', Number(e.target.value))} className="w-full px-2 py-1 border border-gray-200 rounded text-xs text-center focus:outline-none focus:border-purple-400" />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-indigo-600 mb-0.5">LN (ln)</label>
+                    <input type="number" step="0.5" value={round._typeDiffs.ln || ''} onChange={(e) => updateTypeDiff('ln', Number(e.target.value))} className="w-full px-2 py-1 border border-gray-200 rounded text-xs text-center focus:outline-none focus:border-indigo-400" />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-amber-600 mb-0.5">SV (rf)</label>
+                    <input type="number" step="0.5" value={round._typeDiffs.sv || ''} onChange={(e) => updateTypeDiff('sv', Number(e.target.value))} className="w-full px-2 py-1 border border-gray-200 rounded text-xs text-center focus:outline-none focus:border-amber-400" />
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="border-t border-gray-100 pt-3">

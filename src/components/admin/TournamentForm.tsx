@@ -53,7 +53,7 @@ export function TournamentForm({ onUpdate, initialData }: Props) {
   }, [])
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 shadow-sm flex flex-col">
+    <div className="bg-white rounded-lg border border-gray-200 shadow-sm flex flex-col max-h-[calc(100vh-180px)]">
       <div className="border-b border-gray-200 px-4 py-3 shrink-0">
         <StepIndicator current={step} />
       </div>
@@ -79,7 +79,42 @@ export function TournamentForm({ onUpdate, initialData }: Props) {
 }
 
 function roundWithMetaToOutput(r: RoundWithMeta): Round {
-  const { _maps, _typeDiffs, _typeDiffsLocked, ...rest } = r
+  const { _maps, _typeDiffs, _typeDiffsLocked, _diffMode, ...rest } = r
+
+  if (_diffMode === 'summary') {
+    const allMins = [_typeDiffs.rcMin, _typeDiffs.hbMin, _typeDiffs.lnMin, _typeDiffs.svMin].filter((v) => v > 0)
+    const allMaxes = [_typeDiffs.rcMax, _typeDiffs.hbMax, _typeDiffs.lnMax, _typeDiffs.svMax].filter((v) => v > 0)
+    const allAvgs = [_typeDiffs.rc, _typeDiffs.hbLn, _typeDiffs.ln, _typeDiffs.sv].filter((v) => v > 0)
+    const min = allMins.length > 0 ? Math.min(...allMins) : 0
+    const max = allMaxes.length > 0 ? Math.max(...allMaxes) : 0
+    const average = allAvgs.length > 0 ? +(allAvgs.reduce((s, v) => s + v, 0) / allAvgs.length).toFixed(1) : 0
+
+    const maps = _maps.map((m) => {
+      const { category, ...mapRest } = m
+      let diff = m.difficulty
+      if (!diff || diff === 0) {
+        if (m.type === 'RC') diff = _typeDiffs.rc
+        else if (m.type === 'LN') diff = _typeDiffs.ln
+        else if (m.type === 'HB') diff = _typeDiffs.hbLn
+        else if (m.type === 'SV') diff = _typeDiffs.sv
+        else diff = _typeDiffs.rc
+      }
+      return { ...mapRest, difficulty: diff || 0 }
+    })
+
+    return {
+      ...rest,
+      difficulty: { min, max, average },
+      maps,
+      typeDifficulties: {
+        RC: { rf: _typeDiffs.rc || undefined },
+        HB: { rf: _typeDiffs.hbRf || undefined, ln: _typeDiffs.hbLn || undefined },
+        LN: { ln: _typeDiffs.ln || undefined },
+        SV: { rf: _typeDiffs.sv || undefined },
+      },
+    }
+  }
+
   return {
     ...rest,
     typeDifficulties: {
@@ -107,11 +142,10 @@ function roundToMeta(r: Round): RoundWithMeta {
     ...r,
     _maps: maps,
     _typeDiffs: {
-      rc: td.RC?.rf || 0,
-      hbRf: td.HB?.rf || 0,
-      hbLn: td.HB?.ln || 0,
-      ln: td.LN?.ln || 0,
-      sv: td.SV?.rf || 0,
+      rc: td.RC?.rf || 0, rcMin: 0, rcMax: 0,
+      hbRf: td.HB?.rf || 0, hbLn: td.HB?.ln || 0, hbMin: 0, hbMax: 0,
+      ln: td.LN?.ln || 0, lnMin: 0, lnMax: 0,
+      sv: td.SV?.rf || 0, svMin: 0, svMax: 0,
     },
     _typeDiffsLocked: {
       rc: !!(td.RC?.rf),
@@ -120,6 +154,7 @@ function roundToMeta(r: Round): RoundWithMeta {
       ln: !!(td.LN?.ln),
       sv: !!(td.SV?.rf),
     },
+    _diffMode: 'perMap' as const,
   }
 }
 
@@ -290,8 +325,9 @@ function RoundsStep({
       difficulty: { min: 0, max: 0, average: 0 },
       maps: [],
       _maps: [],
-      _typeDiffs: { rc: 0, hbRf: 0, hbLn: 0, ln: 0, sv: 0 },
+      _typeDiffs: { rc: 0, rcMin: 0, rcMax: 0, hbRf: 0, hbLn: 0, hbMin: 0, hbMax: 0, ln: 0, lnMin: 0, lnMax: 0, sv: 0, svMin: 0, svMax: 0 },
       _typeDiffsLocked: { rc: false, hbRf: false, hbLn: false, ln: false, sv: false },
+      _diffMode: 'perMap',
     }
     onUpdate([...rounds, newRound])
   }

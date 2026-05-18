@@ -13,8 +13,8 @@
       "order": 1,
       "difficulty": {
         "min": 7.4,
-        "max": 9.5,
-        "average": 8.4
+        "max": 13,
+        "average": 9
       },
       "maps": [
         {
@@ -67,6 +67,14 @@
           "realType": "RE",
           "name": "LN2",
           "difficulty": 9
+        },
+        {
+          "slot": "TB1",
+          "type": "TB",
+          "realType": "TB",
+          "name": "TB1",
+          "difficulty": 13,
+          "difficultyLn": 13
         }
       ],
       "isQualifier": true,
@@ -80,6 +88,33 @@
         "LN": {
           "ln": 9.3
         },
+        "SV": {}
+      }
+    },
+    {
+      "id": "round-2",
+      "name": "Finals",
+      "abbreviation": "F",
+      "order": 2,
+      "difficulty": {
+        "min": 15,
+        "max": 15,
+        "average": 15
+      },
+      "maps": [
+        {
+          "slot": "TB1",
+          "type": "TB",
+          "realType": "TB",
+          "name": "TB1",
+          "difficulty": 15,
+          "difficultyLn": 15
+        }
+      ],
+      "typeDifficulties": {
+        "RC": {},
+        "HB": {},
+        "LN": {},
         "SV": {}
       }
     }

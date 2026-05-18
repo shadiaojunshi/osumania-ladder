@@ -4,6 +4,103 @@ import { useState } from 'react'
 import type { Round, BeatmapMeta } from '@/lib/types'
 import { MapSlotEditor, type ExtendedMap, type MapCategory, REAL_TYPES } from './MapSlotEditor'
 
+interface PoolTemplate {
+  label: string
+  maps: { type: MapCategory; realType: string }[]
+}
+
+const QUALIFIER_TEMPLATES: Record<number, PoolTemplate[]> = {
+  7: [{ label: '3RC 2LN 2HB', maps: [
+    { type: 'RC', realType: 'SS' }, { type: 'RC', realType: 'JS' }, { type: 'RC', realType: 'TC' },
+    { type: 'LN', realType: 'RE' }, { type: 'LN', realType: 'DE' },
+    { type: 'HB', realType: 'HB1' }, { type: 'HB', realType: 'HB2' },
+  ]}],
+  8: [
+    { label: '1SV 3RC 2LN 2HB', maps: [
+      { type: 'SV', realType: 'SV1' },
+      { type: 'RC', realType: 'SS' }, { type: 'RC', realType: 'JS' }, { type: 'RC', realType: 'TC' },
+      { type: 'LN', realType: 'RE' }, { type: 'LN', realType: 'DE' },
+      { type: 'HB', realType: 'HB1' }, { type: 'HB', realType: 'HB2' },
+    ]},
+    { label: '4RC 2LN 2HB', maps: [
+      { type: 'RC', realType: 'SS' }, { type: 'RC', realType: 'JS' }, { type: 'RC', realType: 'TC' }, { type: 'RC', realType: 'CJ' },
+      { type: 'LN', realType: 'RE' }, { type: 'LN', realType: 'DE' },
+      { type: 'HB', realType: 'HB1' }, { type: 'HB', realType: 'HB2' },
+    ]},
+  ],
+  9: [{ label: '1SV 4RC 2LN 2HB', maps: [
+    { type: 'SV', realType: 'SV1' },
+    { type: 'RC', realType: 'SS' }, { type: 'RC', realType: 'JS' }, { type: 'RC', realType: 'TC' }, { type: 'RC', realType: 'CJ' },
+    { type: 'LN', realType: 'RE' }, { type: 'LN', realType: 'DE' },
+    { type: 'HB', realType: 'HB1' }, { type: 'HB', realType: 'HB2' },
+  ]}],
+}
+
+const MATCH_TEMPLATES: Record<number, PoolTemplate[]> = {
+  7: [
+    { label: '4RC 2HB 2LN 1SV 1TB', maps: [
+      { type: 'RC', realType: 'SS' }, { type: 'RC', realType: 'JS' }, { type: 'RC', realType: 'TC' }, { type: 'RC', realType: 'TC' },
+      { type: 'HB', realType: 'HB1' }, { type: 'HB', realType: 'HB2' },
+      { type: 'LN', realType: 'RE' }, { type: 'LN', realType: 'DE' },
+      { type: 'SV', realType: 'SV1' }, { type: 'TB', realType: 'TB' },
+    ]},
+    { label: '4RC 2HB 2LN 1TB', maps: [
+      { type: 'RC', realType: 'SS' }, { type: 'RC', realType: 'JS' }, { type: 'RC', realType: 'TC' }, { type: 'RC', realType: 'TC' },
+      { type: 'HB', realType: 'HB1' }, { type: 'HB', realType: 'HB2' },
+      { type: 'LN', realType: 'RE' }, { type: 'LN', realType: 'DE' },
+      { type: 'TB', realType: 'TB' },
+    ]},
+  ],
+  9: [
+    { label: '5RC 2HB 3LN 2SV 1TB', maps: [
+      { type: 'RC', realType: 'SS' }, { type: 'RC', realType: 'SA' }, { type: 'RC', realType: 'MX' }, { type: 'RC', realType: 'DP' }, { type: 'RC', realType: 'TC' },
+      { type: 'HB', realType: 'HB1' }, { type: 'HB', realType: 'HB2' },
+      { type: 'LN', realType: 'RE' }, { type: 'LN', realType: 'DE' }, { type: 'LN', realType: 'LNMX' },
+      { type: 'SV', realType: 'SV1' }, { type: 'SV', realType: 'SV2' }, { type: 'TB', realType: 'TB' },
+    ]},
+    { label: '6RC 3HB 3LN 1TB', maps: [
+      { type: 'RC', realType: 'SS' }, { type: 'RC', realType: 'SA' }, { type: 'RC', realType: 'CJ' }, { type: 'RC', realType: 'TC' }, { type: 'RC', realType: 'TC' }, { type: 'RC', realType: 'WTC' },
+      { type: 'HB', realType: 'HB1' }, { type: 'HB', realType: 'HB2' }, { type: 'HB', realType: 'HB3' },
+      { type: 'LN', realType: 'RE' }, { type: 'LN', realType: 'DE' }, { type: 'LN', realType: 'LNMX' },
+      { type: 'TB', realType: 'TB' },
+    ]},
+  ],
+  11: [
+    { label: '6RC 3HB 3LN 2SV 1TB', maps: [
+      { type: 'RC', realType: 'SS' }, { type: 'RC', realType: 'SA' }, { type: 'RC', realType: 'CJ' }, { type: 'RC', realType: 'TC' }, { type: 'RC', realType: 'TC' }, { type: 'RC', realType: 'WTC' },
+      { type: 'HB', realType: 'HB1' }, { type: 'HB', realType: 'HB2' }, { type: 'HB', realType: 'HB3' },
+      { type: 'LN', realType: 'CO' }, { type: 'LN', realType: 'DE' }, { type: 'LN', realType: 'LNMX' },
+      { type: 'SV', realType: 'SV1' }, { type: 'SV', realType: 'SV2' }, { type: 'TB', realType: 'TB' },
+    ]},
+    { label: '7RC 3HB 4LN 1TB', maps: [
+      { type: 'RC', realType: 'SS' }, { type: 'RC', realType: 'JS' }, { type: 'RC', realType: 'SA' }, { type: 'RC', realType: 'CJ' }, { type: 'RC', realType: 'TC' }, { type: 'RC', realType: 'TC' }, { type: 'RC', realType: 'WTC' },
+      { type: 'HB', realType: 'HB1' }, { type: 'HB', realType: 'HB2' }, { type: 'HB', realType: 'HB3' },
+      { type: 'LN', realType: 'CO' }, { type: 'LN', realType: 'DE' }, { type: 'LN', realType: 'JW' }, { type: 'LN', realType: 'SW' },
+      { type: 'TB', realType: 'TB' },
+    ]},
+  ],
+  13: [
+    { label: '7RC 3HB 4LN 2SV 1TB', maps: [
+      { type: 'RC', realType: 'SS' }, { type: 'RC', realType: 'JS' }, { type: 'RC', realType: 'SA' }, { type: 'RC', realType: 'CJ' }, { type: 'RC', realType: 'DP' }, { type: 'RC', realType: 'STC' }, { type: 'RC', realType: 'JTC' },
+      { type: 'HB', realType: 'HB1' }, { type: 'HB', realType: 'HB2' }, { type: 'HB', realType: 'HB3' },
+      { type: 'LN', realType: 'CO' }, { type: 'LN', realType: 'DE' }, { type: 'LN', realType: 'JW' }, { type: 'LN', realType: 'SW' },
+      { type: 'SV', realType: 'SV1' }, { type: 'SV', realType: 'SV2' }, { type: 'TB', realType: 'TB' },
+    ]},
+    { label: '8RC 4HB 4LN 1TB', maps: [
+      { type: 'RC', realType: 'SS' }, { type: 'RC', realType: 'JS' }, { type: 'RC', realType: 'SA' }, { type: 'RC', realType: 'CJ' }, { type: 'RC', realType: 'DP' }, { type: 'RC', realType: 'STC' }, { type: 'RC', realType: 'JTC' }, { type: 'RC', realType: 'WTC' },
+      { type: 'HB', realType: 'HB1' }, { type: 'HB', realType: 'HB2' }, { type: 'HB', realType: 'HB3' }, { type: 'HB', realType: 'HB4' },
+      { type: 'LN', realType: 'CO' }, { type: 'LN', realType: 'DE' }, { type: 'LN', realType: 'JW' }, { type: 'LN', realType: 'SW' },
+      { type: 'TB', realType: 'TB' },
+    ]},
+    { label: '8RC 3HB 5LN 1TB', maps: [
+      { type: 'RC', realType: 'SS' }, { type: 'RC', realType: 'JS' }, { type: 'RC', realType: 'SA' }, { type: 'RC', realType: 'CJ' }, { type: 'RC', realType: 'DP' }, { type: 'RC', realType: 'STC' }, { type: 'RC', realType: 'JTC' }, { type: 'RC', realType: 'WTC' },
+      { type: 'HB', realType: 'HB1' }, { type: 'HB', realType: 'HB2' }, { type: 'HB', realType: 'HB3' },
+      { type: 'LN', realType: 'CO' }, { type: 'LN', realType: 'DE' }, { type: 'LN', realType: 'JW' }, { type: 'LN', realType: 'SW' }, { type: 'LN', realType: 'LNMX' },
+      { type: 'TB', realType: 'TB' },
+    ]},
+  ],
+}
+
 const ROUND_PRESETS = [
   { name: 'Qualifiers', abbreviation: 'Qual', isQualifier: true },
   { name: 'Round of 32', abbreviation: 'RO32' },
@@ -18,8 +115,8 @@ const STANDARD_TYPES = ['RC', 'HB', 'LN', 'SV', 'TB'] as const
 
 interface RoundWithMeta extends Round {
   _maps: ExtendedMap[]
-  _typeDiffs: { rc: number; hb: number; ln: number; sv: number }
-  _typeDiffsLocked: { rc: boolean; hb: boolean; ln: boolean; sv: boolean }
+  _typeDiffs: { rc: number; hbRf: number; hbLn: number; ln: number; sv: number }
+  _typeDiffsLocked: { rc: boolean; hbRf: boolean; hbLn: boolean; ln: boolean; sv: boolean }
 }
 
 interface Props {
@@ -91,6 +188,28 @@ export function RoundEditor({ round, index, onChange, onRemove }: Props) {
     })
   }
 
+  const getTemplates = (bo: number, isQualifier: boolean): PoolTemplate[] => {
+    return isQualifier ? (QUALIFIER_TEMPLATES[bo] || []) : (MATCH_TEMPLATES[bo] || [])
+  }
+
+  const applyPoolTemplate = (tpl: PoolTemplate) => {
+    const slotCounters: Record<string, number> = {}
+    const maps: ExtendedMap[] = tpl.maps.map((m) => {
+      const count = (slotCounters[m.type] || 0) + 1
+      slotCounters[m.type] = count
+      return {
+        slot: `${m.type}${count}`,
+        type: m.type,
+        realType: m.realType,
+        name: `${m.type}${count}`,
+        difficulty: 0,
+        category: m.type,
+      }
+    })
+    const typeDiffs = autoCalcTypeDiffs(maps, round._typeDiffs, round._typeDiffsLocked)
+    onChange({ ...round, _maps: maps, _typeDiffs: typeDiffs, maps: mapsToOutput(maps), difficulty: recalcDifficulty(maps) })
+  }
+
   return (
     <div className="border border-gray-200 rounded-lg overflow-hidden">
       <div
@@ -156,20 +275,37 @@ export function RoundEditor({ round, index, onChange, onRemove }: Props) {
               />
             </div>
             <div>
-              <label className="block text-xs text-gray-500 mb-0.5">BO (Best Of)</label>
+              <label className="block text-xs text-gray-500 mb-0.5">
+                {round.isQualifier ? '谱面数量' : 'BO (Best Of)'}
+              </label>
               <input
                 type="number"
                 value={round.bestOf || ''}
                 onChange={(e) => updateField('bestOf', Number(e.target.value) || undefined)}
-                placeholder="9"
+                placeholder={round.isQualifier ? '9' : '9'}
                 className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:border-purple-400"
               />
             </div>
           </div>
 
+          {round.bestOf && getTemplates(round.bestOf, !!round.isQualifier).length > 0 && (
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="text-xs text-gray-500">图池模板:</span>
+              {getTemplates(round.bestOf, !!round.isQualifier).map((tpl, i) => (
+                <button
+                  key={i}
+                  onClick={() => applyPoolTemplate(tpl)}
+                  className="px-2 py-0.5 text-xs bg-blue-50 text-blue-700 rounded hover:bg-blue-100 border border-blue-200"
+                >
+                  {tpl.label}
+                </button>
+              ))}
+            </div>
+          )}
+
           <div className="border-t border-gray-100 pt-3">
             <label className="block text-xs font-medium text-gray-700 mb-2">各键型平均难度</label>
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-5 gap-2">
               <div>
                 <label className="block text-xs text-blue-600 mb-0.5">RC (rf)</label>
                 <input
@@ -181,12 +317,22 @@ export function RoundEditor({ round, index, onChange, onRemove }: Props) {
                 />
               </div>
               <div>
+                <label className="block text-xs text-purple-600 mb-0.5">HB (rf)</label>
+                <input
+                  type="number"
+                  step="0.5"
+                  value={round._typeDiffs.hbRf || ''}
+                  onChange={(e) => updateTypeDiff('hbRf', Number(e.target.value))}
+                  className="w-full px-2 py-1 border border-gray-200 rounded text-xs text-center focus:outline-none focus:border-purple-400"
+                />
+              </div>
+              <div>
                 <label className="block text-xs text-purple-600 mb-0.5">HB (ln)</label>
                 <input
                   type="number"
                   step="0.5"
-                  value={round._typeDiffs.hb || ''}
-                  onChange={(e) => updateTypeDiff('hb', Number(e.target.value))}
+                  value={round._typeDiffs.hbLn || ''}
+                  onChange={(e) => updateTypeDiff('hbLn', Number(e.target.value))}
                   className="w-full px-2 py-1 border border-gray-200 rounded text-xs text-center focus:outline-none focus:border-purple-400"
                 />
               </div>
@@ -301,7 +447,8 @@ function autoCalcTypeDiffs(
     return diffs.length > 0 ? +(diffs.reduce((s, d) => s + d, 0) / diffs.length).toFixed(1) : 0
   }
   if (!locked.rc) result.rc = avg('RC')
-  if (!locked.hb) result.hb = avg('HB', 'difficultyLn')
+  if (!locked.hbRf) result.hbRf = avg('HB', 'difficulty')
+  if (!locked.hbLn) result.hbLn = avg('HB', 'difficultyLn')
   if (!locked.ln) result.ln = avg('LN')
   if (!locked.sv) result.sv = avg('SV')
   return result

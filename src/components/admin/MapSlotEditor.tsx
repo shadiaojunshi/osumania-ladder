@@ -36,6 +36,7 @@ export const REAL_TYPES: Record<string, { id: string; name: string }[]> = {
     { id: 'SW', name: 'Speedy Wildcard LN (SW)' },
     { id: 'JW', name: 'Jacky Wildcard LN (JW)' },
     { id: 'IN', name: 'Inverse (IN)' },
+    { id: 'LNMX', name: 'LN Mixed (LNMX)' },
     { id: 'OLN', name: 'OtherLongnote (OLN)' },
   ],
   SV: [

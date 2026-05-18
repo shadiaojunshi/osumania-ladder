@@ -84,7 +84,7 @@ function roundWithMetaToOutput(r: RoundWithMeta): Round {
     ...rest,
     typeDifficulties: {
       RC: { rf: _typeDiffs.rc || undefined },
-      HB: { ln: _typeDiffs.hb || undefined },
+      HB: { rf: _typeDiffs.hbRf || undefined, ln: _typeDiffs.hbLn || undefined },
       LN: { ln: _typeDiffs.ln || undefined },
       SV: { rf: _typeDiffs.sv || undefined },
     },
@@ -108,13 +108,15 @@ function roundToMeta(r: Round): RoundWithMeta {
     _maps: maps,
     _typeDiffs: {
       rc: td.RC?.rf || 0,
-      hb: td.HB?.ln || td.HB?.rf || 0,
+      hbRf: td.HB?.rf || 0,
+      hbLn: td.HB?.ln || 0,
       ln: td.LN?.ln || 0,
       sv: td.SV?.rf || 0,
     },
     _typeDiffsLocked: {
       rc: !!(td.RC?.rf),
-      hb: !!(td.HB?.ln || td.HB?.rf),
+      hbRf: !!(td.HB?.rf),
+      hbLn: !!(td.HB?.ln),
       ln: !!(td.LN?.ln),
       sv: !!(td.SV?.rf),
     },
@@ -207,14 +209,9 @@ function BasicInfoStep({
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">键数</label>
-          <select
-            value={tournament.keyCount}
-            onChange={(e) => updateField('keyCount', Number(e.target.value))}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:border-purple-400"
-          >
-            <option value={4}>4K</option>
-            <option value={7}>7K</option>
-          </select>
+          <div className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm bg-gray-50 text-gray-600">
+            4K（暂不支持其他键数）
+          </div>
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">年份</label>
@@ -293,8 +290,8 @@ function RoundsStep({
       difficulty: { min: 0, max: 0, average: 0 },
       maps: [],
       _maps: [],
-      _typeDiffs: { rc: 0, hb: 0, ln: 0, sv: 0 },
-      _typeDiffsLocked: { rc: false, hb: false, ln: false, sv: false },
+      _typeDiffs: { rc: 0, hbRf: 0, hbLn: 0, ln: 0, sv: 0 },
+      _typeDiffsLocked: { rc: false, hbRf: false, hbLn: false, ln: false, sv: false },
     }
     onUpdate([...rounds, newRound])
   }

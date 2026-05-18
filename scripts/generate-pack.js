@@ -28,7 +28,7 @@ const REAL_TYPE_NAMES = {
   HB1: 'Speed Hybrid', HB2: 'Jack Hybrid', HB3: 'Technical Hybrid',
   HB4: 'Wildcard Hybrid', HB5: 'Old-school Hybrid', OHB: 'OtherHybrid',
   RE: 'Release', CO: 'Coordination', TE: 'Timinghell', DE: 'Density',
-  SW: 'Speedy Wildcard LN', JW: 'Jacky Wildcard LN', IN: 'Inverse', OLN: 'OtherLongnote',
+  SW: 'Speedy Wildcard LN', JW: 'Jacky Wildcard LN', IN: 'Inverse', LNMX: 'LN Mixed', OLN: 'OtherLongnote',
   SV1: 'Pattern SV', SV2: 'Rhythm SV', SI: 'Sightread SV', ME: 'Memorization SV',
   TB: 'Tiebreaker',
 }

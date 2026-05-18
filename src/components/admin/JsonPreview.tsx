@@ -35,7 +35,7 @@ export function JsonPreview({ tournament, onSubmit, submitting, submitStatus, is
   }
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 shadow-sm flex flex-col max-h-[calc(100vh-180px)] sticky top-6">
+    <div className="bg-white rounded-lg border border-gray-200 shadow-sm flex flex-col max-h-none lg:max-h-[calc(100vh-180px)] lg:sticky top-6">
       <div className="border-b border-gray-200 px-4 py-3 flex items-center justify-between shrink-0">
         <div>
           <h3 className="text-sm font-medium text-gray-900">JSON 预览</h3>
@@ -58,6 +58,11 @@ export function JsonPreview({ tournament, onSubmit, submitting, submitStatus, is
       </div>
 
       <div className="border-t border-gray-200 px-4 py-3 shrink-0 space-y-2">
+        {submitStatus && (
+          <div className={`p-2.5 rounded-md text-sm text-center ${submitStatus.type === 'success' ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-red-50 text-red-800 border border-red-200'}`}>
+            {submitStatus.message}
+          </div>
+        )}
         <button
           onClick={onSubmit}
           disabled={submitting}

@@ -276,11 +276,6 @@ export default function AdminPage() {
           <PackLinksEditor />
         )}
 
-        {submitStatus && (
-          <div className={`mt-4 p-3 rounded-md text-sm ${submitStatus.type === 'success' ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-red-50 text-red-800 border border-red-200'}`}>
-            {submitStatus.message}
-          </div>
-        )}
       </main>
     </div>
   )

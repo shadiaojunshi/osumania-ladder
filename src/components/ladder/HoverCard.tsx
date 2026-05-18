@@ -2,6 +2,12 @@
 
 import type { Round, Tournament } from '@/lib/types'
 import { useViewStore } from '@/stores/viewStore'
+import reformDanData from '@data/scales/reform-dan.json'
+import lnDanData from '@data/scales/ln-dan.json'
+
+interface DanLevel { id: string; name: string; numericValue: number; color: string }
+const rfLevels = reformDanData.levels as DanLevel[]
+const lnLevels = lnDanData.levels as DanLevel[]
 
 export function HoverCard({
   round,
@@ -107,35 +113,35 @@ function buildDifficultyLabel(round: Round, activeFilter: string | null, hovered
     const avg = typeMaps.length > 0 ? typeMaps.reduce((s, m) => s + m.difficulty, 0) / typeMaps.length : round.difficulty.average
     return `~${getRfDanName(avg)} / ${getLnDanName(avg)}`
   }
+  if (type === 'TB') {
+    const typeMaps = round.maps.filter((m) => m.type === 'TB')
+    if (typeMaps.length > 0) {
+      const rfAvg = typeMaps.reduce((s, m) => s + m.difficulty, 0) / typeMaps.length
+      const lnAvg = typeMaps.reduce((s, m) => s + (m.difficultyLn ?? m.difficulty), 0) / typeMaps.length
+      return `~${getRfDanName(rfAvg)} / ${getLnDanName(lnAvg)}`
+    }
+  }
 
   const avg = round.difficulty.average
   return `~${getRfDanName(avg)} / ${getLnDanName(avg)}`
 }
 
 function getRfDanName(diff: number): string {
-  if (diff >= 17) return 'η'
-  if (diff >= 16) return 'ζ'
-  if (diff >= 15) return 'ε'
-  if (diff >= 14) return 'δ'
-  if (diff >= 13) return 'γ'
-  if (diff >= 12) return 'β'
-  if (diff >= 11) return 'α'
-  if (diff >= 10) return '10th'
-  if (diff >= 9) return '9th'
-  if (diff >= 8) return '8th'
-  if (diff >= 7) return '7th'
-  if (diff >= 6) return '6th'
-  if (diff >= 5) return '5th'
-  if (diff >= 4) return '4th'
-  if (diff >= 3) return '3rd'
-  if (diff >= 2) return '2nd'
-  if (diff >= 1) return '1st'
-  return 'intro'
+  let closest = rfLevels[0]
+  let minDist = Math.abs(diff - closest.numericValue)
+  for (const level of rfLevels) {
+    const dist = Math.abs(diff - level.numericValue)
+    if (dist < minDist) { closest = level; minDist = dist }
+  }
+  return closest.name
 }
 
 function getLnDanName(diff: number): string {
-  const lnVal = Math.round(diff)
-  if (lnVal >= 17) return 'LN17'
-  if (lnVal <= 1) return 'LN1'
-  return `LN${lnVal}`
+  let closest = lnLevels[0]
+  let minDist = Math.abs(diff - closest.numericValue)
+  for (const level of lnLevels) {
+    const dist = Math.abs(diff - level.numericValue)
+    if (dist < minDist) { closest = level; minDist = dist }
+  }
+  return `LN${closest.name}`
 }

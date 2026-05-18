@@ -53,7 +53,7 @@ export function TournamentForm({ onUpdate, initialData }: Props) {
   }, [])
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 shadow-sm flex flex-col max-h-[calc(100vh-180px)]">
+    <div className="bg-white rounded-lg border border-gray-200 shadow-sm flex flex-col max-h-none lg:max-h-[calc(100vh-180px)] min-h-0">
       <div className="border-b border-gray-200 px-4 py-3 shrink-0">
         <StepIndicator current={step} />
       </div>

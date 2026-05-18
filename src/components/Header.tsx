@@ -32,7 +32,7 @@ export function Header() {
   return (
     <header className="h-14 border-b border-gray-200 flex items-center px-4 gap-4 shrink-0">
       <h1 className="text-lg font-bold whitespace-nowrap">
-        <span className="text-purple-700">osu!mania</span> 难度天梯榜
+        <span className="text-purple-700">osu!mania</span> 比赛谱面天梯榜
       </h1>
 
       <div className="flex items-center gap-1 ml-4">

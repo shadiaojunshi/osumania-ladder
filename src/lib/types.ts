@@ -39,6 +39,7 @@ export interface Tournament {
   abbreviation: string
   forumUrl?: string
   wikiUrl?: string
+  sheetUrl?: string
   keyCount: number
   year: number
   tags?: string[]

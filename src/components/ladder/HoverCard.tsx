@@ -33,8 +33,8 @@ export function HoverCard({
   const cardY = typeof window !== 'undefined' ? Math.min(y + 12, window.innerHeight - 220) : y + 12
 
   const typeMaps = hoveredType ? round.maps.filter((m) => m.type === hoveredType) : round.maps
-  const minDiff = typeMaps.length > 0 ? Math.min(...typeMaps.map((m) => m.difficulty)) : round.difficulty.min
-  const maxDiff = typeMaps.length > 0 ? Math.max(...typeMaps.map((m) => m.difficulty)) : round.difficulty.max
+  const minDiff = typeMaps.length > 0 ? Math.min(...typeMaps.map((m) => m.difficultyLn || m.difficulty)) : round.difficulty.min
+  const maxDiff = typeMaps.length > 0 ? Math.max(...typeMaps.map((m) => m.difficultyLn || m.difficulty)) : round.difficulty.max
 
   return (
     <div
@@ -67,6 +67,16 @@ export function HoverCard({
           className="text-xs text-blue-500 hover:underline block mb-0.5"
         >
           Wiki
+        </a>
+      )}
+      {tournament.sheetUrl && (
+        <a
+          href={tournament.sheetUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-xs text-blue-500 hover:underline block mb-0.5"
+        >
+          主表格
         </a>
       )}
       <div className="text-xs text-gray-400 mt-1.5 pt-1.5 border-t border-gray-100">

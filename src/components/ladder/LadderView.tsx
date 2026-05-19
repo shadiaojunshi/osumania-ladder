@@ -17,6 +17,13 @@ function isLnBased(m: { type: string; realType: string }): boolean {
   return m.type === 'LN' || m.type === 'HB' || LN_REAL_TYPES.has(m.realType) || HB_REAL_TYPES.has(m.realType)
 }
 
+function getLnDiff(m: { type: string; realType: string; difficulty: number; difficultyLn?: number }): number {
+  if (m.type === 'LN') return m.difficulty
+  if (LN_REAL_TYPES.has(m.realType)) return m.difficultyLn || m.difficulty
+  if (m.type === 'HB' || HB_REAL_TYPES.has(m.realType)) return m.difficultyLn || m.difficulty
+  return m.difficulty
+}
+
 export function LadderView() {
   const { mode, zoom, columnWidth, rowHeight, rfLnOffset, activeFilter, searchQuery, sortMode, customOrder } = useViewStore()
   const scrollContainerRef = useRef<HTMLDivElement>(null)
@@ -291,7 +298,7 @@ function TournamentColumn({
 }) {
   if (mode === 'tournament') {
     const allDiffs = tournament.rounds.flatMap((r) =>
-      r.maps.map((m) => isLnBased(m) ? m.difficulty - rfLnOffset : m.difficulty)
+      r.maps.map((m) => isLnBased(m) ? getLnDiff(m) - rfLnOffset : m.difficulty)
     )
     const minDiff = Math.min(...allDiffs)
     const maxDiff = Math.max(...allDiffs)
@@ -325,7 +332,7 @@ function TournamentColumn({
         </div>
         {tournament.rounds.map((round, idx) => {
           const adjustedDiffs = round.maps.map((m) =>
-            isLnBased(m) ? m.difficulty - rfLnOffset : m.difficulty
+            isLnBased(m) ? getLnDiff(m) - rfLnOffset : m.difficulty
           )
           const minDiff = Math.min(...adjustedDiffs)
           const maxDiff = Math.max(...adjustedDiffs)
@@ -363,22 +370,32 @@ function TournamentColumn({
     const types = getUniqueTypes(round)
     for (const type of types) {
       const typeMaps = round.maps.filter((m) => m.type === type)
-      const typeAvg = typeMaps.reduce((s, m) => s + m.difficulty, 0) / typeMaps.length
+      const typeAvg = typeMaps.reduce((s, m) => s + (isLnBased(m) ? getLnDiff(m) : m.difficulty), 0) / typeMaps.length
       const adjustedAvg = typeMaps.some((m) => isLnBased(m)) ? typeAvg - rfLnOffset : typeAvg
       allTypeBoxes.push({ round, type, adjustedAvg })
     }
   }
 
-  const overlapGroups = new Map<string, number>()
+  const overlapOffsets = new Map<string, number>()
+  const OVERLAP_THRESHOLD = 0.3
+  const VERTICAL_NUDGE = BOX_HEIGHT_TYPE * 0.6
   for (let i = 0; i < allTypeBoxes.length; i++) {
     const a = allTypeBoxes[i]
+    const keyA = `${a.round.id}-${a.type}`
+    if (overlapOffsets.has(keyA)) continue
+    const group = [i]
     for (let j = i + 1; j < allTypeBoxes.length; j++) {
       const b = allTypeBoxes[j]
-      if (Math.abs(a.adjustedAvg - b.adjustedAvg) < 0.05) {
-        const keyA = `${a.round.id}-${a.type}`
-        const keyB = `${b.round.id}-${b.type}`
-        if (!overlapGroups.has(keyA)) overlapGroups.set(keyA, 0)
-        if (!overlapGroups.has(keyB)) overlapGroups.set(keyB, 1)
+      if (Math.abs(a.adjustedAvg - b.adjustedAvg) < OVERLAP_THRESHOLD) {
+        group.push(j)
+      }
+    }
+    if (group.length > 1) {
+      const mid = (group.length - 1) / 2
+      for (let g = 0; g < group.length; g++) {
+        const item = allTypeBoxes[group[g]]
+        const key = `${item.round.id}-${item.type}`
+        overlapOffsets.set(key, (g - mid) * VERTICAL_NUDGE)
       }
     }
   }
@@ -394,20 +411,19 @@ function TournamentColumn({
         const isDimmed = activeFilter && activeFilter !== type
         const color = getDifficultyColor(adjustedAvg)
         const key = `${round.id}-${type}`
-        const overlapIdx = overlapGroups.get(key)
-        const hasOverlap = overlapIdx !== undefined
+        const vOffset = overlapOffsets.get(key) || 0
 
         return (
           <div
             key={key}
             className={`round-box absolute ${isDimmed ? 'dimmed' : ''}`}
             style={{
-              top: y - boxH / 2,
+              top: y - boxH / 2 + vOffset,
               height: boxH,
               background: color,
               fontSize: '10px',
-              left: hasOverlap ? (overlapIdx === 0 ? '2px' : '50%') : '4px',
-              right: hasOverlap ? (overlapIdx === 0 ? '50%' : '2px') : '4px',
+              left: '4px',
+              right: '4px',
             }}
             onMouseEnter={(e) => onHover(round, e.clientX, e.clientY, type)}
             onMouseLeave={onLeave}

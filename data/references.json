@@ -1,6 +1,20 @@
 {
   "points": [
     {
+      "label": "KET2 GF LN",
+      "difficulty": 15.3,
+      "type": "ln"
+    },
+    {
+      "label": "o!mLN4 GF",
+      "difficulty": 14.9,
+      "type": "ln"
+    },
+    {
+      "label": "KET2 GF RC",
+      "difficulty": 14.7
+    },
+    {
       "label": "MWC 2025 GF LN",
       "difficulty": 14,
       "type": "ln"
@@ -29,7 +43,7 @@
     },
     {
       "label": "MWC 2025 QF LN",
-      "difficulty": 10.5,
+      "difficulty": 10.7,
       "type": "ln"
     },
     {
@@ -46,13 +60,22 @@
       "type": "ln"
     },
     {
-      "label": "MWC 2025 Ro32 RC",
-      "difficulty": 8.7
+      "label": "MWC 2025 Ro32 LN",
+      "difficulty": 8.4,
+      "type": "ln"
     },
     {
-      "label": "MWC 2025 Ro32 LN",
-      "difficulty": 8.5,
+      "label": "MWC 2025 Ro32 RC",
+      "difficulty": 7.9
+    },
+    {
+      "label": "THMC 4 Ro32 LN",
+      "difficulty": 7,
       "type": "ln"
+    },
+    {
+      "label": "THMC 4 Ro32 RC",
+      "difficulty": 6.3
     }
   ]
 }

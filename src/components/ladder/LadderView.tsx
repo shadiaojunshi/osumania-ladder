@@ -376,26 +376,16 @@ function TournamentColumn({
     }
   }
 
-  const overlapOffsets = new Map<string, number>()
-  const OVERLAP_THRESHOLD = 0.3
-  const VERTICAL_NUDGE = BOX_HEIGHT_TYPE * 0.6
+  const overlapGroups = new Map<string, number>()
   for (let i = 0; i < allTypeBoxes.length; i++) {
     const a = allTypeBoxes[i]
-    const keyA = `${a.round.id}-${a.type}`
-    if (overlapOffsets.has(keyA)) continue
-    const group = [i]
     for (let j = i + 1; j < allTypeBoxes.length; j++) {
       const b = allTypeBoxes[j]
-      if (Math.abs(a.adjustedAvg - b.adjustedAvg) < OVERLAP_THRESHOLD) {
-        group.push(j)
-      }
-    }
-    if (group.length > 1) {
-      const mid = (group.length - 1) / 2
-      for (let g = 0; g < group.length; g++) {
-        const item = allTypeBoxes[group[g]]
-        const key = `${item.round.id}-${item.type}`
-        overlapOffsets.set(key, (g - mid) * VERTICAL_NUDGE)
+      if (Math.abs(a.adjustedAvg - b.adjustedAvg) < 0.05) {
+        const keyA = `${a.round.id}-${a.type}`
+        const keyB = `${b.round.id}-${b.type}`
+        if (!overlapGroups.has(keyA)) overlapGroups.set(keyA, 0)
+        if (!overlapGroups.has(keyB)) overlapGroups.set(keyB, 1)
       }
     }
   }
@@ -411,19 +401,20 @@ function TournamentColumn({
         const isDimmed = activeFilter && activeFilter !== type
         const color = getDifficultyColor(adjustedAvg)
         const key = `${round.id}-${type}`
-        const vOffset = overlapOffsets.get(key) || 0
+        const overlapIdx = overlapGroups.get(key)
+        const hasOverlap = overlapIdx !== undefined
 
         return (
           <div
             key={key}
             className={`round-box absolute ${isDimmed ? 'dimmed' : ''}`}
             style={{
-              top: y - boxH / 2 + vOffset,
+              top: y - boxH / 2,
               height: boxH,
               background: color,
               fontSize: '10px',
-              left: '4px',
-              right: '4px',
+              left: hasOverlap ? (overlapIdx === 0 ? '2px' : '50%') : '4px',
+              right: hasOverlap ? (overlapIdx === 0 ? '50%' : '2px') : '4px',
             }}
             onMouseEnter={(e) => onHover(round, e.clientX, e.clientY, type)}
             onMouseLeave={onLeave}

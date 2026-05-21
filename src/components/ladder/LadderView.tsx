@@ -340,6 +340,7 @@ function TournamentColumn({
           const bottom = difficultyToY(minDiff, containerHeight, DIFFICULTY_RANGE)
           const boxH = Math.max(bottom - top, 24)
           const isDimmed = activeFilter && !round.maps.some((m) => m.type === activeFilter)
+          const isQualifier = round.isQualifier
 
           return (
             <div
@@ -348,13 +349,20 @@ function TournamentColumn({
               style={{
                 top,
                 height: boxH,
-                background: getGradientForRange(minDiff, maxDiff),
-                zIndex: totalRounds - idx,
+                background: isQualifier ? 'transparent' : getGradientForRange(minDiff, maxDiff),
+                border: isQualifier ? '1.5px dashed rgba(139, 92, 246, 0.5)' : undefined,
+                zIndex: isQualifier ? 0 : totalRounds - idx,
+                pointerEvents: isQualifier ? 'none' : undefined,
               }}
               onMouseEnter={(e) => onHover(round, e.clientX, e.clientY)}
               onMouseLeave={onLeave}
             >
-              <span className="truncate block w-full text-center">
+              <span
+                className={`truncate block w-full text-center ${isQualifier ? 'text-purple-500' : ''}`}
+                style={isQualifier ? { pointerEvents: 'auto' } : undefined}
+                onMouseEnter={isQualifier ? (e) => { e.stopPropagation(); onHover(round, e.clientX, e.clientY) } : undefined}
+                onMouseLeave={isQualifier ? onLeave : undefined}
+              >
                 {tournament.abbreviation} {round.abbreviation}
               </span>
             </div>

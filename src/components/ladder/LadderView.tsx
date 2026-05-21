@@ -25,7 +25,7 @@ function getLnDiff(m: { type: string; realType: string; difficulty: number; diff
 }
 
 export function LadderView() {
-  const { mode, zoom, columnWidth, rowHeight, rfLnOffset, activeFilter, searchQuery, sortMode, customOrder } = useViewStore()
+  const { mode, zoom, columnWidth, rowHeight, rfLnOffset, activeFilter, searchQuery, sortMode, customOrder, hideQualifiers } = useViewStore()
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const leftRef = useRef<HTMLDivElement>(null)
   const rightRef = useRef<HTMLDivElement>(null)
@@ -118,6 +118,7 @@ export function LadderView() {
               columnWidth={columnWidth}
               activeFilter={activeFilter}
               rfLnOffset={rfLnOffset}
+              hideQualifiers={hideQualifiers}
               onHover={(round, x, y, type) => showHover(round, tournament, x, y, type)}
               onLeave={scheduleHide}
             />
@@ -284,6 +285,7 @@ function TournamentColumn({
   columnWidth,
   activeFilter,
   rfLnOffset,
+  hideQualifiers,
   onHover,
   onLeave,
 }: {
@@ -293,11 +295,14 @@ function TournamentColumn({
   columnWidth: number
   activeFilter: string | null
   rfLnOffset: number
+  hideQualifiers: boolean
   onHover: (round: Round, x: number, y: number, type?: string) => void
   onLeave: () => void
 }) {
+  const visibleRounds = hideQualifiers ? tournament.rounds.filter((r) => !r.isQualifier) : tournament.rounds
+
   if (mode === 'tournament') {
-    const allDiffs = tournament.rounds.flatMap((r) =>
+    const allDiffs = visibleRounds.flatMap((r) =>
       r.maps.filter((m) => m.type !== 'TB').map((m) => isLnBased(m) ? getLnDiff(m) - rfLnOffset : m.difficulty)
     )
     const minDiff = Math.min(...allDiffs)
@@ -314,7 +319,7 @@ function TournamentColumn({
         <div
           className="round-box absolute left-0 right-0"
           style={{ top: top + 20, height, background: getGradientForRange(minDiff, maxDiff) }}
-          onMouseEnter={(e) => onHover(tournament.rounds[tournament.rounds.length - 1], e.clientX, e.clientY)}
+          onMouseEnter={(e) => onHover(visibleRounds[visibleRounds.length - 1], e.clientX, e.clientY)}
           onMouseLeave={onLeave}
         >
           {tournament.abbreviation}
@@ -324,13 +329,13 @@ function TournamentColumn({
   }
 
   if (mode === 'round') {
-    const totalRounds = tournament.rounds.length
+    const totalRounds = visibleRounds.length
     return (
       <div className="relative shrink-0" style={{ width: columnWidth }}>
         <div className="text-xs text-center text-gray-500 truncate mb-1 font-medium sticky top-0 bg-white z-20">
           {tournament.abbreviation}
         </div>
-        {tournament.rounds.map((round, idx) => {
+        {visibleRounds.map((round, idx) => {
           const adjustedDiffs = round.maps.filter((m) => m.type !== 'TB').map((m) =>
             isLnBased(m) ? getLnDiff(m) - rfLnOffset : m.difficulty
           )
@@ -349,20 +354,13 @@ function TournamentColumn({
               style={{
                 top,
                 height: boxH,
-                background: isQualifier ? 'transparent' : getGradientForRange(minDiff, maxDiff),
-                border: isQualifier ? '1.5px dashed rgba(139, 92, 246, 0.5)' : undefined,
-                zIndex: isQualifier ? 0 : totalRounds - idx,
-                pointerEvents: isQualifier ? 'none' : undefined,
+                background: getGradientForRange(minDiff, maxDiff),
+                zIndex: totalRounds - idx,
               }}
               onMouseEnter={(e) => onHover(round, e.clientX, e.clientY)}
               onMouseLeave={onLeave}
             >
-              <span
-                className={`truncate block w-full text-center ${isQualifier ? 'text-purple-500' : ''}`}
-                style={isQualifier ? { pointerEvents: 'auto' } : undefined}
-                onMouseEnter={isQualifier ? (e) => { e.stopPropagation(); onHover(round, e.clientX, e.clientY) } : undefined}
-                onMouseLeave={isQualifier ? onLeave : undefined}
-              >
+              <span className="truncate block w-full text-center">
                 {tournament.abbreviation} {round.abbreviation}
               </span>
             </div>
@@ -374,7 +372,7 @@ function TournamentColumn({
 
   // mode === 'type'
   const allTypeBoxes: { round: Round; type: string; adjustedAvg: number }[] = []
-  for (const round of tournament.rounds) {
+  for (const round of visibleRounds) {
     const types = getUniqueTypes(round)
     for (const type of types) {
       const typeMaps = round.maps.filter((m) => m.type === type)

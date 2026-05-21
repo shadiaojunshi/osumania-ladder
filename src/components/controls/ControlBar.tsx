@@ -10,6 +10,7 @@ export function ControlBar() {
     rowHeight, setRowHeight,
     rfLnOffset, setRfLnOffset,
     sortMode, setSortMode,
+    hideQualifiers, setHideQualifiers,
   } = useViewStore()
 
   const cycleSortMode = () => {
@@ -98,6 +99,17 @@ export function ControlBar() {
         }`}
       >
         {sortLabel}
+      </button>
+
+      <button
+        onClick={() => setHideQualifiers(!hideQualifiers)}
+        className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
+          hideQualifiers
+            ? 'bg-orange-100 text-orange-700'
+            : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+        }`}
+      >
+        {hideQualifiers ? '资格赛: 隐藏' : '资格赛: 显示'}
       </button>
 
       <div className="ml-auto text-xs text-gray-400">

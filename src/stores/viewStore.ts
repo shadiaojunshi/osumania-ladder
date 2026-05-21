@@ -13,6 +13,7 @@ interface ViewStore {
   searchQuery: string
   sortMode: SortMode
   customOrder: string[] | null
+  hideQualifiers: boolean
 
   setMode: (mode: ViewMode) => void
   setZoom: (zoom: number) => void
@@ -23,6 +24,7 @@ interface ViewStore {
   setSearchQuery: (query: string) => void
   setSortMode: (sort: SortMode) => void
   setCustomOrder: (order: string[] | null) => void
+  setHideQualifiers: (hide: boolean) => void
 }
 
 export const useViewStore = create<ViewStore>((set) => ({
@@ -35,6 +37,7 @@ export const useViewStore = create<ViewStore>((set) => ({
   searchQuery: '',
   sortMode: 'default',
   customOrder: null,
+  hideQualifiers: false,
 
   setMode: (mode) => set({ mode }),
   setZoom: (zoom) => set({ zoom }),
@@ -45,4 +48,5 @@ export const useViewStore = create<ViewStore>((set) => ({
   setSearchQuery: (query) => set({ searchQuery: query }),
   setSortMode: (sortMode) => set({ sortMode, customOrder: null }),
   setCustomOrder: (customOrder) => set({ customOrder, sortMode: 'default' }),
+  setHideQualifiers: (hideQualifiers) => set({ hideQualifiers }),
 }))

@@ -27,8 +27,8 @@ interface ViewStore {
 
 export const useViewStore = create<ViewStore>((set) => ({
   mode: 'round',
-  zoom: 1,
-  rowHeight: 40,
+  zoom: 2,
+  rowHeight: 100,
   columnWidth: 160,
   rfLnOffset: 0,
   activeFilter: null,

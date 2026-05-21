@@ -13,6 +13,7 @@ export const REAL_TYPES: Record<string, { id: string; name: string }[]> = {
     { id: 'SJ', name: 'Jackspeed (SJ)' },
     { id: 'MX', name: 'Rcmix (MX)' },
     { id: 'DP', name: 'Dump (DP)' },
+    { id: 'ADP', name: 'Accurate dump (ADP)' },
     { id: 'STC', name: 'Streamtech (STC)' },
     { id: 'MTC', name: 'Minijacktech (MTC)' },
     { id: 'JTC', name: 'Jackmained tech (JTC)' },
@@ -37,6 +38,7 @@ export const REAL_TYPES: Record<string, { id: string; name: string }[]> = {
     { id: 'JW', name: 'Jacky Wildcard LN (JW)' },
     { id: 'IN', name: 'Inverse (IN)' },
     { id: 'LNMX', name: 'LN Mixed (LNMX)' },
+    { id: 'LNTC', name: 'Technical LN (LNTC)' },
     { id: 'OLN', name: 'OtherLongnote (OLN)' },
   ],
   SV: [
@@ -44,6 +46,7 @@ export const REAL_TYPES: Record<string, { id: string; name: string }[]> = {
     { id: 'SV2', name: 'Rhythm (SV2)' },
     { id: 'SI', name: 'Sightread (SI)' },
     { id: 'ME', name: 'Memorization (ME)' },
+    { id: 'SVMX', name: 'SVMix (SVMX)' },
   ],
   TB: [
     { id: 'TB', name: 'Tiebreaker' },

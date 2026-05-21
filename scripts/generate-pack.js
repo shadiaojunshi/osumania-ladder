@@ -22,14 +22,14 @@ const s3 = new S3Client({
 
 const REAL_TYPE_NAMES = {
   SS: 'Stream', JS: 'Jumpstream', SA: 'Stamina', CJ: 'Chordjack',
-  SJ: 'Jackspeed', MX: 'Rcmix', DP: 'Dump', STC: 'Streamtech',
+  SJ: 'Jackspeed', MX: 'Rcmix', DP: 'Dump', ADP: 'Accurate dump', STC: 'Streamtech',
   MTC: 'Minijacktech', JTC: 'Jackmained tech', WTC: 'Wild tech',
   TC: 'Tech', ORC: 'Otherrice',
   HB1: 'Speed Hybrid', HB2: 'Jack Hybrid', HB3: 'Technical Hybrid',
   HB4: 'Wildcard Hybrid', HB5: 'Old-school Hybrid', OHB: 'OtherHybrid',
   RE: 'Release', CO: 'Coordination', TE: 'Timinghell', DE: 'Density',
-  SW: 'Speedy Wildcard LN', JW: 'Jacky Wildcard LN', IN: 'Inverse', LNMX: 'LN Mixed', OLN: 'OtherLongnote',
-  SV1: 'Pattern SV', SV2: 'Rhythm SV', SI: 'Sightread SV', ME: 'Memorization SV',
+  SW: 'Speedy Wildcard LN', JW: 'Jacky Wildcard LN', IN: 'Inverse', LNMX: 'LN Mixed', LNTC: 'Technical LN', OLN: 'OtherLongnote',
+  SV1: 'Pattern SV', SV2: 'Rhythm SV', SI: 'Sightread SV', ME: 'Memorization SV', SVMX: 'SVMix',
   TB: 'Tiebreaker',
 }
 

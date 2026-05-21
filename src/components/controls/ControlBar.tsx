@@ -61,7 +61,7 @@ export function ControlBar() {
         <input
           type="range"
           min={20}
-          max={100}
+          max={200}
           value={rowHeight}
           onChange={(e) => setRowHeight(Number(e.target.value))}
           className="w-20 h-1 accent-purple-600"

@@ -10,7 +10,7 @@ import { HoverCard } from './HoverCard'
 const DIFFICULTY_RANGE = { min: 0.5, max: 17.5 }
 const BOX_HEIGHT_TYPE = 28
 
-const LN_REAL_TYPES = new Set(['RE', 'CO', 'TE', 'DE', 'SW', 'JW', 'IN', 'LNMX', 'OLN'])
+const LN_REAL_TYPES = new Set(['RE', 'CO', 'TE', 'DE', 'SW', 'JW', 'IN', 'LNMX', 'LNTC', 'OLN'])
 const HB_REAL_TYPES = new Set(['HB1', 'HB2', 'HB3', 'HB4', 'HB5', 'OHB'])
 
 function isLnBased(m: { type: string; realType: string }): boolean {
@@ -52,7 +52,7 @@ export function LadderView() {
     }
     if (sortMode === 'default') return filteredTournaments
     const getAvg = (t: Tournament) => {
-      const allDiffs = t.rounds.flatMap((r) => r.maps.map((m) => m.difficulty))
+      const allDiffs = t.rounds.flatMap((r) => r.maps.filter((m) => m.type !== 'TB').map((m) => m.difficulty))
       return allDiffs.length > 0 ? allDiffs.reduce((s, d) => s + d, 0) / allDiffs.length : 0
     }
     return [...filteredTournaments].sort((a, b) =>
@@ -298,7 +298,7 @@ function TournamentColumn({
 }) {
   if (mode === 'tournament') {
     const allDiffs = tournament.rounds.flatMap((r) =>
-      r.maps.map((m) => isLnBased(m) ? getLnDiff(m) - rfLnOffset : m.difficulty)
+      r.maps.filter((m) => m.type !== 'TB').map((m) => isLnBased(m) ? getLnDiff(m) - rfLnOffset : m.difficulty)
     )
     const minDiff = Math.min(...allDiffs)
     const maxDiff = Math.max(...allDiffs)
@@ -331,7 +331,7 @@ function TournamentColumn({
           {tournament.abbreviation}
         </div>
         {tournament.rounds.map((round, idx) => {
-          const adjustedDiffs = round.maps.map((m) =>
+          const adjustedDiffs = round.maps.filter((m) => m.type !== 'TB').map((m) =>
             isLnBased(m) ? getLnDiff(m) - rfLnOffset : m.difficulty
           )
           const minDiff = Math.min(...adjustedDiffs)

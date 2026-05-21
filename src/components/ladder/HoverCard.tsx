@@ -33,8 +33,14 @@ export function HoverCard({
   const cardY = typeof window !== 'undefined' ? Math.min(y + 12, window.innerHeight - 220) : y + 12
 
   const typeMaps = hoveredType ? round.maps.filter((m) => m.type === hoveredType) : round.maps
-  const minDiff = typeMaps.length > 0 ? Math.min(...typeMaps.map((m) => m.difficultyLn || m.difficulty)) : round.difficulty.min
-  const maxDiff = typeMaps.length > 0 ? Math.max(...typeMaps.map((m) => m.difficultyLn || m.difficulty)) : round.difficulty.max
+  let minDiff: number, maxDiff: number
+  if (hoveredType && typeMaps.length > 0) {
+    minDiff = Math.min(...typeMaps.map((m) => m.difficultyLn || m.difficulty))
+    maxDiff = Math.max(...typeMaps.map((m) => m.difficultyLn || m.difficulty))
+  } else {
+    minDiff = round.difficulty.min
+    maxDiff = round.difficulty.max
+  }
 
   return (
     <div

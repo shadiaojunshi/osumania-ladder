@@ -269,11 +269,15 @@ export default function AdminPage() {
         )}
 
         {tab === 'upload' && (
-          <MapUploader />
+          <div className="max-h-[calc(100vh-200px)] overflow-y-auto">
+            <MapUploader />
+          </div>
         )}
 
         {tab === 'packs' && (
-          <PackLinksEditor />
+          <div className="max-h-[calc(100vh-200px)] overflow-y-auto">
+            <PackLinksEditor />
+          </div>
         )}
 
       </main>

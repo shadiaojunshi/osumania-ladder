@@ -64,6 +64,7 @@ export function TournamentForm({ onUpdate, initialData }: Props) {
             tournament={tournament}
             updateField={updateField}
             onNext={() => setStep(1)}
+            isEditing={!!initialData}
           />
         )}
         {step === 1 && (
@@ -185,10 +186,12 @@ function BasicInfoStep({
   tournament,
   updateField,
   onNext,
+  isEditing,
 }: {
   tournament: Tournament
   updateField: <K extends keyof Tournament>(key: K, value: Tournament[K]) => void
   onNext: () => void
+  isEditing: boolean
 }) {
   const canProceed = tournament.name.trim() && tournament.abbreviation.trim()
 
@@ -231,12 +234,13 @@ function BasicInfoStep({
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">ID (自动生成)</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">ID {isEditing ? '(不可修改)' : '(自动生成)'}</label>
           <input
             type="text"
             value={tournament.id}
-            onChange={(e) => updateField('id', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm bg-gray-50 text-gray-600"
+            onChange={(e) => !isEditing && updateField('id', e.target.value)}
+            disabled={isEditing}
+            className={`w-full px-3 py-2 border border-gray-200 rounded-md text-sm bg-gray-50 text-gray-600 ${isEditing ? 'cursor-not-allowed opacity-60' : ''}`}
           />
         </div>
       </div>

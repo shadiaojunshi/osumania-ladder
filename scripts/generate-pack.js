@@ -170,6 +170,8 @@ SliderTickRate:1
 256,192,0,128,0,500:0:0:0:0:
 `
 
+const MAX_MAPS_PER_PACK = 80
+
 async function generatePack(targetType) {
   const tournamentsDir = path.join(__dirname, '..', 'data', 'tournaments')
   const files = fs.readdirSync(tournamentsDir).filter(f => f.endsWith('.json'))
@@ -203,82 +205,93 @@ async function generatePack(targetType) {
 
   if (available.length === 0) {
     console.log(`[${targetType}] No files available, skipping`)
-    return null
+    return []
   }
 
   const outputDir = path.join(__dirname, '..', 'output')
   if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir, { recursive: true })
 
-  const packName = `4K Contest ${REAL_TYPE_NAMES[targetType] || targetType} Pack`
-  const outputPath = path.join(outputDir, `${targetType}.osz`)
-  const output = fs.createWriteStream(outputPath)
-  const archive = new ZipArchive({ zlib: { level: 5 } })
-  archive.pipe(output)
+  const totalPacks = Math.ceil(available.length / MAX_MAPS_PER_PACK)
+  const results = []
 
-  let processed = 0
-  for (const map of available) {
-    try {
-      const oszBuffer = await downloadFromR2(map.r2Key)
-      const zip = await JSZip.loadAsync(oszBuffer)
+  for (let packIdx = 0; packIdx < totalPacks; packIdx++) {
+    const chunk = available.slice(packIdx * MAX_MAPS_PER_PACK, (packIdx + 1) * MAX_MAPS_PER_PACK)
+    const packSuffix = totalPacks > 1 ? ` ${packIdx + 1}` : ''
+    const packName = `4K Contest ${REAL_TYPE_NAMES[targetType] || targetType} Pack${packSuffix}`
+    const outputFileName = totalPacks > 1 ? `${targetType}_${packIdx + 1}.osz` : `${targetType}.osz`
+    const outputPath = path.join(outputDir, outputFileName)
+    const output = fs.createWriteStream(outputPath)
+    const archive = new ZipArchive({ zlib: { level: 5 } })
+    archive.pipe(output)
 
-      let osuFileName = Object.keys(zip.files).find(f => f.endsWith('.osu'))
-      if (!osuFileName) { console.warn(`  Skip ${map.r2Key}: no .osu file`); continue }
+    let processed = 0
+    for (const map of chunk) {
+      try {
+        const oszBuffer = await downloadFromR2(map.r2Key)
+        const zip = await JSZip.loadAsync(oszBuffer)
 
-      const osuContent = await zip.files[osuFileName].async('string')
-      const meta = parseOsu(osuContent)
+        let osuFileName = Object.keys(zip.files).find(f => f.endsWith('.osu'))
+        if (!osuFileName) { console.warn(`  Skip ${map.r2Key}: no .osu file`); continue }
 
-      const newVersion = `(${map.tournamentAbbr} ${map.roundAbbr} ${map.slot}) ${meta.artist || 'Unknown'} - ${meta.title || 'Unknown'} [${meta.creator || 'Unknown'}] (${meta.version || 'Normal'})`
-      const safeVersion = sanitizeFileName(newVersion)
+        const osuContent = await zip.files[osuFileName].async('string')
+        const meta = parseOsu(osuContent)
 
-      const audioExt = getAudioExtension(meta.audioFilename || 'audio.mp3')
-      const newAudioName = safeVersion + audioExt
+        const newVersion = `(${map.tournamentAbbr} ${map.roundAbbr} ${map.slot}) ${meta.artist || 'Unknown'} - ${meta.title || 'Unknown'} [${meta.creator || 'Unknown'}] (${meta.version || 'Normal'})`
+        const safeVersion = sanitizeFileName(newVersion)
 
-      const bgExt = getBgExtension(meta.backgroundFile || 'bg.jpg')
-      const newBgName = safeVersion + bgExt
+        const audioExt = getAudioExtension(meta.audioFilename || 'audio.mp3')
+        const newAudioName = safeVersion + audioExt
 
-      const rewritten = rewriteOsu(osuContent, {
-        newTitle: packName,
-        newArtist: 'Various Artists',
-        newCreator: 'shadiaojunshi',
-        newVersion: newVersion,
-        newAudioFilename: newAudioName,
-        newBgFilename: newBgName,
-      })
+        const bgExt = getBgExtension(meta.backgroundFile || 'bg.jpg')
+        const newBgName = safeVersion + bgExt
 
-      archive.append(Buffer.from(rewritten, 'utf-8'), { name: safeVersion + '.osu' })
+        const rewritten = rewriteOsu(osuContent, {
+          newTitle: packName,
+          newArtist: 'Various Artists',
+          newCreator: 'shadiaojunshi',
+          newVersion: newVersion,
+          newAudioFilename: newAudioName,
+          newBgFilename: newBgName,
+        })
 
-      if (meta.audioFilename && zip.files[meta.audioFilename]) {
-        const audioData = await zip.files[meta.audioFilename].async('nodebuffer')
-        archive.append(audioData, { name: newAudioName })
+        archive.append(Buffer.from(rewritten, 'utf-8'), { name: safeVersion + '.osu' })
+
+        if (meta.audioFilename && zip.files[meta.audioFilename]) {
+          const audioData = await zip.files[meta.audioFilename].async('nodebuffer')
+          archive.append(audioData, { name: newAudioName })
+        }
+
+        if (meta.backgroundFile && zip.files[meta.backgroundFile]) {
+          const bgData = await zip.files[meta.backgroundFile].async('nodebuffer')
+          archive.append(bgData, { name: newBgName })
+        }
+
+        processed++
+        if (processed % 10 === 0) console.log(`  [Pack${packSuffix}] Processed ${processed}/${chunk.length}`)
+      } catch (err) {
+        console.warn(`  Error processing ${map.r2Key}: ${err.message}`)
       }
-
-      if (meta.backgroundFile && zip.files[meta.backgroundFile]) {
-        const bgData = await zip.files[meta.backgroundFile].async('nodebuffer')
-        archive.append(bgData, { name: newBgName })
-      }
-
-      processed++
-      if (processed % 10 === 0) console.log(`  Processed ${processed}/${available.length}`)
-    } catch (err) {
-      console.warn(`  Error processing ${map.r2Key}: ${err.message}`)
     }
+
+    archive.append(Buffer.from(DELETE_PLACEHOLDER_OSU, 'utf-8'), { name: 'delete this.osu' })
+    await archive.finalize()
+    await new Promise(resolve => output.on('close', resolve))
+
+    const stats = fs.statSync(outputPath)
+    console.log(`[${targetType}${packSuffix}] Pack generated: ${(stats.size / 1024 / 1024).toFixed(1)}MB, ${processed} maps`)
+
+    results.push({
+      realType: targetType,
+      name: packName,
+      part: totalPacks > 1 ? packIdx + 1 : undefined,
+      mapCount: processed,
+      totalMaps: mapsToProcess.length,
+      sizeMB: Math.round(stats.size / 1024 / 1024),
+      outputPath,
+    })
   }
 
-  archive.append(Buffer.from(DELETE_PLACEHOLDER_OSU, 'utf-8'), { name: 'delete this.osu' })
-  await archive.finalize()
-  await new Promise(resolve => output.on('close', resolve))
-
-  const stats = fs.statSync(outputPath)
-  console.log(`[${targetType}] Pack generated: ${(stats.size / 1024 / 1024).toFixed(1)}MB, ${processed} maps`)
-
-  return {
-    realType: targetType,
-    name: packName,
-    mapCount: processed,
-    totalMaps: mapsToProcess.length,
-    sizeMB: Math.round(stats.size / 1024 / 1024),
-    outputPath,
-  }
+  return results
 }
 
 async function main() {
@@ -289,8 +302,8 @@ async function main() {
   }
 
   if (targetType) {
-    const result = await generatePack(targetType)
-    if (result) console.log('\nDone:', JSON.stringify(result, null, 2))
+    const results = await generatePack(targetType)
+    if (results.length > 0) console.log('\nDone:', JSON.stringify(results, null, 2))
   } else {
     const allTypes = new Set()
     const tournamentsDir = path.join(__dirname, '..', 'data', 'tournaments')
@@ -301,10 +314,10 @@ async function main() {
     }
 
     console.log(`Generating packs for ${allTypes.size} types: ${[...allTypes].join(', ')}`)
-    const results = []
+    const allResults = []
     for (const type of allTypes) {
-      const result = await generatePack(type)
-      if (result) results.push(result)
+      const results = await generatePack(type)
+      allResults.push(...results)
     }
 
     const manifestPath = path.join(__dirname, '..', 'data', 'packs-manifest.json')
@@ -313,11 +326,15 @@ async function main() {
       manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'))
     }
 
-    for (const result of results) {
-      const existing = manifest.packs.find(p => p.realType === result.realType)
+    for (const result of allResults) {
+      const matchKey = result.part ? `${result.realType}_${result.part}` : result.realType
+      const existing = manifest.packs.find(p =>
+        p.realType === result.realType && (p.part || undefined) === result.part
+      )
       const entry = {
         realType: result.realType,
         name: result.name,
+        part: result.part,
         mapCount: result.mapCount,
         totalMaps: result.totalMaps,
         lastUpdated: new Date().toISOString().split('T')[0],

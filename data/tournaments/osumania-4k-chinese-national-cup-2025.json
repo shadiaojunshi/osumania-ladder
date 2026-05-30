@@ -1,0 +1,999 @@
+{
+  "id": "osumania-4k-chinese-national-cup-2025",
+  "name": "osu!mania 4K Chinese National Cup 2025",
+  "abbreviation": "MCNC 4K 2025",
+  "keyCount": 4,
+  "year": 2025,
+  "tags": [],
+  "rounds": [
+    {
+      "id": "round-1",
+      "name": "Qualifiers",
+      "abbreviation": "Qual",
+      "order": 1,
+      "difficulty": {
+        "min": 10,
+        "max": 13.8,
+        "average": 12.4
+      },
+      "maps": [
+        {
+          "slot": "ST1",
+          "type": "RC",
+          "realType": "TC",
+          "name": "RC1",
+          "difficulty": 12.8
+        },
+        {
+          "slot": "ST2",
+          "type": "HB",
+          "realType": "HB3",
+          "name": "RC2",
+          "difficulty": 12.3
+        },
+        {
+          "slot": "ST3",
+          "type": "LN",
+          "realType": "CO",
+          "name": "RC3",
+          "difficulty": 12
+        },
+        {
+          "slot": "ST4",
+          "type": "RC",
+          "realType": "CJ",
+          "name": "RC4",
+          "difficulty": 12.8
+        },
+        {
+          "slot": "ST5",
+          "type": "HB&SV",
+          "realType": "HB1",
+          "name": "RC5",
+          "difficulty": 12.8
+        },
+        {
+          "slot": "ST6",
+          "type": "LN",
+          "realType": "DE",
+          "name": "HB1",
+          "difficulty": 12
+        },
+        {
+          "slot": "ST7",
+          "type": "HB",
+          "realType": "HB2",
+          "name": "HB2",
+          "difficulty": 12.3
+        },
+        {
+          "slot": "ST8",
+          "type": "RC",
+          "realType": "SA",
+          "name": "HB3",
+          "difficulty": 12.8
+        },
+        {
+          "slot": "ST9",
+          "type": "RC",
+          "realType": "WTC",
+          "name": "LN1",
+          "difficulty": 12.8
+        }
+      ],
+      "isQualifier": true,
+      "bestOf": 8,
+      "typeDifficulties": {
+        "RC": {
+          "rf": 12.8
+        },
+        "HB": {
+          "ln": 12.3
+        },
+        "LN": {
+          "ln": 12
+        },
+        "SV": {}
+      }
+    },
+    {
+      "id": "round-2",
+      "name": "Play-off",
+      "abbreviation": "Playoff",
+      "order": 2,
+      "difficulty": {
+        "min": 7.5,
+        "max": 7.5,
+        "average": 7.5
+      },
+      "maps": [
+        {
+          "slot": "RC1",
+          "type": "RC",
+          "realType": "SS",
+          "name": "RC1",
+          "difficulty": 0
+        },
+        {
+          "slot": "RC2",
+          "type": "RC",
+          "realType": "SA",
+          "name": "RC2",
+          "difficulty": 0
+        },
+        {
+          "slot": "RC3",
+          "type": "RC",
+          "realType": "CJ",
+          "name": "RC3",
+          "difficulty": 0
+        },
+        {
+          "slot": "RC4",
+          "type": "RC",
+          "realType": "DP",
+          "name": "RC4",
+          "difficulty": 0
+        },
+        {
+          "slot": "DF",
+          "type": "RC",
+          "realType": "ADP",
+          "name": "RC5",
+          "difficulty": 0
+        },
+        {
+          "slot": "HB1",
+          "type": "HB",
+          "realType": "HB2",
+          "name": "HB1",
+          "difficulty": 0
+        },
+        {
+          "slot": "HB2",
+          "type": "HB",
+          "realType": "HB3",
+          "name": "HB2",
+          "difficulty": 0
+        },
+        {
+          "slot": "HB3",
+          "type": "HB&SV",
+          "realType": "HB1",
+          "name": "HB3",
+          "difficulty": 0
+        },
+        {
+          "slot": "LN1",
+          "type": "LN",
+          "realType": "RE",
+          "name": "LN1",
+          "difficulty": 0
+        },
+        {
+          "slot": "LN2",
+          "type": "LN",
+          "realType": "DE",
+          "name": "LN2",
+          "difficulty": 0
+        },
+        {
+          "slot": "TB1",
+          "type": "TB",
+          "realType": "TB",
+          "name": "TB1",
+          "difficulty": 7.5,
+          "difficultyLn": 8
+        }
+      ],
+      "bestOf": 7,
+      "typeDifficulties": {
+        "RC": {
+          "rf": 7.5
+        },
+        "HB": {
+          "rf": 6.9,
+          "ln": 7.4
+        },
+        "LN": {
+          "ln": 7.7
+        },
+        "SV": {}
+      }
+    },
+    {
+      "id": "round-3",
+      "name": "Round of 32",
+      "abbreviation": "RO32",
+      "order": 3,
+      "difficulty": {
+        "min": 9,
+        "max": 9,
+        "average": 9
+      },
+      "maps": [
+        {
+          "slot": "RC1",
+          "type": "RC",
+          "realType": "SS",
+          "name": "RC1",
+          "difficulty": 0
+        },
+        {
+          "slot": "RC2",
+          "type": "RC",
+          "realType": "SA",
+          "name": "RC2",
+          "difficulty": 0
+        },
+        {
+          "slot": "RC3",
+          "type": "RC",
+          "realType": "CJ",
+          "name": "RC3",
+          "difficulty": 0
+        },
+        {
+          "slot": "RC4",
+          "type": "RC",
+          "realType": "MX",
+          "name": "RC4",
+          "difficulty": 0
+        },
+        {
+          "slot": "RC5",
+          "type": "RC",
+          "realType": "STC",
+          "name": "RC5",
+          "difficulty": 0
+        },
+        {
+          "slot": "DF",
+          "type": "RC",
+          "realType": "MTC",
+          "name": "RC6",
+          "difficulty": 0
+        },
+        {
+          "slot": "HB1",
+          "type": "HB",
+          "realType": "HB2",
+          "name": "HB1",
+          "difficulty": 0
+        },
+        {
+          "slot": "HB2",
+          "type": "HB",
+          "realType": "HB3",
+          "name": "HB2",
+          "difficulty": 0
+        },
+        {
+          "slot": "HB3",
+          "type": "HB&SV",
+          "realType": "HB1",
+          "name": "HB3",
+          "difficulty": 0
+        },
+        {
+          "slot": "LN1",
+          "type": "LN",
+          "realType": "RE",
+          "name": "LN1",
+          "difficulty": 0
+        },
+        {
+          "slot": "LN2",
+          "type": "LN",
+          "realType": "DE",
+          "name": "LN2",
+          "difficulty": 0
+        },
+        {
+          "slot": "TB1",
+          "type": "TB",
+          "realType": "TB",
+          "name": "TB1",
+          "difficulty": 9,
+          "difficultyLn": 10
+        }
+      ],
+      "bestOf": 9,
+      "typeDifficulties": {
+        "RC": {
+          "rf": 8.8
+        },
+        "HB": {
+          "rf": 8.5,
+          "ln": 9.2
+        },
+        "LN": {
+          "ln": 9.3
+        },
+        "SV": {}
+      }
+    },
+    {
+      "id": "round-4",
+      "name": "Round of 16",
+      "abbreviation": "RO16",
+      "order": 4,
+      "difficulty": {
+        "min": 11.2,
+        "max": 11.2,
+        "average": 11.2
+      },
+      "maps": [
+        {
+          "slot": "RC1",
+          "type": "RC",
+          "realType": "SS",
+          "name": "RC1",
+          "difficulty": 0
+        },
+        {
+          "slot": "RC2",
+          "type": "RC",
+          "realType": "SA",
+          "name": "RC2",
+          "difficulty": 0
+        },
+        {
+          "slot": "RC3",
+          "type": "RC",
+          "realType": "CJ",
+          "name": "RC3",
+          "difficulty": 0
+        },
+        {
+          "slot": "RC4",
+          "type": "RC",
+          "realType": "ADP",
+          "name": "RC4",
+          "difficulty": 0
+        },
+        {
+          "slot": "RC5",
+          "type": "RC",
+          "realType": "MX",
+          "name": "RC5",
+          "difficulty": 0
+        },
+        {
+          "slot": "DF",
+          "type": "RC",
+          "realType": "JTC",
+          "name": "RC6",
+          "difficulty": 0
+        },
+        {
+          "slot": "HB1",
+          "type": "HB",
+          "realType": "HB2",
+          "name": "HB1",
+          "difficulty": 0
+        },
+        {
+          "slot": "HB2",
+          "type": "HB",
+          "realType": "HB3",
+          "name": "HB2",
+          "difficulty": 0
+        },
+        {
+          "slot": "HB3",
+          "type": "HB&SV",
+          "realType": "HB1",
+          "name": "HB3",
+          "difficulty": 0
+        },
+        {
+          "slot": "LN1",
+          "type": "LN",
+          "realType": "CO",
+          "name": "LN1",
+          "difficulty": 0
+        },
+        {
+          "slot": "LN2",
+          "type": "LN",
+          "realType": "DE",
+          "name": "LN2",
+          "difficulty": 0
+        },
+        {
+          "slot": "LN3",
+          "type": "LN",
+          "realType": "LNMX",
+          "name": "LN3",
+          "difficulty": 0
+        },
+        {
+          "slot": "TB1",
+          "type": "TB",
+          "realType": "TB",
+          "name": "TB1",
+          "difficulty": 11.2,
+          "difficultyLn": 11.5
+        }
+      ],
+      "bestOf": 11,
+      "typeDifficulties": {
+        "RC": {
+          "rf": 10.1
+        },
+        "HB": {
+          "rf": 10,
+          "ln": 10.3
+        },
+        "LN": {
+          "ln": 10.7
+        },
+        "SV": {}
+      }
+    },
+    {
+      "id": "round-5",
+      "name": "Quarterfinals",
+      "abbreviation": "QF",
+      "order": 5,
+      "difficulty": {
+        "min": 11.8,
+        "max": 11.8,
+        "average": 11.8
+      },
+      "maps": [
+        {
+          "slot": "RC1",
+          "type": "RC",
+          "realType": "SS",
+          "name": "RC1",
+          "difficulty": 0
+        },
+        {
+          "slot": "RC2",
+          "type": "RC",
+          "realType": "JS",
+          "name": "RC2",
+          "difficulty": 0
+        },
+        {
+          "slot": "RC3",
+          "type": "RC",
+          "realType": "SA",
+          "name": "RC3",
+          "difficulty": 0
+        },
+        {
+          "slot": "RC4",
+          "type": "RC",
+          "realType": "CJ",
+          "name": "RC4",
+          "difficulty": 0
+        },
+        {
+          "slot": "RC5",
+          "type": "RC",
+          "realType": "MTC",
+          "name": "RC5",
+          "difficulty": 0
+        },
+        {
+          "slot": "RC6",
+          "type": "RC",
+          "realType": "TC",
+          "name": "RC6",
+          "difficulty": 0
+        },
+        {
+          "slot": "DF",
+          "type": "RC",
+          "realType": "JTC",
+          "name": "RC7",
+          "difficulty": 0
+        },
+        {
+          "slot": "HB1",
+          "type": "HB",
+          "realType": "HB2",
+          "name": "HB1",
+          "difficulty": 0
+        },
+        {
+          "slot": "HB2",
+          "type": "HB",
+          "realType": "HB3",
+          "name": "HB2",
+          "difficulty": 0
+        },
+        {
+          "slot": "HB3",
+          "type": "HB&SV",
+          "realType": "HB2",
+          "name": "HB3",
+          "difficulty": 0
+        },
+        {
+          "slot": "LN1",
+          "type": "LN",
+          "realType": "CO",
+          "name": "LN1",
+          "difficulty": 0
+        },
+        {
+          "slot": "LN2",
+          "type": "LN",
+          "realType": "DE",
+          "name": "LN2",
+          "difficulty": 0
+        },
+        {
+          "slot": "LN3",
+          "type": "LN",
+          "realType": "JW",
+          "name": "LN3",
+          "difficulty": 0
+        },
+        {
+          "slot": "LN4",
+          "type": "LN",
+          "realType": "LNTC",
+          "name": "LN4",
+          "difficulty": 0
+        },
+        {
+          "slot": "TB1",
+          "type": "TB",
+          "realType": "TB",
+          "name": "TB1",
+          "difficulty": 11.8,
+          "difficultyLn": 12.5
+        }
+      ],
+      "bestOf": 11,
+      "typeDifficulties": {
+        "RC": {
+          "rf": 11.6
+        },
+        "HB": {
+          "rf": 11.6,
+          "ln": 11.7
+        },
+        "LN": {
+          "ln": 11.5
+        },
+        "SV": {}
+      }
+    },
+    {
+      "id": "round-6",
+      "name": "Semifinals",
+      "abbreviation": "SF",
+      "order": 6,
+      "difficulty": {
+        "min": 13.4,
+        "max": 13.4,
+        "average": 13.4
+      },
+      "maps": [
+        {
+          "slot": "RC1",
+          "type": "RC",
+          "realType": "SS",
+          "name": "RC1",
+          "difficulty": 0
+        },
+        {
+          "slot": "RC2",
+          "type": "RC",
+          "realType": "JS",
+          "name": "RC2",
+          "difficulty": 0
+        },
+        {
+          "slot": "RC3",
+          "type": "RC",
+          "realType": "SA",
+          "name": "RC3",
+          "difficulty": 0
+        },
+        {
+          "slot": "RC4",
+          "type": "RC",
+          "realType": "CJ",
+          "name": "RC4",
+          "difficulty": 0
+        },
+        {
+          "slot": "RC5",
+          "type": "RC",
+          "realType": "DP",
+          "name": "RC5",
+          "difficulty": 0
+        },
+        {
+          "slot": "RC6",
+          "type": "RC",
+          "realType": "ADP",
+          "name": "RC6",
+          "difficulty": 0
+        },
+        {
+          "slot": "DF",
+          "type": "RC",
+          "realType": "WTC",
+          "name": "RC7",
+          "difficulty": 0
+        },
+        {
+          "slot": "HB1",
+          "type": "HB",
+          "realType": "HB2",
+          "name": "HB1",
+          "difficulty": 0
+        },
+        {
+          "slot": "HB2",
+          "type": "HB",
+          "realType": "HB3",
+          "name": "HB2",
+          "difficulty": 0
+        },
+        {
+          "slot": "HB3",
+          "type": "HB&SV",
+          "realType": "HB1",
+          "name": "HB3",
+          "difficulty": 0
+        },
+        {
+          "slot": "LN1",
+          "type": "LN",
+          "realType": "CO",
+          "name": "LN1",
+          "difficulty": 0
+        },
+        {
+          "slot": "LN2",
+          "type": "LN",
+          "realType": "DE",
+          "name": "LN2",
+          "difficulty": 0
+        },
+        {
+          "slot": "LN3",
+          "type": "LN",
+          "realType": "LNMX",
+          "name": "LN3",
+          "difficulty": 0
+        },
+        {
+          "slot": "LN4",
+          "type": "LN",
+          "realType": "LNTC",
+          "name": "LN4",
+          "difficulty": 0
+        },
+        {
+          "slot": "TB1",
+          "type": "TB",
+          "realType": "TB",
+          "name": "TB1",
+          "difficulty": 13.4,
+          "difficultyLn": 13.9
+        }
+      ],
+      "bestOf": 11,
+      "typeDifficulties": {
+        "RC": {
+          "rf": 12.9
+        },
+        "HB": {
+          "rf": 12.2,
+          "ln": 12.3
+        },
+        "LN": {
+          "ln": 12.5
+        },
+        "SV": {}
+      }
+    },
+    {
+      "id": "round-7",
+      "name": "Finals",
+      "abbreviation": "F",
+      "order": 7,
+      "difficulty": {
+        "min": 13.9,
+        "max": 13.9,
+        "average": 13.9
+      },
+      "maps": [
+        {
+          "slot": "RC1",
+          "type": "RC",
+          "realType": "SS",
+          "name": "RC1",
+          "difficulty": 0
+        },
+        {
+          "slot": "RC2",
+          "type": "RC",
+          "realType": "JS",
+          "name": "RC2",
+          "difficulty": 0
+        },
+        {
+          "slot": "RC3",
+          "type": "RC",
+          "realType": "SA",
+          "name": "RC3",
+          "difficulty": 0
+        },
+        {
+          "slot": "RC4",
+          "type": "RC",
+          "realType": "CJ",
+          "name": "RC4",
+          "difficulty": 0
+        },
+        {
+          "slot": "RC5",
+          "type": "RC",
+          "realType": "DP",
+          "name": "RC5",
+          "difficulty": 0
+        },
+        {
+          "slot": "RC6",
+          "type": "RC",
+          "realType": "ADP",
+          "name": "RC6",
+          "difficulty": 0
+        },
+        {
+          "slot": "RC7",
+          "type": "RC",
+          "realType": "JTC",
+          "name": "RC7",
+          "difficulty": 0
+        },
+        {
+          "slot": "DF",
+          "type": "RC",
+          "realType": "TC",
+          "name": "RC8",
+          "difficulty": 0
+        },
+        {
+          "slot": "HB1",
+          "type": "HB",
+          "realType": "HB2",
+          "name": "HB1",
+          "difficulty": 0
+        },
+        {
+          "slot": "HB2",
+          "type": "HB",
+          "realType": "HB1",
+          "name": "HB2",
+          "difficulty": 0
+        },
+        {
+          "slot": "HB3",
+          "type": "HB",
+          "realType": "HB3",
+          "name": "HB3",
+          "difficulty": 0
+        },
+        {
+          "slot": "HB4",
+          "type": "HB&SV",
+          "realType": "HB3",
+          "name": "HB4",
+          "difficulty": 0
+        },
+        {
+          "slot": "LN1",
+          "type": "LN",
+          "realType": "CO",
+          "name": "LN1",
+          "difficulty": 0
+        },
+        {
+          "slot": "LN2",
+          "type": "LN",
+          "realType": "DE",
+          "name": "LN2",
+          "difficulty": 0
+        },
+        {
+          "slot": "LN3",
+          "type": "LN",
+          "realType": "LNMX",
+          "name": "LN3",
+          "difficulty": 0
+        },
+        {
+          "slot": "LN4",
+          "type": "LN",
+          "realType": "LNTC",
+          "name": "LN4",
+          "difficulty": 0
+        },
+        {
+          "slot": "TB1",
+          "type": "TB",
+          "realType": "TB",
+          "name": "TB1",
+          "difficulty": 13.9,
+          "difficultyLn": 14.6
+        }
+      ],
+      "bestOf": 13,
+      "typeDifficulties": {
+        "RC": {
+          "rf": 13.6
+        },
+        "HB": {
+          "rf": 12.8,
+          "ln": 13.5
+        },
+        "LN": {
+          "ln": 13.5
+        },
+        "SV": {}
+      }
+    },
+    {
+      "id": "round-8",
+      "name": "Grand Finals",
+      "abbreviation": "GF",
+      "order": 8,
+      "difficulty": {
+        "min": 14.5,
+        "max": 14.5,
+        "average": 14.5
+      },
+      "maps": [
+        {
+          "slot": "RC1",
+          "type": "RC",
+          "realType": "SS",
+          "name": "RC1",
+          "difficulty": 0
+        },
+        {
+          "slot": "RC2",
+          "type": "RC",
+          "realType": "JS",
+          "name": "RC2",
+          "difficulty": 0
+        },
+        {
+          "slot": "RC3",
+          "type": "RC",
+          "realType": "SA",
+          "name": "RC3",
+          "difficulty": 0
+        },
+        {
+          "slot": "RC4",
+          "type": "RC",
+          "realType": "CJ",
+          "name": "RC4",
+          "difficulty": 0
+        },
+        {
+          "slot": "RC5",
+          "type": "RC",
+          "realType": "ADP",
+          "name": "RC5",
+          "difficulty": 0
+        },
+        {
+          "slot": "RC6",
+          "type": "RC",
+          "realType": "MTC",
+          "name": "RC6",
+          "difficulty": 0
+        },
+        {
+          "slot": "RC7",
+          "type": "RC",
+          "realType": "JTC",
+          "name": "RC7",
+          "difficulty": 0
+        },
+        {
+          "slot": "RC8",
+          "type": "RC",
+          "realType": "TC",
+          "name": "RC8",
+          "difficulty": 0
+        },
+        {
+          "slot": "HB1",
+          "type": "HB",
+          "realType": "HB2",
+          "name": "HB1",
+          "difficulty": 0
+        },
+        {
+          "slot": "HB2",
+          "type": "HB",
+          "realType": "HB1",
+          "name": "HB2",
+          "difficulty": 0
+        },
+        {
+          "slot": "HB3",
+          "type": "HB",
+          "realType": "HB3",
+          "name": "HB3",
+          "difficulty": 0
+        },
+        {
+          "slot": "HB4",
+          "type": "HB&SV",
+          "realType": "HB3",
+          "name": "HB4",
+          "difficulty": 0
+        },
+        {
+          "slot": "LN1",
+          "type": "LN",
+          "realType": "TE",
+          "name": "LN1",
+          "difficulty": 0
+        },
+        {
+          "slot": "LN2",
+          "type": "LN",
+          "realType": "DE",
+          "name": "LN2",
+          "difficulty": 0
+        },
+        {
+          "slot": "LN3",
+          "type": "LN",
+          "realType": "SW",
+          "name": "LN3",
+          "difficulty": 0
+        },
+        {
+          "slot": "LN4",
+          "type": "LN",
+          "realType": "JW",
+          "name": "LN4",
+          "difficulty": 0
+        },
+        {
+          "slot": "TB1",
+          "type": "TB",
+          "realType": "TB",
+          "name": "TB1",
+          "difficulty": 14.5,
+          "difficultyLn": 15.1
+        }
+      ],
+      "bestOf": 13,
+      "typeDifficulties": {
+        "RC": {
+          "rf": 14.3
+        },
+        "HB": {
+          "rf": 14.2,
+          "ln": 14.6
+        },
+        "LN": {
+          "ln": 14.7
+        },
+        "SV": {}
+      }
+    }
+  ],
+  "customTypes": [],
+  "sheetUrl": "https://mcnc.crzteam.cn/sheet?src=https://mcnc.crzteam.cn/static/osumania-4k-chinese-national-cup-2025-information-sheet-match-results-schedules.html",
+  "forumUrl": "https://osu.ppy.sh/community/forums/topics/2079837?n=1"
+}

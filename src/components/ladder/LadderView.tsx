@@ -339,8 +339,14 @@ function TournamentColumn({
           const adjustedDiffs = round.maps.filter((m) => m.type !== 'TB').map((m) =>
             isLnBased(m) ? getLnDiff(m) - rfLnOffset : m.difficulty
           )
-          const minDiff = Math.min(...adjustedDiffs)
-          const maxDiff = Math.max(...adjustedDiffs)
+          const computedMin = adjustedDiffs.length > 0 ? Math.min(...adjustedDiffs) : 0
+          const computedMax = adjustedDiffs.length > 0 ? Math.max(...adjustedDiffs) : 0
+          const allLn = adjustedDiffs.length > 0 && round.maps.filter((m) => m.type !== 'TB').every((m) => isLnBased(m))
+          const offsetForStored = allLn ? rfLnOffset : 0
+          const storedMin = round.difficulty.min > 0 ? round.difficulty.min - offsetForStored : Infinity
+          const storedMax = round.difficulty.max > 0 ? round.difficulty.max - offsetForStored : -Infinity
+          const minDiff = Math.min(computedMin, storedMin)
+          const maxDiff = Math.max(computedMax, storedMax)
           const top = difficultyToY(maxDiff, containerHeight, DIFFICULTY_RANGE)
           const bottom = difficultyToY(minDiff, containerHeight, DIFFICULTY_RANGE)
           const boxH = Math.max(bottom - top, 24)

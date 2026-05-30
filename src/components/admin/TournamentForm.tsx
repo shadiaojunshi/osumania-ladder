@@ -79,45 +79,67 @@ export function TournamentForm({ onUpdate, initialData }: Props) {
   )
 }
 
+function distributeDiffsForType<F extends 'difficulty' | 'difficultyLn'>(
+  maps: { type: string; difficulty?: number; difficultyLn?: number }[],
+  min: number,
+  max: number,
+  avg: number,
+  field: F,
+) {
+  if (maps.length === 0) return
+  const eligible = maps.filter((m) => !m[field] || m[field] === 0)
+  if (eligible.length === 0) return
+  const allEligible = eligible.length === maps.length
+
+  if (allEligible && eligible.length >= 2 && min > 0 && max > 0) {
+    eligible.forEach((m, i) => {
+      ;(m as Record<F, number>)[field] = +(min + (max - min) * (i / (eligible.length - 1))).toFixed(1)
+    })
+  } else if (avg > 0) {
+    eligible.forEach((m) => { (m as Record<F, number>)[field] = avg })
+  } else if (min > 0 && max > 0) {
+    const mid = +((min + max) / 2).toFixed(1)
+    eligible.forEach((m) => { (m as Record<F, number>)[field] = mid })
+  }
+}
+
 function roundWithMetaToOutput(r: RoundWithMeta): Round {
   const { _maps, _typeDiffs, _typeDiffsLocked, _diffMode, ...rest } = r
 
+  const maps = _maps.map((m) => {
+    const { category, ...mapRest } = m
+    return { ...mapRest }
+  })
+
+  distributeDiffsForType(maps.filter((m) => m.type === 'RC'), _typeDiffs.rcMin, _typeDiffs.rcMax, _typeDiffs.rc, 'difficulty')
+  distributeDiffsForType(maps.filter((m) => m.type === 'LN'), _typeDiffs.lnMin, _typeDiffs.lnMax, _typeDiffs.ln, 'difficulty')
+  distributeDiffsForType(maps.filter((m) => m.type === 'HB'), _typeDiffs.hbMin, _typeDiffs.hbMax, _typeDiffs.hbLn, 'difficultyLn')
+  distributeDiffsForType(maps.filter((m) => m.type === 'HB'), 0, 0, _typeDiffs.hbRf, 'difficulty')
+  distributeDiffsForType(maps.filter((m) => m.type === 'SV'), _typeDiffs.svMin, _typeDiffs.svMax, _typeDiffs.sv, 'difficulty')
+
+  const nonTbDiffs = maps
+    .filter((m) => m.type !== 'TB')
+    .flatMap((m) => [m.difficulty, m.difficultyLn].filter((d): d is number => !!d && d > 0))
+
+  let min: number, max: number, average: number
+
   if (_diffMode === 'summary') {
-    const allMins = [_typeDiffs.rcMin, _typeDiffs.hbMin, _typeDiffs.lnMin, _typeDiffs.svMin].filter((v) => v > 0)
-    const allMaxes = [_typeDiffs.rcMax, _typeDiffs.hbMax, _typeDiffs.lnMax, _typeDiffs.svMax].filter((v) => v > 0)
-    const allAvgs = [_typeDiffs.rc, _typeDiffs.hbLn, _typeDiffs.ln, _typeDiffs.sv].filter((v) => v > 0)
-    const min = allMins.length > 0 ? Math.min(...allMins) : 0
-    const max = allMaxes.length > 0 ? Math.max(...allMaxes) : 0
-    const average = allAvgs.length > 0 ? +(allAvgs.reduce((s, v) => s + v, 0) / allAvgs.length).toFixed(1) : 0
-
-    const maps = _maps.map((m) => {
-      const { category, ...mapRest } = m
-      let diff = m.difficulty
-      if (!diff || diff === 0) {
-        if (m.type === 'RC') diff = _typeDiffs.rc
-        else if (m.type === 'LN') diff = _typeDiffs.ln
-        else if (m.type === 'HB') diff = _typeDiffs.hbLn
-        else if (m.type === 'SV') diff = _typeDiffs.sv
-        else diff = _typeDiffs.rc
-      }
-      return { ...mapRest, difficulty: diff || 0 }
-    })
-
-    return {
-      ...rest,
-      difficulty: { min, max, average },
-      maps,
-      typeDifficulties: {
-        RC: { rf: _typeDiffs.rc || undefined },
-        HB: { rf: _typeDiffs.hbRf || undefined, ln: _typeDiffs.hbLn || undefined },
-        LN: { ln: _typeDiffs.ln || undefined },
-        SV: { rf: _typeDiffs.sv || undefined },
-      },
-    }
+    const userMins = [_typeDiffs.rcMin, _typeDiffs.hbMin, _typeDiffs.lnMin, _typeDiffs.svMin].filter((v) => v > 0)
+    const userMaxes = [_typeDiffs.rcMax, _typeDiffs.hbMax, _typeDiffs.lnMax, _typeDiffs.svMax].filter((v) => v > 0)
+    const userAvgs = [_typeDiffs.rc, _typeDiffs.hbLn, _typeDiffs.ln, _typeDiffs.sv].filter((v) => v > 0)
+    min = userMins.length > 0 ? Math.min(...userMins) : (nonTbDiffs.length > 0 ? Math.min(...nonTbDiffs) : 0)
+    max = userMaxes.length > 0 ? Math.max(...userMaxes) : (nonTbDiffs.length > 0 ? Math.max(...nonTbDiffs) : 0)
+    average = userAvgs.length > 0 ? +(userAvgs.reduce((s, v) => s + v, 0) / userAvgs.length).toFixed(1) : 0
+  } else {
+    min = nonTbDiffs.length > 0 ? Math.min(...nonTbDiffs) : 0
+    max = nonTbDiffs.length > 0 ? Math.max(...nonTbDiffs) : 0
+    average = nonTbDiffs.length > 0 ? +(nonTbDiffs.reduce((s, d) => s + d, 0) / nonTbDiffs.length).toFixed(1) : 0
   }
 
   return {
     ...rest,
+    difficulty: { min, max, average },
+    maps,
     typeDifficulties: {
       RC: { rf: _typeDiffs.rc || undefined },
       HB: { rf: _typeDiffs.hbRf || undefined, ln: _typeDiffs.hbLn || undefined },

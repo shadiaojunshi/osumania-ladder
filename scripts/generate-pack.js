@@ -178,8 +178,16 @@ async function generatePack(targetType) {
 
   const mapsToProcess = []
 
-  for (const file of files) {
-    const tournament = JSON.parse(fs.readFileSync(path.join(tournamentsDir, file), 'utf-8'))
+  const tournamentsList = files.map(file =>
+    JSON.parse(fs.readFileSync(path.join(tournamentsDir, file), 'utf-8'))
+  )
+  tournamentsList.sort((a, b) => {
+    const yearDiff = (a.year || 0) - (b.year || 0)
+    if (yearDiff !== 0) return yearDiff
+    return a.id.localeCompare(b.id)
+  })
+
+  for (const tournament of tournamentsList) {
     for (const round of tournament.rounds) {
       for (const map of round.maps) {
         if (map.realType === targetType) {
@@ -189,6 +197,7 @@ async function generatePack(targetType) {
             roundId: round.id,
             roundAbbr: round.abbreviation,
             slot: map.slot,
+            difficulty: map.difficulty || 0,
             r2Key: `maps/${tournament.id}/${round.id}/${map.slot}.osz`,
           })
         }
@@ -216,6 +225,7 @@ async function generatePack(targetType) {
 
   for (let packIdx = 0; packIdx < totalPacks; packIdx++) {
     const chunk = available.slice(packIdx * MAX_MAPS_PER_PACK, (packIdx + 1) * MAX_MAPS_PER_PACK)
+    chunk.sort((a, b) => (a.difficulty || 0) - (b.difficulty || 0))
     const packSuffix = totalPacks > 1 ? ` ${packIdx + 1}` : ''
     const packName = `4K Contest ${REAL_TYPE_NAMES[targetType] || targetType} Pack${packSuffix}`
     const outputFileName = totalPacks > 1 ? `${targetType}_${packIdx + 1}.osz` : `${targetType}.osz`

@@ -23,7 +23,7 @@ export const onRequestOptions: PagesFunction<Env> = async () => {
   return new Response(null, { status: 204, headers: corsHeaders() })
 }
 
-const MAX_SIZE = 25 * 1024 * 1024
+const MAX_SIZE = 100 * 1024 * 1024
 
 export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   const contentType = request.headers.get('content-type') || ''
@@ -36,6 +36,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   const roundId = formData.get('roundId') as string
   const slot = formData.get('slot') as string
   const file = formData.get('file') as File | null
+  const isNsv = formData.get('nsv') === '1'
 
   if (!tournamentId || !roundId || !slot || !file) {
     return jsonResponse({ error: 'Missing required fields: tournamentId, roundId, slot, file' }, 400)
@@ -45,7 +46,8 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     return jsonResponse({ error: `File too large (max ${MAX_SIZE / 1024 / 1024}MB)` }, 413)
   }
 
-  const key = `maps/${tournamentId}/${roundId}/${slot}.osz`
+  const suffix = isNsv ? '.nsv.osz' : '.osz'
+  const key = `maps/${tournamentId}/${roundId}/${slot}${suffix}`
   await env.R2_BUCKET.put(key, file.stream(), {
     httpMetadata: { contentType: 'application/octet-stream' },
     customMetadata: { originalName: file.name },

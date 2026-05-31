@@ -209,8 +209,18 @@ async function generatePack(targetType) {
 
   const r2Objects = await listR2Objects('maps/')
   const r2Keys = new Set(r2Objects.map(o => o.Key))
-  const available = mapsToProcess.filter(m => r2Keys.has(m.r2Key))
-  console.log(`[${targetType}] ${available.length} maps have files in R2`)
+
+  const available = []
+  for (const m of mapsToProcess) {
+    if (!r2Keys.has(m.r2Key)) continue
+    available.push({ ...m, isNsv: false })
+    const nsvKey = m.r2Key.replace(/\.osz$/, '.nsv.osz')
+    if (r2Keys.has(nsvKey)) {
+      available.push({ ...m, r2Key: nsvKey, isNsv: true })
+    }
+  }
+  const nsvCount = available.filter(m => m.isNsv).length
+  console.log(`[${targetType}] ${available.length} maps have files in R2 (incl. ${nsvCount} NSV variants)`)
 
   if (available.length === 0) {
     console.log(`[${targetType}] No files available, skipping`)
@@ -246,7 +256,7 @@ async function generatePack(targetType) {
         const osuContent = await zip.files[osuFileName].async('string')
         const meta = parseOsu(osuContent)
 
-        const newVersion = `(${map.tournamentAbbr} ${map.roundAbbr} ${map.slot}) ${meta.artist || 'Unknown'} - ${meta.title || 'Unknown'} [${meta.creator || 'Unknown'}] (${meta.version || 'Normal'})`
+        const newVersion = `(${map.tournamentAbbr} ${map.roundAbbr} ${map.slot}${map.isNsv ? ' NSV' : ''}) ${meta.artist || 'Unknown'} - ${meta.title || 'Unknown'} [${meta.creator || 'Unknown'}] (${meta.version || 'Normal'})`
         const safeVersion = sanitizeFileName(newVersion)
 
         const audioExt = getAudioExtension(meta.audioFilename || 'audio.mp3')

@@ -34,10 +34,16 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   const prefix = `maps/${tournamentId}/`
   const listed = await env.R2_BUCKET.list({ prefix })
 
-  const uploaded = listed.objects.map((obj) => {
-    const relative = obj.key.replace(prefix, '').replace('.osz', '')
-    return relative
-  })
+  const uploaded: string[] = []
+  const uploadedNsv: string[] = []
+  for (const obj of listed.objects) {
+    const relative = obj.key.replace(prefix, '')
+    if (relative.endsWith('.nsv.osz')) {
+      uploadedNsv.push(relative.replace('.nsv.osz', ''))
+    } else if (relative.endsWith('.osz')) {
+      uploaded.push(relative.replace('.osz', ''))
+    }
+  }
 
-  return jsonResponse({ uploaded })
+  return jsonResponse({ uploaded, uploadedNsv })
 }

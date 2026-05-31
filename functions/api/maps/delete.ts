@@ -24,17 +24,19 @@ export const onRequestOptions: PagesFunction<Env> = async () => {
 }
 
 export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
-  const { tournamentId, roundId, slot } = await request.json() as {
+  const { tournamentId, roundId, slot, nsv } = await request.json() as {
     tournamentId: string
     roundId: string
     slot: string
+    nsv?: boolean
   }
 
   if (!tournamentId || !roundId || !slot) {
     return jsonResponse({ error: 'Missing required fields' }, 400)
   }
 
-  const key = `maps/${tournamentId}/${roundId}/${slot}.osz`
+  const suffix = nsv ? '.nsv.osz' : '.osz'
+  const key = `maps/${tournamentId}/${roundId}/${slot}${suffix}`
   await env.R2_BUCKET.delete(key)
 
   return jsonResponse({ success: true })

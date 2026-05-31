@@ -33,13 +33,13 @@
       "difficulty": 12.7
     },
     {
-      "label": "MWC 2025 SF RC",
-      "difficulty": 12
-    },
-    {
       "label": "MWC 2025 SF LN",
       "difficulty": 11.6,
       "type": "ln"
+    },
+    {
+      "label": "MWC 2025 SF RC",
+      "difficulty": 11.6
     },
     {
       "label": "MWC 2025 QF LN",

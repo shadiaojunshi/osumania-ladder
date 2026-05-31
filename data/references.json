@@ -6,22 +6,22 @@
       "type": "ln"
     },
     {
-      "label": "o!mLN4 GF",
-      "difficulty": 14.9,
-      "type": "ln"
-    },
-    {
       "label": "KET2 GF RC",
       "difficulty": 14.7
     },
     {
+      "label": "o!mLN4 GF LN",
+      "difficulty": 14.7,
+      "type": "ln"
+    },
+    {
       "label": "MWC 2025 GF LN",
-      "difficulty": 14,
+      "difficulty": 14.1,
       "type": "ln"
     },
     {
       "label": "MWC 2025 GF RC",
-      "difficulty": 13.9
+      "difficulty": 13.8
     },
     {
       "label": "MWC 2025 F LN",
@@ -34,7 +34,7 @@
     },
     {
       "label": "MWC 2025 SF LN",
-      "difficulty": 11.6,
+      "difficulty": 12,
       "type": "ln"
     },
     {
@@ -43,7 +43,7 @@
     },
     {
       "label": "MWC 2025 QF LN",
-      "difficulty": 10.7,
+      "difficulty": 11.1,
       "type": "ln"
     },
     {
@@ -51,27 +51,27 @@
       "difficulty": 10.4
     },
     {
+      "label": "MWC 2025 Ro16 LN",
+      "difficulty": 10.2,
+      "type": "ln"
+    },
+    {
       "label": "MWC 2025 Ro16 RC",
       "difficulty": 9.5
     },
     {
-      "label": "MWC 2025 Ro16 LN",
-      "difficulty": 9.5,
+      "label": "MWC 2025 Ro32 LN",
+      "difficulty": 9.2,
       "type": "ln"
     },
     {
-      "label": "MWC 2025 Ro32 LN",
-      "difficulty": 8.4,
+      "label": "THMC 4 Ro32 LN",
+      "difficulty": 8.3,
       "type": "ln"
     },
     {
       "label": "MWC 2025 Ro32 RC",
       "difficulty": 7.9
-    },
-    {
-      "label": "THMC 4 Ro32 LN",
-      "difficulty": 7,
-      "type": "ln"
     },
     {
       "label": "THMC 4 Ro32 RC",

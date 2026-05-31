@@ -266,6 +266,24 @@ function parseOsuMeta(content: string): OsuDiffInfo {
   return { fileName: '', version, audioFilename, bgFile, artist, title }
 }
 
+async function buildTrimmedOsz(sourceZip: JSZip, diff: OsuDiffInfo, slot: string, isNsv: boolean): Promise<File> {
+  const newZip = new JSZip()
+  const osuContent = await sourceZip.files[diff.fileName].async('uint8array')
+  newZip.file(diff.fileName, osuContent)
+
+  if (diff.audioFilename && sourceZip.files[diff.audioFilename]) {
+    const audio = await sourceZip.files[diff.audioFilename].async('uint8array')
+    newZip.file(diff.audioFilename, audio)
+  }
+  if (diff.bgFile && sourceZip.files[diff.bgFile]) {
+    const bg = await sourceZip.files[diff.bgFile].async('uint8array')
+    newZip.file(diff.bgFile, bg)
+  }
+
+  const blob = await newZip.generateAsync({ type: 'blob' })
+  return new File([blob], `${slot}${isNsv ? '.nsv' : ''}.osz`, { type: 'application/octet-stream' })
+}
+
 function MapUploadRow({
   slot,
   type,
@@ -374,7 +392,11 @@ function MapUploadCell({
     }
 
     if (osuFiles.length === 1) {
-      onUploadOsz(roundId, slot, file, isNsv)
+      const content = await zip.files[osuFiles[0]].async('string')
+      const meta = parseOsuMeta(content)
+      meta.fileName = osuFiles[0]
+      const trimmed = await buildTrimmedOsz(zip, meta, slot, isNsv)
+      onUploadOsz(roundId, slot, trimmed, isNsv)
       return
     }
 
@@ -404,23 +426,8 @@ function MapUploadCell({
   const confirmDiffUpload = async () => {
     if (!pendingZip || availableDiffs.length === 0) return
     const diff = availableDiffs[selectedDiff]
-
-    const newZip = new JSZip()
-    const osuContent = await pendingZip.files[diff.fileName].async('uint8array')
-    newZip.file(diff.fileName, osuContent)
-
-    if (diff.audioFilename && pendingZip.files[diff.audioFilename]) {
-      const audio = await pendingZip.files[diff.audioFilename].async('uint8array')
-      newZip.file(diff.audioFilename, audio)
-    }
-    if (diff.bgFile && pendingZip.files[diff.bgFile]) {
-      const bg = await pendingZip.files[diff.bgFile].async('uint8array')
-      newZip.file(diff.bgFile, bg)
-    }
-
-    const blob = await newZip.generateAsync({ type: 'blob' })
-    const oszFile = new File([blob], `${slot}${isNsv ? '.nsv' : ''}.osz`, { type: 'application/octet-stream' })
-    onUploadOsz(roundId, slot, oszFile, isNsv)
+    const trimmed = await buildTrimmedOsz(pendingZip, diff, slot, isNsv)
+    onUploadOsz(roundId, slot, trimmed, isNsv)
     setPendingZip(null)
     setAvailableDiffs([])
   }

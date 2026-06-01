@@ -251,25 +251,26 @@ export function BulkImporter({ onImport, onClose, existingRoundCount }: Props) {
 
   const failedCount = rows.filter((r) => r.status === 'error' && r.mapId).length
   const okRows = rows.filter((r) => r.status === 'ok' && r.meta)
-  const groupedOk: ParsedRow[][] = []
-  for (const r of okRows) {
-    if (!groupedOk[r.groupIndex]) groupedOk[r.groupIndex] = []
-    groupedOk[r.groupIndex].push(r)
+  const importableRows = rows.filter((r) => r.slot)
+  const groupedAll: ParsedRow[][] = []
+  for (const r of importableRows) {
+    if (!groupedAll[r.groupIndex]) groupedAll[r.groupIndex] = []
+    groupedAll[r.groupIndex].push(r)
   }
   const allAbbrFilled = groupMetas.every((m, i) => groupSizes[i] === 0 || m.abbreviation.trim())
-  const canImport = okRows.length > 0 && allAbbrFilled && !running
+  const canImport = importableRows.length > 0 && allAbbrFilled && !running
 
   const doImport = () => {
     const rounds: RoundWithMeta[] = []
     let orderCursor = existingRoundCount
 
-    groupedOk.forEach((groupRows, gi) => {
+    groupedAll.forEach((groupRows, gi) => {
       if (!groupRows || groupRows.length === 0) return
       const meta = groupMetas[gi]
       orderCursor++
 
       const maps: ExtendedMap[] = groupRows.map((r) => {
-        const m = r.meta!
+        const m = r.meta
         const category = detectCategory(r.slot)
         const realTypes = REAL_TYPES[category] || []
         const realType = realTypes.length > 0 ? realTypes[0].id : ''
@@ -278,10 +279,9 @@ export function BulkImporter({ onImport, onClose, existingRoundCount }: Props) {
           slot: r.slot,
           type,
           realType,
-          name: `${m.artist} - ${m.title} [${m.version}]`,
+          name: m ? `${m.artist} - ${m.title} [${m.version}]` : '',
           difficulty: 0,
-          beatmapId: Number(m.beatmapId),
-          beatmapsetId: Number(m.beatmapsetId),
+          ...(m && { beatmapId: Number(m.beatmapId), beatmapsetId: Number(m.beatmapsetId) }),
           category,
         }
       })
@@ -509,7 +509,7 @@ export function BulkImporter({ onImport, onClose, existingRoundCount }: Props) {
                 disabled={!canImport}
                 className="px-3 py-1.5 bg-green-600 text-white rounded text-sm hover:bg-green-700 disabled:opacity-40"
               >
-                导入 {groupedOk.filter((g) => g && g.length > 0).length} 轮（{okRows.length} 张）
+                导入 {groupedAll.filter((g) => g && g.length > 0).length} 轮（{importableRows.length} 张{failedCount > 0 ? `，${failedCount} 张元数据失败仍会创建` : ''}）
               </button>
             </>
           )}

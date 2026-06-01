@@ -200,25 +200,76 @@ function RoundUploadSection({
   uploadedNsvSlots: Set<string>
   uploading: Record<string, boolean>
   status: Record<string, 'success' | 'error'>
-  onUploadOsz: (roundId: string, slot: string, file: File, isNsv: boolean) => void
+  onUploadOsz: (roundId: string, slot: string, file: File, isNsv: boolean) => Promise<void> | void
   onUploadThree: (roundId: string, slot: string, osu: File, audio: File, bg: File, isNsv: boolean) => void
   onDelete: (roundId: string, slot: string, isNsv: boolean) => void
 }) {
   const [expanded, setExpanded] = useState(false)
+  const [bulkRunning, setBulkRunning] = useState(false)
+  const [bulkProgress, setBulkProgress] = useState({ done: 0, total: 0 })
+  const [bulkErrors, setBulkErrors] = useState<{ slot: string; msg: string }[]>([])
   const uploadedInRound = round.maps.filter(m => uploadedSlots.has(`${round.id}/${m.slot}`)).length
+
+  const eligibleForBulk = round.maps.filter(
+    m => m.beatmapsetId && !uploadedSlots.has(`${round.id}/${m.slot}`)
+  )
+
+  const startBulkAuto = async (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (bulkRunning || eligibleForBulk.length === 0) return
+    setBulkRunning(true)
+    setBulkProgress({ done: 0, total: eligibleForBulk.length })
+    const errors: { slot: string; msg: string }[] = []
+    for (let i = 0; i < eligibleForBulk.length; i++) {
+      const m = eligibleForBulk[i]
+      try {
+        const expectedVersion = extractVersionFromName(m.name)
+        const result = await autoDownloadAndTrim(m.beatmapsetId!, expectedVersion, m.slot, false)
+        if (result.needsManualSelect) {
+          errors.push({ slot: m.slot, msg: '多难度匹配不上，需手动选' })
+        } else {
+          await onUploadOsz(round.id, m.slot, result.file, false)
+        }
+      } catch (err) {
+        errors.push({ slot: m.slot, msg: err instanceof Error ? err.message : String(err) })
+      }
+      setBulkProgress({ done: i + 1, total: eligibleForBulk.length })
+      await new Promise(r => setTimeout(r, 200))
+    }
+    setBulkErrors(errors)
+    setBulkRunning(false)
+  }
 
   return (
     <div className="border border-gray-100 rounded-md">
-      <button
-        onClick={() => setExpanded(!expanded)}
-        className="w-full px-3 py-2 flex items-center justify-between text-left hover:bg-gray-50"
-      >
-        <span className="text-sm font-medium text-gray-700">{round.abbreviation}</span>
-        <span className="text-xs text-gray-400">
-          {uploadedInRound}/{round.maps.length} 张
-          {uploadedInRound === round.maps.length && ' ✓'}
-        </span>
-      </button>
+      <div className="w-full px-3 py-2 flex items-center justify-between hover:bg-gray-50">
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="flex-1 flex items-center justify-between text-left"
+        >
+          <span className="text-sm font-medium text-gray-700">{round.abbreviation}</span>
+          <span className="text-xs text-gray-400">
+            {uploadedInRound}/{round.maps.length} 张
+            {uploadedInRound === round.maps.length && ' ✓'}
+          </span>
+        </button>
+        {eligibleForBulk.length > 0 && (
+          <button
+            onClick={startBulkAuto}
+            disabled={bulkRunning}
+            className="ml-3 px-2 py-1 text-xs bg-blue-50 text-blue-700 rounded hover:bg-blue-100 border border-blue-200 disabled:opacity-50 shrink-0"
+            title={`一键从镜像自动下载并上传本轮 ${eligibleForBulk.length} 张图（仅主版本）`}
+          >
+            {bulkRunning ? `下载中 ${bulkProgress.done}/${bulkProgress.total}` : `一键自动 (${eligibleForBulk.length})`}
+          </button>
+        )}
+      </div>
+
+      {bulkErrors.length > 0 && !bulkRunning && (
+        <div className="px-3 py-1.5 text-xs text-yellow-700 bg-yellow-50 border-t border-yellow-200">
+          {bulkErrors.length} 张失败：{bulkErrors.map(e => `${e.slot}(${e.msg})`).join('，')}
+        </div>
+      )}
 
       {expanded && (
         <div className="px-3 pb-3 space-y-2">
@@ -640,7 +691,7 @@ function MapUploadCell({
                   onChange={handleOszSelect}
                 />
               </div>
-              {beatmapsetId && !autoDownloading && (
+              {beatmapsetId && !isNsv && !autoDownloading && (
                 <button
                   onClick={handleAutoDownload}
                   className="px-2 py-1 text-xs bg-blue-50 text-blue-700 rounded hover:bg-blue-100 border border-blue-200 shrink-0"

@@ -23,13 +23,22 @@ interface ParsedRow {
   raw: string
   slot: string
   mapId: string
+  groupIndex: number
   status: RowStatus
   meta?: BeatmapApiResponse
   error?: string
 }
 
+interface GroupMeta {
+  name: string
+  abbreviation: string
+  isQualifier: boolean
+}
+
+type Step = 'input' | 'confirm' | 'fetch'
+
 interface Props {
-  onImport: (round: RoundWithMeta) => void
+  onImport: (rounds: RoundWithMeta[]) => void
   onClose: () => void
   existingRoundCount: number
 }
@@ -64,17 +73,78 @@ function extractMapId(s: string): string | null {
 }
 
 function parseInput(text: string): ParsedRow[] {
-  const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean)
-  return lines.map((raw): ParsedRow => {
-    const parts = raw.split(/\s*\t\s*|\s{2,}|\s+/).filter(Boolean)
+  const lines = text.split(/\r?\n/)
+  const rows: ParsedRow[] = []
+  let groupIndex = 0
+  const seenSlotsInGroup = new Set<string>()
+
+  for (const rawLine of lines) {
+    const line = rawLine.trim()
+
+    if (!line) {
+      if (seenSlotsInGroup.size > 0) {
+        groupIndex++
+        seenSlotsInGroup.clear()
+      }
+      continue
+    }
+
+    const parts = line.split(/\s*\t\s*|\s{2,}|\s+/).filter(Boolean)
     if (parts.length < 2) {
-      return { raw, slot: parts[0] || '', mapId: '', status: 'error', error: '缺少 slot 或 ID' }
+      rows.push({ raw: line, slot: parts[0] || '', mapId: '', groupIndex, status: 'error', error: '缺少 slot 或 ID' })
+      continue
     }
     const slot = parts[0].toUpperCase()
     const mapId = extractMapId(parts.slice(1).join(' '))
-    if (!mapId) return { raw, slot, mapId: '', status: 'error', error: '无法提取 mapID' }
-    return { raw, slot, mapId, status: 'pending' }
-  })
+
+    if (seenSlotsInGroup.has(slot)) {
+      groupIndex++
+      seenSlotsInGroup.clear()
+    }
+    seenSlotsInGroup.add(slot)
+
+    if (!mapId) {
+      rows.push({ raw: line, slot, mapId: '', groupIndex, status: 'error', error: '无法提取 mapID' })
+      continue
+    }
+    rows.push({ raw: line, slot, mapId, groupIndex, status: 'pending' })
+  }
+  return rows
+}
+
+const ELIM_NAMES: { name: string; abbr: string }[] = [
+  { name: 'Grand Finals', abbr: 'GF' },
+  { name: 'Finals', abbr: 'F' },
+  { name: 'Semifinals', abbr: 'SF' },
+  { name: 'Quarterfinals', abbr: 'QF' },
+  { name: 'Round of 16', abbr: 'RO16' },
+  { name: 'Round of 32', abbr: 'RO32' },
+  { name: 'Round of 64', abbr: 'RO64' },
+  { name: 'Round of 128', abbr: 'RO128' },
+]
+
+function buildDefaultGroupMetas(groupCount: number, qualifierMask: boolean[]): GroupMeta[] {
+  const result: GroupMeta[] = []
+  const elimCount = qualifierMask.filter((q) => !q).length
+  let elimAssigned = 0
+
+  for (let i = 0; i < groupCount; i++) {
+    if (qualifierMask[i]) {
+      const qualIdx = qualifierMask.slice(0, i + 1).filter((q) => q).length
+      const totalQuals = qualifierMask.filter((q) => q).length
+      result.push({
+        name: totalQuals > 1 ? `Qualifiers ${qualIdx}` : 'Qualifiers',
+        abbreviation: totalQuals > 1 ? `Qual${qualIdx}` : 'Qual',
+        isQualifier: true,
+      })
+    } else {
+      const remainingFromEnd = elimCount - elimAssigned - 1
+      const preset = ELIM_NAMES[remainingFromEnd] || { name: `Round ${i + 1}`, abbr: `R${i + 1}` }
+      result.push({ name: preset.name, abbreviation: preset.abbr, isQualifier: false })
+      elimAssigned++
+    }
+  }
+  return result
 }
 
 async function fetchBeatmap(mapId: string): Promise<BeatmapApiResponse> {
@@ -97,12 +167,24 @@ function formatLength(seconds: number | null): string {
   return `${m}:${s.toString().padStart(2, '0')}`
 }
 
+const GROUP_COLORS = ['bg-purple-100', 'bg-blue-100', 'bg-emerald-100', 'bg-pink-100', 'bg-amber-100', 'bg-indigo-100', 'bg-teal-100', 'bg-rose-100']
+
 export function BulkImporter({ onImport, onClose, existingRoundCount }: Props) {
+  const [step, setStep] = useState<Step>('input')
   const [text, setText] = useState('')
   const [rows, setRows] = useState<ParsedRow[]>([])
   const [running, setRunning] = useState(false)
-  const [roundName, setRoundName] = useState('')
-  const [roundAbbr, setRoundAbbr] = useState('')
+  const [groupMetas, setGroupMetas] = useState<GroupMeta[]>([])
+
+  const groupCount = rows.length > 0 ? Math.max(...rows.map((r) => r.groupIndex)) + 1 : 0
+
+  const groupSizes: number[] = Array.from({ length: groupCount }, () => 0)
+  for (const r of rows) groupSizes[r.groupIndex]++
+
+  const groupHasTb: boolean[] = Array.from({ length: groupCount }, () => false)
+  for (const r of rows) {
+    if (/^TB/i.test(r.slot)) groupHasTb[r.groupIndex] = true
+  }
 
   const parse = () => {
     const parsed = parseInput(text)
@@ -111,9 +193,44 @@ export function BulkImporter({ onImport, onClose, existingRoundCount }: Props) {
       return
     }
     setRows(parsed)
+    const gc = parsed.length > 0 ? Math.max(...parsed.map((r) => r.groupIndex)) + 1 : 0
+    const tbMask: boolean[] = Array.from({ length: gc }, () => false)
+    for (const r of parsed) if (/^TB/i.test(r.slot)) tbMask[r.groupIndex] = true
+    const qualifierMask = tbMask.map((hasTb) => !hasTb)
+    setGroupMetas(buildDefaultGroupMetas(gc, qualifierMask))
+    setStep('confirm')
   }
 
-  const fetchAll = async () => {
+  const toggleQualifier = (index: number) => {
+    const newMask = groupMetas.map((m, i) => (i === index ? !m.isQualifier : m.isQualifier))
+    setGroupMetas(buildDefaultGroupMetas(groupCount, newMask))
+  }
+
+  const updateGroupMeta = (index: number, key: keyof GroupMeta, value: string | boolean) => {
+    setGroupMetas((prev) => prev.map((g, i) => (i === index ? { ...g, [key]: value } : g)))
+  }
+
+  const startFetch = async () => {
+    setStep('fetch')
+    setRunning(true)
+    const next = [...rows]
+    for (let i = 0; i < next.length; i++) {
+      if (next[i].status === 'ok' || !next[i].mapId) continue
+      next[i] = { ...next[i], status: 'fetching' }
+      setRows([...next])
+      try {
+        const meta = await fetchBeatmap(next[i].mapId)
+        next[i] = { ...next[i], status: 'ok', meta }
+      } catch (err) {
+        next[i] = { ...next[i], status: 'error', error: err instanceof Error ? err.message : String(err) }
+      }
+      setRows([...next])
+      await new Promise((r) => setTimeout(r, 400))
+    }
+    setRunning(false)
+  }
+
+  const retryFailed = async () => {
     setRunning(true)
     const next = [...rows]
     for (let i = 0; i < next.length; i++) {
@@ -133,165 +250,269 @@ export function BulkImporter({ onImport, onClose, existingRoundCount }: Props) {
   }
 
   const failedCount = rows.filter((r) => r.status === 'error' && r.mapId).length
-
   const okRows = rows.filter((r) => r.status === 'ok' && r.meta)
-  const canImport = okRows.length > 0 && roundAbbr.trim()
+  const groupedOk: ParsedRow[][] = []
+  for (const r of okRows) {
+    if (!groupedOk[r.groupIndex]) groupedOk[r.groupIndex] = []
+    groupedOk[r.groupIndex].push(r)
+  }
+  const allAbbrFilled = groupMetas.every((m, i) => groupSizes[i] === 0 || m.abbreviation.trim())
+  const canImport = okRows.length > 0 && allAbbrFilled && !running
 
   const doImport = () => {
-    const slotCounters: Record<string, number> = {}
-    const maps: ExtendedMap[] = okRows.map((r) => {
-      const meta = r.meta!
-      const category = detectCategory(r.slot)
-      const realTypes = REAL_TYPES[category] || []
-      const realType = realTypes.length > 0 ? realTypes[0].id : ''
-      const type = category === 'SPECIAL' ? r.slot.replace(/\d+$/, '') : category
-      slotCounters[type] = (slotCounters[type] || 0) + 1
-      return {
-        slot: r.slot,
-        type,
-        realType,
-        name: `${meta.artist} - ${meta.title} [${meta.version}]`,
-        difficulty: 0,
-        beatmapId: Number(meta.beatmapId),
-        beatmapsetId: Number(meta.beatmapsetId),
-        category,
-      }
+    const rounds: RoundWithMeta[] = []
+    let orderCursor = existingRoundCount
+
+    groupedOk.forEach((groupRows, gi) => {
+      if (!groupRows || groupRows.length === 0) return
+      const meta = groupMetas[gi]
+      orderCursor++
+
+      const maps: ExtendedMap[] = groupRows.map((r) => {
+        const m = r.meta!
+        const category = detectCategory(r.slot)
+        const realTypes = REAL_TYPES[category] || []
+        const realType = realTypes.length > 0 ? realTypes[0].id : ''
+        const type = category === 'SPECIAL' ? r.slot.replace(/\d+$/, '') : category
+        return {
+          slot: r.slot,
+          type,
+          realType,
+          name: `${m.artist} - ${m.title} [${m.version}]`,
+          difficulty: 0,
+          beatmapId: Number(m.beatmapId),
+          beatmapsetId: Number(m.beatmapsetId),
+          category,
+        }
+      })
+
+      rounds.push({
+        id: `round-${orderCursor}`,
+        name: meta.name.trim() || meta.abbreviation.trim(),
+        abbreviation: meta.abbreviation.trim(),
+        order: orderCursor,
+        isQualifier: meta.isQualifier || undefined,
+        difficulty: { min: 0, max: 0, average: 0 },
+        maps: maps.map(({ category, ...rest }) => rest),
+        _maps: maps,
+        _typeDiffs: { rc: 0, rcMin: 0, rcMax: 0, hbRf: 0, hbLn: 0, hbMin: 0, hbMax: 0, ln: 0, lnMin: 0, lnMax: 0, sv: 0, svMin: 0, svMax: 0 },
+        _typeDiffsLocked: { rc: false, hbRf: false, hbLn: false, ln: false, sv: false },
+        _diffMode: 'perMap',
+      })
     })
 
-    const order = existingRoundCount + 1
-    const round: RoundWithMeta = {
-      id: `round-${order}`,
-      name: roundName.trim() || roundAbbr.trim(),
-      abbreviation: roundAbbr.trim(),
-      order,
-      difficulty: { min: 0, max: 0, average: 0 },
-      maps: maps.map(({ category, ...rest }) => rest),
-      _maps: maps,
-      _typeDiffs: { rc: 0, rcMin: 0, rcMax: 0, hbRf: 0, hbLn: 0, hbMin: 0, hbMax: 0, ln: 0, lnMin: 0, lnMax: 0, sv: 0, svMin: 0, svMax: 0 },
-      _typeDiffsLocked: { rc: false, hbRf: false, hbLn: false, ln: false, sv: false },
-      _diffMode: 'perMap',
-    }
-    onImport(round)
+    onImport(rounds)
   }
 
   return (
     <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] flex flex-col">
         <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between shrink-0">
-          <h3 className="text-sm font-medium text-gray-900">从主表格批量导入图池</h3>
+          <h3 className="text-sm font-medium text-gray-900">
+            从主表格批量导入图池
+            <span className="ml-2 text-xs text-gray-400">
+              {step === 'input' && '步骤 1/3：粘贴'}
+              {step === 'confirm' && '步骤 2/3：确认轮次'}
+              {step === 'fetch' && '步骤 3/3：查询元数据'}
+            </span>
+          </h3>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600">✕</button>
         </div>
 
         <div className="p-4 overflow-y-auto flex-1 space-y-3">
-          <div className="text-xs text-gray-500 leading-relaxed">
-            从 Google 主表格选中 <strong>slot 列</strong> 和 <strong>map link/ID 列</strong>（两列），复制粘贴到下方。每行格式自由：tab 或多空格分隔皆可。<br />
-            支持的 ID 格式：纯数字、<code>osu.ppy.sh/b/数字</code>、<code>osu.ppy.sh/beatmapsets/X#mode/数字</code>。
-          </div>
-
-          <textarea
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            placeholder={'RC1\thttps://osu.ppy.sh/b/5318853\nRC2\t5318764\nHB1\t5318882\nTB\t5318924'}
-            rows={8}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md text-xs font-mono focus:outline-none focus:border-purple-400"
-          />
-
-          <div className="flex items-center gap-2">
-            <button
-              onClick={parse}
-              disabled={!text.trim() || running}
-              className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded text-xs hover:bg-gray-200 disabled:opacity-40"
-            >
-              解析
-            </button>
-            <button
-              onClick={fetchAll}
-              disabled={rows.length === 0 || running || rows.every((r) => r.status === 'ok' || !r.mapId)}
-              className="px-3 py-1.5 bg-purple-600 text-white rounded text-xs hover:bg-purple-700 disabled:opacity-40"
-            >
-              {running ? '查询中...' : failedCount > 0 ? `重试失败 (${failedCount}) + 查询剩余` : '调 osu! API 拉元数据'}
-            </button>
-            {rows.length > 0 && (
-              <span className="text-xs text-gray-500 ml-auto">
-                {okRows.length}/{rows.length} 成功
-              </span>
-            )}
-          </div>
-
-          {rows.length > 0 && (
-            <div className="border border-gray-200 rounded text-xs">
-              <div className="grid grid-cols-[60px_80px_1fr] gap-2 px-2 py-1.5 bg-gray-50 border-b border-gray-200 font-medium text-gray-500">
-                <span>Slot</span>
-                <span>Map ID</span>
-                <span>结果</span>
+          {step === 'input' && (
+            <>
+              <div className="text-xs text-gray-500 leading-relaxed">
+                从 Google 主表格选中 <strong>slot 列</strong> 和 <strong>map link/ID 列</strong>（两列），复制粘贴到下方。每行格式自由：tab 或多空格分隔皆可。<br />
+                <strong className="text-gray-700">分轮规则：</strong>用 <strong>空行</strong>分隔不同的轮次（资格赛和决赛之间必须空一行）；如果同一个 slot（如 RC1）再次出现，也会自动开新一轮。<br />
+                支持的 ID 格式：纯数字、<code>osu.ppy.sh/b/数字</code>、<code>osu.ppy.sh/beatmapsets/X#mode/数字</code>。
               </div>
-              <div className="max-h-64 overflow-y-auto">
-                {rows.map((r, i) => (
-                  <div
-                    key={i}
-                    className={`grid grid-cols-[60px_80px_1fr] gap-2 px-2 py-1 border-b border-gray-100 ${
-                      r.status === 'error' ? 'bg-yellow-50' : r.status === 'ok' ? '' : 'bg-blue-50'
-                    }`}
-                  >
-                    <span className="font-mono text-gray-700">{r.slot}</span>
-                    <span className="font-mono text-gray-500">{r.mapId || '—'}</span>
-                    <span className="truncate">
-                      {r.status === 'ok' && r.meta && (
-                        <>
-                          <span className="text-gray-700">{r.meta.artist} - {r.meta.title} [{r.meta.version}]</span>
-                          <span className="text-gray-400 ml-2">
-                            {r.meta.bpm ? `${Math.round(r.meta.bpm)}bpm` : ''} {formatLength(r.meta.length)}
-                            {r.meta.mode !== '3' && <span className="text-orange-600 ml-1">⚠ 非 mania (mode={r.meta.mode})</span>}
-                          </span>
-                        </>
-                      )}
-                      {r.status === 'fetching' && <span className="text-blue-600">查询中...</span>}
-                      {r.status === 'error' && <span className="text-yellow-700">{r.error}</span>}
-                      {r.status === 'pending' && <span className="text-gray-400">待查询</span>}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
+
+              <textarea
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                placeholder={
+                  '示例（两轮，用空行分隔）：\n\n' +
+                  'RC1\thttps://osu.ppy.sh/b/5318853\n' +
+                  'RC2\t5318764\n' +
+                  'HB1\t5318882\n' +
+                  'TB\t5318924\n' +
+                  '\n' +
+                  'RC1\t5308399\n' +
+                  'RC2\t5308425\n' +
+                  'HB1\t5308454\n'
+                }
+                rows={14}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-xs font-mono focus:outline-none focus:border-purple-400"
+              />
+            </>
           )}
 
-          {okRows.length > 0 && (
-            <div className="grid grid-cols-2 gap-2 pt-2 border-t border-gray-100">
-              <div>
-                <label className="block text-xs text-gray-500 mb-0.5">轮次名称（可选）</label>
-                <input
-                  type="text"
-                  value={roundName}
-                  onChange={(e) => setRoundName(e.target.value)}
-                  placeholder="Grand Finals"
-                  className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:border-purple-400"
-                />
+          {step === 'confirm' && (
+            <>
+              <div className="text-xs text-gray-500 leading-relaxed">
+                识别到 <strong className="text-gray-900">{groupCount} 轮</strong>，每行 <strong>张数</strong> 见右侧。<br />
+                默认按淘汰赛从尾倒推命名（GF/F/SF/QF/RO16...），<strong>没有 TB</strong> 的轮次默认标为资格赛。请确认或修改。
               </div>
-              <div>
-                <label className="block text-xs text-gray-500 mb-0.5">缩写</label>
-                <input
-                  type="text"
-                  value={roundAbbr}
-                  onChange={(e) => setRoundAbbr(e.target.value)}
-                  placeholder="GF"
-                  className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:border-purple-400"
-                />
+
+              <div className="border border-gray-200 rounded">
+                <div className="grid grid-cols-[40px_70px_1fr_1fr_60px] gap-2 px-2 py-1.5 bg-gray-50 border-b border-gray-200 font-medium text-xs text-gray-500">
+                  <span>轮</span>
+                  <span>类型</span>
+                  <span>名称</span>
+                  <span>缩写</span>
+                  <span className="text-right">张数</span>
+                </div>
+                {groupMetas.map((m, gi) => {
+                  if (groupSizes[gi] === 0) return null
+                  const groupColor = GROUP_COLORS[gi % GROUP_COLORS.length]
+                  return (
+                    <div key={gi} className="grid grid-cols-[40px_70px_1fr_1fr_60px] gap-2 px-2 py-1.5 border-b border-gray-100 items-center">
+                      <span className={`font-mono text-center text-gray-700 rounded text-xs py-1 ${groupColor}`}>
+                        {gi + 1}
+                      </span>
+                      <button
+                        onClick={() => toggleQualifier(gi)}
+                        className={`text-xs px-2 py-1 rounded ${m.isQualifier ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-600'}`}
+                        title={`点击切换：当前是${m.isQualifier ? '资格赛' : '淘汰赛'}`}
+                      >
+                        {m.isQualifier ? '资格赛' : '淘汰赛'}
+                      </button>
+                      <input
+                        type="text"
+                        value={m.name}
+                        onChange={(e) => updateGroupMeta(gi, 'name', e.target.value)}
+                        placeholder="轮次名称"
+                        className="w-full px-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:border-purple-400"
+                      />
+                      <input
+                        type="text"
+                        value={m.abbreviation}
+                        onChange={(e) => updateGroupMeta(gi, 'abbreviation', e.target.value)}
+                        placeholder="缩写"
+                        className="w-full px-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:border-purple-400"
+                      />
+                      <span className="text-xs text-gray-400 text-right">
+                        {groupSizes[gi]}{!groupHasTb[gi] && <span className="text-orange-600 ml-1" title="无 TB">⚐</span>}
+                      </span>
+                    </div>
+                  )
+                })}
               </div>
-            </div>
+
+              <div className="text-xs text-gray-400">
+                共 {rows.length} 行，{rows.filter((r) => r.mapId).length} 个有效 mapID。下一步会逐张调 osu! API 拉取元数据，每张约 0.4 秒。
+              </div>
+            </>
+          )}
+
+          {step === 'fetch' && (
+            <>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-500">
+                  {okRows.length}/{rows.filter((r) => r.mapId).length} 已查询成功
+                  {failedCount > 0 && <span className="text-yellow-700 ml-2">· {failedCount} 失败</span>}
+                </span>
+                {!running && failedCount > 0 && (
+                  <button
+                    onClick={retryFailed}
+                    className="px-2 py-1 text-xs bg-purple-600 text-white rounded hover:bg-purple-700 ml-auto"
+                  >
+                    重试失败
+                  </button>
+                )}
+              </div>
+
+              <div className="border border-gray-200 rounded text-xs">
+                <div className="grid grid-cols-[40px_60px_80px_1fr] gap-2 px-2 py-1.5 bg-gray-50 border-b border-gray-200 font-medium text-gray-500">
+                  <span>轮</span>
+                  <span>Slot</span>
+                  <span>Map ID</span>
+                  <span>结果</span>
+                </div>
+                <div className="max-h-72 overflow-y-auto">
+                  {rows.map((r, i) => {
+                    const groupColor = GROUP_COLORS[r.groupIndex % GROUP_COLORS.length]
+                    return (
+                      <div
+                        key={i}
+                        className={`grid grid-cols-[40px_60px_80px_1fr] gap-2 px-2 py-1 border-b border-gray-100 ${
+                          r.status === 'error' ? 'bg-yellow-50' : r.status === 'ok' ? '' : 'bg-blue-50'
+                        }`}
+                      >
+                        <span className={`font-mono text-center text-gray-700 rounded text-[10px] ${groupColor}`}>
+                          {r.groupIndex + 1}
+                        </span>
+                        <span className="font-mono text-gray-700">{r.slot}</span>
+                        <span className="font-mono text-gray-500">{r.mapId || '—'}</span>
+                        <span className="truncate">
+                          {r.status === 'ok' && r.meta && (
+                            <>
+                              <span className="text-gray-700">{r.meta.artist} - {r.meta.title} [{r.meta.version}]</span>
+                              <span className="text-gray-400 ml-2">
+                                {r.meta.bpm ? `${Math.round(r.meta.bpm)}bpm` : ''} {formatLength(r.meta.length)}
+                                {r.meta.mode !== '3' && <span className="text-orange-600 ml-1">⚠ 非 mania (mode={r.meta.mode})</span>}
+                              </span>
+                            </>
+                          )}
+                          {r.status === 'fetching' && <span className="text-blue-600">查询中...</span>}
+                          {r.status === 'error' && <span className="text-yellow-700">{r.error}</span>}
+                          {r.status === 'pending' && <span className="text-gray-400">待查询</span>}
+                        </span>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            </>
           )}
         </div>
 
         <div className="px-4 py-3 border-t border-gray-200 flex items-center justify-end gap-2 shrink-0">
-          <button onClick={onClose} className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800">
-            取消
-          </button>
-          <button
-            onClick={doImport}
-            disabled={!canImport}
-            className="px-3 py-1.5 bg-green-600 text-white rounded text-sm hover:bg-green-700 disabled:opacity-40"
-          >
-            导入为新轮次（{okRows.length} 张）
-          </button>
+          {step === 'input' && (
+            <>
+              <button onClick={onClose} className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800">
+                取消
+              </button>
+              <button
+                onClick={parse}
+                disabled={!text.trim()}
+                className="px-3 py-1.5 bg-purple-600 text-white rounded text-sm hover:bg-purple-700 disabled:opacity-40"
+              >
+                解析 →
+              </button>
+            </>
+          )}
+
+          {step === 'confirm' && (
+            <>
+              <button onClick={() => setStep('input')} className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800">
+                ← 返回修改
+              </button>
+              <button
+                onClick={startFetch}
+                disabled={rows.filter((r) => r.mapId).length === 0}
+                className="px-3 py-1.5 bg-purple-600 text-white rounded text-sm hover:bg-purple-700 disabled:opacity-40"
+              >
+                确认并查询元数据 →
+              </button>
+            </>
+          )}
+
+          {step === 'fetch' && (
+            <>
+              <button onClick={() => setStep('confirm')} className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800" disabled={running}>
+                ← 返回确认
+              </button>
+              <button
+                onClick={doImport}
+                disabled={!canImport}
+                className="px-3 py-1.5 bg-green-600 text-white rounded text-sm hover:bg-green-700 disabled:opacity-40"
+              >
+                导入 {groupedOk.filter((g) => g && g.length > 0).length} 轮（{okRows.length} 张）
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>

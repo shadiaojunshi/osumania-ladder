@@ -382,8 +382,8 @@ function RoundsStep({
     onUpdate(rounds.filter((_, i) => i !== index))
   }
 
-  const handleImport = (round: RoundWithMeta) => {
-    onUpdate([...rounds, round])
+  const handleImport = (newRounds: RoundWithMeta[]) => {
+    onUpdate([...rounds, ...newRounds])
     setImporterOpen(false)
   }
 

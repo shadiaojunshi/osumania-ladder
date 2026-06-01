@@ -27,6 +27,9 @@ export const REAL_TYPES: Record<string, { id: string; name: string }[]> = {
     { id: 'HB3', name: 'Technical (HB3)' },
     { id: 'HB4', name: 'Wildcard (HB4)' },
     { id: 'HB5', name: 'Old-school (HB5)' },
+    { id: 'RCmainHB', name: 'RC-main Hybrid (RCmainHB)' },
+    { id: 'LNmainHB', name: 'LN-main Hybrid (LNmainHB)' },
+    { id: 'MNTB', name: 'Mini Tiebreaker (MNTB)' },
     { id: 'OHB', name: 'OtherHybrid (OHB)' },
   ],
   LN: [

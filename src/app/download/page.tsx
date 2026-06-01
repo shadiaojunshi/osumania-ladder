@@ -13,7 +13,7 @@ interface Pack {
 const CATEGORIES: { label: string; types: string[] }[] = [
   { label: 'Rice 类', types: ['SS', 'JS', 'SA', 'CJ', 'SJ', 'MX', 'DP', 'STC', 'MTC', 'JTC', 'WTC', 'TC', 'ORC'] },
   { label: 'LN 类', types: ['RE', 'CO', 'TE', 'DE', 'SW', 'JW', 'IN', 'OLN'] },
-  { label: 'Hybrid 类', types: ['HB1', 'HB2', 'HB3', 'HB4', 'HB5', 'OHB'] },
+  { label: 'Hybrid 类', types: ['HB1', 'HB2', 'HB3', 'HB4', 'HB5', 'RCmainHB', 'LNmainHB', 'MNTB', 'OHB'] },
   { label: 'SV 类', types: ['SV1', 'SV2', 'SI', 'ME'] },
   { label: '其他', types: ['TB'] },
 ]

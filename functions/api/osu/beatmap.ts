@@ -30,13 +30,19 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   const apiUrl = `https://osu.ppy.sh/api/get_beatmaps?k=${env.OSU_API_KEY}&b=${id}`
   let upstream: Response | null = null
   let lastErr: unknown = null
-  for (let attempt = 0; attempt < 3; attempt++) {
+  for (let attempt = 0; attempt < 4; attempt++) {
     try {
       upstream = await fetch(apiUrl, {
         headers: { 'User-Agent': 'osumania-ladder' },
         signal: AbortSignal.timeout(8000),
       })
       if (upstream.ok) break
+      if (upstream.status === 429) {
+        const retryAfter = Number(upstream.headers.get('retry-after'))
+        const wait = Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter * 1000 : 2000 * (attempt + 1)
+        await new Promise((r) => setTimeout(r, Math.min(wait, 8000)))
+        continue
+      }
       if (upstream.status >= 400 && upstream.status < 500) break
     } catch (err) {
       lastErr = err
@@ -47,7 +53,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   if (!upstream || !upstream.ok) {
     return jsonResponse(
       { error: 'upstream error', status: upstream?.status ?? null, message: String(lastErr ?? '') },
-      502
+      upstream?.status === 429 ? 429 : 502
     )
   }
 

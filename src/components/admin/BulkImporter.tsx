@@ -81,7 +81,11 @@ async function fetchBeatmap(mapId: string): Promise<BeatmapApiResponse> {
   const res = await fetch(`/api/osu/beatmap?id=${mapId}`)
   if (!res.ok) {
     const body = await res.json().catch(() => ({}))
-    throw new Error((body as { error?: string }).error || `HTTP ${res.status}`)
+    const err = body as { error?: string; status?: number }
+    if (res.status === 429 || err.status === 429) {
+      throw new Error('被限流 (429)，建议稍后重试这一行')
+    }
+    throw new Error(err.error || `HTTP ${res.status}`)
   }
   return res.json()
 }
@@ -113,7 +117,7 @@ export function BulkImporter({ onImport, onClose, existingRoundCount }: Props) {
     setRunning(true)
     const next = [...rows]
     for (let i = 0; i < next.length; i++) {
-      if (next[i].status === 'error' || !next[i].mapId) continue
+      if (next[i].status === 'ok' || !next[i].mapId) continue
       next[i] = { ...next[i], status: 'fetching' }
       setRows([...next])
       try {
@@ -123,10 +127,12 @@ export function BulkImporter({ onImport, onClose, existingRoundCount }: Props) {
         next[i] = { ...next[i], status: 'error', error: err instanceof Error ? err.message : String(err) }
       }
       setRows([...next])
-      await new Promise((r) => setTimeout(r, 200))
+      await new Promise((r) => setTimeout(r, 400))
     }
     setRunning(false)
   }
+
+  const failedCount = rows.filter((r) => r.status === 'error' && r.mapId).length
 
   const okRows = rows.filter((r) => r.status === 'ok' && r.meta)
   const canImport = okRows.length > 0 && roundAbbr.trim()
@@ -200,10 +206,10 @@ export function BulkImporter({ onImport, onClose, existingRoundCount }: Props) {
             </button>
             <button
               onClick={fetchAll}
-              disabled={rows.length === 0 || running || rows.every((r) => r.status === 'ok' || r.status === 'error')}
+              disabled={rows.length === 0 || running || rows.every((r) => r.status === 'ok' || !r.mapId)}
               className="px-3 py-1.5 bg-purple-600 text-white rounded text-xs hover:bg-purple-700 disabled:opacity-40"
             >
-              {running ? '查询中...' : '调 osu! API 拉元数据'}
+              {running ? '查询中...' : failedCount > 0 ? `重试失败 (${failedCount}) + 查询剩余` : '调 osu! API 拉元数据'}
             </button>
             {rows.length > 0 && (
               <span className="text-xs text-gray-500 ml-auto">

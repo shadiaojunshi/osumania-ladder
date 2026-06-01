@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect } from 'react'
 import type { Tournament, Round } from '@/lib/types'
 import { RoundEditor, type RoundWithMeta } from './RoundEditor'
 import type { MapCategory, ExtendedMap } from './MapSlotEditor'
+import { BulkImporter } from './BulkImporter'
 
 interface Props {
   onUpdate: (tournament: Tournament | null) => void
@@ -352,6 +353,8 @@ function RoundsStep({
   onUpdate: (rounds: RoundWithMeta[]) => void
   onBack: () => void
 }) {
+  const [importerOpen, setImporterOpen] = useState(false)
+
   const addRound = () => {
     const order = rounds.length + 1
     const newRound: RoundWithMeta = {
@@ -379,18 +382,31 @@ function RoundsStep({
     onUpdate(rounds.filter((_, i) => i !== index))
   }
 
+  const handleImport = (round: RoundWithMeta) => {
+    onUpdate([...rounds, round])
+    setImporterOpen(false)
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-medium text-gray-700">
           轮次列表 ({rounds.length} 轮)
         </h3>
-        <button
-          onClick={addRound}
-          className="px-3 py-1.5 bg-green-600 text-white rounded text-sm hover:bg-green-700"
-        >
-          + 添加轮次
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setImporterOpen(true)}
+            className="px-3 py-1.5 bg-purple-600 text-white rounded text-sm hover:bg-purple-700"
+          >
+            从主表格导入
+          </button>
+          <button
+            onClick={addRound}
+            className="px-3 py-1.5 bg-green-600 text-white rounded text-sm hover:bg-green-700"
+          >
+            + 添加轮次
+          </button>
+        </div>
       </div>
 
       {rounds.length === 0 && (
@@ -417,6 +433,14 @@ function RoundsStep({
           ← 上一步
         </button>
       </div>
+
+      {importerOpen && (
+        <BulkImporter
+          onImport={handleImport}
+          onClose={() => setImporterOpen(false)}
+          existingRoundCount={rounds.length}
+        />
+      )}
     </div>
   )
 }

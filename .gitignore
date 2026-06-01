@@ -2,3 +2,5 @@ node_modules
 .next
 out
 src/generated
+.dev.vars
+.wrangler

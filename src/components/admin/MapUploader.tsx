@@ -3,9 +3,16 @@
 import { useState, useEffect, useCallback } from 'react'
 import JSZip from 'jszip'
 
+interface MapInfo {
+  slot: string
+  type: string
+  name?: string
+  beatmapsetId?: number
+}
+
 interface TournamentRounds {
   id: string
-  rounds: { id: string; abbreviation: string; maps: { slot: string; type: string }[] }[]
+  rounds: { id: string; abbreviation: string; maps: MapInfo[] }[]
 }
 
 const NSV_ELIGIBLE_EXCLUDED = new Set(['RC', 'LN', 'HB', 'TB'])
@@ -188,7 +195,7 @@ function RoundUploadSection({
   onUploadThree,
   onDelete,
 }: {
-  round: { id: string; abbreviation: string; maps: { slot: string; type: string }[] }
+  round: { id: string; abbreviation: string; maps: MapInfo[] }
   uploadedSlots: Set<string>
   uploadedNsvSlots: Set<string>
   uploading: Record<string, boolean>
@@ -220,6 +227,8 @@ function RoundUploadSection({
               key={map.slot}
               slot={map.slot}
               type={map.type}
+              name={map.name}
+              beatmapsetId={map.beatmapsetId}
               roundId={round.id}
               isUploaded={uploadedSlots.has(`${round.id}/${map.slot}`)}
               isNsvUploaded={uploadedNsvSlots.has(`${round.id}/${map.slot}`)}
@@ -284,9 +293,60 @@ async function buildTrimmedOsz(sourceZip: JSZip, diff: OsuDiffInfo, slot: string
   return new File([blob], `${slot}${isNsv ? '.nsv' : ''}.osz`, { type: 'application/octet-stream' })
 }
 
+function extractVersionFromName(name: string | undefined): string | null {
+  if (!name) return null
+  const match = name.match(/\[([^\]]+)\]\s*$/)
+  return match ? match[1] : null
+}
+
+async function autoDownloadAndTrim(
+  setId: number,
+  expectedVersion: string | null,
+  slot: string,
+  isNsv: boolean,
+): Promise<{ file: File; needsManualSelect: false } | { zip: JSZip; diffs: OsuDiffInfo[]; needsManualSelect: true }> {
+  const res = await fetch(`/api/osu/download?setId=${setId}`)
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}))
+    throw new Error((body as { error?: string }).error || `下载失败 HTTP ${res.status}`)
+  }
+  const blob = await res.blob()
+  if (blob.size > MAX_SIZE) {
+    throw new Error(`set 文件超过 ${MAX_SIZE / 1024 / 1024}MB 限制`)
+  }
+  const zip = await JSZip.loadAsync(blob)
+  const osuFiles = Object.keys(zip.files).filter(f => f.endsWith('.osu'))
+  if (osuFiles.length === 0) throw new Error('下载的 .osz 中没有 .osu')
+
+  const diffs: OsuDiffInfo[] = []
+  for (const f of osuFiles) {
+    const content = await zip.files[f].async('string')
+    const meta = parseOsuMeta(content)
+    meta.fileName = f
+    diffs.push(meta)
+  }
+
+  if (expectedVersion) {
+    const matched = diffs.find(d => d.version === expectedVersion)
+    if (matched) {
+      const file = await buildTrimmedOsz(zip, matched, slot, isNsv)
+      return { file, needsManualSelect: false }
+    }
+  }
+
+  if (diffs.length === 1) {
+    const file = await buildTrimmedOsz(zip, diffs[0], slot, isNsv)
+    return { file, needsManualSelect: false }
+  }
+
+  return { zip, diffs, needsManualSelect: true }
+}
+
 function MapUploadRow({
   slot,
   type,
+  name,
+  beatmapsetId,
   roundId,
   isUploaded,
   isNsvUploaded,
@@ -298,6 +358,8 @@ function MapUploadRow({
 }: {
   slot: string
   type: string
+  name?: string
+  beatmapsetId?: number
   roundId: string
   isUploaded: boolean
   isNsvUploaded: boolean
@@ -308,10 +370,14 @@ function MapUploadRow({
   onDelete: (roundId: string, slot: string, isNsv: boolean) => void
 }) {
   const showNsv = isNsvEligible(type)
+  const expectedVersion = extractVersionFromName(name)
 
   return (
     <div className="flex items-stretch gap-2 p-2 bg-gray-50 rounded border border-gray-100">
-      <span className="text-xs font-mono w-10 text-gray-600 shrink-0 self-center">{slot}</span>
+      <div className="flex flex-col w-32 shrink-0 self-center">
+        <span className="text-xs font-mono text-gray-600">{slot}</span>
+        {name && <span className="text-[10px] text-gray-400 truncate" title={name}>{name}</span>}
+      </div>
 
       <div className={showNsv ? 'flex-1 grid grid-cols-2 gap-2' : 'flex-1'}>
         <MapUploadCell
@@ -321,6 +387,8 @@ function MapUploadRow({
           isUploaded={isUploaded}
           isUploading={uploading[`${roundId}/${slot}`] || false}
           uploadStatus={status[`${roundId}/${slot}`]}
+          beatmapsetId={beatmapsetId}
+          expectedVersion={expectedVersion}
           onUploadOsz={onUploadOsz}
           onUploadThree={onUploadThree}
           onDelete={onDelete}
@@ -333,6 +401,8 @@ function MapUploadRow({
             isUploaded={isNsvUploaded}
             isUploading={uploading[`${roundId}/${slot}#nsv`] || false}
             uploadStatus={status[`${roundId}/${slot}#nsv`]}
+            beatmapsetId={beatmapsetId}
+            expectedVersion={expectedVersion}
             onUploadOsz={onUploadOsz}
             onUploadThree={onUploadThree}
             onDelete={onDelete}
@@ -350,6 +420,8 @@ function MapUploadCell({
   isUploaded,
   isUploading,
   uploadStatus,
+  beatmapsetId,
+  expectedVersion,
   onUploadOsz,
   onUploadThree,
   onDelete,
@@ -360,6 +432,8 @@ function MapUploadCell({
   isUploaded: boolean
   isUploading: boolean
   uploadStatus?: 'success' | 'error'
+  beatmapsetId?: number
+  expectedVersion: string | null
   onUploadOsz: (roundId: string, slot: string, file: File, isNsv: boolean) => void
   onUploadThree: (roundId: string, slot: string, osu: File, audio: File, bg: File, isNsv: boolean) => void
   onDelete: (roundId: string, slot: string, isNsv: boolean) => void
@@ -371,6 +445,8 @@ function MapUploadCell({
   const [pendingZip, setPendingZip] = useState<JSZip | null>(null)
   const [availableDiffs, setAvailableDiffs] = useState<OsuDiffInfo[]>([])
   const [selectedDiff, setSelectedDiff] = useState<number>(0)
+  const [autoDownloading, setAutoDownloading] = useState(false)
+  const [autoError, setAutoError] = useState<string | null>(null)
 
   const inputId = `osz-${roundId}-${slot}-${isNsv ? 'nsv' : 'main'}`
   const radioName = `diff-${roundId}-${slot}-${isNsv ? 'nsv' : 'main'}`
@@ -440,6 +516,26 @@ function MapUploadCell({
   const handleThreeUpload = () => {
     if (osuFile && audioFile && bgFile) {
       onUploadThree(roundId, slot, osuFile, audioFile, bgFile, isNsv)
+    }
+  }
+
+  const handleAutoDownload = async () => {
+    if (!beatmapsetId) return
+    setAutoDownloading(true)
+    setAutoError(null)
+    try {
+      const result = await autoDownloadAndTrim(beatmapsetId, expectedVersion, slot, isNsv)
+      if (result.needsManualSelect) {
+        setPendingZip(result.zip)
+        setAvailableDiffs(result.diffs)
+        setSelectedDiff(0)
+      } else {
+        onUploadOsz(roundId, slot, result.file, isNsv)
+      }
+    } catch (err) {
+      setAutoError(err instanceof Error ? err.message : String(err))
+    } finally {
+      setAutoDownloading(false)
     }
   }
 
@@ -528,20 +624,31 @@ function MapUploadCell({
           </div>
 
           {mode === 'osz' && (
-            <div
-              className={`flex-1 min-w-0 border border-dashed rounded px-2 py-1 text-xs text-center cursor-pointer hover:border-purple-400 hover:text-purple-500 ${isNsv ? 'border-amber-300 text-amber-600' : 'border-gray-300 text-gray-400'}`}
-              onDragOver={(e) => e.preventDefault()}
-              onDrop={handleOszDrop}
-              onClick={() => document.getElementById(inputId)?.click()}
-            >
-              {placeholderText}
-              <input
-                id={inputId}
-                type="file"
-                accept=".osz"
-                className="hidden"
-                onChange={handleOszSelect}
-              />
+            <div className="flex-1 min-w-0 flex items-center gap-1">
+              <div
+                className={`flex-1 min-w-0 border border-dashed rounded px-2 py-1 text-xs text-center cursor-pointer hover:border-purple-400 hover:text-purple-500 ${isNsv ? 'border-amber-300 text-amber-600' : 'border-gray-300 text-gray-400'}`}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={handleOszDrop}
+                onClick={() => document.getElementById(inputId)?.click()}
+              >
+                {autoDownloading ? '自动下载中...' : autoError ? `失败: ${autoError}` : placeholderText}
+                <input
+                  id={inputId}
+                  type="file"
+                  accept=".osz"
+                  className="hidden"
+                  onChange={handleOszSelect}
+                />
+              </div>
+              {beatmapsetId && !autoDownloading && (
+                <button
+                  onClick={handleAutoDownload}
+                  className="px-2 py-1 text-xs bg-blue-50 text-blue-700 rounded hover:bg-blue-100 border border-blue-200 shrink-0"
+                  title={`从镜像自动下载 set ${beatmapsetId}${expectedVersion ? ` 的 [${expectedVersion}]` : ''}`}
+                >
+                  自动
+                </button>
+              )}
             </div>
           )}
 

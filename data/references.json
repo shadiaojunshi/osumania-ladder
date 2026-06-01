@@ -6,13 +6,13 @@
       "type": "ln"
     },
     {
-      "label": "KET2 GF RC",
-      "difficulty": 14.7
-    },
-    {
       "label": "o!mLN4 GF LN",
       "difficulty": 14.7,
       "type": "ln"
+    },
+    {
+      "label": "KET2 GF RC",
+      "difficulty": 14.7
     },
     {
       "label": "MWC 2025 GF LN",

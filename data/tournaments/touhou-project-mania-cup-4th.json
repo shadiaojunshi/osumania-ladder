@@ -1,0 +1,1136 @@
+{
+  "id": "touhou-project-mania-cup-4th",
+  "name": "TOUHOU Project Mania Cup 4th",
+  "abbreviation": "THMC 4",
+  "keyCount": 4,
+  "year": 2026,
+  "tags": [],
+  "rounds": [
+    {
+      "id": "round-1",
+      "name": "Qualifiers",
+      "abbreviation": "Qual",
+      "order": 1,
+      "isQualifier": true,
+      "difficulty": {
+        "min": 0,
+        "max": 0,
+        "average": 0
+      },
+      "maps": [
+        {
+          "slot": "ST1",
+          "type": "RC",
+          "realType": "TC",
+          "name": "Sasara Yuuna - Oreore Shuugetsu ~Wriggle de Pikokyon~ (Cut Ver.) [Stage 1: Fool Moon]",
+          "difficulty": 0,
+          "beatmapId": 4942637,
+          "beatmapsetId": 2310392
+        },
+        {
+          "slot": "ST2",
+          "type": "LN",
+          "realType": "RE",
+          "name": "Matsumoto Sara - Ito Hakanaki Hikari no Gotoku (Sped Up & Cut Ver.) [Stage 2: Sakura Tears]",
+          "difficulty": 0,
+          "beatmapId": 4942587,
+          "beatmapsetId": 2310371
+        },
+        {
+          "slot": "ST3",
+          "type": "LN",
+          "realType": "DE",
+          "name": "sawawa - Seventh Doll [Stage 3: Alice Crisis]",
+          "difficulty": 0,
+          "beatmapId": 4942674,
+          "beatmapsetId": 2310413
+        },
+        {
+          "slot": "ST4",
+          "type": "RC",
+          "realType": "SA",
+          "name": "Pizuya's Cell - Nano Probe [Stage 4: Setsuna]",
+          "difficulty": 0,
+          "beatmapId": 4942651,
+          "beatmapsetId": 2310402
+        },
+        {
+          "slot": "ST5",
+          "type": "RC",
+          "realType": "DP",
+          "name": "Rolling Contact - Tyto Alba [Stage 5: Rocking]",
+          "difficulty": 0,
+          "beatmapId": 4942638,
+          "beatmapsetId": 2310393
+        },
+        {
+          "slot": "ST6",
+          "type": "HB",
+          "realType": "MNTB",
+          "name": "IneSim - HOLOGRAPHIC XHERRY BLOSSOM (Sped Up Ver.) [Stage 6: Color]",
+          "difficulty": 0,
+          "beatmapId": 4942617,
+          "beatmapsetId": 2310386
+        }
+      ],
+      "typeDifficulties": {
+        "RC": {},
+        "HB": {},
+        "LN": {},
+        "SV": {}
+      }
+    },
+    {
+      "id": "round-2",
+      "name": "Group Stage",
+      "abbreviation": "Group",
+      "order": 2,
+      "difficulty": {
+        "min": 0,
+        "max": 0,
+        "average": 0
+      },
+      "maps": [
+        {
+          "slot": "RC1",
+          "type": "RC",
+          "realType": "JS",
+          "name": "",
+          "difficulty": 0
+        },
+        {
+          "slot": "RC2",
+          "type": "RC",
+          "realType": "CJ",
+          "name": "Akiyama Uni - Azakeri no Yuugi [Joy]",
+          "difficulty": 0,
+          "beatmapId": 4953772,
+          "beatmapsetId": 2314758
+        },
+        {
+          "slot": "RC3",
+          "type": "RC",
+          "realType": "DP",
+          "name": "Shibayan feat. 3L - Maigo no Echo [You are the most important person to me... (nerf ver.)]",
+          "difficulty": 0,
+          "beatmapId": 4954410,
+          "beatmapsetId": 2314830
+        },
+        {
+          "slot": "RC4",
+          "type": "RC",
+          "realType": "ADP",
+          "name": "Jane Remover - me (Cut Ver.) [u]",
+          "difficulty": 0,
+          "beatmapId": 4954292,
+          "beatmapsetId": 2314980
+        },
+        {
+          "slot": "HB1",
+          "type": "HB",
+          "realType": "HB1",
+          "name": "Yuuhei Satellite - Hatenaki Kaze no Kiseki sae ~Ha~ (Cut ver.) [Kochiya Sanae]",
+          "difficulty": 0,
+          "beatmapId": 4954309,
+          "beatmapsetId": 2314987
+        },
+        {
+          "slot": "HB2",
+          "type": "HB",
+          "realType": "HB2",
+          "name": "TAMAONSEN - 66 Ondo [66]",
+          "difficulty": 0,
+          "beatmapId": 4954289,
+          "beatmapsetId": 2314979
+        },
+        {
+          "slot": "LN1",
+          "type": "LN",
+          "realType": "RE",
+          "name": "MISATO - Necro Fantasia (Cut Ver.) [Cherry Blossom]",
+          "difficulty": 0,
+          "beatmapId": 4954302,
+          "beatmapsetId": 2314982
+        },
+        {
+          "slot": "LN2",
+          "type": "LN",
+          "realType": "DE",
+          "name": "Chocofan - LUCKY CAT [UNLUCKY LN]",
+          "difficulty": 0,
+          "beatmapId": 4954287,
+          "beatmapsetId": 2314978
+        },
+        {
+          "slot": "CRC1",
+          "type": "RC",
+          "realType": "STC",
+          "name": "EastNewSound - Hana wa gensou no Hate ni [Phantasmagoria x1.15]",
+          "difficulty": 0,
+          "beatmapId": 4164636,
+          "beatmapsetId": 2002645
+        },
+        {
+          "slot": "CRC2",
+          "type": "RC",
+          "realType": "MX",
+          "name": "Hachimitsu Lemon - far away [Nocturne]",
+          "difficulty": 0,
+          "beatmapId": 4954291,
+          "beatmapsetId": 1661860
+        },
+        {
+          "slot": "CHB1",
+          "type": "HB",
+          "realType": "HB2",
+          "name": "",
+          "difficulty": 0
+        },
+        {
+          "slot": "CLN1",
+          "type": "LN",
+          "realType": "LNMX",
+          "name": "Camellia - werewolf howls. [LNFINITE.]",
+          "difficulty": 0,
+          "beatmapId": 2954313,
+          "beatmapsetId": 1435835
+        },
+        {
+          "slot": "TB",
+          "type": "TB",
+          "realType": "TB",
+          "name": "Spacelectro feat. momogami - Colorless [Colorful]",
+          "difficulty": 0,
+          "beatmapId": 4954286,
+          "beatmapsetId": 2314977
+        }
+      ],
+      "typeDifficulties": {
+        "RC": {},
+        "HB": {},
+        "LN": {},
+        "SV": {}
+      }
+    },
+    {
+      "id": "round-3",
+      "name": "Round of 32",
+      "abbreviation": "RO32",
+      "order": 3,
+      "difficulty": {
+        "min": 0,
+        "max": 0,
+        "average": 0
+      },
+      "maps": [
+        {
+          "slot": "RC1",
+          "type": "RC",
+          "realType": "SS",
+          "name": "senya - Yozakura ni Kimi wo Kakushite [1.05 cut edited by YuEast 2018]",
+          "difficulty": 0,
+          "beatmapId": 4983634,
+          "beatmapsetId": 1844571
+        },
+        {
+          "slot": "RC2",
+          "type": "RC",
+          "realType": "JS",
+          "name": "IOSYS - Chanteikku Sanyousei no Itazura Daisensou [Ya! / 1.10]",
+          "difficulty": 0,
+          "beatmapId": 4986112,
+          "beatmapsetId": 2326028
+        },
+        {
+          "slot": "RC3",
+          "type": "RC",
+          "realType": "CJ",
+          "name": "Chiyoko - Alice's Mad Tea Party [Trickster's Spell 1.25x]",
+          "difficulty": 0,
+          "beatmapId": 4985569,
+          "beatmapsetId": 2325599
+        },
+        {
+          "slot": "RC4",
+          "type": "RC",
+          "realType": "DP",
+          "name": "ShinRa-Bansho - Vodka niwa Tonic (Cut Ver.) [Alcoholism (w/ Reimu)]",
+          "difficulty": 0,
+          "beatmapId": 4984994,
+          "beatmapsetId": 2325598
+        },
+        {
+          "slot": "RC5",
+          "type": "RC",
+          "realType": "ADP",
+          "name": "Down - Ekoro [YuEast's [RO32 RC WC +Classic]]",
+          "difficulty": 0,
+          "beatmapId": 4984986,
+          "beatmapsetId": 2023038
+        },
+        {
+          "slot": "RCX",
+          "type": "RC",
+          "realType": "MX",
+          "name": "A-One feat. Shihori - Magic Girl !! [yup]",
+          "difficulty": 0,
+          "beatmapId": 4985002,
+          "beatmapsetId": 2325600
+        },
+        {
+          "slot": "HB1",
+          "type": "HB",
+          "realType": "HB1",
+          "name": "BUTAOTOME - Towa no Maigo [Gastronomic Alchemy]",
+          "difficulty": 0,
+          "beatmapId": 4985013,
+          "beatmapsetId": 2325603
+        },
+        {
+          "slot": "HB2",
+          "type": "HB",
+          "realType": "HB2",
+          "name": "",
+          "difficulty": 0
+        },
+        {
+          "slot": "LN1",
+          "type": "LN",
+          "realType": "CO",
+          "name": "An - artcore JINJA [coordination JINJA]",
+          "difficulty": 0,
+          "beatmapId": 4985049,
+          "beatmapsetId": 2325618
+        },
+        {
+          "slot": "LN2",
+          "type": "LN",
+          "realType": "DE",
+          "name": "Halozy - Paranoid Lost (Cut Ver.) [I'm lost in the starry autumn sky.]",
+          "difficulty": 0,
+          "beatmapId": 4986115,
+          "beatmapsetId": 2326029
+        },
+        {
+          "slot": "LN3",
+          "type": "LN",
+          "realType": "LNMX",
+          "name": "Akatsuki Records - Adieu, to this Lively Graveyard [Zombie]",
+          "difficulty": 0,
+          "beatmapId": 4985039,
+          "beatmapsetId": 2325613
+        },
+        {
+          "slot": "LNX",
+          "type": "LN",
+          "realType": "LNMX",
+          "name": "Akatsuki Records - Necromantic (Cut Ver.) [WakuwakuDokidoki]",
+          "difficulty": 0,
+          "beatmapId": 4985037,
+          "beatmapsetId": 2135171
+        },
+        {
+          "slot": "TB",
+          "type": "TB",
+          "realType": "TB",
+          "name": "JAKAZiD & nora2r - Heian no Alien (Night Striker Mix) [Speed Up X]",
+          "difficulty": 0,
+          "beatmapId": 4985046,
+          "beatmapsetId": 2325616
+        }
+      ],
+      "typeDifficulties": {
+        "RC": {},
+        "HB": {},
+        "LN": {},
+        "SV": {}
+      }
+    },
+    {
+      "id": "round-4",
+      "name": "Round of 16",
+      "abbreviation": "RO16",
+      "order": 4,
+      "difficulty": {
+        "min": 0,
+        "max": 0,
+        "average": 0
+      },
+      "maps": [
+        {
+          "slot": "RC1",
+          "type": "RC",
+          "realType": "SS",
+          "name": "Foreground Eclipse - You May Not Want To Hear This But [I am here screaming, yelling and crying.]",
+          "difficulty": 0,
+          "beatmapId": 4996397,
+          "beatmapsetId": 2329601
+        },
+        {
+          "slot": "RC2",
+          "type": "RC",
+          "realType": "JS",
+          "name": "FELT - New World [Reborn 1.13x (220bpm)]",
+          "difficulty": 0,
+          "beatmapId": 4996122,
+          "beatmapsetId": 2329538
+        },
+        {
+          "slot": "RC3",
+          "type": "RC",
+          "realType": "CJ",
+          "name": "Tomohiko Togashi feat. Kano - Kimi to Iu Tokuiten (Cut Ver.) [Singular 1.05x]",
+          "difficulty": 0,
+          "beatmapId": 4996291,
+          "beatmapsetId": 2329583
+        },
+        {
+          "slot": "RC4",
+          "type": "RC",
+          "realType": "DP",
+          "name": "NJK Record - Spring Of Dreams (Cut Ver.) [Memories 1.1x]",
+          "difficulty": 0,
+          "beatmapId": 4522577,
+          "beatmapsetId": 2147028
+        },
+        {
+          "slot": "RC5",
+          "type": "RC",
+          "realType": "TC",
+          "name": "DJ suslik - Made In China [Save Your Soul (w/ YuEast 2018) 1.0x]",
+          "difficulty": 0,
+          "beatmapId": 4996318,
+          "beatmapsetId": 2329589
+        },
+        {
+          "slot": "RCX",
+          "type": "RC",
+          "realType": "JTC",
+          "name": "Akatsuki Records - Rock 'n' Rock 'n' Beat [Bang! Bang!]",
+          "difficulty": 0,
+          "beatmapId": 4996381,
+          "beatmapsetId": 2329599
+        },
+        {
+          "slot": "HB1",
+          "type": "HB",
+          "realType": "HB1",
+          "name": "Morimori Atsushi - Toono Gensou Monogatari (MRM REMIX) [Illusional]",
+          "difficulty": 0,
+          "beatmapId": 4996270,
+          "beatmapsetId": 2329573
+        },
+        {
+          "slot": "HB2",
+          "type": "HB",
+          "realType": "HB2",
+          "name": "Tokyo Active NEETs - Akahoshi Mizeraburu ~ Hai yi Hen (Game Ver.) [Master 1.1x (176bpm)]",
+          "difficulty": 0,
+          "beatmapId": 4996289,
+          "beatmapsetId": 2329582
+        },
+        {
+          "slot": "LN1",
+          "type": "LN",
+          "realType": "RE",
+          "name": "Floating Cloud - Road to the moon [Happy End]",
+          "difficulty": 0,
+          "beatmapId": 4996292,
+          "beatmapsetId": 2329584
+        },
+        {
+          "slot": "LN2",
+          "type": "LN",
+          "realType": "DE",
+          "name": "Yuma Mizonokuchi feat. Ai Ohsera - Princess Lily [Blooming]",
+          "difficulty": 0,
+          "beatmapId": 4996312,
+          "beatmapsetId": 2329588
+        },
+        {
+          "slot": "LN3",
+          "type": "LN",
+          "realType": "LNMX",
+          "name": "ccy - Another Apple [YuEast's 2025 LN Ver.]",
+          "difficulty": 0,
+          "beatmapId": 4996395,
+          "beatmapsetId": 1612762
+        },
+        {
+          "slot": "LNX",
+          "type": "LN",
+          "realType": "LNMX",
+          "name": "marasy - Re:Unknown X [Lunatic (edit)]",
+          "difficulty": 0,
+          "beatmapId": 4996380,
+          "beatmapsetId": 2279360
+        },
+        {
+          "slot": "TB",
+          "type": "TB",
+          "realType": "TB",
+          "name": "Para Dot. - Hyper banquet [514nm]",
+          "difficulty": 0,
+          "beatmapId": 4996354,
+          "beatmapsetId": 2329595
+        }
+      ],
+      "typeDifficulties": {
+        "RC": {},
+        "HB": {},
+        "LN": {},
+        "SV": {}
+      }
+    },
+    {
+      "id": "round-5",
+      "name": "Quarterfinals",
+      "abbreviation": "QF",
+      "order": 5,
+      "difficulty": {
+        "min": 0,
+        "max": 0,
+        "average": 0
+      },
+      "maps": [
+        {
+          "slot": "RC1",
+          "type": "RC",
+          "realType": "SS",
+          "name": "ShinRa-Bansho - Sanyousei SAY YA!!! (Cut Ver.) [Say! Ya! / 1.05]",
+          "difficulty": 0,
+          "beatmapId": 5007634,
+          "beatmapsetId": 2333478
+        },
+        {
+          "slot": "RC2",
+          "type": "RC",
+          "realType": "JS",
+          "name": "Sally - Ennb~Abyss Flames [ennb style (thmc ver.)]",
+          "difficulty": 0,
+          "beatmapId": 5007768,
+          "beatmapsetId": 2333538
+        },
+        {
+          "slot": "RC3",
+          "type": "RC",
+          "realType": "SA",
+          "name": "LeaF - Calamity Fortune (extended cut ver.) [Collapse(Cut) x1.15]",
+          "difficulty": 0,
+          "beatmapId": 5007744,
+          "beatmapsetId": 2333528
+        },
+        {
+          "slot": "RC4",
+          "type": "RC",
+          "realType": "CJ",
+          "name": "Ganeme - See you again... [Immersion 1.0x]",
+          "difficulty": 0,
+          "beatmapId": 5007653,
+          "beatmapsetId": 2333482
+        },
+        {
+          "slot": "RC5",
+          "type": "RC",
+          "realType": "MX",
+          "name": "FELT - Summer Fever (Cut Ver.) [2hu diff name goes here]",
+          "difficulty": 0,
+          "beatmapId": 5007276,
+          "beatmapsetId": 2333365
+        },
+        {
+          "slot": "RC6",
+          "type": "RC",
+          "realType": "MTC",
+          "name": "para Dot. - Colored garden [Obscured Eden 1.05x (158bpm) OD8]",
+          "difficulty": 0,
+          "beatmapId": 5007687,
+          "beatmapsetId": 2333498
+        },
+        {
+          "slot": "RCX",
+          "type": "RC",
+          "realType": "TC",
+          "name": "nachi - Tsuioku Summer Night (ELEMENTAS Remix) [none [1.05x Rate]]",
+          "difficulty": 0,
+          "beatmapId": 5007542,
+          "beatmapsetId": 2333455
+        },
+        {
+          "slot": "HB1",
+          "type": "HB",
+          "realType": "HB1",
+          "name": "Spacelectro feat. Momokami - DANCING FOX!!! (Cut Ver.) [dancing fish!!!]",
+          "difficulty": 0,
+          "beatmapId": 5007637,
+          "beatmapsetId": 2333480
+        },
+        {
+          "slot": "HB2",
+          "type": "HB",
+          "realType": "HB2",
+          "name": "",
+          "difficulty": 0
+        },
+        {
+          "slot": "HB3",
+          "type": "HB",
+          "realType": "HB3",
+          "name": "cYsmix - Abandoned Shrine Party [Midnight gaming +]",
+          "difficulty": 0,
+          "beatmapId": 5007678,
+          "beatmapsetId": 2333495
+        },
+        {
+          "slot": "LN1",
+          "type": "LN",
+          "realType": "CO",
+          "name": "Nuruhachi - Doll Judgment -Glittering Magic- [Kinju Eishou]",
+          "difficulty": 0,
+          "beatmapId": 5007508,
+          "beatmapsetId": 2333448
+        },
+        {
+          "slot": "LN2",
+          "type": "LN",
+          "realType": "DE",
+          "name": "Houshou Marine - Hoihoi_Gensou Holoism (Cut Ver.) [Lunatic]",
+          "difficulty": 0,
+          "beatmapId": 5007554,
+          "beatmapsetId": 2333460
+        },
+        {
+          "slot": "LN3",
+          "type": "LN",
+          "realType": "LNTC",
+          "name": "xi-on - The Concealed Four Seasons [Chromatic Sound]",
+          "difficulty": 0,
+          "beatmapId": 5007664,
+          "beatmapsetId": 2333486
+        },
+        {
+          "slot": "LNX",
+          "type": "LN",
+          "realType": "LNMX",
+          "name": "K2 SOUND - Fairy stage [LN]",
+          "difficulty": 0,
+          "beatmapId": 5007580,
+          "beatmapsetId": 2333465
+        },
+        {
+          "slot": "TB",
+          "type": "TB",
+          "realType": "TB",
+          "name": "Diao ye zong feat. Meramipop - Shinkirou [Hana.]",
+          "difficulty": 0,
+          "beatmapId": 5007631,
+          "beatmapsetId": 2333476
+        }
+      ],
+      "typeDifficulties": {
+        "RC": {},
+        "HB": {},
+        "LN": {},
+        "SV": {}
+      }
+    },
+    {
+      "id": "round-6",
+      "name": "Semifinals",
+      "abbreviation": "SF",
+      "order": 6,
+      "difficulty": {
+        "min": 0,
+        "max": 0,
+        "average": 0
+      },
+      "maps": [
+        {
+          "slot": "RC1",
+          "type": "RC",
+          "realType": "SS",
+          "name": "Diao ye zong - Seiren 'Uruwashi no Ventra' (Cut ver.) [UFO Romance!?]",
+          "difficulty": 0,
+          "beatmapId": 5018267,
+          "beatmapsetId": 2337247
+        },
+        {
+          "slot": "RC2",
+          "type": "RC",
+          "realType": "JS",
+          "name": "Shinigiwa Satellite - Taishoku Reality [Lost]",
+          "difficulty": 0,
+          "beatmapId": 5018690,
+          "beatmapsetId": 2337391
+        },
+        {
+          "slot": "RC3",
+          "type": "RC",
+          "realType": "SA",
+          "name": "Asomosphere - Cross Commander Circuit [Triangle Chase (edit) 1.05x]",
+          "difficulty": 0,
+          "beatmapId": 5018935,
+          "beatmapsetId": 2337111
+        },
+        {
+          "slot": "RC4",
+          "type": "RC",
+          "realType": "CJ",
+          "name": "SmileDemon - Doomtempo [DoomLotus 150bpm edit]",
+          "difficulty": 0,
+          "beatmapId": 5017844,
+          "beatmapsetId": 2337108
+        },
+        {
+          "slot": "RC5",
+          "type": "RC",
+          "realType": "MX",
+          "name": "SOUND HOLIC feat. Nana Takahashi - No Life Queen [cut]",
+          "difficulty": 0,
+          "beatmapId": 4597090,
+          "beatmapsetId": 2176951
+        },
+        {
+          "slot": "RC6",
+          "type": "RC",
+          "realType": "TC",
+          "name": "Uten-Kekkoh - SYOUZYOSAKUSOUTYU [Egoist (THMC edit)]",
+          "difficulty": 0,
+          "beatmapId": 5018946,
+          "beatmapsetId": 2337473
+        },
+        {
+          "slot": "RCX",
+          "type": "RC",
+          "realType": "WTC",
+          "name": "Xenon - 63HiiraossHuikgoeH53 (cut ver.) [Gensokyo Daydream 1.05x (189bpm)]",
+          "difficulty": 0,
+          "beatmapId": 5018927,
+          "beatmapsetId": 2337459
+        },
+        {
+          "slot": "HB1",
+          "type": "HB",
+          "realType": "HB1",
+          "name": "S.S.H. - Genshi no Yoru ~ Ghostly Eyes [Ei Yoru no Mukui. // co. Xu seventeen 1.05x]",
+          "difficulty": 0,
+          "beatmapId": 5017868,
+          "beatmapsetId": 2337121
+        },
+        {
+          "slot": "HB2",
+          "type": "HB",
+          "realType": "HB2",
+          "name": "Spacelectro feat. setsunann - Luv the world [DJ Raisei Remix] (Cut Ver.) [Phantom]",
+          "difficulty": 0,
+          "beatmapId": 5018650,
+          "beatmapsetId": 2337373
+        },
+        {
+          "slot": "HB3",
+          "type": "HB",
+          "realType": "HB3",
+          "name": "Amane - Neuro Circuit [Crazy Bass Dancers]",
+          "difficulty": 0,
+          "beatmapId": 5017847,
+          "beatmapsetId": 2337109
+        },
+        {
+          "slot": "LN1",
+          "type": "LN",
+          "realType": "CO",
+          "name": "BUTAOTOME - Mesen [roslaunch ittsui_no_kamikemono touhou.launch]",
+          "difficulty": 0,
+          "beatmapId": 5017870,
+          "beatmapsetId": 2337122
+        },
+        {
+          "slot": "LN2",
+          "type": "LN",
+          "realType": "DE",
+          "name": "Sawawa - Taketori Hishou ~Lunatic Princess [nisemono 1.05x]",
+          "difficulty": 0,
+          "beatmapId": 5018089,
+          "beatmapsetId": 2337199
+        },
+        {
+          "slot": "LN3",
+          "type": "LN",
+          "realType": "LNTC",
+          "name": "dBu - Majotachi no Butoukai ~ Magus [Nightmare]",
+          "difficulty": 0,
+          "beatmapId": 5018527,
+          "beatmapsetId": 2337323
+        },
+        {
+          "slot": "LNX",
+          "type": "LN",
+          "realType": "LNMX",
+          "name": "ALiCE'S EMOTiON - Ghostly Parapara Ship (Hardcore Edit) [Let's enjoy the Parapara Night! (Cut ver.)]",
+          "difficulty": 0,
+          "beatmapId": 5018706,
+          "beatmapsetId": 2337396
+        },
+        {
+          "slot": "TB",
+          "type": "TB",
+          "realType": "TB",
+          "name": "HAGISOPH - Beyond the Millennium [Lunatic Eternity (w/ Blue_Potion)]",
+          "difficulty": 0,
+          "beatmapId": 5018707,
+          "beatmapsetId": 2337397
+        }
+      ],
+      "typeDifficulties": {
+        "RC": {},
+        "HB": {},
+        "LN": {},
+        "SV": {}
+      }
+    },
+    {
+      "id": "round-7",
+      "name": "Finals",
+      "abbreviation": "F",
+      "order": 7,
+      "difficulty": {
+        "min": 0,
+        "max": 0,
+        "average": 0
+      },
+      "maps": [
+        {
+          "slot": "RC1",
+          "type": "RC",
+          "realType": "SS",
+          "name": "EastNewSound feat. Chata - Sound of Carnation [Echo (THMC4 Edit)]",
+          "difficulty": 0,
+          "beatmapId": 5027483,
+          "beatmapsetId": 2340245
+        },
+        {
+          "slot": "RC2",
+          "type": "RC",
+          "realType": "JS",
+          "name": "Halozy - Don't let you down [drive up! (cut)]",
+          "difficulty": 0,
+          "beatmapId": 5028421,
+          "beatmapsetId": 2340499
+        },
+        {
+          "slot": "RC3",
+          "type": "RC",
+          "realType": "SA",
+          "name": "DJKurara - Crazy Aliens [Chimera (Edit)]",
+          "difficulty": 0,
+          "beatmapId": 5027469,
+          "beatmapsetId": 2340241
+        },
+        {
+          "slot": "RC4",
+          "type": "RC",
+          "realType": "CJ",
+          "name": "MONO - Fantasmagoria [Phangasm 1.05x (163bpm)]",
+          "difficulty": 0,
+          "beatmapId": 5027429,
+          "beatmapsetId": 2340227
+        },
+        {
+          "slot": "RC5",
+          "type": "RC",
+          "realType": "DP",
+          "name": "NJK Record - Search for the butterfly [edit 1.15x (184bpm) OD8]",
+          "difficulty": 0,
+          "beatmapId": 5028154,
+          "beatmapsetId": 2340381
+        },
+        {
+          "slot": "RC6",
+          "type": "RC",
+          "realType": "WTC",
+          "name": "miso-nicomi records - Heavenly Net Breaking World [0.95x]",
+          "difficulty": 0,
+          "beatmapId": 5029862,
+          "beatmapsetId": 2340507
+        },
+        {
+          "slot": "RC7",
+          "type": "RC",
+          "realType": "TC",
+          "name": "chocofan - Flandol [Rising Flan!]",
+          "difficulty": 0,
+          "beatmapId": 5028483,
+          "beatmapsetId": 2340523
+        },
+        {
+          "slot": "RCX",
+          "type": "RC",
+          "realType": "TC",
+          "name": "Litchee - Fleur De Neige [Nacreous Iridescence 1.05x]",
+          "difficulty": 0,
+          "beatmapId": 5027235,
+          "beatmapsetId": 2340193
+        },
+        {
+          "slot": "HB1",
+          "type": "HB",
+          "realType": "HB1",
+          "name": "",
+          "difficulty": 0
+        },
+        {
+          "slot": "HB2",
+          "type": "HB",
+          "realType": "HB2",
+          "name": "ZUN - Voyage 1969 [Oneiric Odyssey (edit)]",
+          "difficulty": 0,
+          "beatmapId": 5028572,
+          "beatmapsetId": 2340562
+        },
+        {
+          "slot": "HB3",
+          "type": "HB",
+          "realType": "HB3",
+          "name": "NormalM - Karakasa Scramble [Tsukumogami]",
+          "difficulty": 0,
+          "beatmapId": 5027474,
+          "beatmapsetId": 2340242
+        },
+        {
+          "slot": "LN1",
+          "type": "LN",
+          "realType": "CO",
+          "name": "TAMAONSEN - Tairin no Soul [Timing no Soul]",
+          "difficulty": 0,
+          "beatmapId": 5027190,
+          "beatmapsetId": 2340183
+        },
+        {
+          "slot": "LN2",
+          "type": "LN",
+          "realType": "DE",
+          "name": "P*Light feat. mow*2 - Homeneko Sensation (Long Ver.) [Super Nyeeco(216bpm)]",
+          "difficulty": 0,
+          "beatmapId": 5028532,
+          "beatmapsetId": 2340544
+        },
+        {
+          "slot": "LN3",
+          "type": "LN",
+          "realType": "JW",
+          "name": "Demetori - Native Faith ~ Memory of a Free Festival [Phantasm (cut)]",
+          "difficulty": 0,
+          "beatmapId": 5028373,
+          "beatmapsetId": 2340470
+        },
+        {
+          "slot": "LN4",
+          "type": "LN",
+          "realType": "SW",
+          "name": "Takamachi Walk - A Desire to Disappear [Forget Me Not (cut)]",
+          "difficulty": 0,
+          "beatmapId": 5027260,
+          "beatmapsetId": 2340196
+        },
+        {
+          "slot": "LNX",
+          "type": "LN",
+          "realType": "LNMX",
+          "name": "Demetori - Last Remote ~ Type A Personality [Requiem of Koishi od7]",
+          "difficulty": 0,
+          "beatmapId": 4276650,
+          "beatmapsetId": 2048331
+        },
+        {
+          "slot": "TB",
+          "type": "TB",
+          "realType": "TB",
+          "name": "Kurokotei - Scattered Faith [#2025 Most Unbelievable TB#]",
+          "difficulty": 0,
+          "beatmapId": 5028420,
+          "beatmapsetId": 2340498
+        }
+      ],
+      "typeDifficulties": {
+        "RC": {},
+        "HB": {},
+        "LN": {},
+        "SV": {}
+      }
+    },
+    {
+      "id": "round-8",
+      "name": "Grand Finals",
+      "abbreviation": "GF",
+      "order": 8,
+      "difficulty": {
+        "min": 0,
+        "max": 0,
+        "average": 0
+      },
+      "maps": [
+        {
+          "slot": "RC1",
+          "type": "RC",
+          "realType": "SS",
+          "name": "EastNewSound feat. Chata - Sound of Carnation [Echo (THMC4 Edit)]",
+          "difficulty": 0,
+          "beatmapId": 5027483,
+          "beatmapsetId": 2340245
+        },
+        {
+          "slot": "RC2",
+          "type": "RC",
+          "realType": "JS",
+          "name": "Halozy - Don't let you down [drive up! (cut)]",
+          "difficulty": 0,
+          "beatmapId": 5028421,
+          "beatmapsetId": 2340499
+        },
+        {
+          "slot": "RC3",
+          "type": "RC",
+          "realType": "SA",
+          "name": "DJKurara - Crazy Aliens [Chimera (Edit)]",
+          "difficulty": 0,
+          "beatmapId": 5027469,
+          "beatmapsetId": 2340241
+        },
+        {
+          "slot": "RC4",
+          "type": "RC",
+          "realType": "CJ",
+          "name": "MONO - Fantasmagoria [Phangasm 1.05x (163bpm)]",
+          "difficulty": 0,
+          "beatmapId": 5027429,
+          "beatmapsetId": 2340227
+        },
+        {
+          "slot": "RC5",
+          "type": "RC",
+          "realType": "MX",
+          "name": "NJK Record - Search for the butterfly [edit 1.15x (184bpm) OD8]",
+          "difficulty": 0,
+          "beatmapId": 5028154,
+          "beatmapsetId": 2340381
+        },
+        {
+          "slot": "RC6",
+          "type": "RC",
+          "realType": "WTC",
+          "name": "miso-nicomi records - Heavenly Net Breaking World [0.95x]",
+          "difficulty": 0,
+          "beatmapId": 5029862,
+          "beatmapsetId": 2340507
+        },
+        {
+          "slot": "RC7",
+          "type": "RC",
+          "realType": "DP",
+          "name": "chocofan - Flandol [Rising Flan!]",
+          "difficulty": 0,
+          "beatmapId": 5028483,
+          "beatmapsetId": 2340523
+        },
+        {
+          "slot": "RCX",
+          "type": "RC",
+          "realType": "MX",
+          "name": "Litchee - Fleur De Neige [Nacreous Iridescence 1.05x]",
+          "difficulty": 0,
+          "beatmapId": 5027235,
+          "beatmapsetId": 2340193
+        },
+        {
+          "slot": "HB1",
+          "type": "HB",
+          "realType": "HB1",
+          "name": "",
+          "difficulty": 0
+        },
+        {
+          "slot": "HB2",
+          "type": "HB",
+          "realType": "HB2",
+          "name": "ZUN - Voyage 1969 [Oneiric Odyssey (edit)]",
+          "difficulty": 0,
+          "beatmapId": 5028572,
+          "beatmapsetId": 2340562
+        },
+        {
+          "slot": "HB3",
+          "type": "HB",
+          "realType": "HB3",
+          "name": "NormalM - Karakasa Scramble [Tsukumogami]",
+          "difficulty": 0,
+          "beatmapId": 5027474,
+          "beatmapsetId": 2340242
+        },
+        {
+          "slot": "LN1",
+          "type": "LN",
+          "realType": "CO",
+          "name": "TAMAONSEN - Tairin no Soul [Timing no Soul]",
+          "difficulty": 0,
+          "beatmapId": 5027190,
+          "beatmapsetId": 2340183
+        },
+        {
+          "slot": "LN2",
+          "type": "LN",
+          "realType": "DE",
+          "name": "P*Light feat. mow*2 - Homeneko Sensation (Long Ver.) [Super Nyeeco(216bpm)]",
+          "difficulty": 0,
+          "beatmapId": 5028532,
+          "beatmapsetId": 2340544
+        },
+        {
+          "slot": "LN3",
+          "type": "LN",
+          "realType": "JW",
+          "name": "Demetori - Native Faith ~ Memory of a Free Festival [Phantasm (cut)]",
+          "difficulty": 0,
+          "beatmapId": 5028373,
+          "beatmapsetId": 2340470
+        },
+        {
+          "slot": "LN4",
+          "type": "LN",
+          "realType": "SW",
+          "name": "Takamachi Walk - A Desire to Disappear [Forget Me Not (cut)]",
+          "difficulty": 0,
+          "beatmapId": 5027260,
+          "beatmapsetId": 2340196
+        },
+        {
+          "slot": "LNX",
+          "type": "LN",
+          "realType": "LNMX",
+          "name": "Demetori - Last Remote ~ Type A Personality [Requiem of Koishi od7]",
+          "difficulty": 0,
+          "beatmapId": 4276650,
+          "beatmapsetId": 2048331
+        },
+        {
+          "slot": "TB",
+          "type": "TB",
+          "realType": "TB",
+          "name": "Kurokotei - Scattered Faith [#2025 Most Unbelievable TB#]",
+          "difficulty": 0,
+          "beatmapId": 5028420,
+          "beatmapsetId": 2340498
+        }
+      ],
+      "typeDifficulties": {
+        "RC": {},
+        "HB": {},
+        "LN": {},
+        "SV": {}
+      }
+    }
+  ],
+  "customTypes": [],
+  "forumUrl": "https://osu.ppy.sh/community/forums/topics/2015815",
+  "wikiUrl": "https://tourneymethod.com/tournaments/4258",
+  "sheetUrl": "https://docs.google.com/spreadsheets/d/11iFCHTWJLZhRDrtsDUjMx8hwKGWUYu0VR_x3SDgTOS0/edit?usp=sharing"
+}

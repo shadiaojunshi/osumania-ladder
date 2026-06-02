@@ -326,18 +326,68 @@ function parseOsuMeta(content: string): OsuDiffInfo {
   return { fileName: '', version, audioFilename, bgFile, artist, title }
 }
 
+// 我们只保留 .osu + 音频 + 曲绘，丢掉 .osb 和所有 storyboard 精灵图。
+// 但 .osu 的 [Events] 段仍引用那些被丢掉的图/视频，osu 加载时找不到文件
+// 就弹红色报错；若 storyboard 在 Background 层放了精灵图，还会盖住真正的
+// 曲绘导致"没有曲绘"。所以把 [Events] 裁到只剩背景行和休息段（break），
+// 其余（Video / Sprite / Animation / Sample / storyboard 命令行）全部删掉。
+function cleanOsuEvents(content: string): string {
+  const lines = content.split(/\r?\n/)
+  const out: string[] = []
+  let inEvents = false
+  for (const line of lines) {
+    const t = line.trim()
+    if (t.startsWith('[') && t.endsWith(']')) {
+      inEvents = t === '[Events]'
+      out.push(line)
+      continue
+    }
+    if (!inEvents) {
+      out.push(line)
+      continue
+    }
+    // [Events] 段内：保留注释、空行、背景行、break 段；其余丢弃。
+    if (t === '' || t.startsWith('//')) {
+      out.push(line)
+      continue
+    }
+    const isBackground = /^(0|Background)\s*,/.test(t)
+    const isBreak = /^(2|Break)\s*,/.test(t)
+    if (isBackground || isBreak) out.push(line)
+    // Video(1/Video) / Sprite / Animation / Sample(5) / 缩进的 storyboard 命令行 → 丢弃
+  }
+  return out.join('\n')
+}
+
 async function buildTrimmedOsz(sourceZip: JSZip, diff: OsuDiffInfo, slot: string, isNsv: boolean): Promise<File> {
   const newZip = new JSZip()
-  const osuContent = await sourceZip.files[diff.fileName].async('uint8array')
-  newZip.file(diff.fileName, osuContent)
+  const added = new Set<string>()
+  const rawOsu = await sourceZip.files[diff.fileName].async('string')
+  newZip.file(diff.fileName, cleanOsuEvents(rawOsu))
+  added.add(diff.fileName)
 
   if (diff.audioFilename && sourceZip.files[diff.audioFilename]) {
     const audio = await sourceZip.files[diff.audioFilename].async('uint8array')
     newZip.file(diff.audioFilename, audio)
+    added.add(diff.audioFilename)
   }
   if (diff.bgFile && sourceZip.files[diff.bgFile]) {
     const bg = await sourceZip.files[diff.bgFile].async('uint8array')
     newZip.file(diff.bgFile, bg)
+    added.add(diff.bgFile)
+  }
+
+  // 保留所有打击音效 / keysound（.wav/.ogg/.mp3，含子目录路径）。.osu 的
+  // [HitObjects]/[TimingPoints] 会按文件名引用它们，缺失就会在游玩时弹红色报错。
+  // storyboard 的音效样本也是这些格式，一并保留无害（其事件行已被裁掉，不会触发）。
+  for (const name of Object.keys(sourceZip.files)) {
+    if (added.has(name)) continue
+    const f = sourceZip.files[name]
+    if (f.dir) continue
+    if (/\.(wav|ogg|mp3)$/i.test(name)) {
+      newZip.file(name, await f.async('uint8array'))
+      added.add(name)
+    }
   }
 
   const blob = await newZip.generateAsync({ type: 'blob' })

@@ -49,23 +49,29 @@ export async function exchangeCodeForToken(
   env: OsuOAuthEnv,
   code: string,
 ): Promise<string> {
+  // osu! 的 token 端点是 Laravel Passport。用 OAuth2 标准的
+  // application/x-www-form-urlencoded，最稳妥（JSON 在某些配置下会被拒）。
+  const form = new URLSearchParams({
+    client_id: env.OSU_CLIENT_ID,
+    client_secret: env.OSU_CLIENT_SECRET,
+    code,
+    grant_type: 'authorization_code',
+    redirect_uri: buildRedirectUri(env),
+  })
+
   const res = await fetch(OSU_TOKEN_URL, {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json',
+      'Content-Type': 'application/x-www-form-urlencoded',
       Accept: 'application/json',
     },
-    body: JSON.stringify({
-      client_id: env.OSU_CLIENT_ID,
-      client_secret: env.OSU_CLIENT_SECRET,
-      code,
-      grant_type: 'authorization_code',
-      redirect_uri: buildRedirectUri(env),
-    }),
+    body: form.toString(),
   })
 
   if (!res.ok) {
-    throw new Error(`osu token exchange failed: ${res.status}`)
+    // 把 osu 返回的真实错误体带出来，便于定位（截断防止过长）。
+    const body = await res.text().catch(() => '')
+    throw new Error(`osu token exchange failed: ${res.status} ${body.slice(0, 300)}`)
   }
 
   const data = (await res.json()) as { access_token?: string }

@@ -65,20 +65,37 @@ export async function exchangeCodeForToken(
     redirect_uri: buildRedirectUri(env),
   })
 
-  const res = await fetch(OSU_TOKEN_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      Accept: 'application/json',
-      'User-Agent': OSU_USER_AGENT,
-    },
-    body: form.toString(),
-  })
+  // 429 时退避重试：换个时机/出口连接，往往就过了。code 在失败时未被消费，重试安全。
+  let res: Response | null = null
+  for (let attempt = 0; attempt < 3; attempt++) {
+    res = await fetch(OSU_TOKEN_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        Accept: 'application/json',
+        'User-Agent': OSU_USER_AGENT,
+      },
+      body: form.toString(),
+    })
+    if (res.status !== 429) break
+    if (attempt < 2) await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)))
+  }
 
-  if (!res.ok) {
-    // 把 osu 返回的真实错误体带出来，便于定位（截断防止过长）。
-    const body = await res.text().catch(() => '')
-    throw new Error(`osu token exchange failed: ${res.status} ${body.slice(0, 300)}`)
+  if (!res || !res.ok) {
+    // 把 osu 的响应头也带出来，定位到底是谁在哪一层限流：
+    //   cf-ray 在场 → 请求穿过了 Cloudflare；server=nginx → 命中 osu 源站
+    //   cf-mitigated → Cloudflare 边缘拦截；retry-after / x-ratelimit-* → 限流窗口
+    const status = res?.status ?? 0
+    const diag = res
+      ? [
+          `server=${res.headers.get('server') ?? '-'}`,
+          `cf-ray=${res.headers.get('cf-ray') ?? '-'}`,
+          `cf-mitigated=${res.headers.get('cf-mitigated') ?? '-'}`,
+          `retry-after=${res.headers.get('retry-after') ?? '-'}`,
+          `ratelimit=${res.headers.get('x-ratelimit-remaining') ?? '-'}/${res.headers.get('x-ratelimit-limit') ?? '-'}`,
+        ].join(' ')
+      : 'no-response'
+    throw new Error(`osu token exchange failed: ${status} [${diag}]`)
   }
 
   const data = (await res.json()) as { access_token?: string }

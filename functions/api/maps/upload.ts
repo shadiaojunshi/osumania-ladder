@@ -1,31 +1,24 @@
-interface Env {
+import { jsonResponse, noContent } from '../_lib/cors'
+import { hasRole, type AuthEnv, type SessionUser } from '../_lib/auth'
+import { writeAudit } from '../_lib/audit'
+
+interface Env extends AuthEnv {
   GITHUB_TOKEN: string
   GITHUB_REPO: string
   R2_BUCKET: R2Bucket
 }
 
-function corsHeaders() {
-  return {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
-  }
-}
-
-function jsonResponse(data: unknown, status = 200) {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: { 'Content-Type': 'application/json', ...corsHeaders() },
-  })
-}
-
-export const onRequestOptions: PagesFunction<Env> = async () => {
-  return new Response(null, { status: 204, headers: corsHeaders() })
-}
+export const onRequestOptions: PagesFunction<Env> = async () => noContent()
 
 const MAX_SIZE = 100 * 1024 * 1024
 
-export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
+// 上传谱面：contributor 及以上。
+export const onRequestPost: PagesFunction<Env> = async ({ request, env, data }) => {
+  const user = (data as { user?: SessionUser }).user ?? null
+  if (!hasRole(user, 'contributor')) {
+    return jsonResponse({ error: '需要 contributor 及以上权限', code: 'FORBIDDEN' }, 403)
+  }
+
   const contentType = request.headers.get('content-type') || ''
   if (!contentType.includes('multipart/form-data')) {
     return jsonResponse({ error: 'Expected multipart/form-data' }, 400)
@@ -51,6 +44,15 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   await env.R2_BUCKET.put(key, file.stream(), {
     httpMetadata: { contentType: 'application/octet-stream' },
     customMetadata: { originalName: file.name },
+  })
+
+  await writeAudit(env.LADDER_KV, {
+    actorUid: user!.uid,
+    actorName: user!.username,
+    action: 'map.upload',
+    target: key,
+    detail: `${(file.size / 1024 / 1024).toFixed(1)}MB`,
+    ip: request.headers.get('CF-Connecting-IP') ?? undefined,
   })
 
   return jsonResponse({ success: true, key })

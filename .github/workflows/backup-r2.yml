@@ -1,0 +1,30 @@
+name: Backup R2 + Cleanup Trash
+
+# 每日备份主 bucket 到备份 bucket，并清理超期的回收站文件。
+# 也可手动触发（workflow_dispatch）做一次性备份。
+on:
+  schedule:
+    # 每天 UTC 18:07 运行（北京时间次日 02:07），避开整点高峰。
+    - cron: '7 18 * * *'
+  workflow_dispatch:
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - run: npm ci
+
+      - name: Backup R2 and cleanup trash
+        run: node scripts/backup-r2.js
+        env:
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY: ${{ secrets.R2_ACCESS_KEY }}
+          R2_SECRET_KEY: ${{ secrets.R2_SECRET_KEY }}
+          R2_BUCKET: osumania-ladder-maps
+          R2_BACKUP_BUCKET: osumania-ladder-maps-backup

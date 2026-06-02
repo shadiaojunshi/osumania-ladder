@@ -25,6 +25,7 @@
     "zustand": "^5.0.13"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260531.1",
     "@tailwindcss/postcss": "^4.3.0",
     "@types/archiver": "^7.0.0",
     "@types/jszip": "^3.4.0",

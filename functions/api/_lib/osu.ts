@@ -7,6 +7,12 @@ const OSU_AUTHORIZE_URL = 'https://osu.ppy.sh/oauth/authorize'
 const OSU_TOKEN_URL = 'https://osu.ppy.sh/oauth/token'
 const OSU_ME_URL = 'https://osu.ppy.sh/api/v2/me'
 
+// Cloudflare Workers/Pages 的 fetch 默认不带可识别的 User-Agent，
+// osu.ppy.sh 前置的 nginx/WAF 会把这类无标识请求当成爬虫，从共享出口 IP
+// 直接返回 nginx 层的 429（HTML 页面，而非 osu 的 JSON 错误）。
+// 带上明确的 User-Agent 即可通过。
+const OSU_USER_AGENT = 'osumania-ladder/1.0 (+https://osumania-ladder.pages.dev)'
+
 export interface OsuOAuthEnv {
   OSU_CLIENT_ID: string
   OSU_CLIENT_SECRET: string
@@ -64,6 +70,7 @@ export async function exchangeCodeForToken(
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
       Accept: 'application/json',
+      'User-Agent': OSU_USER_AGENT,
     },
     body: form.toString(),
   })
@@ -89,6 +96,7 @@ export async function fetchOsuMe(accessToken: string): Promise<OsuUser> {
     headers: {
       Authorization: `Bearer ${accessToken}`,
       Accept: 'application/json',
+      'User-Agent': OSU_USER_AGENT,
     },
   })
 

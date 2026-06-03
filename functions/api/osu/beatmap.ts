@@ -1,6 +1,10 @@
 interface Env {
   OSU_API_KEY: string
+  OSU_PROXY_URL?: string
+  OSU_PROXY_SECRET?: string
 }
+
+const OSU_USER_AGENT = 'osumania-ladder/1.0 (+https://osumania-ladder.pages.dev)'
 
 function corsHeaders() {
   return {
@@ -27,33 +31,44 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   if (!id || !/^\d+$/.test(id)) return jsonResponse({ error: 'invalid id' }, 400)
   if (!env.OSU_API_KEY) return jsonResponse({ error: 'OSU_API_KEY not configured' }, 500)
 
-  const apiUrl = `https://osu.ppy.sh/api/get_beatmaps?k=${env.OSU_API_KEY}&b=${id}`
+  // 走 Deno 代理（与 OAuth 同一原因：Cloudflare Workers 共享出口 IP 被 osu 边缘整池限流，
+  // 直连 osu v1 API 也会恒 429）。两者都配了才启用代理；否则直连（仅本地开发）。
+  const useProxy = Boolean(env.OSU_PROXY_URL && env.OSU_PROXY_SECRET)
+  const apiUrl = useProxy
+    ? `${env.OSU_PROXY_URL!.replace(/\/$/, '')}/v1/get_beatmaps?k=${encodeURIComponent(env.OSU_API_KEY)}&b=${id}`
+    : `https://osu.ppy.sh/api/get_beatmaps?k=${encodeURIComponent(env.OSU_API_KEY)}&b=${id}`
+
+  const headers: Record<string, string> = {
+    'User-Agent': OSU_USER_AGENT,
+    Accept: 'application/json',
+  }
+  if (useProxy) headers['X-Proxy-Secret'] = env.OSU_PROXY_SECRET!
+
   let upstream: Response | null = null
   let lastErr: unknown = null
-  for (let attempt = 0; attempt < 4; attempt++) {
+  for (let attempt = 0; attempt < 2; attempt++) {
     try {
-      upstream = await fetch(apiUrl, {
-        headers: { 'User-Agent': 'osumania-ladder' },
-        signal: AbortSignal.timeout(8000),
-      })
+      upstream = await fetch(apiUrl, { headers, signal: AbortSignal.timeout(8000) })
       if (upstream.ok) break
       if (upstream.status === 429) {
-        const retryAfter = Number(upstream.headers.get('retry-after'))
-        const wait = Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter * 1000 : 2000 * (attempt + 1)
-        await new Promise((r) => setTimeout(r, Math.min(wait, 8000)))
+        if (attempt < 1) await new Promise((r) => setTimeout(r, 800))
         continue
       }
       if (upstream.status >= 400 && upstream.status < 500) break
     } catch (err) {
       lastErr = err
     }
-    await new Promise((r) => setTimeout(r, 300 * (attempt + 1)))
+    if (attempt < 1) await new Promise((r) => setTimeout(r, 300))
   }
 
   if (!upstream || !upstream.ok) {
+    const status = upstream?.status ?? 0
+    const diag = upstream
+      ? `via=${useProxy ? 'proxy' : 'direct'} server=${upstream.headers.get('server') ?? '-'} cf-ray=${upstream.headers.get('cf-ray') ?? '-'}`
+      : 'no-response'
     return jsonResponse(
-      { error: 'upstream error', status: upstream?.status ?? null, message: String(lastErr ?? '') },
-      upstream?.status === 429 ? 429 : 502
+      { error: 'upstream error', status, diag, message: String(lastErr ?? '') },
+      status === 429 ? 429 : 502,
     )
   }
 

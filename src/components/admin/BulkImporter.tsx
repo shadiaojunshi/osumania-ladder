@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import type { RoundWithMeta } from './RoundEditor'
 import type { ExtendedMap, MapCategory } from './MapSlotEditor'
 import { REAL_TYPES } from './MapSlotEditor'
@@ -175,6 +175,8 @@ export function BulkImporter({ onImport, onClose, existingRoundCount }: Props) {
   const [rows, setRows] = useState<ParsedRow[]>([])
   const [running, setRunning] = useState(false)
   const [groupMetas, setGroupMetas] = useState<GroupMeta[]>([])
+  // 用户点击"返回确认"时把它置 true，循环每轮检查、立刻跳出。
+  const abortRef = useRef(false)
 
   const groupCount = rows.length > 0 ? Math.max(...rows.map((r) => r.groupIndex)) + 1 : 0
 
@@ -213,8 +215,10 @@ export function BulkImporter({ onImport, onClose, existingRoundCount }: Props) {
   const startFetch = async () => {
     setStep('fetch')
     setRunning(true)
+    abortRef.current = false
     const next = [...rows]
     for (let i = 0; i < next.length; i++) {
+      if (abortRef.current) break
       if (next[i].status === 'ok' || !next[i].mapId) continue
       next[i] = { ...next[i], status: 'fetching' }
       setRows([...next])
@@ -225,6 +229,7 @@ export function BulkImporter({ onImport, onClose, existingRoundCount }: Props) {
         next[i] = { ...next[i], status: 'error', error: err instanceof Error ? err.message : String(err) }
       }
       setRows([...next])
+      if (abortRef.current) break
       await new Promise((r) => setTimeout(r, 400))
     }
     setRunning(false)
@@ -232,8 +237,10 @@ export function BulkImporter({ onImport, onClose, existingRoundCount }: Props) {
 
   const retryFailed = async () => {
     setRunning(true)
+    abortRef.current = false
     const next = [...rows]
     for (let i = 0; i < next.length; i++) {
+      if (abortRef.current) break
       if (next[i].status === 'ok' || !next[i].mapId) continue
       next[i] = { ...next[i], status: 'fetching' }
       setRows([...next])
@@ -244,9 +251,17 @@ export function BulkImporter({ onImport, onClose, existingRoundCount }: Props) {
         next[i] = { ...next[i], status: 'error', error: err instanceof Error ? err.message : String(err) }
       }
       setRows([...next])
+      if (abortRef.current) break
       await new Promise((r) => setTimeout(r, 400))
     }
     setRunning(false)
+  }
+
+  const goBackToConfirm = () => {
+    abortRef.current = true
+    // 把"查询中"的行回退成 pending，避免视觉上一直停在 fetching
+    setRows((prev) => prev.map((r) => (r.status === 'fetching' ? { ...r, status: 'pending' } : r)))
+    setStep('confirm')
   }
 
   const failedCount = rows.filter((r) => r.status === 'error' && r.mapId).length
@@ -501,8 +516,8 @@ export function BulkImporter({ onImport, onClose, existingRoundCount }: Props) {
 
           {step === 'fetch' && (
             <>
-              <button onClick={() => setStep('confirm')} className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800" disabled={running}>
-                ← 返回确认
+              <button onClick={goBackToConfirm} className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800">
+                ← 返回确认{running ? '（中断查询）' : ''}
               </button>
               <button
                 onClick={doImport}

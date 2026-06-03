@@ -24,6 +24,7 @@
 
 const OSU_TOKEN_URL = 'https://osu.ppy.sh/oauth/token'
 const OSU_ME_URL = 'https://osu.ppy.sh/api/v2/me'
+const OSU_V1_GET_BEATMAPS_URL = 'https://osu.ppy.sh/api/get_beatmaps'
 const USER_AGENT = 'osumania-ladder-proxy/1.0 (+https://osumania-ladder.pages.dev)'
 
 const PROXY_SECRET = Deno.env.get('PROXY_SECRET') ?? ''
@@ -95,6 +96,27 @@ Deno.serve(async (req: Request) => {
       const upstream = await fetch(OSU_ME_URL, {
         headers: {
           Authorization: auth,
+          Accept: 'application/json',
+          'User-Agent': USER_AGENT,
+        },
+      })
+      const text = await upstream.text()
+      return new Response(text, {
+        status: upstream.status,
+        headers: {
+          'Content-Type': upstream.headers.get('Content-Type') ?? 'application/json',
+          ...cors(),
+        },
+      })
+    }
+
+    // GET /v1/get_beatmaps —— 转发 osu! v1 API 查谱面元数据。
+    // 上游用 query string 鉴权（?k=API_KEY&b=BEATMAP_ID），代理本身不持有 key，
+    // 由 Cloudflare 端在 query 里带过来,代理透传。
+    if (url.pathname === '/v1/get_beatmaps' && req.method === 'GET') {
+      const upstreamUrl = `${OSU_V1_GET_BEATMAPS_URL}?${url.searchParams.toString()}`
+      const upstream = await fetch(upstreamUrl, {
+        headers: {
           Accept: 'application/json',
           'User-Agent': USER_AGENT,
         },

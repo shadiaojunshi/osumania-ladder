@@ -1,7 +1,15 @@
 # 合包自动上传到 Google Drive —— 调研归档
 
 > 2026-06-03 调研。和 [123pan-auto-upload-research.md](./123pan-auto-upload-research.md) 是兄弟方案,
-> Google Drive 优先级低于 123(123 容量大),但作为**兜底**值得做。compact 后照这份开搓。
+> 站长有 **Google AI Pro (5 TB)** Google One 订阅,所以 Google Drive 容量上**反超 123**,
+> 可以当主力。123 退成"国内用户访问更顺"的次要选项。compact 后照这份开搓。
+
+## 容量事实(2026-06-03 确认)
+
+- 站长 Google One 方案:**Google AI Pro,5 TB**(USD 19.99/月,据用户描述"可能有一年")。
+- 这 5 TB 跨 Drive / Photos / Gmail 共享。我们用合包估算每个 100-500MB,几十个合包的总量 < 50GB,**完全用不完**。
+- 只要走"方案 A:站长 OAuth refresh_token"把文件传到站长账号下,容量就算在这 5 TB 里。
+- 即使将来 Google One 到期回退到免费 15GB,文件**不会被删**,只是不能再传新文件;已分享链接继续可读。这与 123 的行为相同,且 Google 的退订规则更清晰、更宽容。
 
 ## 关键事实(决定方案的)
 
@@ -17,9 +25,9 @@
 
 | 方案 | 容量 | 成本 | 实现难度 | 推荐度 |
 |---|---|---|---|---|
-| **A. 站长 OAuth refresh_token + 个人 Drive** | 站长 Google 账号配额(免费 15GB,可升级) | 0(15GB 内) | ★★ 中 | **🟢 首选** |
-| **B. Service Account + 站长个人 Drive 共享文件夹** | Service Account 自己的 15GB(独立) | 0 | ★ 低 | 🟡 备选(15GB 上限不能突破) |
-| **C. Service Account + Workspace Shared Drive** | 100GB+(Workspace 池子) | 12 USD/月 | ★★★ 高 | 🔴 不推荐(贵且杀鸡用牛刀) |
+| **A. 站长 OAuth refresh_token + 个人 Drive** | 站长 Google One 5 TB(已订阅 Google AI Pro) | 已支付 | ★★ 中 | **🟢 首选(已确定)** |
+| **B. Service Account + 站长个人 Drive 共享文件夹** | Service Account 自己的 15GB(独立,不共享 5 TB) | 0 | ★ 低 | ⚫ 排除(用不到 5 TB,白浪费) |
+| **C. Service Account + Workspace Shared Drive** | 100GB+(Workspace 池子) | 12 USD/月 | ★★★ 高 | ⚫ 排除(贵且重复付费) |
 
 ### 为什么不优先 Service Account(方案 B)
 
@@ -27,9 +35,17 @@
 
 ### 为什么 OAuth(方案 A)推荐
 
-- 容量直接挂在站长账号上,免费 15GB,要扩容可买 Google One(国内麻烦,但作为兜底 15GB 够用)。
+- **容量**:5 TB Google One,合包总量再翻 50 倍也用不完。
 - refresh_token 拿到一次终身用(只要 OAuth app 在 Production)。
 - 缺点是首次配置麻烦:要在 Google Cloud Console 建项目、配 consent screen、跑一次 OAuth flow 拿 refresh_token、把 token 填进 GitHub Secret。但**只配一次**。
+
+## Drive 与 123 的分工(更新后)
+
+既然 Drive 5 TB 是主力,123 的角色调整:
+
+- **Google Drive 主力**:容量大、refresh_token 永久、无地区限制(对海外用户更友好)。
+- **123 网盘次要**:对国内用户体验更好(下载速度、不用翻墙),但需要等开放平台审核。两者并存,`packs-manifest.json` 里 `links.googleDrive` + `links.drive123` 两个字段并列填写,前端按用户喜好显示。
+- 如果后面 123 申请下来很顺利,两个都自动跑;如果 123 申请卡住,Drive 单跑也够用。
 
 ## 方案 A 落地步骤(站长操作)
 
@@ -133,8 +149,9 @@
 
 ## 失败模式
 
-- **refresh_token 失效** —— 站长改了密码 / 撤销 app / 90 天没用 / 没切 Production。处理:Actions 失败,流程里 fallback 到不上传,artifact 仍然有,人工兜底。需要在脚本里把 401 / `invalid_grant` 错误明确报出来。
-- **15GB 满** —— 上传失败 `storageQuotaExceeded`。处理:删 Drive 里旧 pack,或 Google One 扩容,或切 123 主、Drive 副(本来就是这个定位)。
+- **refresh_token 失效** —— 站长改了密码 / 撤销 app / OAuth app 卡在 Testing 状态(7 天过期)。处理:Actions 失败,流程里 fallback 到不上传,artifact 仍然有,人工兜底。需要在脚本里把 401 / `invalid_grant` 错误明确报出来。
+- **5 TB 满** —— 不可能。
+- **Google One 到期回退** —— 文件不删,只是不能再上新文件。处理:续费 Google One,或停止合包更新只保留旧 pack 链接,或把存量迁移到 123(改 manifest 链接即可,无需重传)。
 - **Google API rate limit** —— 个人配额 1000 reqs / 100s,远超我们一次几十次的量,无视。
 
 ## 待办

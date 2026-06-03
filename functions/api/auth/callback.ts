@@ -61,7 +61,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   let osuUser
   try {
     const token = await exchangeCodeForToken(env, code)
-    osuUser = await fetchOsuMe(token)
+    osuUser = await fetchOsuMe(env, token)
   } catch (e) {
     return errorRedirect(`osu 授权失败：${(e as Error).message}`)
   }

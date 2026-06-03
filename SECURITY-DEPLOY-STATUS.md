@@ -74,9 +74,91 @@ osu.ppy.sh 在 Cloudflare 后面。Cloudflare Pages Functions 的出口走 **Clo
 
 - `0549c4a` 加 User-Agent（猜错方向，无效但保留没害）
 - `e430fbf` 诊断信息透传 —— 这次定位到 `server=cloudflare` 才确诊根因
-- `e0d4363` 引入 Deno Deploy 中转代理
+- `e0d4363` 引入 Deno Deploy 中转代理（OAuth `/token` + `/me`）
 - `1e5dce4` 把 `osu-proxy/` 从 Next.js TS 检查排除
 - `31b38b9` 谱面裁剪：去 storyboard 事件 + 保留打击音效（待验证）
+- `dd3ca9a` v1 `get_beatmaps` 也走代理 + 批量导入可中断 —— 之前 `/api/osu/beatmap` 直连 osu，97 行批量导入触发同一个 429 根因
+
+---
+
+## 代理迁移预案（万一 Deno 也炸了）
+
+> 万一 Deno Deploy 之后也开始 429（osu 边缘把 GCP IP 段也限了）/ Deno 服务挂了 / Deno 改商业策略，
+> 整个 osu 代理需要换平台。这一节列出"30 分钟换家"的具体步骤。
+
+### 先看影响评估
+
+代理挂了**不丢数据**：
+- 代理只透传，无凭据（无 osu client_secret、无 access_token、无 DB）
+- 已登录用户的 session cookie 7 天有效，代理挂掉时已登录的人继续能用
+- 比赛 JSON 在 GitHub、谱面在 R2、KV 在 Cloudflare —— 全在 Cloudflare 自己家，跟代理无关
+- 公开站（首页天梯、下载页）零 API 调用，**完全不受影响**
+
+代理挂了**只断两件事**：
+- 新登录（osu OAuth `/token` + `/me`）
+- 批量导入图池（v1 `/get_beatmaps` 元数据查询）。`.osz` 自动下载走 catboy/nerinyan 镜像，不经代理
+
+### 候选平台
+
+| 平台 | 出口 IP 段 | 免费额度 | 部署方式 | 优先度 |
+|---|---|---|---|---|
+| **Deno Deploy** | Google Cloud | 100 万请求/月 | git push 自动 | 当前用的 |
+| **Vercel** | AWS + Vercel 边缘 | 100GB 流量/月 | git push 自动 | 🟢 备选 1 |
+| **Fly.io** | 各机房独享 IP | 3 个 shared-cpu-1x VM | `flyctl deploy` | 🟡 备选 2（要写 Dockerfile） |
+| **Render / Railway** | AWS 等 | 750 小时/月 | git push 自动 | 🟡 备选 3 |
+| **Cloudflare Workers** | 同 osu 自己 | — | — | ⚫ 不能用（就是它的池子被限流） |
+| **VPS（阿里云日本 / Vultr 东京 / Linode 新加坡）** | 独享 IP | 5-15 USD/月 | scp + systemd | ⚫ 最终兜底（独享 IP，osu 看到只有你） |
+
+**首选 Vercel**：跟 Deno 一样 git push 自动部署、免费额度对小流量足够、IP 段跟 Cloudflare/Deno 都不重叠。
+
+### 搬到 Vercel 的具体步骤
+
+1. **改 `osu-proxy/main.ts` 适配 Vercel Edge Function**：把 `Deno.serve(...)` 包成默认导出，`Deno.env.get(...)` 换成 `process.env`，其余逻辑（cors、authorized、三个端点）一字不改。新建 `osu-proxy/api/index.ts`：
+   ```ts
+   export const config = { runtime: 'edge' }
+   const PROXY_SECRET = process.env.PROXY_SECRET ?? ''
+   // ...保留原 cors / authorized / token / me / v1/get_beatmaps 逻辑
+   export default async function handler(req: Request) { /* same body */ }
+   ```
+2. Vercel 注册 → 导入 GitHub repo（osumania-ladder）→ **Root Directory** 设为 `osu-proxy` → Framework Preset 选 "Other"
+3. **Settings → Environment Variables** 加 `PROXY_SECRET`，值跟当前 Cloudflare 的 `OSU_PROXY_SECRET` **完全一致**
+4. 部署后拿到 `https://<项目名>.vercel.app`
+5. **Cloudflare Pages → Settings → Environment Variables 改 `OSU_PROXY_URL`**（Production + Preview 都要改），从 `https://osumania-ladder.shadiaojunshi.deno.net` 改成 Vercel URL
+6. **Cloudflare Deployments → 最近一次部署 Retry**（改环境变量不会自动重部署）
+7. 验证：能登录进 admin / 批量导入贴一行能查通
+
+代码改动 < 20 行，主要是 Deno API → Edge Function API 的形式变换。
+
+### 搬到 Fly.io 的步骤（如果 Vercel 也炸）
+
+写 Dockerfile，Deno 官方镜像直接用：
+```dockerfile
+FROM denoland/deno:latest
+WORKDIR /app
+COPY main.ts .
+RUN deno cache main.ts
+CMD ["run", "--allow-net", "--allow-env", "main.ts"]
+```
+然后 `flyctl launch` → 选机房（`nrt` 东京 / `sjc` 加州）→ `flyctl secrets set PROXY_SECRET=<同值>` → `flyctl deploy` → 拿到 `<app>.fly.dev` URL。Cloudflare 端同 Vercel 第 5-7 步。
+
+### 终极兜底：自购 VPS
+
+只有 Vercel + Fly.io 都被同样限流时才走这步（极小概率）。挑 IP 干净的小机房（阿里云日本 / Vultr 东京 / Linode 新加坡），月 5-15 USD。
+- 装 Deno：`curl -fsSL https://deno.land/install.sh | sh`
+- `main.ts` scp 上去，systemd 包一层 service
+- Cloudflare Tunnel（cloudflared）打通公网（不用买域名、不用配 nginx），或自己 nginx + Let's Encrypt
+- 优势：**独享 IP**，osu 边缘看到的就只有你，限流概率最低
+
+### 平时怎么监测代理是不是要炸
+
+代理根路径是健康检查端点（无需密钥）：
+```
+curl https://osumania-ladder.shadiaojunshi.deno.net/
+→ {"ok":true,"service":"osu-proxy","secretConfigured":true}
+```
+挂一个 UptimeRobot / Better Stack 免费监控，每 5 分钟拉一次 `/`，非 200 就邮件提醒。
+
+如果某天你看到「登录卡顿但 `/` 返回 OK」，说明上游 osu 边缘 429，不是代理本身——这就是要换平台的信号。
 
 ---
 

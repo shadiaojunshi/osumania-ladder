@@ -340,17 +340,9 @@ export default function AdminPage() {
 
         {tab === 'references' && <ReferencesEditor />}
 
-        {tab === 'upload' && (
-          <div className="max-h-[calc(100vh-200px)] overflow-y-auto">
-            <MapUploader />
-          </div>
-        )}
+        {tab === 'upload' && <MapUploader />}
 
-        {tab === 'packs' && (
-          <div className="max-h-[calc(100vh-200px)] overflow-y-auto">
-            <PackLinksEditor />
-          </div>
-        )}
+        {tab === 'packs' && <PackLinksEditor />}
 
         {tab === 'trash' && isAdmin && <TrashManager />}
         {tab === 'admins' && isAdmin && <AdminsManager />}

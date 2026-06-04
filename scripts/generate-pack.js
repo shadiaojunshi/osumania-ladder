@@ -36,7 +36,14 @@ const REAL_TYPE_NAMES = {
 }
 
 function sanitizeFileName(name) {
-  return name.replace(/[<>:"/\\|?*]/g, '').replace(/\s+/g, ' ').trim()
+  // 注意:逗号必须替换掉。osu! 的 .osu 解析器读 [Events] 里的背景行
+  // 0,0,"file.jpg" 是按逗号分割的,文件名里带逗号会让解析器把后半段当成
+  // 别的字段,曲绘加载失败。同样的隐患也存在于 AudioFilename 行。
+  return name
+    .replace(/[<>:"/\\|?*]/g, '')
+    .replace(/,/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
 }
 
 function parseOsu(content) {
@@ -66,8 +73,18 @@ function parseOsu(content) {
       if (key === 'BeatmapSetID') meta.beatmapSetId = value
     }
     if (currentSection === 'Events') {
-      const match = trimmed.match(/"([^"]+\.(jpg|jpeg|png))"/i)
-      if (match) meta.backgroundFile = match[1]
+      // [Events] 里背景行格式有两种:带引号 0,0,"file.jpg",0,0 / 不带引号 0,0,file.jpg,0,0
+      // 之前只匹配带引号的,导致部分谱子的 backgroundFile 为 undefined,
+      // 合包时不写曲绘进 archive,游戏里就没图。两种都要兜住。
+      if (!meta.backgroundFile) {
+        const quoted = trimmed.match(/^0\s*,\s*0\s*,\s*"([^"]+\.(?:jpg|jpeg|png))"/i)
+        if (quoted) {
+          meta.backgroundFile = quoted[1]
+        } else {
+          const unquoted = trimmed.match(/^0\s*,\s*0\s*,\s*([^,]+\.(?:jpg|jpeg|png))/i)
+          if (unquoted) meta.backgroundFile = unquoted[1].trim()
+        }
+      }
     }
   }
   return meta
@@ -93,7 +110,13 @@ function rewriteOsu(content, { newTitle, newArtist, newCreator, newVersion, newA
   replaceLine('Metadata', 'Tags', '')
 
   if (newBgFilename) {
-    result = result.replace(/^(0,0,")(.+?)(".*$)/m, `$1${newBgFilename}$3`)
+    // 改背景行,同样兼容带引号 / 不带引号两种格式。
+    // 改完统一用带引号格式,这样新文件名里如果带空格不会断成两段。
+    if (/^(0,0,").+?(".*)$/m.test(result)) {
+      result = result.replace(/^(0,0,")(.+?)(".*)$/m, `$1${newBgFilename}$3`)
+    } else {
+      result = result.replace(/^(0\s*,\s*0\s*,\s*)([^,\s][^,]*\.(?:jpg|jpeg|png))(.*)$/im, `$1"${newBgFilename}"$3`)
+    }
   }
 
   return result

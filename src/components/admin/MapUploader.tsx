@@ -548,6 +548,14 @@ function MapUploadCell({
   const [selectedDiff, setSelectedDiff] = useState<number>(0)
   const [autoDownloading, setAutoDownloading] = useState(false)
   const [autoError, setAutoError] = useState<string | null>(null)
+  const [reuploading, setReuploading] = useState(false)
+
+  // 重传完成后(uploadStatus 变 success 且不再 uploading)自动收回到 ✓ 状态。
+  useEffect(() => {
+    if (reuploading && uploadStatus === 'success' && !isUploading) {
+      setReuploading(false)
+    }
+  }, [reuploading, uploadStatus, isUploading])
 
   const inputId = `osz-${roundId}-${slot}-${isNsv ? 'nsv' : 'main'}`
   const radioName = `diff-${roundId}-${slot}-${isNsv ? 'nsv' : 'main'}`
@@ -683,15 +691,22 @@ function MapUploadCell({
 
   return (
     <div className="flex items-center gap-2">
-      {isUploaded && !isUploading && uploadStatus !== 'error' && (
+      {isUploaded && !isUploading && uploadStatus !== 'error' && !reuploading && (
         <span className="text-xs text-green-600 flex items-center gap-1">
           <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
           </svg>
           {isNsv ? 'NSV 已上传' : '已上传'}
           <button
+            onClick={() => setReuploading(true)}
+            className="ml-1 text-blue-400 hover:text-blue-600"
+            title="重新上传(覆盖)"
+          >
+            ⟳
+          </button>
+          <button
             onClick={() => onDelete(roundId, slot, isNsv)}
-            className="ml-1 text-red-400 hover:text-red-600"
+            className="text-red-400 hover:text-red-600"
             title="删除文件"
           >
             ✕
@@ -707,8 +722,17 @@ function MapUploadCell({
         <span className="text-xs text-red-600">上传失败</span>
       )}
 
-      {!isUploading && !isUploaded && (
+      {!isUploading && (!isUploaded || reuploading) && (
         <div className="flex-1 flex items-center gap-2 min-w-0">
+          {reuploading && (
+            <button
+              onClick={() => { setReuploading(false); setAutoError(null) }}
+              className="text-xs text-gray-400 hover:text-gray-600 shrink-0"
+              title="取消重传"
+            >
+              ←
+            </button>
+          )}
           <div className="flex gap-1 shrink-0">
             <button
               onClick={() => setMode('osz')}

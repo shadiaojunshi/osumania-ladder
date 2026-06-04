@@ -1,0 +1,512 @@
+{
+  "id": "po-fang-cup-s3",
+  "name": "Po Fang Cup S3",
+  "abbreviation": "PFC S3",
+  "keyCount": 4,
+  "year": 2025,
+  "tags": [],
+  "rounds": [
+    {
+      "id": "round-1",
+      "name": "Qualifiers",
+      "abbreviation": "Qual",
+      "order": 1,
+      "isQualifier": true,
+      "difficulty": {
+        "min": 0,
+        "max": 0,
+        "average": 0
+      },
+      "maps": [
+        {
+          "slot": "SV1",
+          "type": "SV",
+          "realType": "SI",
+          "name": "",
+          "difficulty": 0
+        },
+        {
+          "slot": "RC1",
+          "type": "RC",
+          "realType": "SS",
+          "name": "xi - d e a t h  p i a n o ~for four pianos~ [i n s a n e]",
+          "difficulty": 0,
+          "beatmapId": 5063207,
+          "beatmapsetId": 2349815
+        },
+        {
+          "slot": "RC2",
+          "type": "RC",
+          "realType": "TC",
+          "name": "mindvacy - always in one place [stationary]",
+          "difficulty": 0,
+          "beatmapId": 4256287,
+          "beatmapsetId": 2040323
+        },
+        {
+          "slot": "RC3",
+          "type": "RC",
+          "realType": "MX",
+          "name": "Reza Artamevia - Berharap Tak Berpisah - Feel Koplo version [Senoparty]",
+          "difficulty": 0,
+          "beatmapId": 3198039,
+          "beatmapsetId": 1558784
+        },
+        {
+          "slot": "LN1",
+          "type": "LN",
+          "realType": "RE",
+          "name": "Mikeneko - Omajinai [The Forgotten Word]",
+          "difficulty": 0,
+          "beatmapId": 4712350,
+          "beatmapsetId": 2222380
+        },
+        {
+          "slot": "LN2",
+          "type": "LN",
+          "realType": "DE",
+          "name": "inabakumori - I'm the Rain [Departed]",
+          "difficulty": 0,
+          "beatmapId": 4698155,
+          "beatmapsetId": 2216909
+        },
+        {
+          "slot": "HB1",
+          "type": "HB",
+          "realType": "LNmainHB",
+          "name": "splitter - NERF THIS! [<<OVER//POWER>>]",
+          "difficulty": 0,
+          "beatmapId": 4924528,
+          "beatmapsetId": 2303845
+        }
+      ],
+      "typeDifficulties": {
+        "RC": {},
+        "HB": {},
+        "LN": {},
+        "SV": {}
+      }
+    },
+    {
+      "id": "round-2",
+      "name": "Round 1",
+      "abbreviation": "R1",
+      "order": 2,
+      "difficulty": {
+        "min": 0,
+        "max": 0,
+        "average": 0
+      },
+      "maps": [
+        {
+          "slot": "RC1",
+          "type": "RC",
+          "realType": "SS",
+          "name": "BACO - Love & Justice [Hard]",
+          "difficulty": 0,
+          "beatmapId": 2196986,
+          "beatmapsetId": 1051250
+        },
+        {
+          "slot": "RC2",
+          "type": "RC",
+          "realType": "JS",
+          "name": "-45 - EXILE [far away...(edit.ver]",
+          "difficulty": 0,
+          "beatmapId": 5198154,
+          "beatmapsetId": 2381703
+        },
+        {
+          "slot": "RC3",
+          "type": "RC",
+          "realType": "CJ",
+          "name": "Nor - Rabbit of Caerbannog [anajoyo x1.1 (edit)]",
+          "difficulty": 0,
+          "beatmapId": 5198157,
+          "beatmapsetId": 2398587
+        },
+        {
+          "slot": "RC4",
+          "type": "RC",
+          "realType": "TC",
+          "name": "The Flashbulb - EZ God Library [Light Insane]",
+          "difficulty": 0,
+          "beatmapId": 4229570,
+          "beatmapsetId": 2029742
+        },
+        {
+          "slot": "RC5",
+          "type": "RC",
+          "realType": "MX",
+          "name": "Risk Junk - quaver [guise's insane]",
+          "difficulty": 0,
+          "beatmapId": 4315527,
+          "beatmapsetId": 2061602
+        },
+        {
+          "slot": "HB1",
+          "type": "HB",
+          "realType": "HB1",
+          "name": "Camellia - LORELEI [Lost Memories]",
+          "difficulty": 0,
+          "beatmapId": 4278741,
+          "beatmapsetId": 1944604
+        },
+        {
+          "slot": "HB2",
+          "type": "HB",
+          "realType": "HB2",
+          "name": "Ni-Sokkususu - Blade Dance (TV Size) [Future]",
+          "difficulty": 0,
+          "beatmapId": 4706840,
+          "beatmapsetId": 2220445
+        },
+        {
+          "slot": "LN1",
+          "type": "LN",
+          "realType": "RE",
+          "name": "Sakamata Chloe - Kagayakashi [3 Years of memories]",
+          "difficulty": 0,
+          "beatmapId": 4912391,
+          "beatmapsetId": 2297534
+        },
+        {
+          "slot": "LN2",
+          "type": "LN",
+          "realType": "IN",
+          "name": "WOVOP - Jiu Shi Yue [Mon3tr_Miku's NOODLE_LN]",
+          "difficulty": 0,
+          "beatmapId": 5198152,
+          "beatmapsetId": 2398586
+        },
+        {
+          "slot": "LN3",
+          "type": "LN",
+          "realType": "JW",
+          "name": "Morimori Atsushi - Paradigm Shift [Revolution]",
+          "difficulty": 0,
+          "beatmapId": 3689359,
+          "beatmapsetId": 1799639
+        },
+        {
+          "slot": "SV1",
+          "type": "SV",
+          "realType": "SI",
+          "name": "TheFatRat - Unity (Cut Ver.) [Stage 1: Diversity]",
+          "difficulty": 0,
+          "beatmapId": 4821478,
+          "beatmapsetId": 2264745
+        },
+        {
+          "slot": "TB",
+          "type": "TB",
+          "realType": "TB",
+          "name": "Morimori Atsushi Remixed by ARForest - Alter Ego (ARForest Remix) [A Dearest Farewell]",
+          "difficulty": 0,
+          "beatmapId": 2791771,
+          "beatmapsetId": 1348181
+        }
+      ],
+      "typeDifficulties": {
+        "RC": {},
+        "HB": {},
+        "LN": {},
+        "SV": {}
+      }
+    },
+    {
+      "id": "round-3",
+      "name": "Round 2",
+      "abbreviation": "R2",
+      "order": 3,
+      "difficulty": {
+        "min": 0,
+        "max": 0,
+        "average": 0
+      },
+      "maps": [
+        {
+          "slot": "RC1",
+          "type": "RC",
+          "realType": "SS",
+          "name": "Creo - Dimension [3D [106bpm]]",
+          "difficulty": 0,
+          "beatmapId": 5224073,
+          "beatmapsetId": 2407061
+        },
+        {
+          "slot": "RC2",
+          "type": "RC",
+          "realType": "JS",
+          "name": "Piko - Kotonoha (Nightcore Mix) [togame x1.05]",
+          "difficulty": 0,
+          "beatmapId": 5224078,
+          "beatmapsetId": 2407063
+        },
+        {
+          "slot": "RC3",
+          "type": "RC",
+          "realType": "CJ",
+          "name": "DJGenji - HajiMidnight City [PlatinumSplash's pang bao bao]",
+          "difficulty": 0,
+          "beatmapId": 5224128,
+          "beatmapsetId": 2407092
+        },
+        {
+          "slot": "RC4",
+          "type": "RC",
+          "realType": "TC",
+          "name": "The Flashbulb - That Missing Week (Alternate) [Elegy]",
+          "difficulty": 0,
+          "beatmapId": 3883366,
+          "beatmapsetId": 1886022
+        },
+        {
+          "slot": "RC5",
+          "type": "RC",
+          "realType": "MX",
+          "name": "Sewerslvt - Kawaii Razor Blades (feat. yandere) (Cut Ver.) [insane.]",
+          "difficulty": 0,
+          "beatmapId": 3415974,
+          "beatmapsetId": 1520686
+        },
+        {
+          "slot": "HB1",
+          "type": "HB",
+          "realType": "HB1",
+          "name": "Juggernaut. - OUTERHEAVEN [EXHAUST]",
+          "difficulty": 0,
+          "beatmapId": 3040530,
+          "beatmapsetId": 1482354
+        },
+        {
+          "slot": "HB2",
+          "type": "HB",
+          "realType": "HB2",
+          "name": "ClariS - Colorful -movie MIX- [Shadows of Fate]",
+          "difficulty": 0,
+          "beatmapId": 4496057,
+          "beatmapsetId": 2136548
+        },
+        {
+          "slot": "HB3",
+          "type": "HB",
+          "realType": "MNTB",
+          "name": "PIKASONIC & Tatsunoshin - Lockdown (feat. NEONA) [Journey]",
+          "difficulty": 0,
+          "beatmapId": 4313298,
+          "beatmapsetId": 2062505
+        },
+        {
+          "slot": "LN1",
+          "type": "LN",
+          "realType": "RE",
+          "name": "Wizkhalifa ft.Chalie Puth - See you again [For Paul(edit)]",
+          "difficulty": 0,
+          "beatmapId": 4998703,
+          "beatmapsetId": 2232531
+        },
+        {
+          "slot": "LN2",
+          "type": "LN",
+          "realType": "DE",
+          "name": "seatrus - Raindrop [anatha's Insane]",
+          "difficulty": 0,
+          "beatmapId": 5158679,
+          "beatmapsetId": 2374747
+        },
+        {
+          "slot": "LN3",
+          "type": "LN",
+          "realType": "CO",
+          "name": "ILLIT - Cherish (My Love) [Cherry On Top]",
+          "difficulty": 0,
+          "beatmapId": 4839165,
+          "beatmapsetId": 2268395
+        },
+        {
+          "slot": "SV1",
+          "type": "SV",
+          "realType": "SVMX",
+          "name": "MK - Irresistible [Temptation]",
+          "difficulty": 0,
+          "beatmapId": 4226594,
+          "beatmapsetId": 2028297
+        },
+        {
+          "slot": "TB",
+          "type": "TB",
+          "realType": "TB",
+          "name": "Camellia - Heart of Android : Even If It's Only By Mechanism [4K Code]",
+          "difficulty": 0,
+          "beatmapId": 2177954,
+          "beatmapsetId": 1042122
+        }
+      ],
+      "typeDifficulties": {
+        "RC": {},
+        "HB": {},
+        "LN": {},
+        "SV": {}
+      }
+    },
+    {
+      "id": "round-4",
+      "name": "Round 3",
+      "abbreviation": "R3",
+      "order": 4,
+      "difficulty": {
+        "min": 0,
+        "max": 0,
+        "average": 0
+      },
+      "maps": [
+        {
+          "slot": "RC1",
+          "type": "RC",
+          "realType": "SS",
+          "name": "DJ Nanasaki - Unorthodox Red (Cut Ver.) [Unorthodox Streams]",
+          "difficulty": 0,
+          "beatmapId": 4735204,
+          "beatmapsetId": 2231078
+        },
+        {
+          "slot": "RC2",
+          "type": "RC",
+          "realType": "JS",
+          "name": "Feint - Tower Of Heaven (You Are Slaves) [-Enma-'s Insane // Heaven's Gate x1.1]",
+          "difficulty": 0,
+          "beatmapId": 5243063,
+          "beatmapsetId": 2413857
+        },
+        {
+          "slot": "RC3",
+          "type": "RC",
+          "realType": "SA",
+          "name": "LamazeP, Hatsune Miku - Ai No Uta [5885885858588(cut&edit)]",
+          "difficulty": 0,
+          "beatmapId": 5243052,
+          "beatmapsetId": 2367722
+        },
+        {
+          "slot": "RC4",
+          "type": "RC",
+          "realType": "CJ",
+          "name": "Creo - Crystallize [PlatinumSplash's Macabre]",
+          "difficulty": 0,
+          "beatmapId": 5243073,
+          "beatmapsetId": 2413860
+        },
+        {
+          "slot": "RC5",
+          "type": "RC",
+          "realType": "TC",
+          "name": "Teinu - Chromafill [Ayu]",
+          "difficulty": 0,
+          "beatmapId": 4692807,
+          "beatmapsetId": 2214796
+        },
+        {
+          "slot": "RC6",
+          "type": "RC",
+          "realType": "MX",
+          "name": "Nanashi Mumei - A New Start (Eurobeat Remix Ver.) [Mumei Forever!]",
+          "difficulty": 0,
+          "beatmapId": 5242514,
+          "beatmapsetId": 2410520
+        },
+        {
+          "slot": "HB1",
+          "type": "HB",
+          "realType": "HB1",
+          "name": "litmus* - Rush-Hour [Insane]",
+          "difficulty": 0,
+          "beatmapId": 4761246,
+          "beatmapsetId": 2130605
+        },
+        {
+          "slot": "HB2",
+          "type": "HB",
+          "realType": "HB2",
+          "name": "linear ring - enchanted love [Linear Notes(Nerfed Again...)]",
+          "difficulty": 0,
+          "beatmapId": 5243067,
+          "beatmapsetId": 2413859
+        },
+        {
+          "slot": "HB3",
+          "type": "HB",
+          "realType": "HB3",
+          "name": "tv room - Something in the Water [Stage 2: Punchdrunk]",
+          "difficulty": 0,
+          "beatmapId": 4632572,
+          "beatmapsetId": 2190304
+        },
+        {
+          "slot": "LN1",
+          "type": "LN",
+          "realType": "RE",
+          "name": "Sha Wen_Rhodonite - Hong Zhao Yuan [Phoenix]",
+          "difficulty": 0,
+          "beatmapId": 4791162,
+          "beatmapsetId": 2222680
+        },
+        {
+          "slot": "LN2",
+          "type": "LN",
+          "realType": "DE",
+          "name": "Zekk - Fallen [uwu (OD7 edit)]",
+          "difficulty": 0,
+          "beatmapId": 5002034,
+          "beatmapsetId": 2331601
+        },
+        {
+          "slot": "LN3",
+          "type": "LN",
+          "realType": "LNMX",
+          "name": "Sobrem & NIWASHI - A fight in Tunisia [Insane]",
+          "difficulty": 0,
+          "beatmapId": 4746389,
+          "beatmapsetId": 2234592
+        },
+        {
+          "slot": "SV1",
+          "type": "SV",
+          "realType": "SI",
+          "name": "Eliminate - ON MY MIND (Waste My Time) [Fading Hours]",
+          "difficulty": 0,
+          "beatmapId": 4996382,
+          "beatmapsetId": 2329600
+        },
+        {
+          "slot": "SV2",
+          "type": "SV",
+          "realType": "SVMX",
+          "name": "Skybreak - Waterfall (Cut Ver.) [Steam Vapor]",
+          "difficulty": 0,
+          "beatmapId": 5243090,
+          "beatmapsetId": 2413865
+        },
+        {
+          "slot": "TB",
+          "type": "TB",
+          "realType": "TB",
+          "name": "ReeK - A Flower In The Snow [A journey from the beginning to the end.]",
+          "difficulty": 0,
+          "beatmapId": 5243065,
+          "beatmapsetId": 2413858
+        }
+      ],
+      "typeDifficulties": {
+        "RC": {},
+        "HB": {},
+        "LN": {},
+        "SV": {}
+      }
+    }
+  ],
+  "customTypes": [],
+  "forumUrl": "(4) [o!m 4k][Chinese][5500pp-]Po Fang Cup S3 顺利完赛！‬ · 论坛‬ | ‭osu!‬",
+  "wikiUrl": "https://tourneymethod.com/tournaments/5060",
+  "sheetUrl": "https://docs.qq.com/sheet/DRFhMUVFSaU1OUm9P?tab=BB08J2&nlc=1"
+}

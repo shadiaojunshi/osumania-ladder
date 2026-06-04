@@ -304,9 +304,20 @@ function TournamentColumn({
   if (mode === 'tournament') {
     const allDiffs = visibleRounds.flatMap((r) =>
       r.maps.filter((m) => m.type !== 'TB').map((m) => isLnBased(m) ? getLnDiff(m) - rfLnOffset : m.difficulty)
-    )
-    const minDiff = Math.min(...allDiffs)
-    const maxDiff = Math.max(...allDiffs)
+    ).filter((d) => d > 0)
+    // maps 都是 0 时 fallback 到每轮 difficulty.average
+    const fallbackAvgs = visibleRounds
+      .map((r) => {
+        if (r.difficulty.average <= 0) return null
+        const allLn = r.maps.filter((m) => m.type !== 'TB').length > 0 &&
+          r.maps.filter((m) => m.type !== 'TB').every((m) => isLnBased(m))
+        return r.difficulty.average - (allLn ? rfLnOffset : 0)
+      })
+      .filter((v): v is number => v !== null)
+    const pool = allDiffs.length > 0 ? allDiffs : fallbackAvgs
+    if (pool.length === 0) return null
+    const minDiff = Math.min(...pool)
+    const maxDiff = Math.max(...pool)
     const top = difficultyToY(maxDiff, containerHeight, DIFFICULTY_RANGE)
     const bottom = difficultyToY(minDiff, containerHeight, DIFFICULTY_RANGE)
     const height = Math.max(bottom - top, 40)
@@ -336,17 +347,26 @@ function TournamentColumn({
           {tournament.abbreviation}
         </div>
         {visibleRounds.map((round, idx) => {
-          const adjustedDiffs = round.maps.filter((m) => m.type !== 'TB').map((m) =>
-            isLnBased(m) ? getLnDiff(m) - rfLnOffset : m.difficulty
-          )
-          const computedMin = adjustedDiffs.length > 0 ? Math.min(...adjustedDiffs) : 0
-          const computedMax = adjustedDiffs.length > 0 ? Math.max(...adjustedDiffs) : 0
-          const allLn = adjustedDiffs.length > 0 && round.maps.filter((m) => m.type !== 'TB').every((m) => isLnBased(m))
+          const adjustedDiffs = round.maps
+            .filter((m) => m.type !== 'TB')
+            .map((m) => (isLnBased(m) ? getLnDiff(m) - rfLnOffset : m.difficulty))
+            .filter((d) => d > 0)
+          const computedMin = adjustedDiffs.length > 0 ? Math.min(...adjustedDiffs) : Infinity
+          const computedMax = adjustedDiffs.length > 0 ? Math.max(...adjustedDiffs) : -Infinity
+          const allLn = round.maps.filter((m) => m.type !== 'TB').length > 0 &&
+            round.maps.filter((m) => m.type !== 'TB').every((m) => isLnBased(m))
           const offsetForStored = allLn ? rfLnOffset : 0
           const storedMin = round.difficulty.min > 0 ? round.difficulty.min - offsetForStored : Infinity
           const storedMax = round.difficulty.max > 0 ? round.difficulty.max - offsetForStored : -Infinity
-          const minDiff = Math.min(computedMin, storedMin)
-          const maxDiff = Math.max(computedMax, storedMax)
+          const storedAvg = round.difficulty.average > 0 ? round.difficulty.average - offsetForStored : null
+          let minDiff = Math.min(computedMin, storedMin)
+          let maxDiff = Math.max(computedMax, storedMax)
+          // 用户只填平均、没填 min/max,也没逐图填难度时,用 average 撑出一个单点小框
+          if ((!isFinite(minDiff) || !isFinite(maxDiff)) && storedAvg !== null) {
+            minDiff = storedAvg
+            maxDiff = storedAvg
+          }
+          if (!isFinite(minDiff) || !isFinite(maxDiff)) return null
           const top = difficultyToY(maxDiff, containerHeight, DIFFICULTY_RANGE)
           const bottom = difficultyToY(minDiff, containerHeight, DIFFICULTY_RANGE)
           const boxH = Math.max(bottom - top, 24)
@@ -382,8 +402,19 @@ function TournamentColumn({
     const types = getUniqueTypes(round)
     for (const type of types) {
       const typeMaps = round.maps.filter((m) => m.type === type)
-      const typeAvg = typeMaps.reduce((s, m) => s + (isLnBased(m) ? getLnDiff(m) : m.difficulty), 0) / typeMaps.length
-      const adjustedAvg = typeMaps.some((m) => isLnBased(m)) ? typeAvg - rfLnOffset : typeAvg
+      const diffs = typeMaps.map((m) => (isLnBased(m) ? getLnDiff(m) : m.difficulty)).filter((d) => d > 0)
+      const typeIsLn = typeMaps.some((m) => isLnBased(m))
+      let typeAvg: number | null = null
+      if (diffs.length > 0) {
+        typeAvg = diffs.reduce((s, d) => s + d, 0) / diffs.length
+      } else {
+        // 谱面难度全是 0,fallback 到 round.typeDifficulties 站长填的值
+        const td = round.typeDifficulties?.[type]
+        const stored = typeIsLn ? (td?.ln ?? td?.rf) : (td?.rf ?? td?.ln)
+        if (stored && stored > 0) typeAvg = stored
+      }
+      if (typeAvg === null) continue
+      const adjustedAvg = typeIsLn ? typeAvg - rfLnOffset : typeAvg
       allTypeBoxes.push({ round, type, adjustedAvg })
     }
   }

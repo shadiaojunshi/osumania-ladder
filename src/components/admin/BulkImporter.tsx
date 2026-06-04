@@ -4,6 +4,7 @@ import { useState, useRef } from 'react'
 import type { RoundWithMeta } from './RoundEditor'
 import type { ExtendedMap, MapCategory } from './MapSlotEditor'
 import { REAL_TYPES } from './MapSlotEditor'
+import { findMatchingTemplate, applyTemplateRealTypes } from '@/lib/poolTemplates'
 
 interface BeatmapApiResponse {
   beatmapId: string
@@ -284,11 +285,17 @@ export function BulkImporter({ onImport, onClose, existingRoundCount }: Props) {
       const meta = groupMetas[gi]
       orderCursor++
 
-      const maps: ExtendedMap[] = groupRows.map((r) => {
+      // 优先尝试按"张数 + 各 type 计数"匹配预设模板;命中就按出现顺序对位填 realType
+      const categories = groupRows.map((r) => detectCategory(r.slot))
+      const template = findMatchingTemplate(categories, meta.isQualifier)
+      const matchedRealTypes = template ? applyTemplateRealTypes(categories, template) : null
+
+      const maps: ExtendedMap[] = groupRows.map((r, ri) => {
         const m = r.meta
-        const category = detectCategory(r.slot)
+        const category = categories[ri]
         const realTypes = REAL_TYPES[category] || []
-        const realType = realTypes.length > 0 ? realTypes[0].id : ''
+        const fallbackRealType = realTypes.length > 0 ? realTypes[0].id : ''
+        const realType = matchedRealTypes?.[ri] || fallbackRealType
         const type = category === 'SPECIAL' ? r.slot.replace(/\d+$/, '') : category
         return {
           slot: r.slot,

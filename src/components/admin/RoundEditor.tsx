@@ -3,103 +3,7 @@
 import { useState } from 'react'
 import type { Round, BeatmapMeta } from '@/lib/types'
 import { MapSlotEditor, type ExtendedMap, type MapCategory, REAL_TYPES } from './MapSlotEditor'
-
-interface PoolTemplate {
-  label: string
-  maps: { type: MapCategory; realType: string }[]
-}
-
-const QUALIFIER_TEMPLATES: Record<number, PoolTemplate[]> = {
-  7: [{ label: '3RC 2LN 2HB', maps: [
-    { type: 'RC', realType: 'SS' }, { type: 'RC', realType: 'JS' }, { type: 'RC', realType: 'TC' },
-    { type: 'LN', realType: 'RE' }, { type: 'LN', realType: 'DE' },
-    { type: 'HB', realType: 'HB1' }, { type: 'HB', realType: 'HB2' },
-  ]}],
-  8: [
-    { label: '1SV 3RC 2LN 2HB', maps: [
-      { type: 'SV', realType: 'SV1' },
-      { type: 'RC', realType: 'SS' }, { type: 'RC', realType: 'JS' }, { type: 'RC', realType: 'TC' },
-      { type: 'LN', realType: 'RE' }, { type: 'LN', realType: 'DE' },
-      { type: 'HB', realType: 'HB1' }, { type: 'HB', realType: 'HB2' },
-    ]},
-    { label: '4RC 2LN 2HB', maps: [
-      { type: 'RC', realType: 'SS' }, { type: 'RC', realType: 'JS' }, { type: 'RC', realType: 'TC' }, { type: 'RC', realType: 'CJ' },
-      { type: 'LN', realType: 'RE' }, { type: 'LN', realType: 'DE' },
-      { type: 'HB', realType: 'HB1' }, { type: 'HB', realType: 'HB2' },
-    ]},
-  ],
-  9: [{ label: '1SV 4RC 2LN 2HB', maps: [
-    { type: 'SV', realType: 'SV1' },
-    { type: 'RC', realType: 'SS' }, { type: 'RC', realType: 'JS' }, { type: 'RC', realType: 'TC' }, { type: 'RC', realType: 'CJ' },
-    { type: 'LN', realType: 'RE' }, { type: 'LN', realType: 'DE' },
-    { type: 'HB', realType: 'HB1' }, { type: 'HB', realType: 'HB2' },
-  ]}],
-}
-
-const MATCH_TEMPLATES: Record<number, PoolTemplate[]> = {
-  7: [
-    { label: '4RC 2HB 2LN 1SV 1TB', maps: [
-      { type: 'RC', realType: 'SS' }, { type: 'RC', realType: 'JS' }, { type: 'RC', realType: 'TC' }, { type: 'RC', realType: 'TC' },
-      { type: 'HB', realType: 'HB1' }, { type: 'HB', realType: 'HB2' },
-      { type: 'LN', realType: 'RE' }, { type: 'LN', realType: 'DE' },
-      { type: 'SV', realType: 'SV1' }, { type: 'TB', realType: 'TB' },
-    ]},
-    { label: '4RC 2HB 2LN 1TB', maps: [
-      { type: 'RC', realType: 'SS' }, { type: 'RC', realType: 'JS' }, { type: 'RC', realType: 'TC' }, { type: 'RC', realType: 'TC' },
-      { type: 'HB', realType: 'HB1' }, { type: 'HB', realType: 'HB2' },
-      { type: 'LN', realType: 'RE' }, { type: 'LN', realType: 'DE' },
-      { type: 'TB', realType: 'TB' },
-    ]},
-  ],
-  9: [
-    { label: '5RC 2HB 3LN 2SV 1TB', maps: [
-      { type: 'RC', realType: 'SS' }, { type: 'RC', realType: 'SA' }, { type: 'RC', realType: 'MX' }, { type: 'RC', realType: 'DP' }, { type: 'RC', realType: 'TC' },
-      { type: 'HB', realType: 'HB1' }, { type: 'HB', realType: 'HB2' },
-      { type: 'LN', realType: 'RE' }, { type: 'LN', realType: 'DE' }, { type: 'LN', realType: 'LNMX' },
-      { type: 'SV', realType: 'SV1' }, { type: 'SV', realType: 'SV2' }, { type: 'TB', realType: 'TB' },
-    ]},
-    { label: '6RC 3HB 3LN 1TB', maps: [
-      { type: 'RC', realType: 'SS' }, { type: 'RC', realType: 'SA' }, { type: 'RC', realType: 'CJ' }, { type: 'RC', realType: 'TC' }, { type: 'RC', realType: 'TC' }, { type: 'RC', realType: 'WTC' },
-      { type: 'HB', realType: 'HB1' }, { type: 'HB', realType: 'HB2' }, { type: 'HB', realType: 'HB3' },
-      { type: 'LN', realType: 'RE' }, { type: 'LN', realType: 'DE' }, { type: 'LN', realType: 'LNMX' },
-      { type: 'TB', realType: 'TB' },
-    ]},
-  ],
-  11: [
-    { label: '6RC 3HB 3LN 2SV 1TB', maps: [
-      { type: 'RC', realType: 'SS' }, { type: 'RC', realType: 'SA' }, { type: 'RC', realType: 'CJ' }, { type: 'RC', realType: 'TC' }, { type: 'RC', realType: 'TC' }, { type: 'RC', realType: 'WTC' },
-      { type: 'HB', realType: 'HB1' }, { type: 'HB', realType: 'HB2' }, { type: 'HB', realType: 'HB3' },
-      { type: 'LN', realType: 'CO' }, { type: 'LN', realType: 'DE' }, { type: 'LN', realType: 'LNMX' },
-      { type: 'SV', realType: 'SV1' }, { type: 'SV', realType: 'SV2' }, { type: 'TB', realType: 'TB' },
-    ]},
-    { label: '7RC 3HB 4LN 1TB', maps: [
-      { type: 'RC', realType: 'SS' }, { type: 'RC', realType: 'JS' }, { type: 'RC', realType: 'SA' }, { type: 'RC', realType: 'CJ' }, { type: 'RC', realType: 'TC' }, { type: 'RC', realType: 'TC' }, { type: 'RC', realType: 'WTC' },
-      { type: 'HB', realType: 'HB1' }, { type: 'HB', realType: 'HB2' }, { type: 'HB', realType: 'HB3' },
-      { type: 'LN', realType: 'CO' }, { type: 'LN', realType: 'DE' }, { type: 'LN', realType: 'JW' }, { type: 'LN', realType: 'SW' },
-      { type: 'TB', realType: 'TB' },
-    ]},
-  ],
-  13: [
-    { label: '7RC 3HB 4LN 2SV 1TB', maps: [
-      { type: 'RC', realType: 'SS' }, { type: 'RC', realType: 'JS' }, { type: 'RC', realType: 'SA' }, { type: 'RC', realType: 'CJ' }, { type: 'RC', realType: 'DP' }, { type: 'RC', realType: 'STC' }, { type: 'RC', realType: 'JTC' },
-      { type: 'HB', realType: 'HB1' }, { type: 'HB', realType: 'HB2' }, { type: 'HB', realType: 'HB3' },
-      { type: 'LN', realType: 'CO' }, { type: 'LN', realType: 'DE' }, { type: 'LN', realType: 'JW' }, { type: 'LN', realType: 'SW' },
-      { type: 'SV', realType: 'SV1' }, { type: 'SV', realType: 'SV2' }, { type: 'TB', realType: 'TB' },
-    ]},
-    { label: '8RC 4HB 4LN 1TB', maps: [
-      { type: 'RC', realType: 'SS' }, { type: 'RC', realType: 'JS' }, { type: 'RC', realType: 'SA' }, { type: 'RC', realType: 'CJ' }, { type: 'RC', realType: 'DP' }, { type: 'RC', realType: 'STC' }, { type: 'RC', realType: 'JTC' }, { type: 'RC', realType: 'WTC' },
-      { type: 'HB', realType: 'HB1' }, { type: 'HB', realType: 'HB2' }, { type: 'HB', realType: 'HB3' }, { type: 'HB', realType: 'HB4' },
-      { type: 'LN', realType: 'CO' }, { type: 'LN', realType: 'DE' }, { type: 'LN', realType: 'JW' }, { type: 'LN', realType: 'SW' },
-      { type: 'TB', realType: 'TB' },
-    ]},
-    { label: '8RC 3HB 5LN 1TB', maps: [
-      { type: 'RC', realType: 'SS' }, { type: 'RC', realType: 'JS' }, { type: 'RC', realType: 'SA' }, { type: 'RC', realType: 'CJ' }, { type: 'RC', realType: 'DP' }, { type: 'RC', realType: 'STC' }, { type: 'RC', realType: 'JTC' }, { type: 'RC', realType: 'WTC' },
-      { type: 'HB', realType: 'HB1' }, { type: 'HB', realType: 'HB2' }, { type: 'HB', realType: 'HB3' },
-      { type: 'LN', realType: 'CO' }, { type: 'LN', realType: 'DE' }, { type: 'LN', realType: 'JW' }, { type: 'LN', realType: 'SW' }, { type: 'LN', realType: 'LNMX' },
-      { type: 'TB', realType: 'TB' },
-    ]},
-  ],
-}
+import { getTemplatesByBestOf, type PoolTemplate } from '@/lib/poolTemplates'
 
 const ROUND_PRESETS = [
   { name: 'Qualifiers', abbreviation: 'Qual', isQualifier: true },
@@ -195,7 +99,7 @@ export function RoundEditor({ round, index, onChange, onRemove }: Props) {
   }
 
   const getTemplates = (bo: number, isQualifier: boolean): PoolTemplate[] => {
-    return isQualifier ? (QUALIFIER_TEMPLATES[bo] || []) : (MATCH_TEMPLATES[bo] || [])
+    return getTemplatesByBestOf(bo, isQualifier)
   }
 
   const applyPoolTemplate = (tpl: PoolTemplate) => {

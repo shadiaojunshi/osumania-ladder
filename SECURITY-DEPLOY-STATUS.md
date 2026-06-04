@@ -1,7 +1,7 @@
 # 安全改造部署状态（交接文档）
 
 > 这份文档记录安全改造的当前进度、待验证项和已知遗留问题。压缩对话后照这份继续即可。
-> 最后更新：2026-06-03
+> 最后更新：2026-06-04
 
 ---
 
@@ -78,6 +78,9 @@ osu.ppy.sh 在 Cloudflare 后面。Cloudflare Pages Functions 的出口走 **Clo
 - `1e5dce4` 把 `osu-proxy/` 从 Next.js TS 检查排除
 - `31b38b9` 谱面裁剪：去 storyboard 事件 + 保留打击音效（待验证）
 - `dd3ca9a` v1 `get_beatmaps` 也走代理 + 批量导入可中断 —— 之前 `/api/osu/beatmap` 直连 osu，97 行批量导入触发同一个 429 根因
+- `887fb0d` 批量导入按图池模板自动填 realType（模板抽到 `src/lib/poolTemplates.ts`，RoundEditor 共用）
+- `852dffc` 主页 round/tournament/type 三种模式：当谱面 difficulty 全 0、只填了 average / typeDifficulties 时也撑出小框（之前会塌到底部）
+- `16436f7` 合包脚本两个曲绘 bug：`parseOsu` 兼容不带引号的 bg 行 + `sanitizeFileName` 替换逗号（osu 解析按逗号分段，文件名带逗号会让曲绘加载失败）。**老 pack 需重跑一次 generate-pack 才生效，谱面不用重传。**
 
 ---
 
@@ -188,15 +191,49 @@ curl https://osumania-ladder.shadiaojunshi.deno.net/
 
 ## 待办（按优先级）
 
-1. **[Bug 修复] 谱面缺曲绘 + 红色错误提示**
+1. **[需要重跑] 合包曲绘修复（`16436f7`）后重新跑一次 generate-pack**
+   - 修了两个独立 bug：1) parseOsu 之前只匹配带引号的 `0,0,"file.jpg"` 背景行，不带引号的谱子直接 `backgroundFile=undefined`，合包时根本不写曲绘进 archive；2) `sanitizeFileName` 没过滤逗号，文件名带逗号会让 osu Events 行解析错位 → 曲绘加载失败。
+   - **不需要重传谱面**（R2 里的原始 .osz 没变）。只要触发一次 Generate Map Packs workflow，新合包就是好的。
+2. **[Bug 修复] 谱面缺曲绘 + 红色错误提示**
    - 已修代码（commit `31b38b9`）：自动下载图包时裁掉 `[Events]` 段的 storyboard 事件、保留所有打击音效（`.wav/.ogg/.mp3`）。
    - **需要用户重新跑一遍受影响图的"自动下载并上传"** → 老的 R2 文件是按旧逻辑裁的，仍然坏。重传一次后才能验证。
-2. **[排查中] THMC4 F/GF 文件"重合"**
+3. **[排查中] THMC4 F/GF 文件"重合"**
    - 数据层确认：F=`round-7`、GF=`round-8`，roundId 不同，R2 路径分别是 `maps/touhou.../round-7/...` 和 `maps/touhou.../round-8/...`，**不会互相覆盖**。
    - 但 JSON 里两轮的图池**完全相同**（同 slot、同 beatmapsetId、同名），所以两边文件内容确实一样——这是数据本身决定的，不是 bug。
    - **需要用户重传后确认**：R2 里 `round-7/` 和 `round-8/` 是不是两个独立文件夹。如果是，pass；如果发现真落进同一个文件夹，那才是真 bug。
-3. **[遗留] 合包填链接**：用户说"懒得填，反正合完了"，暂缓。
-4. **[当前对话] 下载图包的其它 bug**：用户即将描述具体症状。
+4. **[已讨论，暂不实现] 不同比赛用同一张赛图**
+   - 讨论结论：保留双份。两个比赛同一张图在合包里文件名不冲突（前缀含比赛缩写+轮次+slot，safeVersion 不同），用户硬盘多几 MB 可接受，"按比赛收藏"心智更清晰。如果以后合包真的撑爆 80 张/包再考虑去重。
+5. **[遗留] 合包填链接**：用户说"懒得填，反正合完了"，暂缓。
+6. **[阻塞中] Google Drive 自动上传**：`docs/google-drive-auto-upload-research.md` 7 步 GCP 设置由用户完成；完成后用户提供 `GDRIVE_CLIENT_ID`，AI 实施 `scripts/upload-to-gdrive.js`（Plan B 稳定 fileId 策略）+ workflow 加 Upload step。
+
+---
+
+## 管理后台关键流程速查（给接手 AI）
+
+### 添加比赛 / 编辑比赛
+- 入口：[src/components/admin/TournamentForm.tsx](src/components/admin/TournamentForm.tsx)，两步骤（基本信息 / 轮次与谱面）。
+- 轮次内部：[src/components/admin/RoundEditor.tsx](src/components/admin/RoundEditor.tsx)。每个轮次有"图池模板"快速填充按钮 + 难度有"逐图填写 / 只填范围"两种模式。
+- 模板定义集中在 [src/lib/poolTemplates.ts](src/lib/poolTemplates.ts)（`QUALIFIER_TEMPLATES` / `MATCH_TEMPLATES`，按 BO 数索引）。RoundEditor 和 BulkImporter 共用同一份，新增模板只改这一个文件。
+
+### 主表格批量导入
+- 入口：[src/components/admin/BulkImporter.tsx](src/components/admin/BulkImporter.tsx)（轮次列表上方"从主表格导入"按钮打开）。
+- 三步骤：粘贴（slot+ID 两列）→ 确认轮次（自动识别空行/重复 slot 分轮，淘汰赛从尾倒推命名）→ 查询元数据（逐张调 `/api/osu/beatmap`，可中断）。
+- **`doImport` 时调 `findMatchingTemplate` 按"map 数 + 各 type 计数"无序匹配**；命中就 `applyTemplateRealTypes` 按出现顺序对位填 realType；没匹配上回退到 category 第一个 realType（旧行为）。
+- 元数据调 `/api/osu/beatmap?id=ID` → Pages Function → Deno 代理 → osu v1 API（之前 429 根因就是少了这条代理路径，已在 `dd3ca9a` 修）。
+
+### 谱面上传 / 自动下载
+- 入口：[src/components/admin/MapUploader.tsx](src/components/admin/MapUploader.tsx)。`buildTrimmedOsz` 在浏览器侧用 JSZip 切单难度 + 去 storyboard + 保留打击音效。
+- 上传走 `POST /api/maps/upload`（multipart），R2 路径 `maps/<tid>/<rid>/<slot>.osz`，可选 NSV 变体 `.nsv.osz`。
+
+### 合包流程（GitHub Actions 触发）
+- 脚本：[scripts/generate-pack.js](scripts/generate-pack.js)，按 `realType` 聚合所有比赛的图，每包最多 80 张。
+- 流程：listObjects(R2) → 下载 .osz → 解压 → 改 metadata（前缀 `(比赛缩写 轮次缩写 slot[ NSV])`）→ 按真实后缀重命名音频/曲绘 → 重新打包 → 写 output/ + 更新 `data/packs-manifest.json`。
+- **改动 metadata 时的两个隐形坑**：1) Events 行背景文件名一定要兜住带引号 + 不带引号两种格式（已修于 `16436f7`）；2) `sanitizeFileName` 必须过滤逗号，因为 osu 解析按逗号分段（已修于 `16436f7`）。改 generate-pack.js 时这两点要保留。
+
+### 主页天梯渲染
+- 入口：[src/components/ladder/LadderView.tsx](src/components/ladder/LadderView.tsx)。三种模式：tournament（一比赛一框）/ round（每轮一框）/ type（每轮按键型分若干小框）。
+- 难度框高低范围：默认从 `round.maps[].difficulty` 取 min/max；**全为 0 时 fallback 到 `round.difficulty.average` 或 `round.typeDifficulties[type].rf/.ln`**（type 模式）—— 这是为了支持站长只填平均难度、不逐图填的情况（在 `852dffc` 修复，之前框会塌到底部）。
+- LN/HB 类的 difficulty 显示要减 `rfLnOffset`（用户在控件里调），公式见 `getLnDiff` / `isLnBased`。
 
 ---
 

@@ -208,11 +208,20 @@ function RoundUploadSection({
   const [bulkRunning, setBulkRunning] = useState(false)
   const [bulkProgress, setBulkProgress] = useState({ done: 0, total: 0 })
   const [bulkErrors, setBulkErrors] = useState<{ slot: string; msg: string }[]>([])
+  const [pasteOpen, setPasteOpen] = useState(false)
   const uploadedInRound = round.maps.filter(m => uploadedSlots.has(`${round.id}/${m.slot}`)).length
 
   const eligibleForBulk = round.maps.filter(
     m => m.beatmapsetId && !uploadedSlots.has(`${round.id}/${m.slot}`)
   )
+
+  // "贴 BID 补传"在本轮有任何图时都允许打开 — 可以补漏,也可以覆盖已传的图。
+  // 显示数字优先用"待补",没待补就用"全部"提示可走覆盖路径。
+  const unuploadedInRound = round.maps.filter(
+    m => !uploadedSlots.has(`${round.id}/${m.slot}`)
+  )
+  const pasteBadge =
+    unuploadedInRound.length > 0 ? `${unuploadedInRound.length}` : `全${round.maps.length}覆盖`
 
   const startBulkAuto = async (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -253,14 +262,23 @@ function RoundUploadSection({
             {uploadedInRound === round.maps.length && ' ✓'}
           </span>
         </button>
+        {round.maps.length > 0 && !bulkRunning && (
+          <button
+            onClick={(e) => { e.stopPropagation(); setPasteOpen(true) }}
+            className="ml-3 px-2 py-1 text-xs bg-amber-50 text-amber-700 rounded hover:bg-amber-100 border border-amber-200 shrink-0"
+            title="粘贴 slot+BID 逐张拉元数据并自动下载上传(支持手动指派未匹配 slot 和覆盖已上传)"
+          >
+            贴 BID 补传 ({pasteBadge})
+          </button>
+        )}
         {eligibleForBulk.length > 0 && (
           <button
             onClick={startBulkAuto}
             disabled={bulkRunning}
-            className="ml-3 px-2 py-1 text-xs bg-blue-50 text-blue-700 rounded hover:bg-blue-100 border border-blue-200 disabled:opacity-50 shrink-0"
-            title={`一键从镜像自动下载并上传本轮 ${eligibleForBulk.length} 张图（仅主版本）`}
+            className="ml-2 px-2 py-1 text-xs bg-blue-50 text-blue-700 rounded hover:bg-blue-100 border border-blue-200 disabled:opacity-50 shrink-0"
+            title={`一键从镜像自动下载并上传本轮 ${eligibleForBulk.length} 张图(仅主版本)`}
           >
-            {bulkRunning ? `下载中 ${bulkProgress.done}/${bulkProgress.total}` : `一键自动 (${eligibleForBulk.length})`}
+            {bulkRunning ? `下载中 ${bulkProgress.done}/${bulkProgress.total}` : `一键下载上传 (${eligibleForBulk.length})`}
           </button>
         )}
       </div>
@@ -269,6 +287,16 @@ function RoundUploadSection({
         <div className="px-3 py-1.5 text-xs text-yellow-700 bg-yellow-50 border-t border-yellow-200">
           {bulkErrors.length} 张失败：{bulkErrors.map(e => `${e.slot}(${e.msg})`).join('，')}
         </div>
+      )}
+
+      {pasteOpen && (
+        <PasteBidPanel
+          roundId={round.id}
+          roundMaps={round.maps}
+          uploadedSlots={uploadedSlots}
+          onClose={() => setPasteOpen(false)}
+          onUploadOsz={onUploadOsz}
+        />
       )}
 
       {expanded && (
@@ -291,6 +319,366 @@ function RoundUploadSection({
             />
           ))}
         </div>
+      )}
+    </div>
+  )
+}
+
+// "贴 BID 补传":两阶段流程 — 解析 → review(可改 slot 指派 / 选择是否覆盖已上传) → 跑。
+// TB1↔TB 等价(normTbSlot);未匹配 slot 给 select 让用户手动指派到本轮某个未补 slot,
+// 或选"跳过"。"包含已上传(覆盖)"勾上后允许已上传 slot 也被分配,R2 直接覆盖原文件。
+function normTbSlot(s: string): string {
+  const up = s.toUpperCase().trim()
+  return up === 'TB1' ? 'TB' : up
+}
+
+function PasteBidPanel({
+  roundId,
+  roundMaps,
+  uploadedSlots,
+  onClose,
+  onUploadOsz,
+}: {
+  roundId: string
+  roundMaps: MapInfo[]
+  uploadedSlots: Set<string>
+  onClose: () => void
+  onUploadOsz: (roundId: string, slot: string, file: File, isNsv: boolean) => Promise<void> | void
+}) {
+  type RowState = 'pending' | 'fetching' | 'downloading' | 'uploading' | 'ok' | 'error' | 'skip'
+  interface Row {
+    rawSlot: string
+    rawMapId: string
+    assignedSlot: string // '' = 跳过
+    state: RowState
+    msg?: string
+  }
+  type Phase = 'input' | 'review' | 'run'
+
+  const [phase, setPhase] = useState<Phase>('input')
+  const [text, setText] = useState('')
+  const [rows, setRows] = useState<Row[]>([])
+  const [includeUploaded, setIncludeUploaded] = useState(false)
+  const [running, setRunning] = useState(false)
+
+  // 本轮全部 slot 的 normalize 映射:贴进来的 slot 用 normTbSlot 之后跟它比对,
+  // 找到原始 slot(可能是 TB1)。
+  const slotByNorm = new Map<string, string>()
+  for (const m of roundMaps) slotByNorm.set(normTbSlot(m.slot), m.slot)
+  const allRoundSlots = roundMaps.map((m) => m.slot)
+  const unuploadedSlots = roundMaps
+    .filter((m) => !uploadedSlots.has(`${roundId}/${m.slot}`))
+    .map((m) => m.slot)
+
+  const parse = () => {
+    const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean)
+    if (lines.length > 200) {
+      alert('单次最多 200 行')
+      return
+    }
+    const parsed: Row[] = []
+    const usedAssigned = new Set<string>()
+    for (const line of lines) {
+      const parts = line.split(/\s*\t\s*|\s{2,}|\s+/).filter(Boolean)
+      if (parts.length < 2) {
+        parsed.push({ rawSlot: parts[0] || line, rawMapId: '', assignedSlot: '', state: 'error', msg: '缺少 slot 或 ID' })
+        continue
+      }
+      const rawSlot = parts[0]
+      const idRaw = parts.slice(1).join(' ')
+      let mapId: string | null = null
+      if (/^\d+$/.test(idRaw.trim())) mapId = idRaw.trim()
+      else {
+        const b = idRaw.match(/osu\.ppy\.sh\/b\/(\d+)/i)
+        const s = idRaw.match(/osu\.ppy\.sh\/beatmapsets\/\d+#\w+\/(\d+)/i)
+        const last = idRaw.match(/(\d+)(?!.*\d)/)
+        mapId = (b?.[1] || s?.[1] || last?.[1]) ?? null
+      }
+      if (!mapId) {
+        parsed.push({ rawSlot, rawMapId: '', assignedSlot: '', state: 'error', msg: '提取不到 mapID' })
+        continue
+      }
+      const norm = normTbSlot(rawSlot)
+      const matched = slotByNorm.get(norm)
+      let assigned = ''
+      if (matched && !usedAssigned.has(matched)) {
+        // 默认匹配上的 slot,但如果是已上传的 + 用户没勾"包含已上传",此时也保留指派,
+        // 在 run 阶段会按 includeUploaded 过滤。这里给个默认值即可,review 阶段用户能改。
+        assigned = matched
+        usedAssigned.add(matched)
+      }
+      parsed.push({ rawSlot, rawMapId: mapId, assignedSlot: assigned, state: 'pending' })
+    }
+    setRows(parsed)
+    setPhase('review')
+  }
+
+  // review 阶段每行 select 的可选项:本轮所有 slot,但已被本批次别的行选走的禁用,
+  // 已上传的 slot 在没勾 includeUploaded 时也禁用。
+  const optionsForRow = (rowIdx: number): { slot: string; disabled: boolean; reason?: string }[] => {
+    const usedByOthers = new Set(
+      rows
+        .map((r, i) => (i !== rowIdx && r.assignedSlot ? r.assignedSlot : null))
+        .filter((s): s is string => s !== null)
+    )
+    return allRoundSlots.map((slot) => {
+      if (usedByOthers.has(slot)) return { slot, disabled: true, reason: '已被本批次另一行使用' }
+      const isUploaded = uploadedSlots.has(`${roundId}/${slot}`)
+      if (isUploaded && !includeUploaded) return { slot, disabled: true, reason: '已上传(勾选上方覆盖选项才能指派)' }
+      return { slot, disabled: false }
+    })
+  }
+
+  const updateAssign = (rowIdx: number, value: string) => {
+    setRows((prev) => prev.map((r, i) => (i === rowIdx ? { ...r, assignedSlot: value } : r)))
+  }
+
+  const toggleIncludeUploaded = (next: boolean) => {
+    setIncludeUploaded(next)
+    // 关掉时,把那些指派到"已上传 slot"的行清空,避免误传。
+    if (!next) {
+      setRows((prev) =>
+        prev.map((r) =>
+          r.assignedSlot && uploadedSlots.has(`${roundId}/${r.assignedSlot}`)
+            ? { ...r, assignedSlot: '' }
+            : r
+        )
+      )
+    }
+  }
+
+  const startRun = async () => {
+    setPhase('run')
+    setRunning(true)
+    const next = [...rows]
+    for (let i = 0; i < next.length; i++) {
+      if (next[i].state === 'error') continue
+      if (!next[i].assignedSlot) {
+        next[i] = { ...next[i], state: 'skip', msg: '未指派 slot,跳过' }
+        setRows([...next])
+        continue
+      }
+      const targetSlot = next[i].assignedSlot
+      const wasUploaded = uploadedSlots.has(`${roundId}/${targetSlot}`)
+      const r = next[i]
+      try {
+        next[i] = { ...r, state: 'fetching' }
+        setRows([...next])
+        const metaRes = await fetch(`/api/osu/beatmap?id=${r.rawMapId}`)
+        if (!metaRes.ok) {
+          const body = await metaRes.json().catch(() => ({}))
+          throw new Error((body as { error?: string }).error || `HTTP ${metaRes.status}`)
+        }
+        const meta = (await metaRes.json()) as { beatmapsetId: string; version: string }
+        next[i] = { ...next[i], state: 'downloading' }
+        setRows([...next])
+        const result = await autoDownloadAndTrim(Number(meta.beatmapsetId), meta.version, targetSlot, false)
+        if (result.needsManualSelect) {
+          next[i] = { ...next[i], state: 'error', msg: '多难度匹配不上,需手动选' }
+        } else {
+          next[i] = { ...next[i], state: 'uploading' }
+          setRows([...next])
+          await onUploadOsz(roundId, targetSlot, result.file, false)
+          next[i] = { ...next[i], state: 'ok', msg: wasUploaded ? '已覆盖' : undefined }
+        }
+      } catch (err) {
+        next[i] = { ...next[i], state: 'error', msg: err instanceof Error ? err.message : String(err) }
+      }
+      setRows([...next])
+      await new Promise((res) => setTimeout(res, 300))
+    }
+    setRunning(false)
+  }
+
+  const okCount = rows.filter((r) => r.state === 'ok').length
+  const errCount = rows.filter((r) => r.state === 'error').length
+  const skipCount = rows.filter((r) => r.state === 'skip').length
+  const assignableCount = rows.filter((r) => r.assignedSlot && r.state !== 'error').length
+
+  const reset = () => {
+    setRows([])
+    setText('')
+    setPhase('input')
+  }
+
+  return (
+    <div className="px-3 py-2 border-t border-amber-200 bg-amber-50/50 space-y-2">
+      <div className="flex items-center justify-between">
+        <span className="text-xs text-amber-800 font-medium">
+          贴 BID 补传 ·
+          {phase === 'input' && ' 步骤 1/3:粘贴'}
+          {phase === 'review' && ' 步骤 2/3:确认指派'}
+          {phase === 'run' && ' 步骤 3/3:执行'}
+        </span>
+        <button onClick={onClose} className="text-xs text-gray-400 hover:text-gray-600" disabled={running}>
+          关闭
+        </button>
+      </div>
+
+      {phase === 'input' && (
+        <>
+          <div className="text-[11px] text-gray-500 leading-relaxed">
+            每行格式:<code>slot</code> + tab/空格 + <code>mapID 或链接</code>。<br />
+            本轮待补 slot:<span className="font-mono">{unuploadedSlots.join(', ') || '(都已上传)'}</span><br />
+            <span className="text-gray-400">TB / TB1 视作等价。下一步可手动指派识别不出的 slot,或选择覆盖已上传的图。</span>
+          </div>
+          <textarea
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder={'RC1\t5318853\nRC2\thttps://osu.ppy.sh/b/5318764\nTB\t5318924\n...'}
+            rows={6}
+            className="w-full px-2 py-1.5 border border-gray-300 rounded text-xs font-mono focus:outline-none focus:border-amber-400"
+          />
+          <div className="flex justify-end">
+            <button
+              onClick={parse}
+              disabled={!text.trim()}
+              className="px-3 py-1 text-xs bg-amber-600 text-white rounded hover:bg-amber-700 disabled:opacity-40"
+            >
+              解析 →
+            </button>
+          </div>
+        </>
+      )}
+
+      {phase === 'review' && (
+        <>
+          <label className="flex items-center gap-1.5 text-[11px] text-gray-600">
+            <input
+              type="checkbox"
+              checked={includeUploaded}
+              onChange={(e) => toggleIncludeUploaded(e.target.checked)}
+              className="accent-amber-600"
+            />
+            包含已上传(覆盖)— 勾选后可把贴上来的图指派到已传过的 slot,R2 上的源文件会被覆盖。
+          </label>
+          <div className="border border-amber-200 rounded bg-white text-[11px] max-h-72 overflow-y-auto">
+            <div className="grid grid-cols-[80px_70px_120px_1fr] gap-2 px-2 py-1 bg-gray-50 border-b border-gray-200 font-medium text-gray-500 sticky top-0">
+              <span>原 slot</span>
+              <span>Map ID</span>
+              <span>指派到</span>
+              <span>说明</span>
+            </div>
+            {rows.map((r, i) => {
+              const opts = optionsForRow(i)
+              const matched = slotByNorm.get(normTbSlot(r.rawSlot))
+              const isMismatch = !matched && r.state !== 'error'
+              return (
+                <div
+                  key={i}
+                  className={`grid grid-cols-[80px_70px_120px_1fr] gap-2 px-2 py-1 border-b border-gray-100 items-center ${
+                    r.state === 'error' ? 'bg-red-50' : isMismatch ? 'bg-yellow-50' : ''
+                  }`}
+                >
+                  <span className="font-mono text-gray-700">{r.rawSlot}</span>
+                  <span className="font-mono text-gray-500">{r.rawMapId || '—'}</span>
+                  {r.state === 'error' ? (
+                    <span className="text-gray-400 text-[10px]">—</span>
+                  ) : (
+                    <select
+                      value={r.assignedSlot}
+                      onChange={(e) => updateAssign(i, e.target.value)}
+                      className="px-1 py-0.5 border border-gray-200 rounded text-[11px] focus:outline-none focus:border-amber-400 font-mono"
+                    >
+                      <option value="">跳过</option>
+                      {opts.map((o) => {
+                        const isUploaded = uploadedSlots.has(`${roundId}/${o.slot}`)
+                        return (
+                          <option key={o.slot} value={o.slot} disabled={o.disabled}>
+                            {o.slot}
+                            {isUploaded ? ' (已传)' : ''}
+                            {o.disabled && o.reason ? ` — ${o.reason}` : ''}
+                          </option>
+                        )
+                      })}
+                    </select>
+                  )}
+                  <span className="text-gray-500">
+                    {r.state === 'error' && <span className="text-red-700">{r.msg}</span>}
+                    {r.state !== 'error' && isMismatch && (
+                      <span className="text-yellow-700">本轮没有 {r.rawSlot},请手动指派或跳过</span>
+                    )}
+                    {r.state !== 'error' && !isMismatch && r.assignedSlot && r.assignedSlot !== matched && (
+                      <span className="text-amber-700">已改派到 {r.assignedSlot}</span>
+                    )}
+                  </span>
+                </div>
+              )
+            })}
+          </div>
+          <div className="flex items-center justify-between text-[11px] text-gray-500">
+            <span>
+              将处理 {assignableCount} 张
+              {errCount > 0 && <span className="text-red-700 ml-2">· {errCount} 行解析失败</span>}
+            </span>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setPhase('input')}
+                className="px-3 py-1 text-xs text-gray-600 border border-gray-300 rounded hover:bg-gray-50"
+              >
+                ← 返回修改
+              </button>
+              <button
+                onClick={startRun}
+                disabled={assignableCount === 0}
+                className="px-3 py-1 text-xs bg-amber-600 text-white rounded hover:bg-amber-700 disabled:opacity-40"
+              >
+                开始执行 →
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {phase === 'run' && (
+        <>
+          <div className="text-[11px] text-gray-600">
+            进度 {okCount}/{assignableCount}
+            {errCount > 0 && <span className="text-yellow-700 ml-2">· {errCount} 失败</span>}
+            {skipCount > 0 && <span className="text-gray-400 ml-2">· {skipCount} 跳过</span>}
+            {!running && <span className="ml-2 text-green-700">已完成</span>}
+          </div>
+          <div className="border border-amber-200 rounded bg-white max-h-72 overflow-y-auto text-[11px]">
+            <div className="grid grid-cols-[80px_70px_80px_1fr] gap-2 px-2 py-1 bg-gray-50 border-b border-gray-200 font-medium text-gray-500 sticky top-0">
+              <span>原 slot</span>
+              <span>Map ID</span>
+              <span>→ slot</span>
+              <span>状态</span>
+            </div>
+            {rows.map((r, i) => (
+              <div key={i} className="grid grid-cols-[80px_70px_80px_1fr] gap-2 px-2 py-1 border-b border-gray-100">
+                <span className="font-mono text-gray-700">{r.rawSlot}</span>
+                <span className="font-mono text-gray-500">{r.rawMapId || '—'}</span>
+                <span className="font-mono text-gray-600">{r.assignedSlot || '—'}</span>
+                <span>
+                  {r.state === 'pending' && <span className="text-gray-400">待处理</span>}
+                  {r.state === 'fetching' && <span className="text-blue-600">查元数据...</span>}
+                  {r.state === 'downloading' && <span className="text-blue-600">下载 .osz...</span>}
+                  {r.state === 'uploading' && <span className="text-blue-600">上传中...</span>}
+                  {r.state === 'ok' && <span className="text-green-700">✓ {r.msg || '完成'}</span>}
+                  {r.state === 'error' && <span className="text-yellow-700">{r.msg}</span>}
+                  {r.state === 'skip' && <span className="text-gray-400">{r.msg}</span>}
+                </span>
+              </div>
+            ))}
+          </div>
+          {!running && (
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={reset}
+                className="px-3 py-1 text-xs text-gray-600 border border-gray-300 rounded hover:bg-gray-50"
+              >
+                再补一批
+              </button>
+              <button
+                onClick={onClose}
+                className="px-3 py-1 text-xs bg-amber-600 text-white rounded hover:bg-amber-700"
+              >
+                完成
+              </button>
+            </div>
+          )}
+        </>
       )}
     </div>
   )

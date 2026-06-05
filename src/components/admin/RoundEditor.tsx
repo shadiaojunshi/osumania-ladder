@@ -48,7 +48,9 @@ export function RoundEditor({ round, index, onChange, onRemove }: Props) {
     const prefix = slotPrefix || category
     const existingCount = round._maps.filter((m) => m.slot.startsWith(prefix)).length
     const slotNum = existingCount + 1
-    const slot = `${prefix}${slotNum}`
+    // TB 习惯上单张就叫 TB,只在出现第二张时才编号 TB2/TB3...。
+    // 跟 generate-pack.js 的 TB1→TB 显示规则保持一致。
+    const slot = prefix === 'TB' && slotNum === 1 ? 'TB' : `${prefix}${slotNum}`
     const realTypes = REAL_TYPES[category] || []
     const firstRealType = realTypes.length > 0 ? realTypes[0].id : ''
 
@@ -103,15 +105,20 @@ export function RoundEditor({ round, index, onChange, onRemove }: Props) {
   }
 
   const applyPoolTemplate = (tpl: PoolTemplate) => {
+    // 先统计每种 type 在模板里出现几次,用来决定 TB 是叫 TB 还是 TB1。
+    // 单张 TB → "TB",多张才编号(TB1/TB2...);跟 addMap 的规则对齐。
+    const totalPerType: Record<string, number> = {}
+    for (const m of tpl.maps) totalPerType[m.type] = (totalPerType[m.type] || 0) + 1
     const slotCounters: Record<string, number> = {}
     const maps: ExtendedMap[] = tpl.maps.map((m) => {
       const count = (slotCounters[m.type] || 0) + 1
       slotCounters[m.type] = count
+      const slot = m.type === 'TB' && totalPerType.TB === 1 ? 'TB' : `${m.type}${count}`
       return {
-        slot: `${m.type}${count}`,
+        slot,
         type: m.type,
         realType: m.realType,
-        name: `${m.type}${count}`,
+        name: slot,
         difficulty: 0,
         category: m.type,
       }

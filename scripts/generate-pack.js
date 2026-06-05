@@ -281,7 +281,9 @@ async function generatePack(targetType) {
         const osuContent = await zip.files[osuFileName].async('string')
         const meta = parseOsu(osuContent)
 
-        const newVersion = `(${map.tournamentAbbr} ${map.roundAbbr} ${map.slot}${map.isNsv ? ' NSV' : ''}) ${meta.artist || 'Unknown'} - ${meta.title || 'Unknown'} [${meta.creator || 'Unknown'}] (${meta.version || 'Normal'})`
+        // TB1 习惯上等同于 TB(单张约定)。R2 路径里仍是 TB1,只在合包里显示成 TB。
+        const displaySlot = map.slot === 'TB1' ? 'TB' : map.slot
+        const newVersion = `(${map.tournamentAbbr} ${map.roundAbbr} ${displaySlot}${map.isNsv ? ' NSV' : ''}) ${meta.artist || 'Unknown'} - ${meta.title || 'Unknown'} [${meta.creator || 'Unknown'}] (${meta.version || 'Normal'})`
         const safeVersion = sanitizeFileName(newVersion)
 
         const audioExt = getAudioExtension(meta.audioFilename || 'audio.mp3')

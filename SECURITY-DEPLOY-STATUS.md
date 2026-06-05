@@ -197,6 +197,7 @@ curl https://osumania-ladder.shadiaojunshi.deno.net/
 
 1. **[首次验证] Google Drive 自动上传(`57904da`)**
    - 已实施完整流程：[scripts/upload-to-gdrive.js](scripts/upload-to-gdrive.js) + workflow Upload step + 4 个 GitHub Secret(`GDRIVE_CLIENT_ID/SECRET/REFRESH_TOKEN/FOLDER_ID`)。OAuth Production、refresh_token 永久。
+   - **触发方式**：GitHub → Actions → Generate Map Packs → Run workflow。**`realType` 输入框必须留空**(默认就是空,直接点 Run 即可)。Upload to Google Drive / Commit manifest 这两步都加了 `if: github.event.inputs.realType == ''` 守卫,只有跑全量才执行——指定单类型时它们会被 skip(显示空心圆),manifest 也不会写回,这是设计如此(避免单跑时 manifest 全量重建把别的类型清空)。
    - **第一次跑要看的事**：1) workflow Upload step 日志每个包都打 `Created XXX_1.osz (id=...)` 大概 35 行；2) `Commit manifest` 步骤把 `gdriveFileId` 和 `links.googleDrive` 写回；3) `/download` 页面所有包都有 Google Drive 下载按钮。
    - **失败兜底**：如果日志里出 `FATAL: refresh_token invalid` → OAuth Playground 重跑 Step 2 拿新 refresh token 更新 GitHub Secret。
 
@@ -230,11 +231,19 @@ curl https://osumania-ladder.shadiaojunshi.deno.net/
 
 ### 谱面上传 / 自动下载
 - 入口：[src/components/admin/MapUploader.tsx](src/components/admin/MapUploader.tsx)。`buildTrimmedOsz` 在浏览器侧用 JSZip 切单难度 + 去 storyboard + 保留打击音效。
-- 上传走 `POST /api/maps/upload`（multipart），R2 路径 `maps/<tid>/<rid>/<slot>.osz`，可选 NSV 变体 `.nsv.osz`。
+- 上传走 `POST /api/maps/upload`(multipart),R2 路径 `maps/<tid>/<rid>/<slot>.osz`,可选 NSV 变体 `.nsv.osz`。R2 `put` 同 key 默认覆盖,**贴 BID 补传的"覆盖已上传"靠这个特性,后端无需改**。
+- **轮次头部两个补传按钮**(别点错):
+  - **「一键下载上传 (N)」**(蓝色) — 已经有 `beatmapsetId` 的图(BulkImporter 导入过的)按已知 set/version 自动跑完整轮。
+  - **「贴 BID 补传 (N / 全 N 覆盖)」**(琥珀色) — 三阶段流程:粘贴 → review 指派 → 执行。
+    - **TB ↔ TB1 等价**:贴 `TB` 而 JSON 里是 `TB1`(或反之)能自动匹配。
+    - **未匹配 slot 手动指派**:本轮没有的 slot(如贴了 `BB`)在 review 阶段给一个下拉菜单,可选本轮任意未占用 slot,或选"跳过"。
+    - **包含已上传(覆盖)**:review 阶段勾上后,允许指派到已上传的 slot,直接覆盖 R2 上的源文件。默认关闭。
+    - **行数 < 图池**:没贴的 slot 不动,review 阶段会显示哪些是"待补"。
 
 ### 合包流程（GitHub Actions 触发）
 - 脚本：[scripts/generate-pack.js](scripts/generate-pack.js) + [scripts/upload-to-gdrive.js](scripts/upload-to-gdrive.js)。按 `realType` 聚合所有比赛的图，每包最多 80 张。
 - **命名规则（破坏性升级 `57904da`）**：输出文件名一律 `<realType>_<n>.osz`（如 `SS_1.osz`、`HB1_1.osz`），合包标题一律 `4K Contest XXX Pack <n>`，**单包也带 `_1` 后缀**——用来杜绝"分包数变化时残留孤儿"的问题。改 generate-pack.js 时不要回退到"单包不带后缀"。
+- **TB / TB1 显示约定**:R2 路径里历史数据有的写 `TB1` 有的写 `TB`,合包脚本拼 `newVersion` 时统一把 `TB1` 显示成 `TB`(单张约定)。新建比赛 + BulkImporter 也按这个规则:单张 TB 直接叫 `TB`,只有出现第二张时才编号 `TB1/TB2`。R2 路径不动,只改显示层。
 - **manifest 全量重建**：每次跑全量(realType 留空)时，generate-pack.js 把旧 `data/packs-manifest.json` 转储到 `data/packs-manifest.previous.json`(.gitignore 排除)，然后只用本次输出的 entry 重建主 manifest，新 entry 按 `(realType, part)` 从旧版找回 `links` 和 `gdriveFileId`。
 - **孤儿清理**：upload-to-gdrive.js 跑完后对比 `.previous.json` 和本次成功上传的 fileId 集合，差集就 `drive.files.delete` 掉——分包数缩了/type 删了，Drive 上对应文件自动消失。最后清掉 `.previous.json` 避免被误 commit。
 - **稳定 fileId**：upload-to-gdrive.js 用 `files.update(fileId, ...)` 而不是反复 create，链接 `https://drive.google.com/uc?id=<id>&export=download` 永远不变。首次没 fileId 时按文件名搜一次 fallback，再没有才 create。

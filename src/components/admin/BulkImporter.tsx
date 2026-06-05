@@ -290,6 +290,10 @@ export function BulkImporter({ onImport, onClose, existingRoundCount }: Props) {
       const template = findMatchingTemplate(categories, meta.isQualifier)
       const matchedRealTypes = template ? applyTemplateRealTypes(categories, template) : null
 
+      // 如果本轮只有一张 TB 且 slot 写成了 TB1,统一改成 TB(单张约定);
+      // 跟 RoundEditor.addMap 和 generate-pack.js 显示规则对齐。
+      const tbCount = groupRows.filter((r) => /^TB/i.test(r.slot)).length
+
       const maps: ExtendedMap[] = groupRows.map((r, ri) => {
         const m = r.meta
         const category = categories[ri]
@@ -297,8 +301,9 @@ export function BulkImporter({ onImport, onClose, existingRoundCount }: Props) {
         const fallbackRealType = realTypes.length > 0 ? realTypes[0].id : ''
         const realType = matchedRealTypes?.[ri] || fallbackRealType
         const type = category === 'SPECIAL' ? r.slot.replace(/\d+$/, '') : category
+        const slot = tbCount === 1 && /^TB1?$/i.test(r.slot) ? 'TB' : r.slot
         return {
-          slot: r.slot,
+          slot,
           type,
           realType,
           name: m ? `${m.artist} - ${m.title} [${m.version}]` : '',

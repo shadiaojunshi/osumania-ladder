@@ -1,8 +1,12 @@
+'use client'
+
+import { useState } from 'react'
 import packsManifest from '@data/packs-manifest.json'
 
 interface Pack {
   realType: string
   name: string
+  part?: number
   mapCount: number
   totalMaps: number
   lastUpdated: string
@@ -26,8 +30,16 @@ const LINK_LABELS: Record<string, string> = {
 }
 
 export default function DownloadPage() {
-  const packs = (packsManifest.packs || []) as Pack[]
-  const packMap = new Map(packs.map(p => [p.realType, p]))
+  const allPacks = (packsManifest.packs || []) as Pack[]
+  // 按 realType 分组,每组按 part 升序排
+  const groupsByType = new Map<string, Pack[]>()
+  for (const p of allPacks) {
+    if (!groupsByType.has(p.realType)) groupsByType.set(p.realType, [])
+    groupsByType.get(p.realType)!.push(p)
+  }
+  for (const list of groupsByType.values()) {
+    list.sort((a, b) => (a.part || 0) - (b.part || 0))
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -43,11 +55,11 @@ export default function DownloadPage() {
 
       <main className="max-w-4xl mx-auto px-6 py-8 space-y-8">
         {CATEGORIES.map(category => {
-          const categoryPacks = category.types
-            .map(type => packMap.get(type))
-            .filter((p): p is Pack => !!p && p.mapCount > 0)
+          const categoryGroups = category.types
+            .map(type => ({ type, parts: groupsByType.get(type) }))
+            .filter(g => g.parts && g.parts.length > 0)
 
-          if (categoryPacks.length === 0 && !category.types.some(t => packMap.has(t))) return null
+          if (categoryGroups.length === 0) return null
 
           return (
             <section key={category.label}>
@@ -55,17 +67,15 @@ export default function DownloadPage() {
                 {category.label}
               </h2>
               <div className="grid gap-3">
-                {category.types.map(type => {
-                  const pack = packMap.get(type)
-                  if (!pack) return null
-                  return <PackCard key={type} pack={pack} />
-                })}
+                {categoryGroups.map(g => (
+                  <PackGroup key={g.type} parts={g.parts!} />
+                ))}
               </div>
             </section>
           )
         })}
 
-        {packs.length === 0 && (
+        {allPacks.length === 0 && (
           <div className="text-center py-16 text-gray-400">
             <p className="text-lg mb-2">暂无合包</p>
             <p className="text-sm">合包生成后会在这里显示下载链接</p>
@@ -76,23 +86,83 @@ export default function DownloadPage() {
   )
 }
 
-function PackCard({ pack }: { pack: Pack }) {
+function PackGroup({ parts }: { parts: Pack[] }) {
+  // 同 realType 的多个 part 共享 mapCount/totalMaps 求和;name 取去掉" Pack N"后缀的根名
+  const totalMaps = parts[0].totalMaps
+  const totalMapCount = parts.reduce((s, p) => s + p.mapCount, 0)
+  const totalSizeMB = parts.reduce((s, p) => s + p.sizeMB, 0)
+  const lastUpdated = parts.map(p => p.lastUpdated).sort().slice(-1)[0] || ''
+  const baseName = parts[0].name.replace(/ Pack \d+$/, ' Pack')
+  const realType = parts[0].realType
+
+  const isMulti = parts.length > 1
+  const [expanded, setExpanded] = useState(false)
+
+  // 单包时直接平铺,多包时折叠
+  if (!isMulti) {
+    return <PackRow pack={parts[0]} hidePartLabel />
+  }
+
+  const progress = totalMaps > 0 ? Math.round((totalMapCount / totalMaps) * 100) : 0
+
+  return (
+    <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition"
+      >
+        <div className="flex-1 text-left">
+          <div className="flex items-center gap-2">
+            <span className={`text-xs text-gray-400 transition-transform ${expanded ? 'rotate-90' : ''}`}>▶</span>
+            <span className="text-sm font-medium text-gray-900">{baseName}</span>
+            <span className="text-xs font-mono text-gray-400">({realType})</span>
+            <span className="text-xs text-purple-600 bg-purple-50 px-1.5 py-0.5 rounded">{parts.length} 个分包</span>
+          </div>
+          <div className="flex items-center gap-3 mt-1 ml-5 text-xs text-gray-500">
+            <span>{totalMapCount}/{totalMaps} 张谱面</span>
+            {totalSizeMB > 0 && <span>{totalSizeMB}MB</span>}
+            {lastUpdated && <span>更新于 {lastUpdated}</span>}
+          </div>
+          {progress < 100 && (
+            <div className="mt-2 ml-5 w-32 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+              <div className="h-full bg-purple-500 rounded-full" style={{ width: `${progress}%` }} />
+            </div>
+          )}
+        </div>
+      </button>
+
+      {expanded && (
+        <div className="border-t border-gray-100 divide-y divide-gray-100">
+          {parts.map(p => <PackRow key={p.part} pack={p} indent />)}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function PackRow({ pack, indent, hidePartLabel }: { pack: Pack; indent?: boolean; hidePartLabel?: boolean }) {
   const hasLinks = Object.keys(pack.links).length > 0
   const progress = pack.totalMaps > 0 ? Math.round((pack.mapCount / pack.totalMaps) * 100) : 0
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-4 flex items-center justify-between">
+    <div className={`flex items-center justify-between p-4 ${indent ? 'pl-9' : 'bg-white rounded-lg border border-gray-200 shadow-sm'}`}>
       <div className="flex-1">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-gray-900">{pack.name}</span>
-          <span className="text-xs font-mono text-gray-400">({pack.realType})</span>
+          {hidePartLabel ? (
+            <>
+              <span className="text-sm font-medium text-gray-900">{pack.name}</span>
+              <span className="text-xs font-mono text-gray-400">({pack.realType})</span>
+            </>
+          ) : (
+            <span className="text-sm font-medium text-gray-700">Part {pack.part}</span>
+          )}
         </div>
         <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
-          <span>{pack.mapCount}/{pack.totalMaps} 张谱面</span>
+          <span>{pack.mapCount} 张</span>
           {pack.sizeMB > 0 && <span>{pack.sizeMB}MB</span>}
-          {pack.lastUpdated && <span>更新于 {pack.lastUpdated}</span>}
+          {hidePartLabel && pack.lastUpdated && <span>更新于 {pack.lastUpdated}</span>}
         </div>
-        {progress < 100 && (
+        {hidePartLabel && progress < 100 && (
           <div className="mt-2 w-32 h-1.5 bg-gray-100 rounded-full overflow-hidden">
             <div className="h-full bg-purple-500 rounded-full" style={{ width: `${progress}%` }} />
           </div>

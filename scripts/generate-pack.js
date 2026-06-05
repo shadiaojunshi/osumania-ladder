@@ -21,17 +21,17 @@ const s3 = new S3Client({
 })
 
 const REAL_TYPE_NAMES = {
-  SS: 'Stream', JS: 'Jumpstream', SA: 'Stamina', CJ: 'Chordjack',
-  SJ: 'Jackspeed', MX: 'Rcmix', DP: 'Dump', ADP: 'Accurate dump', STC: 'Streamtech',
-  MTC: 'Minijacktech', JTC: 'Jackmained tech', WTC: 'Wild tech',
+  SS: 'Single/Minijack Stream/Consistency', JS: 'Jumpstream', SA: 'Stamina', CJ: 'Chordjack',
+  SJ: 'Jackspeed', MX: 'Rcmix', DP: 'Dump', ADP: 'Accurate Dump', STC: 'Streamtech',
+  MTC: 'Minijacktech', JTC: 'Jack-mained tech', WTC: 'Wild/Ultra Burst tech',
   TC: 'Tech', ORC: 'Otherrice',
-  HB1: 'Speed Hybrid', HB2: 'Jack Hybrid', HB3: 'Technical Hybrid',
+  HB1: 'Speed/Generic Hybrid', HB2: 'Mid-tempo/Jack/Shield Hybrid', HB3: 'Technical Hybrid',
   HB4: 'Wildcard Hybrid', HB5: 'Old-school Hybrid',
   RCmainHB: 'RC-main Hybrid', LNmainHB: 'LN-main Hybrid', MNTB: 'Mini-Tiebreaker Hybrid',
   OHB: 'OtherHybrid',
   RE: 'Release', CO: 'Coordination', TE: 'Timinghell', DE: 'Density',
   SW: 'Speedy Wildcard LN', JW: 'Jacky Wildcard LN', IN: 'Inverse', LNMX: 'LN Mixed', LNTC: 'Technical LN', OLN: 'OtherLongnote',
-  SV1: 'Pattern SV', SV2: 'Rhythm SV', SI: 'Sightread SV', ME: 'Memorization SV', SVMX: 'SVMix',
+  SV1: 'Pattern SV', SV2: 'Rhythm SV', SI: 'Sightread SV', ME: 'Memorization SV', SVMX: 'Mix SV',
   TB: 'Tiebreaker',
 }
 
@@ -261,9 +261,9 @@ async function generatePack(targetType) {
   for (let packIdx = 0; packIdx < totalPacks; packIdx++) {
     const chunk = available.slice(packIdx * MAX_MAPS_PER_PACK, (packIdx + 1) * MAX_MAPS_PER_PACK)
     chunk.sort((a, b) => (a.difficulty || 0) - (b.difficulty || 0))
-    const packSuffix = totalPacks > 1 ? ` ${packIdx + 1}` : ''
-    const packName = `4K Contest ${REAL_TYPE_NAMES[targetType] || targetType} Pack${packSuffix}`
-    const outputFileName = totalPacks > 1 ? `${targetType}_${packIdx + 1}.osz` : `${targetType}.osz`
+    const partNum = packIdx + 1
+    const packName = `4K Contest ${REAL_TYPE_NAMES[targetType] || targetType} Pack ${partNum}`
+    const outputFileName = `${targetType}_${partNum}.osz`
     const outputPath = path.join(outputDir, outputFileName)
     const output = fs.createWriteStream(outputPath)
     const archive = new ZipArchive({ zlib: { level: 5 } })
@@ -312,7 +312,7 @@ async function generatePack(targetType) {
         }
 
         processed++
-        if (processed % 10 === 0) console.log(`  [Pack${packSuffix}] Processed ${processed}/${chunk.length}`)
+        if (processed % 10 === 0) console.log(`  [Pack ${partNum}] Processed ${processed}/${chunk.length}`)
       } catch (err) {
         console.warn(`  Error processing ${map.r2Key}: ${err.message}`)
       }
@@ -323,12 +323,12 @@ async function generatePack(targetType) {
     await new Promise(resolve => output.on('close', resolve))
 
     const stats = fs.statSync(outputPath)
-    console.log(`[${targetType}${packSuffix}] Pack generated: ${(stats.size / 1024 / 1024).toFixed(1)}MB, ${processed} maps`)
+    console.log(`[${targetType} ${partNum}] Pack generated: ${(stats.size / 1024 / 1024).toFixed(1)}MB, ${processed} maps`)
 
     results.push({
       realType: targetType,
       name: packName,
-      part: totalPacks > 1 ? packIdx + 1 : undefined,
+      part: partNum,
       mapCount: processed,
       totalMaps: mapsToProcess.length,
       sizeMB: Math.round(stats.size / 1024 / 1024),
@@ -366,28 +366,32 @@ async function main() {
     }
 
     const manifestPath = path.join(__dirname, '..', 'data', 'packs-manifest.json')
-    let manifest = { packs: [], lastGenerated: '' }
+    const prevManifestPath = path.join(__dirname, '..', 'data', 'packs-manifest.previous.json')
+    let oldManifest = { packs: [], lastGenerated: '' }
     if (fs.existsSync(manifestPath)) {
-      manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'))
+      oldManifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'))
     }
+    // 把旧 manifest 写到 .previous,让 upload-to-gdrive.js 用它来判断哪些
+    // fileId 是上一版的孤儿(本次不再生成),好同步删 Drive。
+    fs.writeFileSync(prevManifestPath, JSON.stringify(oldManifest, null, 2) + '\n')
 
+    // 全量重建:本次没生成的 entry 直接消失,避免分包数变化时残留孤儿。
+    const manifest = { packs: [], lastGenerated: '' }
     for (const result of allResults) {
-      const matchKey = result.part ? `${result.realType}_${result.part}` : result.realType
-      const existing = manifest.packs.find(p =>
+      const previous = (oldManifest.packs || []).find(p =>
         p.realType === result.realType && (p.part || undefined) === result.part
       )
-      const entry = {
+      manifest.packs.push({
         realType: result.realType,
         name: result.name,
         part: result.part,
         mapCount: result.mapCount,
         totalMaps: result.totalMaps,
         lastUpdated: new Date().toISOString().split('T')[0],
-        links: existing?.links || {},
+        links: previous?.links || {},
+        gdriveFileId: previous?.gdriveFileId,
         sizeMB: result.sizeMB,
-      }
-      if (existing) Object.assign(existing, entry)
-      else manifest.packs.push(entry)
+      })
     }
     manifest.lastGenerated = new Date().toISOString()
     fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + '\n')

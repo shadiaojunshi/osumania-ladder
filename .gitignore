@@ -4,3 +4,5 @@ out
 src/generated
 .dev.vars
 .wrangler
+output
+data/packs-manifest.previous.json

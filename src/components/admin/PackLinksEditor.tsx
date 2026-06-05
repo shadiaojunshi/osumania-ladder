@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react'
 interface Pack {
   realType: string
   name: string
+  part?: number
   mapCount: number
   totalMaps: number
   lastUpdated: string
@@ -48,10 +49,10 @@ export function PackLinksEditor() {
     }
   }
 
-  const updateLink = (realType: string, linkKey: string, url: string) => {
+  const updateLink = (realType: string, part: number | undefined, linkKey: string, url: string) => {
     if (!manifest) return
     const updated = { ...manifest, packs: manifest.packs.map(p => {
-      if (p.realType !== realType) return p
+      if (p.realType !== realType || (p.part || undefined) !== part) return p
       const links = { ...p.links }
       if (url.trim()) links[linkKey] = url.trim()
       else delete links[linkKey]
@@ -99,7 +100,7 @@ export function PackLinksEditor() {
 
         <div className="space-y-4">
           {manifest.packs.map(pack => (
-            <div key={pack.realType} className="border border-gray-100 rounded-md p-3">
+            <div key={`${pack.realType}_${pack.part || 0}`} className="border border-gray-100 rounded-md p-3">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-medium text-gray-700">{pack.name}</span>
                 <span className="text-xs text-gray-400">{pack.mapCount} 张 · {pack.sizeMB}MB</span>
@@ -111,7 +112,7 @@ export function PackLinksEditor() {
                     <input
                       type="url"
                       value={pack.links[lk.id] || ''}
-                      onChange={e => updateLink(pack.realType, lk.id, e.target.value)}
+                      onChange={e => updateLink(pack.realType, pack.part, lk.id, e.target.value)}
                       placeholder="https://..."
                       className="flex-1 px-2 py-1 border border-gray-200 rounded text-xs focus:outline-none focus:border-purple-400"
                     />

@@ -38,6 +38,15 @@ jobs:
           retention-days: 7
           if-no-files-found: ignore
 
+      - name: Upload to Google Drive
+        if: github.event.inputs.realType == ''
+        run: node scripts/upload-to-gdrive.js
+        env:
+          GDRIVE_CLIENT_ID: ${{ secrets.GDRIVE_CLIENT_ID }}
+          GDRIVE_CLIENT_SECRET: ${{ secrets.GDRIVE_CLIENT_SECRET }}
+          GDRIVE_REFRESH_TOKEN: ${{ secrets.GDRIVE_REFRESH_TOKEN }}
+          GDRIVE_FOLDER_ID: ${{ secrets.GDRIVE_FOLDER_ID }}
+
       - name: Commit manifest
         if: github.event.inputs.realType == ''
         run: |

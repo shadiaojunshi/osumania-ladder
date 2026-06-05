@@ -57,20 +57,24 @@
 2. 顶部「选择项目」→「新建项目」,名字 `osumania-ladder-packs`。
 3. 左侧菜单「APIs & Services」→「Library」→ 搜 `Google Drive API`,点开,点 **Enable**。
 
-### 2. 配置 OAuth consent screen
+### 2. 配置 OAuth consent screen(新 UI 叫「Google Auth Platform」)
 
-1. 左侧「APIs & Services」→「OAuth consent screen」。
-2. User Type 选 **External**(只有 Workspace 才能选 Internal)。
-3. App name 填 `osumania-ladder-packs`,User support email 填站长邮箱。
-4. Scopes 那一步加 `https://www.googleapis.com/auth/drive.file`(只能看/操作 app 自己创建的文件,最小权限,推荐)或 `drive`(全 Drive 权限,不推荐)。
-5. Test users 加站长自己的 Google 账号邮箱。
-6. **重要:** 这步完成后默认是 **Testing** 状态,refresh_token 7 天过期。后面要点「PUBLISH APP」切到 Production —— 因为我们 scope 只是 `drive.file`(非敏感),**不需要 Google 审核**,直接发布即可。
+> 2026 年 GCP 把 OAuth 配置 UI 重做了,菜单名换了,下面按新 UI 写。老 UI 看的话:Scopes 在 OAuth consent screen 第二步,PUBLISH APP 在 OAuth consent screen 顶部。
+
+1. 左侧 **「Google Auth Platform」→「目标对象 / Audience」**。如果是新项目首次进入,会引导你填 App name + 用户支持邮箱 + User type。User Type 选 **External**(只有 Workspace 才能选 Internal)。App name 填 `osumania-ladder-packs`。
+2. **加 Scopes** —— 新 UI 在左栏 **「数据访问 / Data Access」**,不在「目标对象」里。点进去 → **「添加或移除范围」**(Add or remove scopes)→ 搜 `drive.file` → 勾 `.../auth/drive.file` → 更新 → 保存。**不要勾 `.../auth/drive`**(全 Drive 权限,会触发敏感 scope 审核流程,几周才过)。
+3. **加测试用户** —— 回「目标对象」往下找「测试用户」(Test users)→ Add users → 加站长自己的 Google 账号邮箱(就是 5TB 网盘那个账号,精确填,别多打 `.`)。
+4. **必须发布应用** —— 「目标对象」页顶部「发布状态」那块点 **「发布应用 / PUBLISH APP」**,确认即可。**几秒生效,不需要 Google 审核**——因为 `drive.file` 是非敏感 scope,Google 会自动放行。
+   - 不发布的后果:Testing 状态下 refresh_token **7 天就过期**,自动上传跑不了几次就要重新授权。
+   - 发布之后状态显示「正式版 / In production」,refresh_token 永久有效。
+   - 别担心被陌生人滥用:发布 ≠ 公开,只有你自己授权过的账号能登,而且 `drive.file` 只能看到本 app 自己上传的文件,看不到你网盘里别的东西。
 
 ### 3. 创建 OAuth Client ID
 
 1. 左侧「APIs & Services」→「Credentials」→「+ CREATE CREDENTIALS」→「OAuth client ID」。
-2. Application type 选 **Desktop app**,名字随便填。
-3. 创建后下载 JSON,里面的 `client_id` 和 `client_secret` 等下要用。
+2. **应用类型选「Web 应用 / Web application」**(不要选 Desktop app —— 后面用 OAuth Playground 拿 refresh_token,Playground 要求注册回调 URL,Desktop 类型不接受自定义回调)。
+3. 名字随便填,「已获授权的重定向 URI」加这一条:`https://developers.google.com/oauthplayground`(末尾不要 `/`,Google 严格匹配)。
+4. 创建后下载 JSON,里面的 `client_id` 和 `client_secret` 等下要用。
 
 ### 4. 跑一次 OAuth flow 拿 refresh_token
 
@@ -91,7 +95,7 @@
 
 仓库 → Settings → Secrets and variables → Actions → New repository secret,加这三个:
 
-| Name | Value |
+| Name | Value |c:\Users\SHADIA~1\AppData\Local\Temp\QQ_1780625525846.png
 |---|---|
 | `GDRIVE_CLIENT_ID` | 步骤 3 的 client_id |
 | `GDRIVE_CLIENT_SECRET` | 步骤 3 的 client_secret |

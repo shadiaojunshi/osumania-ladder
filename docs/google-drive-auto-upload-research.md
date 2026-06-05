@@ -160,8 +160,17 @@
 
 ## 待办
 
-- [ ] 站长按"方案 A 落地步骤"7 步配置(预计 30 分钟)
-- [ ] 站长把 `client_id` 告诉 AI(secret 仨直接填 GitHub Secret 不发 AI)
-- [ ] AI 写 `scripts/upload-to-gdrive.js`(走方案 B 稳定 fileId)
-- [ ] AI 改 workflow 加上传步骤
+- [x] 站长按"方案 A 落地步骤"7 步配置(2026-06-05 完成,OAuth 已切 Production)
+- [x] 站长把 `client_id` 告诉 AI,3 个 secret 直接进 GitHub Secrets
+- [x] AI 写 [scripts/upload-to-gdrive.js](../scripts/upload-to-gdrive.js)(稳定 fileId + 顺手做了孤儿清理)
+- [x] AI 改 [.github/workflows/generate-packs.yml](../.github/workflows/generate-packs.yml) 加上传步骤
 - [ ] 跑一次 Generate Map Packs,确认链接进 manifest 且 /download 页面显示
+
+## 实施时落进来的额外设计
+
+> 实施过程中跟站长讨论后调整,跟原文不一致的地方记一下:
+
+1. **始终带 part 后缀**(`<type>_<n>.osz` + `... Pack <n>`)——原计划是"单包不带后缀,多包才带",但站长指出"既然以后会涨过 80 张,不如全部统一带后缀,UI 也不用做两套"。这从根上避免了"单包变多包时旧 entry 残留"的孤儿问题。
+2. **manifest 全量重建 + Drive 同步删孤儿**——原计划只覆盖,新计划是 generate-pack.js 把旧 manifest 转储到 `data/packs-manifest.previous.json`,然后只用本次输出 entry 重建主文件;upload-to-gdrive.js 跑完用 `.previous.json` 找出"上次有 fileId 但本次没用到"的孤儿,在 Drive 上 `files.delete` 同步清理。最后清掉 `.previous.json`(.gitignore 排除)。
+3. **/download 页面**:同 realType 多 part 折叠成一行,展开看 Part 1/2/3;单包(只有 part 1)平铺。
+

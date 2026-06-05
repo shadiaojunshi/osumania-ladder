@@ -1,13 +1,13 @@
 # 安全改造部署状态（交接文档）
 
 > 这份文档记录安全改造的当前进度、待验证项和已知遗留问题。压缩对话后照这份继续即可。
-> 最后更新：2026-06-04
+> 最后更新：2026-06-05
 
 ---
 
 ## 一句话现状
 
-安全改造**已全量上线、osu 登录已验证通过**（站长身份能进后台）。当前在排查图包相关的两个小 bug。
+安全改造**已全量上线、osu 登录已验证通过**。Google Drive 自动上传**已实施待首次跑验证**。合包命名/分包逻辑做了一次破坏性升级（统一带 part 后缀 + manifest 全量重建 + 孤儿 Drive 文件自动清理）。
 
 ---
 
@@ -184,6 +184,10 @@ curl https://osumania-ladder.shadiaojunshi.deno.net/
 
 **沿用的旧 secret**：`GITHUB_TOKEN`、`GITHUB_REPO`、`OSU_API_KEY`（v1 抓谱面元数据用，已重置过）、`R2_ACCOUNT_ID/ACCESS_KEY/SECRET_KEY`
 
+**GitHub Actions Secrets（合包/上传/备份用，与 Cloudflare 是两套）**：
+- `R2_ACCOUNT_ID` / `R2_ACCESS_KEY` / `R2_SECRET_KEY`（合包 + 备份）
+- `GDRIVE_CLIENT_ID` / `GDRIVE_CLIENT_SECRET` / `GDRIVE_REFRESH_TOKEN` / `GDRIVE_FOLDER_ID`（Drive 自动上传，OAuth Production 状态 refresh_token 永久）
+
 ⚠️ **KV 绑定要在 Production 和 Preview 两个环境都加**，否则预览部署会 500。
 ⚠️ **Deno 代理用 app 的稳定生产域名**（`<app>.<org>.deno.net`），别用带 build ID 的 preview URL（每次重部署 build ID 会变，URL 会失效）。
 
@@ -191,20 +195,23 @@ curl https://osumania-ladder.shadiaojunshi.deno.net/
 
 ## 待办（按优先级）
 
-1. **[需要重跑] 合包曲绘修复（`16436f7`）后重新跑一次 generate-pack**
-   - 修了两个独立 bug：1) parseOsu 之前只匹配带引号的 `0,0,"file.jpg"` 背景行，不带引号的谱子直接 `backgroundFile=undefined`，合包时根本不写曲绘进 archive；2) `sanitizeFileName` 没过滤逗号，文件名带逗号会让 osu Events 行解析错位 → 曲绘加载失败。
-   - **不需要重传谱面**（R2 里的原始 .osz 没变）。只要触发一次 Generate Map Packs workflow，新合包就是好的。
+1. **[首次验证] Google Drive 自动上传(`57904da`)**
+   - 已实施完整流程：[scripts/upload-to-gdrive.js](scripts/upload-to-gdrive.js) + workflow Upload step + 4 个 GitHub Secret(`GDRIVE_CLIENT_ID/SECRET/REFRESH_TOKEN/FOLDER_ID`)。OAuth Production、refresh_token 永久。
+   - **第一次跑要看的事**：1) workflow Upload step 日志每个包都打 `Created XXX_1.osz (id=...)` 大概 35 行；2) `Commit manifest` 步骤把 `gdriveFileId` 和 `links.googleDrive` 写回；3) `/download` 页面所有包都有 Google Drive 下载按钮。
+   - **失败兜底**：如果日志里出 `FATAL: refresh_token invalid` → OAuth Playground 重跑 Step 2 拿新 refresh token 更新 GitHub Secret。
+
 2. **[Bug 修复] 谱面缺曲绘 + 红色错误提示**
    - 已修代码（commit `31b38b9`）：自动下载图包时裁掉 `[Events]` 段的 storyboard 事件、保留所有打击音效（`.wav/.ogg/.mp3`）。
    - **需要用户重新跑一遍受影响图的"自动下载并上传"** → 老的 R2 文件是按旧逻辑裁的，仍然坏。重传一次后才能验证。
+
 3. **[排查中] THMC4 F/GF 文件"重合"**
    - 数据层确认：F=`round-7`、GF=`round-8`，roundId 不同，R2 路径分别是 `maps/touhou.../round-7/...` 和 `maps/touhou.../round-8/...`，**不会互相覆盖**。
    - 但 JSON 里两轮的图池**完全相同**（同 slot、同 beatmapsetId、同名），所以两边文件内容确实一样——这是数据本身决定的，不是 bug。
-   - **需要用户重传后确认**：R2 里 `round-7/` 和 `round-8/` 是不是两个独立文件夹。如果是，pass；如果发现真落进同一个文件夹，那才是真 bug。
+
 4. **[已讨论，暂不实现] 不同比赛用同一张赛图**
-   - 讨论结论：保留双份。两个比赛同一张图在合包里文件名不冲突（前缀含比赛缩写+轮次+slot，safeVersion 不同），用户硬盘多几 MB 可接受，"按比赛收藏"心智更清晰。如果以后合包真的撑爆 80 张/包再考虑去重。
-5. **[遗留] 合包填链接**：用户说"懒得填，反正合完了"，暂缓。
-6. **[阻塞中] Google Drive 自动上传**：`docs/google-drive-auto-upload-research.md` 7 步 GCP 设置由用户完成；完成后用户提供 `GDRIVE_CLIENT_ID`，AI 实施 `scripts/upload-to-gdrive.js`（Plan B 稳定 fileId 策略）+ workflow 加 Upload step。
+   - 讨论结论：保留双份。如果以后合包真的撑爆 80 张/包再考虑去重。
+
+5. **[次要] 123 网盘自动上传**：开放平台审核拿到再做，见 [docs/123pan-auto-upload-research.md](docs/123pan-auto-upload-research.md)。Drive 已经够用，123 当国内体验加成。
 
 ---
 
@@ -226,9 +233,14 @@ curl https://osumania-ladder.shadiaojunshi.deno.net/
 - 上传走 `POST /api/maps/upload`（multipart），R2 路径 `maps/<tid>/<rid>/<slot>.osz`，可选 NSV 变体 `.nsv.osz`。
 
 ### 合包流程（GitHub Actions 触发）
-- 脚本：[scripts/generate-pack.js](scripts/generate-pack.js)，按 `realType` 聚合所有比赛的图，每包最多 80 张。
-- 流程：listObjects(R2) → 下载 .osz → 解压 → 改 metadata（前缀 `(比赛缩写 轮次缩写 slot[ NSV])`）→ 按真实后缀重命名音频/曲绘 → 重新打包 → 写 output/ + 更新 `data/packs-manifest.json`。
-- **改动 metadata 时的两个隐形坑**：1) Events 行背景文件名一定要兜住带引号 + 不带引号两种格式（已修于 `16436f7`）；2) `sanitizeFileName` 必须过滤逗号，因为 osu 解析按逗号分段（已修于 `16436f7`）。改 generate-pack.js 时这两点要保留。
+- 脚本：[scripts/generate-pack.js](scripts/generate-pack.js) + [scripts/upload-to-gdrive.js](scripts/upload-to-gdrive.js)。按 `realType` 聚合所有比赛的图，每包最多 80 张。
+- **命名规则（破坏性升级 `57904da`）**：输出文件名一律 `<realType>_<n>.osz`（如 `SS_1.osz`、`HB1_1.osz`），合包标题一律 `4K Contest XXX Pack <n>`，**单包也带 `_1` 后缀**——用来杜绝"分包数变化时残留孤儿"的问题。改 generate-pack.js 时不要回退到"单包不带后缀"。
+- **manifest 全量重建**：每次跑全量(realType 留空)时，generate-pack.js 把旧 `data/packs-manifest.json` 转储到 `data/packs-manifest.previous.json`(.gitignore 排除)，然后只用本次输出的 entry 重建主 manifest，新 entry 按 `(realType, part)` 从旧版找回 `links` 和 `gdriveFileId`。
+- **孤儿清理**：upload-to-gdrive.js 跑完后对比 `.previous.json` 和本次成功上传的 fileId 集合，差集就 `drive.files.delete` 掉——分包数缩了/type 删了，Drive 上对应文件自动消失。最后清掉 `.previous.json` 避免被误 commit。
+- **稳定 fileId**：upload-to-gdrive.js 用 `files.update(fileId, ...)` 而不是反复 create，链接 `https://drive.google.com/uc?id=<id>&export=download` 永远不变。首次没 fileId 时按文件名搜一次 fallback，再没有才 create。
+- **改 metadata 时的两个隐形坑**（修于 `16436f7`，必须保留）：1) Events 行背景文件名一定要兜住带引号 + 不带引号两种格式；2) `sanitizeFileName` 必须过滤逗号，因为 osu 解析按逗号分段。
+- **/download 页面**：同 realType 多 part 折叠成一行可展开看 Part 1/2/3；单包平铺。组件在 [src/app/download/page.tsx](src/app/download/page.tsx)。
+- **PackLinksEditor**：用 `(realType, part)` 复合键识别条目，admin 后台多 part 时各自一行可分别填链接。
 
 ### 主页天梯渲染
 - 入口：[src/components/ladder/LadderView.tsx](src/components/ladder/LadderView.tsx)。三种模式：tournament（一比赛一框）/ round（每轮一框）/ type（每轮按键型分若干小框）。

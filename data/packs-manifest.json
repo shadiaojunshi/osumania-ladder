@@ -1,4 +1,461 @@
 {
-  "packs": [],
-  "lastGenerated": ""
+  "packs": [
+    {
+      "realType": "SV1",
+      "name": "4K Contest Pattern SV Pack 1",
+      "part": 1,
+      "mapCount": 21,
+      "totalMaps": 14,
+      "lastUpdated": "2026-06-06",
+      "links": {
+        "r2": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/SV1_1.osz"
+      },
+      "sizeMB": 115
+    },
+    {
+      "realType": "TC",
+      "name": "4K Contest Tech Pack 1",
+      "part": 1,
+      "mapCount": 59,
+      "totalMaps": 61,
+      "lastUpdated": "2026-06-06",
+      "links": {
+        "r2": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/TC_1.osz"
+      },
+      "sizeMB": 297
+    },
+    {
+      "realType": "HB1",
+      "name": "4K Contest Speed/Generic Hybrid Pack 1",
+      "part": 1,
+      "mapCount": 80,
+      "totalMaps": 85,
+      "lastUpdated": "2026-06-06",
+      "links": {
+        "r2": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/HB1_1.osz"
+      },
+      "sizeMB": 365
+    },
+    {
+      "realType": "HB1",
+      "name": "4K Contest Speed/Generic Hybrid Pack 2",
+      "part": 2,
+      "mapCount": 4,
+      "totalMaps": 85,
+      "lastUpdated": "2026-06-06",
+      "links": {
+        "r2": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/HB1_2.osz"
+      },
+      "sizeMB": 16
+    },
+    {
+      "realType": "RE",
+      "name": "4K Contest Release Pack 1",
+      "part": 1,
+      "mapCount": 37,
+      "totalMaps": 38,
+      "lastUpdated": "2026-06-06",
+      "links": {
+        "r2": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/RE_1.osz"
+      },
+      "sizeMB": 178
+    },
+    {
+      "realType": "DE",
+      "name": "4K Contest Density Pack 1",
+      "part": 1,
+      "mapCount": 80,
+      "totalMaps": 88,
+      "lastUpdated": "2026-06-06",
+      "links": {
+        "r2": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/DE_1.osz"
+      },
+      "sizeMB": 348
+    },
+    {
+      "realType": "DE",
+      "name": "4K Contest Density Pack 2",
+      "part": 2,
+      "mapCount": 3,
+      "totalMaps": 88,
+      "lastUpdated": "2026-06-06",
+      "links": {
+        "r2": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/DE_2.osz"
+      },
+      "sizeMB": 16
+    },
+    {
+      "realType": "JS",
+      "name": "4K Contest Jumpstream Pack 1",
+      "part": 1,
+      "mapCount": 60,
+      "totalMaps": 60,
+      "lastUpdated": "2026-06-06",
+      "links": {
+        "r2": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/JS_1.osz"
+      },
+      "sizeMB": 266
+    },
+    {
+      "realType": "SS",
+      "name": "4K Contest Single/Minijack Stream/Consistency Pack 1",
+      "part": 1,
+      "mapCount": 76,
+      "totalMaps": 79,
+      "lastUpdated": "2026-06-06",
+      "links": {
+        "r2": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/SS_1.osz"
+      },
+      "sizeMB": 341
+    },
+    {
+      "realType": "DP",
+      "name": "4K Contest Dump Pack 1",
+      "part": 1,
+      "mapCount": 53,
+      "totalMaps": 57,
+      "lastUpdated": "2026-06-06",
+      "links": {
+        "r2": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/DP_1.osz"
+      },
+      "sizeMB": 237
+    },
+    {
+      "realType": "ADP",
+      "name": "4K Contest Accurate Dump Pack 1",
+      "part": 1,
+      "mapCount": 28,
+      "totalMaps": 31,
+      "lastUpdated": "2026-06-06",
+      "links": {
+        "r2": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/ADP_1.osz"
+      },
+      "sizeMB": 123
+    },
+    {
+      "realType": "LNmainHB",
+      "name": "4K Contest LN-main Hybrid Pack 1",
+      "part": 1,
+      "mapCount": 16,
+      "totalMaps": 16,
+      "lastUpdated": "2026-06-06",
+      "links": {
+        "r2": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/LNmainHB_1.osz"
+      },
+      "sizeMB": 65
+    },
+    {
+      "realType": "LNMX",
+      "name": "4K Contest LN Mixed Pack 1",
+      "part": 1,
+      "mapCount": 52,
+      "totalMaps": 54,
+      "lastUpdated": "2026-06-06",
+      "links": {
+        "r2": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/LNMX_1.osz"
+      },
+      "sizeMB": 258
+    },
+    {
+      "realType": "SI",
+      "name": "4K Contest Sightread SV Pack 1",
+      "part": 1,
+      "mapCount": 24,
+      "totalMaps": 24,
+      "lastUpdated": "2026-06-06",
+      "links": {
+        "r2": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/SI_1.osz"
+      },
+      "sizeMB": 100
+    },
+    {
+      "realType": "ME",
+      "name": "4K Contest Memorization SV Pack 1",
+      "part": 1,
+      "mapCount": 11,
+      "totalMaps": 10,
+      "lastUpdated": "2026-06-06",
+      "links": {
+        "r2": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/ME_1.osz"
+      },
+      "sizeMB": 51
+    },
+    {
+      "realType": "TB",
+      "name": "4K Contest Tiebreaker Pack 1",
+      "part": 1,
+      "mapCount": 80,
+      "totalMaps": 87,
+      "lastUpdated": "2026-06-06",
+      "links": {
+        "r2": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/TB_1.osz"
+      },
+      "sizeMB": 784
+    },
+    {
+      "realType": "TB",
+      "name": "4K Contest Tiebreaker Pack 2",
+      "part": 2,
+      "mapCount": 6,
+      "totalMaps": 87,
+      "lastUpdated": "2026-06-06",
+      "links": {
+        "r2": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/TB_2.osz"
+      },
+      "sizeMB": 60
+    },
+    {
+      "realType": "SA",
+      "name": "4K Contest Stamina Pack 1",
+      "part": 1,
+      "mapCount": 60,
+      "totalMaps": 63,
+      "lastUpdated": "2026-06-06",
+      "links": {
+        "r2": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/SA_1.osz"
+      },
+      "sizeMB": 354
+    },
+    {
+      "realType": "MX",
+      "name": "4K Contest Rcmix Pack 1",
+      "part": 1,
+      "mapCount": 58,
+      "totalMaps": 61,
+      "lastUpdated": "2026-06-06",
+      "links": {
+        "r2": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/MX_1.osz"
+      },
+      "sizeMB": 310
+    },
+    {
+      "realType": "JTC",
+      "name": "4K Contest Jack-mained tech Pack 1",
+      "part": 1,
+      "mapCount": 17,
+      "totalMaps": 18,
+      "lastUpdated": "2026-06-06",
+      "links": {
+        "r2": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/JTC_1.osz"
+      },
+      "sizeMB": 87
+    },
+    {
+      "realType": "HB2",
+      "name": "4K Contest Mid-tempo/Jack/Shield Hybrid Pack 1",
+      "part": 1,
+      "mapCount": 73,
+      "totalMaps": 74,
+      "lastUpdated": "2026-06-06",
+      "links": {
+        "r2": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/HB2_1.osz"
+      },
+      "sizeMB": 338
+    },
+    {
+      "realType": "CO",
+      "name": "4K Contest Coordination Pack 1",
+      "part": 1,
+      "mapCount": 53,
+      "totalMaps": 54,
+      "lastUpdated": "2026-06-06",
+      "links": {
+        "r2": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/CO_1.osz"
+      },
+      "sizeMB": 285
+    },
+    {
+      "realType": "CJ",
+      "name": "4K Contest Chordjack Pack 1",
+      "part": 1,
+      "mapCount": 75,
+      "totalMaps": 77,
+      "lastUpdated": "2026-06-06",
+      "links": {
+        "r2": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/CJ_1.osz"
+      },
+      "sizeMB": 314
+    },
+    {
+      "realType": "HB3",
+      "name": "4K Contest Technical Hybrid Pack 1",
+      "part": 1,
+      "mapCount": 63,
+      "totalMaps": 64,
+      "lastUpdated": "2026-06-06",
+      "links": {
+        "r2": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/HB3_1.osz"
+      },
+      "sizeMB": 301
+    },
+    {
+      "realType": "MTC",
+      "name": "4K Contest Minijacktech Pack 1",
+      "part": 1,
+      "mapCount": 11,
+      "totalMaps": 12,
+      "lastUpdated": "2026-06-06",
+      "links": {
+        "r2": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/MTC_1.osz"
+      },
+      "sizeMB": 50
+    },
+    {
+      "realType": "TE",
+      "name": "4K Contest Timinghell Pack 1",
+      "part": 1,
+      "mapCount": 10,
+      "totalMaps": 12,
+      "lastUpdated": "2026-06-06",
+      "links": {
+        "r2": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/TE_1.osz"
+      },
+      "sizeMB": 51
+    },
+    {
+      "realType": "JW",
+      "name": "4K Contest Jacky Wildcard LN Pack 1",
+      "part": 1,
+      "mapCount": 20,
+      "totalMaps": 20,
+      "lastUpdated": "2026-06-06",
+      "links": {
+        "r2": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/JW_1.osz"
+      },
+      "sizeMB": 105
+    },
+    {
+      "realType": "LNTC",
+      "name": "4K Contest Technical LN Pack 1",
+      "part": 1,
+      "mapCount": 24,
+      "totalMaps": 25,
+      "lastUpdated": "2026-06-06",
+      "links": {
+        "r2": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/LNTC_1.osz"
+      },
+      "sizeMB": 123
+    },
+    {
+      "realType": "STC",
+      "name": "4K Contest Streamtech Pack 1",
+      "part": 1,
+      "mapCount": 7,
+      "totalMaps": 8,
+      "lastUpdated": "2026-06-06",
+      "links": {
+        "r2": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/STC_1.osz"
+      },
+      "sizeMB": 27
+    },
+    {
+      "realType": "SV2",
+      "name": "4K Contest Rhythm SV Pack 1",
+      "part": 1,
+      "mapCount": 14,
+      "totalMaps": 9,
+      "lastUpdated": "2026-06-06",
+      "links": {
+        "r2": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/SV2_1.osz"
+      },
+      "sizeMB": 47
+    },
+    {
+      "realType": "SVMX",
+      "name": "4K Contest Mix SV Pack 1",
+      "part": 1,
+      "mapCount": 11,
+      "totalMaps": 9,
+      "lastUpdated": "2026-06-06",
+      "links": {
+        "r2": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/SVMX_1.osz"
+      },
+      "sizeMB": 48
+    },
+    {
+      "realType": "WTC",
+      "name": "4K Contest Wild/Ultra Burst tech Pack 1",
+      "part": 1,
+      "mapCount": 18,
+      "totalMaps": 19,
+      "lastUpdated": "2026-06-06",
+      "links": {
+        "r2": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/WTC_1.osz"
+      },
+      "sizeMB": 96
+    },
+    {
+      "realType": "MNTB",
+      "name": "4K Contest Mini-Tiebreaker Hybrid Pack 1",
+      "part": 1,
+      "mapCount": 11,
+      "totalMaps": 11,
+      "lastUpdated": "2026-06-06",
+      "links": {
+        "r2": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/MNTB_1.osz"
+      },
+      "sizeMB": 72
+    },
+    {
+      "realType": "HB4",
+      "name": "4K Contest Wildcard Hybrid Pack 1",
+      "part": 1,
+      "mapCount": 1,
+      "totalMaps": 1,
+      "lastUpdated": "2026-06-06",
+      "links": {
+        "r2": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/HB4_1.osz"
+      },
+      "sizeMB": 4
+    },
+    {
+      "realType": "SW",
+      "name": "4K Contest Speedy Wildcard LN Pack 1",
+      "part": 1,
+      "mapCount": 9,
+      "totalMaps": 9,
+      "lastUpdated": "2026-06-06",
+      "links": {
+        "r2": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/SW_1.osz"
+      },
+      "sizeMB": 54
+    },
+    {
+      "realType": "SJ",
+      "name": "4K Contest Jackspeed Pack 1",
+      "part": 1,
+      "mapCount": 1,
+      "totalMaps": 1,
+      "lastUpdated": "2026-06-06",
+      "links": {
+        "r2": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/SJ_1.osz"
+      },
+      "sizeMB": 3
+    },
+    {
+      "realType": "RCmainHB",
+      "name": "4K Contest RC-main Hybrid Pack 1",
+      "part": 1,
+      "mapCount": 6,
+      "totalMaps": 6,
+      "lastUpdated": "2026-06-06",
+      "links": {
+        "r2": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/RCmainHB_1.osz"
+      },
+      "sizeMB": 28
+    },
+    {
+      "realType": "IN",
+      "name": "4K Contest Inverse Pack 1",
+      "part": 1,
+      "mapCount": 1,
+      "totalMaps": 1,
+      "lastUpdated": "2026-06-06",
+      "links": {
+        "r2": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/IN_1.osz"
+      },
+      "sizeMB": 5
+    }
+  ],
+  "lastGenerated": "2026-06-06T08:29:53.763Z"
 }

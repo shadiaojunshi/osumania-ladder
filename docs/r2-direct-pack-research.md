@@ -1,7 +1,12 @@
 # 合包自动上传到 R2(直发)—— 调研归档
 
-> 2026-06-06。在 Drive 自动上传(已接通)和 123(内测排队)之外,
-> 多加一条最便宜、最快接通、最稳定的兜底通道。
+> 2026-06-06 调研 + 当天落地完成。
+
+> **2026-06-06 状态:已上线**。bucket = `osumania-ladder-packs`,
+> public URL = `https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev`,
+> 6.63 GB / 38 对象。manifest 里所有 entry 都有 `links.r2`,
+> /download 页面已显示「Cloudflare 直链」按钮(排第一位)。
+> 落地用了一次 Generate Map Packs run + 一次 Drive 凭据修复 + 重跑。
 
 ## 背景
 
@@ -112,7 +117,23 @@ Drive 自动上传跑通后**下一个动作**,排在 123 之前。
 
 ## 待办
 
-- [ ] 站长建 `osumania-ladder-packs` bucket,开 Public Access,记下 r2.dev URL
-- [ ] 站长把 `R2_PACKS_BUCKET` / `R2_PACKS_PUBLIC_URL` 填到 GitHub Secrets
-- [ ] AI 改 generate-pack.js + workflow + /download 页
-- [ ] 跑一次 Generate Map Packs,验证 manifest.links.r2 写入 + 下载页按钮可用
+- [x] 站长建 `osumania-ladder-packs` bucket,开 Public Access,记下 r2.dev URL
+- [x] 站长把 `R2_PACKS_BUCKET` / `R2_PACKS_PUBLIC_URL` 填到 GitHub Secrets
+- [x] AI 改 generate-pack.js + workflow + /download 页
+- [x] 跑一次 Generate Map Packs,验证 manifest.links.r2 写入 + 下载页按钮可用
+
+## 当天踩到的坑(留档)
+
+1. **R2 API token scope 限定到了 maps 桶**:旧 token 只授权了
+   `osumania-ladder-maps`,新桶访问不到。Edit 按钮在那个早期 token 上是灰的,
+   没法在原 token 上加桶。解法:新建一个 token 选 "Apply to all buckets",
+   把 access key / secret 替换 `R2_ACCESS_KEY` / `R2_SECRET_KEY`。
+2. **artifact upload 不影响 R2 直发**:workflow 里 `actions/upload-artifact`
+   是早期兜底,跟 R2 直发并行跑,可保留也可后续删掉。
+3. **Backup R2 workflow 一直红**:同一个 token scope 问题影响到
+   `osumania-ladder-maps-backup`,token 换成全桶后会自动恢复。
+4. **Drive 上传炸了一次**:38 个 pack 全 `invalid_client`,跟 R2 无关。
+   修 GDRIVE_CLIENT_ID / SECRET 后无需重跑生成,加了一个新 workflow
+   `Upload Packs to Google Drive (Re-run)` 可以直接拉 artifact 重跑。
+5. **R2 控制台 Overview 页面统计延迟**:刚上传完看 0 B 是缓存,
+   桶详情页是即时的。

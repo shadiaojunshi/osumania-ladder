@@ -14,6 +14,8 @@ interface ViewStore {
   sortMode: SortMode
   customOrder: string[] | null
   hideQualifiers: boolean
+  yearFilter: number | null
+  roundFilter: string | null
 
   setMode: (mode: ViewMode) => void
   setZoom: (zoom: number) => void
@@ -25,6 +27,8 @@ interface ViewStore {
   setSortMode: (sort: SortMode) => void
   setCustomOrder: (order: string[] | null) => void
   setHideQualifiers: (hide: boolean) => void
+  setYearFilter: (year: number | null) => void
+  setRoundFilter: (round: string | null) => void
 }
 
 export const useViewStore = create<ViewStore>((set) => ({
@@ -38,6 +42,8 @@ export const useViewStore = create<ViewStore>((set) => ({
   sortMode: 'default',
   customOrder: null,
   hideQualifiers: false,
+  yearFilter: null,
+  roundFilter: null,
 
   setMode: (mode) => set({ mode }),
   setZoom: (zoom) => set({ zoom }),
@@ -49,4 +55,6 @@ export const useViewStore = create<ViewStore>((set) => ({
   setSortMode: (sortMode) => set({ sortMode, customOrder: null }),
   setCustomOrder: (customOrder) => set({ customOrder, sortMode: 'default' }),
   setHideQualifiers: (hideQualifiers) => set({ hideQualifiers }),
+  setYearFilter: (yearFilter) => set({ yearFilter }),
+  setRoundFilter: (roundFilter) => set({ roundFilter }),
 }))

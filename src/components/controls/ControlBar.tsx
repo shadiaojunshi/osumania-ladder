@@ -2,6 +2,9 @@
 
 import { useViewStore } from '@/stores/viewStore'
 import type { SortMode } from '@/stores/viewStore'
+import { tournaments } from '@/generated/tournaments'
+
+const COMMON_ROUNDS = ['Qual', 'RO32', 'RO16', 'QF', 'SF', 'F', 'GF']
 
 export function ControlBar() {
   const {
@@ -11,6 +14,8 @@ export function ControlBar() {
     rfLnOffset, setRfLnOffset,
     sortMode, setSortMode,
     hideQualifiers, setHideQualifiers,
+    yearFilter, setYearFilter,
+    roundFilter, setRoundFilter,
   } = useViewStore()
 
   const cycleSortMode = () => {
@@ -22,6 +27,11 @@ export function ControlBar() {
   const sortLabel = sortMode === 'default' ? '默认排序'
     : sortMode === 'difficulty-desc' ? '难度↓'
     : '难度↑'
+
+  // 只列出实际存在的年份和轮次缩写,避免下拉里出现死项
+  const availableYears = [...new Set(tournaments.map((t) => t.year).filter((y): y is number => !!y))].sort((a, b) => b - a)
+  const presentRoundAbbrs = new Set(tournaments.flatMap((t) => t.rounds.map((r) => r.abbreviation)))
+  const availableRounds = COMMON_ROUNDS.filter((r) => presentRoundAbbrs.has(r))
 
   return (
     <footer className="h-14 border-t border-gray-200 flex items-center px-4 gap-4 shrink-0 bg-gray-50">
@@ -111,6 +121,40 @@ export function ControlBar() {
       >
         {hideQualifiers ? '资格赛: 隐藏' : '资格赛: 显示'}
       </button>
+
+      <div className="w-px h-6 bg-gray-300" />
+
+      <div className="flex items-center gap-1.5">
+        <span className="text-xs text-gray-500">年份</span>
+        <select
+          value={yearFilter ?? ''}
+          onChange={(e) => setYearFilter(e.target.value ? Number(e.target.value) : null)}
+          className={`px-2 py-1 text-xs rounded border ${
+            yearFilter !== null ? 'bg-purple-50 border-purple-300 text-purple-700' : 'bg-white border-gray-300 text-gray-600'
+          }`}
+        >
+          <option value="">全部</option>
+          {availableYears.map((y) => (
+            <option key={y} value={y}>{y}</option>
+          ))}
+        </select>
+      </div>
+
+      <div className="flex items-center gap-1.5">
+        <span className="text-xs text-gray-500">轮次</span>
+        <select
+          value={roundFilter ?? ''}
+          onChange={(e) => setRoundFilter(e.target.value || null)}
+          className={`px-2 py-1 text-xs rounded border ${
+            roundFilter ? 'bg-purple-50 border-purple-300 text-purple-700' : 'bg-white border-gray-300 text-gray-600'
+          }`}
+        >
+          <option value="">全部</option>
+          {availableRounds.map((r) => (
+            <option key={r} value={r}>{r}</option>
+          ))}
+        </select>
+      </div>
 
       <div className="ml-auto text-xs text-gray-400">
         osu!mania Ladder v0.1

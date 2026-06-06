@@ -137,3 +137,12 @@ Drive 自动上传跑通后**下一个动作**,排在 123 之前。
    `Upload Packs to Google Drive (Re-run)` 可以直接拉 artifact 重跑。
 5. **R2 控制台 Overview 页面统计延迟**:刚上传完看 0 B 是缓存,
    桶详情页是即时的。
+
+## 上线后(2026-06-06 当晚)优化
+
+跟 R2 没直接关系,但是同一波改动捎带做的:
+
+- **/download 类别表漏 ADP / LNMX / LNTC / SVMX**:这四个 type 之前没出现在 [src/app/download/page.tsx](../src/app/download/page.tsx) 的 `CATEGORIES`,manifest 里的 entry 因此在前端被吃掉。补全。
+- **mapCount > totalMaps 异常**:`mapCount` 之前等于 archive 里的 entry 数(含 NSV 变体),`totalMaps` 是 slot 数;两者口径不一致导致 SVMX/SV2/ME 等 type 进度条 >100%。把 `mapCount` 改成只数 slot(不含 NSV),与 `totalMaps` 同口径。
+- **合包生成并行化**:[scripts/generate-pack.js](../scripts/generate-pack.js) 里每个包的 R2 下载 + JSZip 解压 + parseOsu 改成 4 并发预取,主循环按原顺序 append 到 archive。GitHub runner 4 核上预计 ~3x 加速,内存峰值约 40-50MB 可控。
+- **主页年份 + 轮次筛选**:右下 ControlBar 新增两个下拉(年份 / Qual·RO32·RO16·QF·SF·F·GF),叠加到现有 search / hideQualifiers 之上;只列实际存在的选项。

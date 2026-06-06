@@ -25,7 +25,7 @@ function getLnDiff(m: { type: string; realType: string; difficulty: number; diff
 }
 
 export function LadderView() {
-  const { mode, zoom, columnWidth, rowHeight, rfLnOffset, activeFilter, searchQuery, sortMode, customOrder, hideQualifiers } = useViewStore()
+  const { mode, zoom, columnWidth, rowHeight, rfLnOffset, activeFilter, searchQuery, sortMode, customOrder, hideQualifiers, yearFilter, roundFilter } = useViewStore()
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const leftRef = useRef<HTMLDivElement>(null)
   const rightRef = useRef<HTMLDivElement>(null)
@@ -37,6 +37,8 @@ export function LadderView() {
   const containerHeight = diffRange * rowHeight * zoom
 
   const filteredTournaments = tournaments.filter((t) => {
+    if (yearFilter !== null && t.year !== yearFilter) return false
+    if (roundFilter && !t.rounds.some((r) => r.abbreviation === roundFilter)) return false
     if (!searchQuery) return true
     return t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       t.abbreviation.toLowerCase().includes(searchQuery.toLowerCase())
@@ -119,6 +121,7 @@ export function LadderView() {
               activeFilter={activeFilter}
               rfLnOffset={rfLnOffset}
               hideQualifiers={hideQualifiers}
+              roundFilter={roundFilter}
               onHover={(round, x, y, type) => showHover(round, tournament, x, y, type)}
               onLeave={scheduleHide}
             />
@@ -286,6 +289,7 @@ function TournamentColumn({
   activeFilter,
   rfLnOffset,
   hideQualifiers,
+  roundFilter,
   onHover,
   onLeave,
 }: {
@@ -296,10 +300,13 @@ function TournamentColumn({
   activeFilter: string | null
   rfLnOffset: number
   hideQualifiers: boolean
+  roundFilter: string | null
   onHover: (round: Round, x: number, y: number, type?: string) => void
   onLeave: () => void
 }) {
-  const visibleRounds = hideQualifiers ? tournament.rounds.filter((r) => !r.isQualifier) : tournament.rounds
+  let visibleRounds = hideQualifiers ? tournament.rounds.filter((r) => !r.isQualifier) : tournament.rounds
+  if (roundFilter) visibleRounds = visibleRounds.filter((r) => r.abbreviation === roundFilter)
+  if (visibleRounds.length === 0) return null
 
   if (mode === 'tournament') {
     const allDiffs = visibleRounds.flatMap((r) =>

@@ -12,9 +12,9 @@
       "abbreviation": "Qual",
       "order": 1,
       "difficulty": {
-        "min": 10,
-        "max": 13.4,
-        "average": 12.4
+        "min": 12,
+        "max": 12.8,
+        "average": 12.5
       },
       "maps": [
         {
@@ -29,7 +29,8 @@
           "type": "HB",
           "realType": "HB3",
           "name": "RC2",
-          "difficulty": 12.3
+          "difficulty": 12.3,
+          "difficultyLn": 12.3
         },
         {
           "slot": "ST3",
@@ -64,7 +65,8 @@
           "type": "HB",
           "realType": "HB2",
           "name": "HB2",
-          "difficulty": 12.3
+          "difficulty": 12.3,
+          "difficultyLn": 12.3
         },
         {
           "slot": "ST8",
@@ -102,8 +104,8 @@
       "abbreviation": "Playoff",
       "order": 2,
       "difficulty": {
-        "min": 6,
-        "max": 8,
+        "min": 7.4,
+        "max": 7.7,
         "average": 7.5
       },
       "maps": [
@@ -147,14 +149,16 @@
           "type": "HB",
           "realType": "HB2",
           "name": "HB1",
-          "difficulty": 7.4
+          "difficulty": 7.4,
+          "difficultyLn": 7.4
         },
         {
           "slot": "HB2",
           "type": "HB",
           "realType": "HB3",
           "name": "HB2",
-          "difficulty": 7.4
+          "difficulty": 7.4,
+          "difficultyLn": 7.4
         },
         {
           "slot": "HB3",
@@ -207,8 +211,8 @@
       "abbreviation": "RO32",
       "order": 3,
       "difficulty": {
-        "min": 8,
-        "max": 9.5,
+        "min": 8.8,
+        "max": 10,
         "average": 9.1
       },
       "maps": [
@@ -259,14 +263,16 @@
           "type": "HB",
           "realType": "HB2",
           "name": "HB1",
-          "difficulty": 9.2
+          "difficulty": 9.2,
+          "difficultyLn": 9.2
         },
         {
           "slot": "HB2",
           "type": "HB",
           "realType": "HB3",
           "name": "HB2",
-          "difficulty": 9.2
+          "difficulty": 9.2,
+          "difficultyLn": 9.2
         },
         {
           "slot": "HB3",
@@ -287,7 +293,7 @@
           "type": "LN",
           "realType": "DE",
           "name": "LN2",
-          "difficulty": 9.3
+          "difficulty": 10
         },
         {
           "slot": "TB1",
@@ -296,6 +302,13 @@
           "name": "TB1",
           "difficulty": 9,
           "difficultyLn": 10
+        },
+        {
+          "slot": "LN3",
+          "type": "LN",
+          "realType": "LNMX",
+          "name": "LN3",
+          "difficulty": 9.3
         }
       ],
       "bestOf": 9,
@@ -319,9 +332,9 @@
       "abbreviation": "RO16",
       "order": 4,
       "difficulty": {
-        "min": 9,
+        "min": 10.1,
         "max": 11,
-        "average": 10.4
+        "average": 10.3
       },
       "maps": [
         {
@@ -371,14 +384,16 @@
           "type": "HB",
           "realType": "HB2",
           "name": "HB1",
-          "difficulty": 10.3
+          "difficulty": 10.3,
+          "difficultyLn": 10.3
         },
         {
           "slot": "HB2",
           "type": "HB",
           "realType": "HB3",
           "name": "HB2",
-          "difficulty": 10.3
+          "difficulty": 10.3,
+          "difficultyLn": 10.3
         },
         {
           "slot": "HB3",
@@ -399,7 +414,7 @@
           "type": "LN",
           "realType": "DE",
           "name": "LN2",
-          "difficulty": 10.7
+          "difficulty": 11
         },
         {
           "slot": "LN3",
@@ -438,8 +453,8 @@
       "abbreviation": "QF",
       "order": 5,
       "difficulty": {
-        "min": 10.5,
-        "max": 12,
+        "min": 11.5,
+        "max": 11.7,
         "average": 11.6
       },
       "maps": [
@@ -497,14 +512,16 @@
           "type": "HB",
           "realType": "HB2",
           "name": "HB1",
-          "difficulty": 11.7
+          "difficulty": 11.7,
+          "difficultyLn": 11.7
         },
         {
           "slot": "HB2",
           "type": "HB",
           "realType": "HB3",
           "name": "HB2",
-          "difficulty": 11.7
+          "difficulty": 11.7,
+          "difficultyLn": 11.7
         },
         {
           "slot": "HB3",
@@ -525,7 +542,7 @@
           "type": "LN",
           "realType": "DE",
           "name": "LN2",
-          "difficulty": 11.5
+          "difficulty": 11.7
         },
         {
           "slot": "LN3",
@@ -571,9 +588,9 @@
       "abbreviation": "SF",
       "order": 6,
       "difficulty": {
-        "min": 11.5,
-        "max": 13,
-        "average": 12.6
+        "min": 12.3,
+        "max": 12.9,
+        "average": 12.7
       },
       "maps": [
         {
@@ -630,14 +647,16 @@
           "type": "HB",
           "realType": "HB2",
           "name": "HB1",
-          "difficulty": 12.3
+          "difficulty": 12.3,
+          "difficultyLn": 12.3
         },
         {
           "slot": "HB2",
           "type": "HB",
           "realType": "HB3",
           "name": "HB2",
-          "difficulty": 12.3
+          "difficulty": 12.3,
+          "difficultyLn": 12.3
         },
         {
           "slot": "HB3",
@@ -704,8 +723,8 @@
       "abbreviation": "F",
       "order": 7,
       "difficulty": {
-        "min": 12.5,
-        "max": 14,
+        "min": 13.5,
+        "max": 13.6,
         "average": 13.5
       },
       "maps": [
@@ -770,21 +789,24 @@
           "type": "HB",
           "realType": "HB2",
           "name": "HB1",
-          "difficulty": 13.5
+          "difficulty": 13.5,
+          "difficultyLn": 13.5
         },
         {
           "slot": "HB2",
           "type": "HB",
           "realType": "HB1",
           "name": "HB2",
-          "difficulty": 13.5
+          "difficulty": 13.5,
+          "difficultyLn": 13.5
         },
         {
           "slot": "HB3",
           "type": "HB",
           "realType": "HB3",
           "name": "HB3",
-          "difficulty": 13.5
+          "difficulty": 13.5,
+          "difficultyLn": 13.5
         },
         {
           "slot": "HB4",
@@ -851,9 +873,9 @@
       "abbreviation": "GF",
       "order": 8,
       "difficulty": {
-        "min": 13.5,
-        "max": 14.9,
-        "average": 14.5
+        "min": 14.3,
+        "max": 14.6,
+        "average": 14.4
       },
       "maps": [
         {
@@ -917,21 +939,24 @@
           "type": "HB",
           "realType": "HB2",
           "name": "HB1",
-          "difficulty": 14.5
+          "difficulty": 14.5,
+          "difficultyLn": 14.5
         },
         {
           "slot": "HB2",
           "type": "HB",
           "realType": "HB1",
           "name": "HB2",
-          "difficulty": 14.5
+          "difficulty": 14.5,
+          "difficultyLn": 14.5
         },
         {
           "slot": "HB3",
           "type": "HB",
           "realType": "HB3",
           "name": "HB3",
-          "difficulty": 14.5
+          "difficulty": 14.5,
+          "difficultyLn": 14.5
         },
         {
           "slot": "HB4",

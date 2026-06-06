@@ -23,6 +23,7 @@ const CATEGORIES: { label: string; types: string[] }[] = [
 ]
 
 const LINK_LABELS: Record<string, string> = {
+  r2: 'Cloudflare 直链',
   drive123: '123网盘',
   googleDrive: 'Google Drive',
   baiduPan: '百度网盘',

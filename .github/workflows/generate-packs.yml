@@ -29,6 +29,8 @@ jobs:
           R2_ACCESS_KEY: ${{ secrets.R2_ACCESS_KEY }}
           R2_SECRET_KEY: ${{ secrets.R2_SECRET_KEY }}
           R2_BUCKET: osumania-ladder-maps
+          R2_PACKS_BUCKET: ${{ secrets.R2_PACKS_BUCKET }}
+          R2_PACKS_PUBLIC_URL: ${{ secrets.R2_PACKS_PUBLIC_URL }}
 
       - uses: actions/upload-artifact@v4
         if: always()

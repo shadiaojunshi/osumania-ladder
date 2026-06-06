@@ -1,4 +1,4 @@
-const { S3Client, ListObjectsV2Command, GetObjectCommand, PutObjectCommand } = require('@aws-sdk/client-s3')
+const { S3Client, ListObjectsV2Command, GetObjectCommand, PutObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3')
 const JSZip = require('jszip')
 const { ZipArchive } = require('archiver')
 const fs = require('fs')
@@ -8,6 +8,10 @@ const R2_ACCOUNT_ID = process.env.R2_ACCOUNT_ID
 const R2_ACCESS_KEY = process.env.R2_ACCESS_KEY
 const R2_SECRET_KEY = process.env.R2_SECRET_KEY
 const R2_BUCKET = process.env.R2_BUCKET || 'osumania-ladder-maps'
+// 合包公开桶:与 R2_BUCKET(私有,放 .osz 原始文件)分离。
+// 给前端 /download 直链下载用,r2.dev 公开域名,流量免费。
+const R2_PACKS_BUCKET = process.env.R2_PACKS_BUCKET || 'osumania-ladder-packs'
+const R2_PACKS_PUBLIC_URL = (process.env.R2_PACKS_PUBLIC_URL || '').replace(/\/+$/, '')
 
 if (!R2_ACCOUNT_ID || !R2_ACCESS_KEY || !R2_SECRET_KEY) {
   console.error('Missing R2 credentials. Set R2_ACCOUNT_ID, R2_ACCESS_KEY, R2_SECRET_KEY.')
@@ -396,6 +400,63 @@ async function main() {
       })
     }
     manifest.lastGenerated = new Date().toISOString()
+
+    // R2 直发:把生成好的 .osz 同步上传到 packs 公开桶,manifest 写 links.r2。
+    // 没配 R2_PACKS_PUBLIC_URL 就跳过(本地手动跑、或还没建 packs 桶时)。
+    if (R2_PACKS_PUBLIC_URL) {
+      console.log(`\nUploading ${allResults.length} pack(s) to R2 packs bucket...`)
+      const uploadedKeys = new Set()
+      for (const result of allResults) {
+        const key = `${result.realType}_${result.part}.osz`
+        try {
+          const buf = fs.readFileSync(result.outputPath)
+          await s3.send(new PutObjectCommand({
+            Bucket: R2_PACKS_BUCKET,
+            Key: key,
+            Body: buf,
+            ContentType: 'application/x-osu-archive',
+          }))
+          uploadedKeys.add(key)
+          const entry = manifest.packs.find(p => p.realType === result.realType && p.part === result.part)
+          if (entry) {
+            entry.links = entry.links || {}
+            entry.links.r2 = `${R2_PACKS_PUBLIC_URL}/${key}`
+          }
+          console.log(`  Uploaded ${key} (${result.sizeMB}MB)`)
+        } catch (err) {
+          console.warn(`  Failed to upload ${key}: ${err.message}`)
+        }
+      }
+
+      // 删孤儿:packs 桶里有但本次没产出的 .osz(分包数缩了 / type 删了)
+      try {
+        const cmd = new ListObjectsV2Command({ Bucket: R2_PACKS_BUCKET })
+        const res = await s3.send(cmd)
+        const orphans = (res.Contents || [])
+          .map(o => o.Key)
+          .filter(k => k && k.endsWith('.osz') && !uploadedKeys.has(k))
+        for (const k of orphans) {
+          try {
+            await s3.send(new DeleteObjectCommand({ Bucket: R2_PACKS_BUCKET, Key: k }))
+            console.log(`  Deleted orphan ${k}`)
+          } catch (err) {
+            console.warn(`  Failed to delete orphan ${k}: ${err.message}`)
+          }
+        }
+        // 同时清掉 manifest 里 r2 链接所指向的孤儿引用(其它 entry 的 links.r2 已在上面写好)
+        for (const pack of manifest.packs) {
+          const expected = `${pack.realType}_${pack.part}.osz`
+          if (pack.links && pack.links.r2 && !uploadedKeys.has(expected)) {
+            delete pack.links.r2
+          }
+        }
+      } catch (err) {
+        console.warn(`Orphan cleanup skipped: ${err.message}`)
+      }
+    } else {
+      console.log('\nR2_PACKS_PUBLIC_URL not set, skipping R2 packs upload')
+    }
+
     fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + '\n')
     console.log('\nManifest updated:', manifestPath)
   }

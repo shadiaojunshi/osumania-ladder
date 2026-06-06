@@ -49,15 +49,19 @@
 
 ### 准备工作（站长做）
 
-1. 登录 [123pan.com](https://www.123pan.com/)，找「开放平台」入口（顶部菜单或
-   「我的」→「应用接入」）。
-2. 实名 + 看协议 + 申请应用：
+> **2026-06-06 更新**：123 现在把开放平台调用入口改放在「开发者权益包」里，
+> 而且还在**内测**。直接「应用接入」入口不见了，需要先申请权益包。
+
+1. 登录 [123pan.com](https://www.123pan.com/)，进开放平台页面。
+2. 点页面里「123云盘开发者权益包内测版申请」链接，提交内测申请。门槛：
+   VIP / SVIP / 长期 VIP 会员（站长 Pro 满足）。审核估计几天到一周。
+3. 通过内测后才能开通「开发者权益包」，然后才会看到应用创建入口。
    - 应用名：`osumania-ladder-packs`（随便起）
    - 回调 URL：`https://osumania-ladder.pages.dev/api/123pan/callback`
-3. 通过后拿到 `client_id` 和 `client_secret`。`client_id` 给我；
+4. 拿到 `client_id` 和 `client_secret`。`client_id` 给 AI；
    `client_secret` 直接填 Cloudflare Pages secret（变量名 `PAN123_CLIENT_SECRET`），
    不告诉 AI。
-4. 第一次跑一个 Cloudflare Pages Function `/api/123pan/connect` 触发授权流，把
+5. 第一次跑一个 Cloudflare Pages Function `/api/123pan/connect` 触发授权流，把
    `refresh_token` 写进 Cloudflare KV，之后 GitHub Actions 跑的时候由 CF 端
    提供短期 `access_token`（CF 有 KV、定期刷新更稳；Actions 直接拿 refresh
    也行但要把 token 存 GitHub Secret，更新麻烦）。
@@ -98,7 +102,8 @@
 
 ## 待你确认 / 完成后回到这里继续
 
-- [ ] 站长申请到 `client_id`，告诉 AI
+- [ ] 站长提交「开发者权益包」内测申请（截图里那个链接）
+- [ ] 内测通过后开通权益包、创建应用，拿到 `client_id`，告诉 AI
 - [ ] 站长把 `client_secret` 填进 Cloudflare Secret
 - [ ] AI 写代码（按上面"代码改动"分支）
 - [ ] 跑一次完整的 Generate Map Packs，确认链接自动写回

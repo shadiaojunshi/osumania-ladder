@@ -20,8 +20,8 @@
       "maps": [
         {
           "slot": "ST1",
-          "type": "ST",
-          "realType": "",
+          "type": "SV",
+          "realType": "SVMX",
           "name": "cYsmix - Peer Gynt (Cut Ver.) [Stage 1: Oneself]",
           "difficulty": 0,
           "beatmapId": 5212065,
@@ -29,8 +29,8 @@
         },
         {
           "slot": "ST2",
-          "type": "ST",
-          "realType": "",
+          "type": "RC",
+          "realType": "TC",
           "name": "eoll - Love Like [Stage 2: Unrequited]",
           "difficulty": 0,
           "beatmapId": 5212052,
@@ -38,8 +38,8 @@
         },
         {
           "slot": "ST3",
-          "type": "ST",
-          "realType": "",
+          "type": "LN",
+          "realType": "CO",
           "name": "FELT - Summer Fever (Cut Ver.) [Stage 3: Tryst]",
           "difficulty": 0,
           "beatmapId": 5212117,
@@ -47,8 +47,8 @@
         },
         {
           "slot": "ST4",
-          "type": "ST",
-          "realType": "",
+          "type": "RC",
+          "realType": "JS",
           "name": "DJ Myosuke & Gram - The Rebellion of Phantom (feat. Valkyria) (Sped Up Ver.) [Stage 4: Magic Word]",
           "difficulty": 0,
           "beatmapId": 5212100,
@@ -56,8 +56,8 @@
         },
         {
           "slot": "ST5",
-          "type": "ST",
-          "realType": "",
+          "type": "LN",
+          "realType": "DE",
           "name": "irucaice feat. Choko - Rainbow Rush Story [Stage 5: FESTiVAL]",
           "difficulty": 0,
           "beatmapId": 5212091,
@@ -65,8 +65,8 @@
         },
         {
           "slot": "ST6",
-          "type": "ST",
-          "realType": "",
+          "type": "HB",
+          "realType": "MNTB",
           "name": "nm-y & Kry.exe - Retribution [Stage 6: Final Judgement]",
           "difficulty": 0,
           "beatmapId": 5212099,

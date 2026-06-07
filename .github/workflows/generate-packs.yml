@@ -32,14 +32,6 @@ jobs:
           R2_PACKS_BUCKET: ${{ secrets.R2_PACKS_BUCKET }}
           R2_PACKS_PUBLIC_URL: ${{ secrets.R2_PACKS_PUBLIC_URL }}
 
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: packs
-          path: output/*.osz
-          retention-days: 7
-          if-no-files-found: ignore
-
       - name: Upload to Google Drive
         if: github.event.inputs.realType == ''
         run: node scripts/upload-to-gdrive.js

@@ -45,6 +45,15 @@ body {
   z-index: 50 !important;
 }
 
+.round-box.always-border {
+  box-shadow: 0 0 0 1.5px white, 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.round-box.always-border:hover {
+  box-shadow: 0 0 0 2px white, 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 50 !important;
+}
+
 .round-box.dimmed {
   opacity: 0.08;
   color: transparent;

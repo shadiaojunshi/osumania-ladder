@@ -25,7 +25,7 @@ function getLnDiff(m: { type: string; realType: string; difficulty: number; diff
 }
 
 export function LadderView() {
-  const { mode, zoom, columnWidth, rowHeight, rfLnOffset, activeFilter, searchQuery, sortMode, customOrder, hideQualifiers, yearFilter, roundFilter } = useViewStore()
+  const { mode, zoom, columnWidth, rowHeight, rfLnOffset, activeFilter, searchQuery, sortMode, customOrder, hideQualifiers, yearFilter, roundFilter, roundBorderAlways } = useViewStore()
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const leftRef = useRef<HTMLDivElement>(null)
   const rightRef = useRef<HTMLDivElement>(null)
@@ -122,6 +122,7 @@ export function LadderView() {
               rfLnOffset={rfLnOffset}
               hideQualifiers={hideQualifiers}
               roundFilter={roundFilter}
+              roundBorderAlways={roundBorderAlways}
               onHover={(round, x, y, type) => showHover(round, tournament, x, y, type)}
               onLeave={scheduleHide}
             />
@@ -166,14 +167,32 @@ const MAJOR_LN = new Set(
   lnLevels.filter((l) => !l.id.includes('+') && !l.id.includes('-')).map((l) => l.id)
 )
 
+// 检测视口是否 < 768px(Tailwind md 断点)。SSR 时返回 false,挂载后立即纠正,
+// 后续监听 resize 同步。给 LeftScale / RightRef 做窄化用。
+function useIsNarrow(): boolean {
+  const [narrow, setNarrow] = useState(false)
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const mq = window.matchMedia('(max-width: 767px)')
+    const handler = () => setNarrow(mq.matches)
+    handler()
+    mq.addEventListener('change', handler)
+    return () => mq.removeEventListener('change', handler)
+  }, [])
+  return narrow
+}
+
 const LeftScaleInner = forwardRef<HTMLDivElement, { containerHeight: number }>(
   function LeftScaleInner({ containerHeight }, ref) {
     const { activeFilter, rfLnOffset } = useViewStore()
     const showOnlyLn = activeFilter === 'LN' || activeFilter === 'HB'
     const showOnlyRf = activeFilter === 'RC' || activeFilter === 'SV'
     const showBoth = !showOnlyLn && !showOnlyRf
+    const narrow = useIsNarrow()
 
-    const totalWidth = showBoth ? 110 : 70
+    const totalWidth = narrow
+      ? (showBoth ? 70 : 42)
+      : (showBoth ? 110 : 70)
 
     return (
       <div className={`border-r border-gray-200 overflow-hidden shrink-0`} style={{ width: totalWidth }} ref={ref}>
@@ -186,13 +205,13 @@ const LeftScaleInner = forwardRef<HTMLDivElement, { containerHeight: number }>(
               <div
                 key={level.id}
                 className="absolute flex items-center"
-                style={{ top: y - 8, left: 0, width: showBoth ? 55 : 70 }}
+                style={{ top: y - 8, left: 0, width: narrow ? (showBoth ? 36 : 42) : (showBoth ? 55 : 70) }}
               >
                 <span
-                  className="scale-label pl-2"
+                  className={`scale-label ${narrow ? 'pl-1' : 'pl-2'}`}
                   style={{
                     color: level.color,
-                    fontSize: isMajor ? '12px' : '9px',
+                    fontSize: isMajor ? (narrow ? '10px' : '12px') : (narrow ? '8px' : '9px'),
                     opacity: isMajor ? 1 : 0.4,
                   }}
                 >
@@ -210,13 +229,13 @@ const LeftScaleInner = forwardRef<HTMLDivElement, { containerHeight: number }>(
               <div
                 key={level.id}
                 className="absolute flex items-center"
-                style={{ top: lnY - 8, right: 0, width: showBoth ? 50 : 70 }}
+                style={{ top: lnY - 8, right: 0, width: narrow ? (showBoth ? 32 : 42) : (showBoth ? 50 : 70) }}
               >
                 <span
-                  className="scale-label text-right w-full pr-2"
+                  className={`scale-label text-right w-full ${narrow ? 'pr-1' : 'pr-2'}`}
                   style={{
                     color: '#6366f1',
-                    fontSize: isMajor ? '11px' : '9px',
+                    fontSize: isMajor ? (narrow ? '10px' : '11px') : (narrow ? '8px' : '9px'),
                     opacity: isMajor ? 0.9 : 0.35,
                   }}
                 >
@@ -263,7 +282,7 @@ const RightRefInner = forwardRef<HTMLDivElement, { containerHeight: number }>(
     }
 
     return (
-      <div className="w-[160px] border-l border-gray-200 overflow-hidden shrink-0" ref={ref}>
+      <div className="w-[88px] md:w-[160px] border-l border-gray-200 overflow-hidden shrink-0" ref={ref}>
         <div className="relative" style={{ height: containerHeight }}>
           {positioned.map((point, i) => (
             <div
@@ -271,8 +290,8 @@ const RightRefInner = forwardRef<HTMLDivElement, { containerHeight: number }>(
               className="absolute left-0 right-0 flex items-center"
               style={{ top: point.displayY - 8 }}
             >
-              <div className={`w-3 h-px mr-1 ${point.type === 'ln' ? 'bg-indigo-400' : 'bg-purple-300'}`} />
-              <span className={`text-xs truncate ${point.type === 'ln' ? 'text-indigo-600' : 'text-gray-600'}`}>{point.label}</span>
+              <div className={`w-2 md:w-3 h-px mr-1 shrink-0 ${point.type === 'ln' ? 'bg-indigo-400' : 'bg-purple-300'}`} />
+              <span className={`text-[10px] md:text-xs truncate ${point.type === 'ln' ? 'text-indigo-600' : 'text-gray-600'}`}>{point.label}</span>
             </div>
           ))}
         </div>
@@ -290,6 +309,7 @@ function TournamentColumn({
   rfLnOffset,
   hideQualifiers,
   roundFilter,
+  roundBorderAlways,
   onHover,
   onLeave,
 }: {
@@ -301,6 +321,7 @@ function TournamentColumn({
   rfLnOffset: number
   hideQualifiers: boolean
   roundFilter: string | null
+  roundBorderAlways: boolean
   onHover: (round: Round, x: number, y: number, type?: string) => void
   onLeave: () => void
 }) {
@@ -354,10 +375,20 @@ function TournamentColumn({
           {tournament.abbreviation}
         </div>
         {visibleRounds.map((round, idx) => {
-          const adjustedDiffs = round.maps
-            .filter((m) => m.type !== 'TB')
-            .map((m) => (isLnBased(m) ? getLnDiff(m) - rfLnOffset : m.difficulty))
-            .filter((d) => d > 0)
+          // TB 谱面双轴贡献:RF 用 difficulty,LN 用 difficultyLn - rfLnOffset(若有);
+          // 这样混风格的 TB 在 round 框范围里 RF 和 LN 两侧都体现。
+          const adjustedDiffs: number[] = []
+          for (const m of round.maps) {
+            if (m.type === 'TB') {
+              if (m.difficulty > 0) adjustedDiffs.push(m.difficulty)
+              if (m.difficultyLn && m.difficultyLn > 0) adjustedDiffs.push(m.difficultyLn - rfLnOffset)
+            } else if (isLnBased(m)) {
+              const d = getLnDiff(m) - rfLnOffset
+              if (d > 0) adjustedDiffs.push(d)
+            } else if (m.difficulty > 0) {
+              adjustedDiffs.push(m.difficulty)
+            }
+          }
           const computedMin = adjustedDiffs.length > 0 ? Math.min(...adjustedDiffs) : Infinity
           const computedMax = adjustedDiffs.length > 0 ? Math.max(...adjustedDiffs) : -Infinity
           const allLn = round.maps.filter((m) => m.type !== 'TB').length > 0 &&
@@ -383,7 +414,7 @@ function TournamentColumn({
           return (
             <div
               key={round.id}
-              className={`round-box absolute left-1 right-1 ${isDimmed ? 'dimmed' : ''}`}
+              className={`round-box absolute left-1 right-1 ${isDimmed ? 'dimmed' : ''} ${roundBorderAlways ? 'always-border' : ''}`}
               style={{
                 top,
                 height: boxH,
@@ -409,6 +440,33 @@ function TournamentColumn({
     const types = getUniqueTypes(round)
     for (const type of types) {
       const typeMaps = round.maps.filter((m) => m.type === type)
+      // TB 特判:RF 用 difficulty,LN 用 difficultyLn(都减偏移),两侧平均得 adjustedAvg。
+      // 缺 LN 值时退化到 RF only;站长填 typeDifficulties 时同理两侧平均。
+      if (type === 'TB') {
+        const rfVals = typeMaps.map((m) => m.difficulty).filter((d) => d > 0)
+        const lnVals = typeMaps.map((m) => m.difficultyLn ?? 0).filter((d) => d > 0)
+        let rfAvg: number | null = null
+        let lnAvg: number | null = null
+        if (rfVals.length > 0) rfAvg = rfVals.reduce((s, d) => s + d, 0) / rfVals.length
+        if (lnVals.length > 0) lnAvg = lnVals.reduce((s, d) => s + d, 0) / lnVals.length
+        if (rfAvg === null && lnAvg === null) {
+          const td = round.typeDifficulties?.[type]
+          if (td?.rf && td.rf > 0) rfAvg = td.rf
+          if (td?.ln && td.ln > 0) lnAvg = td.ln
+        }
+        let adjustedAvg: number | null = null
+        if (rfAvg !== null && lnAvg !== null) {
+          adjustedAvg = (rfAvg + (lnAvg - rfLnOffset)) / 2
+        } else if (rfAvg !== null) {
+          adjustedAvg = rfAvg
+        } else if (lnAvg !== null) {
+          adjustedAvg = lnAvg - rfLnOffset
+        }
+        if (adjustedAvg === null) continue
+        allTypeBoxes.push({ round, type, adjustedAvg })
+        continue
+      }
+
       const diffs = typeMaps.map((m) => (isLnBased(m) ? getLnDiff(m) : m.difficulty)).filter((d) => d > 0)
       const typeIsLn = typeMaps.some((m) => isLnBased(m))
       let typeAvg: number | null = null
@@ -426,17 +484,26 @@ function TournamentColumn({
     }
   }
 
-  const overlapGroups = new Map<string, number>()
-  for (let i = 0; i < allTypeBoxes.length; i++) {
-    const a = allTypeBoxes[i]
-    for (let j = i + 1; j < allTypeBoxes.length; j++) {
-      const b = allTypeBoxes[j]
-      if (Math.abs(a.adjustedAvg - b.adjustedAvg) < 0.05) {
-        const keyA = `${a.round.id}-${a.type}`
-        const keyB = `${b.round.id}-${b.type}`
-        if (!overlapGroups.has(keyA)) overlapGroups.set(keyA, 0)
-        if (!overlapGroups.has(keyB)) overlapGroups.set(keyB, 1)
+  // N-way 重叠分组:把 |adjustedAvg 差| < 0.05 的相邻 box 连成一组,组内每个 box
+  // 拿到 (idx, size),渲染时按 idx/size 等分列宽。这样 3/4-way 也不会互相吞键。
+  // 旧实现是 2-way pair-wise,3 个挤一起会有两个 idx=1 互相覆盖,hover 显示错的那个。
+  const overlapInfo = new Map<string, { idx: number; size: number }>()
+  {
+    const sorted = allTypeBoxes
+      .map((b, i) => ({ ...b, _i: i }))
+      .sort((a, b) => a.adjustedAvg - b.adjustedAvg)
+    let i = 0
+    while (i < sorted.length) {
+      let j = i + 1
+      while (j < sorted.length && Math.abs(sorted[j].adjustedAvg - sorted[i].adjustedAvg) < 0.05) j++
+      const size = j - i
+      if (size > 1) {
+        for (let k = i; k < j; k++) {
+          const key = `${sorted[k].round.id}-${sorted[k].type}`
+          overlapInfo.set(key, { idx: k - i, size })
+        }
       }
+      i = j
     }
   }
 
@@ -451,8 +518,9 @@ function TournamentColumn({
         const isDimmed = activeFilter && activeFilter !== type
         const color = getDifficultyColor(adjustedAvg)
         const key = `${round.id}-${type}`
-        const overlapIdx = overlapGroups.get(key)
-        const hasOverlap = overlapIdx !== undefined
+        const info = overlapInfo.get(key)
+        const left = info ? `${(info.idx / info.size) * 100}%` : '4px'
+        const right = info ? `${((info.size - info.idx - 1) / info.size) * 100}%` : '4px'
 
         return (
           <div
@@ -463,8 +531,8 @@ function TournamentColumn({
               height: boxH,
               background: color,
               fontSize: '10px',
-              left: hasOverlap ? (overlapIdx === 0 ? '2px' : '50%') : '4px',
-              right: hasOverlap ? (overlapIdx === 0 ? '50%' : '2px') : '4px',
+              left,
+              right,
             }}
             onMouseEnter={(e) => onHover(round, e.clientX, e.clientY, type)}
             onMouseLeave={onLeave}

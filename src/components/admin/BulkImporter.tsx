@@ -350,24 +350,29 @@ export function BulkImporter({ onImport, onClose, existingRoundCount }: Props) {
           {step === 'input' && (
             <>
               <div className="text-xs text-gray-500 leading-relaxed">
-                从 Google 主表格选中 <strong>slot 列</strong> 和 <strong>map link/ID 列</strong>（两列），复制粘贴到下方。每行格式自由：tab 或多空格分隔皆可。<br />
-                <strong className="text-gray-700">分轮规则：</strong>用 <strong>空行</strong>分隔不同的轮次（资格赛和决赛之间必须空一行）；如果同一个 slot（如 RC1）再次出现，也会自动开新一轮。<br />
-                支持的 ID 格式：纯数字、<code>osu.ppy.sh/b/数字</code>、<code>osu.ppy.sh/beatmapsets/X#mode/数字</code>。
+                从 Google 主表格选中 <strong>slot 列</strong> 和 <strong>map link/ID 列</strong>(两列),复制粘贴到下方。每行格式自由:tab 或多空格分隔皆可。<br />
+                <strong className="text-gray-700">轮次顺序:</strong>从上往下按比赛进程贴 —— 先粘资格赛(Qualifiers),最后粘决赛(Grand Finals)。默认按淘汰赛从尾倒推命名(最后一轮 = GF,倒数第二轮 = F,以此类推),所以贴反了识别会出错。<br />
+                <strong className="text-gray-700">分轮规则:</strong>用 <strong>空行</strong>分隔不同的轮次(资格赛和决赛之间必须空一行);如果同一个 slot(如 RC1)再次出现,也会自动开新一轮。<br />
+                支持的 ID 格式:纯数字、<code>osu.ppy.sh/b/数字</code>、<code>osu.ppy.sh/beatmapsets/X#mode/数字</code>。
               </div>
 
               <textarea
                 value={text}
                 onChange={(e) => setText(e.target.value)}
                 placeholder={
-                  '示例（两轮，用空行分隔）：\n\n' +
+                  '示例(三轮:Qual → F → GF,空行分隔。无 TB 的轮默认识别为 Qual,有 TB 的从尾倒推命名):\n\n' +
                   'RC1\thttps://osu.ppy.sh/b/5318853\n' +
                   'RC2\t5318764\n' +
                   'HB1\t5318882\n' +
-                  'TB\t5318924\n' +
                   '\n' +
                   'RC1\t5308399\n' +
                   'RC2\t5308425\n' +
-                  'HB1\t5308454\n'
+                  'HB1\t5308454\n' +
+                  'TB\t5308499\n' +
+                  '\n' +
+                  'RC1\t5300120\n' +
+                  'HB1\t5300188\n' +
+                  'TB\t5300210\n'
                 }
                 rows={14}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-xs font-mono focus:outline-none focus:border-purple-400"

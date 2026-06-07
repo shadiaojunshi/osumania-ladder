@@ -16,6 +16,7 @@ interface ViewStore {
   hideQualifiers: boolean
   yearFilter: number | null
   roundFilter: string | null
+  roundBorderAlways: boolean
 
   setMode: (mode: ViewMode) => void
   setZoom: (zoom: number) => void
@@ -29,6 +30,7 @@ interface ViewStore {
   setHideQualifiers: (hide: boolean) => void
   setYearFilter: (year: number | null) => void
   setRoundFilter: (round: string | null) => void
+  setRoundBorderAlways: (b: boolean) => void
 }
 
 export const useViewStore = create<ViewStore>((set) => ({
@@ -44,6 +46,7 @@ export const useViewStore = create<ViewStore>((set) => ({
   hideQualifiers: false,
   yearFilter: null,
   roundFilter: null,
+  roundBorderAlways: false,
 
   setMode: (mode) => set({ mode }),
   setZoom: (zoom) => set({ zoom }),
@@ -57,4 +60,5 @@ export const useViewStore = create<ViewStore>((set) => ({
   setHideQualifiers: (hideQualifiers) => set({ hideQualifiers }),
   setYearFilter: (yearFilter) => set({ yearFilter }),
   setRoundFilter: (roundFilter) => set({ roundFilter }),
+  setRoundBorderAlways: (roundBorderAlways) => set({ roundBorderAlways }),
 }))

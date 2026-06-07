@@ -878,6 +878,7 @@ function MapUploadRow({
           uploadStatus={status[`${roundId}/${slot}`]}
           beatmapsetId={beatmapsetId}
           expectedVersion={expectedVersion}
+          mapName={name}
           onUploadOsz={onUploadOsz}
           onUploadThree={onUploadThree}
           onDelete={onDelete}
@@ -892,6 +893,7 @@ function MapUploadRow({
             uploadStatus={status[`${roundId}/${slot}#nsv`]}
             beatmapsetId={beatmapsetId}
             expectedVersion={expectedVersion}
+            mapName={name}
             onUploadOsz={onUploadOsz}
             onUploadThree={onUploadThree}
             onDelete={onDelete}
@@ -911,6 +913,7 @@ function MapUploadCell({
   uploadStatus,
   beatmapsetId,
   expectedVersion,
+  mapName,
   onUploadOsz,
   onUploadThree,
   onDelete,
@@ -923,6 +926,7 @@ function MapUploadCell({
   uploadStatus?: 'success' | 'error'
   beatmapsetId?: number
   expectedVersion: string | null
+  mapName?: string
   onUploadOsz: (roundId: string, slot: string, file: File, isNsv: boolean) => void
   onUploadThree: (roundId: string, slot: string, osu: File, audio: File, bg: File, isNsv: boolean) => void
   onDelete: (roundId: string, slot: string, isNsv: boolean) => void
@@ -1078,9 +1082,9 @@ function MapUploadCell({
   }
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2" title={mapName}>
       {isUploaded && !isUploading && uploadStatus !== 'error' && !reuploading && (
-        <span className="text-xs text-green-600 flex items-center gap-1">
+        <span className="text-xs text-green-600 flex items-center gap-1" title={mapName}>
           <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
           </svg>
@@ -1140,6 +1144,7 @@ function MapUploadCell({
             <div className="flex-1 min-w-0 flex items-center gap-1">
               <div
                 className={`flex-1 min-w-0 border border-dashed rounded px-2 py-1 text-xs text-center cursor-pointer hover:border-purple-400 hover:text-purple-500 ${isNsv ? 'border-amber-300 text-amber-600' : 'border-gray-300 text-gray-400'}`}
+                title={mapName || placeholderText}
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={handleOszDrop}
                 onClick={() => document.getElementById(inputId)?.click()}
@@ -1157,7 +1162,7 @@ function MapUploadCell({
                 <button
                   onClick={handleAutoDownload}
                   className="px-2 py-1 text-xs bg-blue-50 text-blue-700 rounded hover:bg-blue-100 border border-blue-200 shrink-0"
-                  title={`从镜像自动下载 set ${beatmapsetId}${expectedVersion ? ` 的 [${expectedVersion}]` : ''}`}
+                  title={`从镜像自动下载 set ${beatmapsetId}${expectedVersion ? ` 的 [${expectedVersion}]` : ''}${mapName ? `\n${mapName}` : ''}`}
                 >
                   自动
                 </button>

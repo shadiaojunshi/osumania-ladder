@@ -16,6 +16,8 @@ export function ControlBar() {
     hideQualifiers, setHideQualifiers,
     yearFilter, setYearFilter,
     roundFilter, setRoundFilter,
+    mode,
+    roundBorderAlways, setRoundBorderAlways,
   } = useViewStore()
 
   const cycleSortMode = () => {
@@ -34,7 +36,7 @@ export function ControlBar() {
   const availableRounds = COMMON_ROUNDS.filter((r) => presentRoundAbbrs.has(r))
 
   return (
-    <footer className="h-14 border-t border-gray-200 flex items-center px-4 gap-4 shrink-0 bg-gray-50">
+    <footer className="border-t border-gray-200 flex items-center px-2 sm:px-4 gap-2 sm:gap-4 shrink-0 bg-gray-50 flex-wrap md:flex-nowrap min-h-14 py-1 md:py-0 md:h-14">
       <div className="flex items-center gap-1.5">
         <span className="text-xs text-gray-500">缩放</span>
         <button
@@ -52,7 +54,7 @@ export function ControlBar() {
         </button>
       </div>
 
-      <div className="w-px h-6 bg-gray-300" />
+      <div className="w-px h-6 bg-gray-300 hidden md:block" />
 
       <div className="flex items-center gap-1.5">
         <span className="text-xs text-gray-500">列宽</span>
@@ -80,7 +82,7 @@ export function ControlBar() {
         <span className="text-xs font-mono text-gray-600 w-6">{rowHeight}</span>
       </div>
 
-      <div className="w-px h-6 bg-gray-300" />
+      <div className="w-px h-6 bg-gray-300 hidden md:block" />
 
       <div className="flex items-center gap-1.5">
         <span className="text-xs text-gray-500">RF/LN 对齐</span>
@@ -98,7 +100,7 @@ export function ControlBar() {
         </span>
       </div>
 
-      <div className="w-px h-6 bg-gray-300" />
+      <div className="w-px h-6 bg-gray-300 hidden md:block" />
 
       <button
         onClick={cycleSortMode}
@@ -122,7 +124,21 @@ export function ControlBar() {
         {hideQualifiers ? '资格赛: 隐藏' : '资格赛: 显示'}
       </button>
 
-      <div className="w-px h-6 bg-gray-300" />
+      {mode === 'round' && (
+        <button
+          onClick={() => setRoundBorderAlways(!roundBorderAlways)}
+          className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
+            roundBorderAlways
+              ? 'bg-purple-100 text-purple-700'
+              : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+          }`}
+          title="给所有图池框常驻一圈白边,方便区分相邻框"
+        >
+          常驻白边: {roundBorderAlways ? '开' : '关'}
+        </button>
+      )}
+
+      <div className="w-px h-6 bg-gray-300 hidden md:block" />
 
       <div className="flex items-center gap-1.5">
         <span className="text-xs text-gray-500">年份</span>
@@ -156,7 +172,7 @@ export function ControlBar() {
         </select>
       </div>
 
-      <div className="ml-auto text-xs text-gray-400">
+      <div className="md:ml-auto text-xs text-gray-400 hidden md:block">
         osu!mania Ladder v0.1
       </div>
     </footer>

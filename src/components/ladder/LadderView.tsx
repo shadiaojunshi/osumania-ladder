@@ -167,19 +167,29 @@ const MAJOR_LN = new Set(
   lnLevels.filter((l) => !l.id.includes('+') && !l.id.includes('-')).map((l) => l.id)
 )
 
-// 检测视口是否 < 768px(Tailwind md 断点)。SSR 时返回 false,挂载后立即纠正,
-// 后续监听 resize 同步。给 LeftScale / RightRef 做窄化用。
-function useIsNarrow(): boolean {
-  const [narrow, setNarrow] = useState(false)
+// 检测视口宽度档位。'wide' = >=768,'narrow' = 480-767,'tiny' = <480。
+// SSR 时返回 'wide',挂载后即纠正。tiny 给左栏再瘦一档。
+type ViewportTier = 'wide' | 'narrow' | 'tiny'
+function useViewportTier(): ViewportTier {
+  const [tier, setTier] = useState<ViewportTier>('wide')
   useEffect(() => {
     if (typeof window === 'undefined') return
-    const mq = window.matchMedia('(max-width: 767px)')
-    const handler = () => setNarrow(mq.matches)
+    const tinyMq = window.matchMedia('(max-width: 479px)')
+    const narrowMq = window.matchMedia('(max-width: 767px)')
+    const handler = () => {
+      if (tinyMq.matches) setTier('tiny')
+      else if (narrowMq.matches) setTier('narrow')
+      else setTier('wide')
+    }
     handler()
-    mq.addEventListener('change', handler)
-    return () => mq.removeEventListener('change', handler)
+    tinyMq.addEventListener('change', handler)
+    narrowMq.addEventListener('change', handler)
+    return () => {
+      tinyMq.removeEventListener('change', handler)
+      narrowMq.removeEventListener('change', handler)
+    }
   }, [])
-  return narrow
+  return tier
 }
 
 const LeftScaleInner = forwardRef<HTMLDivElement, { containerHeight: number }>(
@@ -188,9 +198,14 @@ const LeftScaleInner = forwardRef<HTMLDivElement, { containerHeight: number }>(
     const showOnlyLn = activeFilter === 'LN' || activeFilter === 'HB'
     const showOnlyRf = activeFilter === 'RC' || activeFilter === 'SV'
     const showBoth = !showOnlyLn && !showOnlyRf
-    const narrow = useIsNarrow()
+    const tier = useViewportTier()
+    const tiny = tier === 'tiny'
+    const narrow = tier !== 'wide'
 
-    const totalWidth = narrow
+    // tiny 档(< 480px)再砍一档:双轴 50px,单轴 32px。左栏只放两列小数字,够看就行。
+    const totalWidth = tiny
+      ? (showBoth ? 50 : 32)
+      : narrow
       ? (showBoth ? 70 : 42)
       : (showBoth ? 110 : 70)
 
@@ -201,17 +216,25 @@ const LeftScaleInner = forwardRef<HTMLDivElement, { containerHeight: number }>(
           {!showOnlyLn && reformLevels.map((level) => {
             const y = d2y(level.numericValue, containerHeight, DIFFICULTY_RANGE)
             const isMajor = MAJOR_RF.has(level.id)
+            const labelW = tiny
+              ? (showBoth ? 26 : 32)
+              : narrow
+              ? (showBoth ? 36 : 42)
+              : (showBoth ? 55 : 70)
+            const padCls = tiny ? 'pl-0.5' : narrow ? 'pl-1' : 'pl-2'
+            const fontMajor = tiny ? '9px' : narrow ? '10px' : '12px'
+            const fontMinor = tiny ? '7px' : narrow ? '8px' : '9px'
             return (
               <div
                 key={level.id}
                 className="absolute flex items-center"
-                style={{ top: y - 8, left: 0, width: narrow ? (showBoth ? 36 : 42) : (showBoth ? 55 : 70) }}
+                style={{ top: y - 8, left: 0, width: labelW }}
               >
                 <span
-                  className={`scale-label ${narrow ? 'pl-1' : 'pl-2'}`}
+                  className={`scale-label ${padCls}`}
                   style={{
                     color: level.color,
-                    fontSize: isMajor ? (narrow ? '10px' : '12px') : (narrow ? '8px' : '9px'),
+                    fontSize: isMajor ? fontMajor : fontMinor,
                     opacity: isMajor ? 1 : 0.4,
                   }}
                 >
@@ -225,17 +248,25 @@ const LeftScaleInner = forwardRef<HTMLDivElement, { containerHeight: number }>(
           {!showOnlyRf && lnLevels.map((level) => {
             const lnY = d2y(level.numericValue - rfLnOffset, containerHeight, DIFFICULTY_RANGE)
             const isMajor = MAJOR_LN.has(level.id)
+            const labelW = tiny
+              ? (showBoth ? 24 : 32)
+              : narrow
+              ? (showBoth ? 32 : 42)
+              : (showBoth ? 50 : 70)
+            const padCls = tiny ? 'pr-0.5' : narrow ? 'pr-1' : 'pr-2'
+            const fontMajor = tiny ? '9px' : narrow ? '10px' : '11px'
+            const fontMinor = tiny ? '7px' : narrow ? '8px' : '9px'
             return (
               <div
                 key={level.id}
                 className="absolute flex items-center"
-                style={{ top: lnY - 8, right: 0, width: narrow ? (showBoth ? 32 : 42) : (showBoth ? 50 : 70) }}
+                style={{ top: lnY - 8, right: 0, width: labelW }}
               >
                 <span
-                  className={`scale-label text-right w-full ${narrow ? 'pr-1' : 'pr-2'}`}
+                  className={`scale-label text-right w-full ${padCls}`}
                   style={{
                     color: '#6366f1',
-                    fontSize: isMajor ? (narrow ? '10px' : '11px') : (narrow ? '8px' : '9px'),
+                    fontSize: isMajor ? fontMajor : fontMinor,
                     opacity: isMajor ? 0.9 : 0.35,
                   }}
                 >

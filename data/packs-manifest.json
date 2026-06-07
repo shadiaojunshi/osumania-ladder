@@ -4,7 +4,7 @@
       "realType": "SV1",
       "name": "4K Contest Pattern SV Pack 1",
       "part": 1,
-      "mapCount": 15,
+      "mapCount": 24,
       "totalMaps": 24,
       "lastUpdated": "2026-06-07",
       "links": {
@@ -12,111 +12,125 @@
         "googleDrive": "https://drive.google.com/uc?id=1mbNMiAJ_0MSIl8or__0NPD_Ha7TFoSQG&export=download"
       },
       "gdriveFileId": "1mbNMiAJ_0MSIl8or__0NPD_Ha7TFoSQG",
-      "sizeMB": 120
+      "sizeMB": 166
     },
     {
       "realType": "TC",
       "name": "4K Contest Tech Pack 1",
       "part": 1,
-      "mapCount": 61,
-      "totalMaps": 69,
+      "mapCount": 73,
+      "totalMaps": 76,
       "lastUpdated": "2026-06-07",
       "links": {
         "r2": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/TC_1.osz",
         "googleDrive": "https://drive.google.com/uc?id=19QnTAN-5R0Ztr24UPN3xiC-ddeT3nhhb&export=download"
       },
       "gdriveFileId": "19QnTAN-5R0Ztr24UPN3xiC-ddeT3nhhb",
-      "sizeMB": 306
+      "sizeMB": 368
     },
     {
       "realType": "HB1",
       "name": "4K Contest Speed/Generic Hybrid Pack 1",
       "part": 1,
       "mapCount": 80,
-      "totalMaps": 107,
+      "totalMaps": 113,
       "lastUpdated": "2026-06-07",
       "links": {
         "r2": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/HB1_1.osz",
         "googleDrive": "https://drive.google.com/uc?id=1ldMbCbReIqSdbfwK7IBQYBkyEkuZlsx0&export=download"
       },
       "gdriveFileId": "1ldMbCbReIqSdbfwK7IBQYBkyEkuZlsx0",
-      "sizeMB": 364
+      "sizeMB": 354
     },
     {
       "realType": "HB1",
       "name": "4K Contest Speed/Generic Hybrid Pack 2",
       "part": 2,
-      "mapCount": 9,
-      "totalMaps": 107,
+      "mapCount": 29,
+      "totalMaps": 113,
       "lastUpdated": "2026-06-07",
       "links": {
         "r2": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/HB1_2.osz",
         "googleDrive": "https://drive.google.com/uc?id=1UNnhzSE8rhPaxNtSN23l_DauRyXHx2af&export=download"
       },
       "gdriveFileId": "1UNnhzSE8rhPaxNtSN23l_DauRyXHx2af",
-      "sizeMB": 38
+      "sizeMB": 137
     },
     {
       "realType": "RE",
       "name": "4K Contest Release Pack 1",
       "part": 1,
-      "mapCount": 39,
-      "totalMaps": 41,
+      "mapCount": 44,
+      "totalMaps": 45,
       "lastUpdated": "2026-06-07",
       "links": {
         "r2": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/RE_1.osz",
         "googleDrive": "https://drive.google.com/uc?id=1KXH-HigesHv2V-NPNmMDq0Ijq3yIisGt&export=download"
       },
       "gdriveFileId": "1KXH-HigesHv2V-NPNmMDq0Ijq3yIisGt",
-      "sizeMB": 188
+      "sizeMB": 221
     },
     {
       "realType": "DE",
       "name": "4K Contest Density Pack 1",
       "part": 1,
       "mapCount": 80,
-      "totalMaps": 109,
+      "totalMaps": 117,
       "lastUpdated": "2026-06-07",
       "links": {
         "r2": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/DE_1.osz",
         "googleDrive": "https://drive.google.com/uc?id=1eGUudKQ9XTOl_IGAqbnYiDpBbcLnwC7u&export=download"
       },
       "gdriveFileId": "1eGUudKQ9XTOl_IGAqbnYiDpBbcLnwC7u",
-      "sizeMB": 349
+      "sizeMB": 342
     },
     {
       "realType": "DE",
       "name": "4K Contest Density Pack 2",
       "part": 2,
-      "mapCount": 7,
-      "totalMaps": 109,
+      "mapCount": 29,
+      "totalMaps": 117,
       "lastUpdated": "2026-06-07",
       "links": {
         "r2": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/DE_2.osz",
         "googleDrive": "https://drive.google.com/uc?id=1edfxJPvVaUb37iASAuuhm9YcbzeFGJHX&export=download"
       },
       "gdriveFileId": "1edfxJPvVaUb37iASAuuhm9YcbzeFGJHX",
-      "sizeMB": 33
+      "sizeMB": 134
     },
     {
       "realType": "JS",
       "name": "4K Contest Jumpstream Pack 1",
       "part": 1,
-      "mapCount": 64,
-      "totalMaps": 73,
+      "mapCount": 80,
+      "totalMaps": 81,
       "lastUpdated": "2026-06-07",
       "links": {
         "r2": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/JS_1.osz",
         "googleDrive": "https://drive.google.com/uc?id=1NhxclXMQ5rq6fJn0RXAfFoPRXs25NHaz&export=download"
       },
       "gdriveFileId": "1NhxclXMQ5rq6fJn0RXAfFoPRXs25NHaz",
-      "sizeMB": 282
+      "sizeMB": 363
+    },
+    {
+      "realType": "JS",
+      "name": "4K Contest Jumpstream Pack 2",
+      "part": 2,
+      "mapCount": 1,
+      "totalMaps": 81,
+      "lastUpdated": "2026-06-07",
+      "links": {
+        "r2": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/JS_2.osz",
+        "googleDrive": "https://drive.google.com/uc?id=18fhiwUovcNJdCr3j3xAFC660GZ85PNuE&export=download"
+      },
+      "sizeMB": 7,
+      "gdriveFileId": "18fhiwUovcNJdCr3j3xAFC660GZ85PNuE"
     },
     {
       "realType": "SS",
       "name": "4K Contest Single/Minijack Stream/Consistency Pack 1",
       "part": 1,
-      "mapCount": 79,
+      "mapCount": 80,
       "totalMaps": 98,
       "lastUpdated": "2026-06-07",
       "links": {
@@ -124,35 +138,49 @@
         "googleDrive": "https://drive.google.com/uc?id=1FVvmNl6qQ8oO_tHZ0tksK1m_0BWyQZbP&export=download"
       },
       "gdriveFileId": "1FVvmNl6qQ8oO_tHZ0tksK1m_0BWyQZbP",
-      "sizeMB": 350
+      "sizeMB": 356
+    },
+    {
+      "realType": "SS",
+      "name": "4K Contest Single/Minijack Stream/Consistency Pack 2",
+      "part": 2,
+      "mapCount": 15,
+      "totalMaps": 98,
+      "lastUpdated": "2026-06-07",
+      "links": {
+        "r2": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/SS_2.osz",
+        "googleDrive": "https://drive.google.com/uc?id=1O2pLPPecpliC6VzOFnHUqqubcgze-xoT&export=download"
+      },
+      "sizeMB": 73,
+      "gdriveFileId": "1O2pLPPecpliC6VzOFnHUqqubcgze-xoT"
     },
     {
       "realType": "DP",
       "name": "4K Contest Dump Pack 1",
       "part": 1,
-      "mapCount": 55,
-      "totalMaps": 69,
+      "mapCount": 63,
+      "totalMaps": 70,
       "lastUpdated": "2026-06-07",
       "links": {
         "r2": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/DP_1.osz",
         "googleDrive": "https://drive.google.com/uc?id=13rllknsMy1Vqg3krS9V4bozbaXGcjY9C&export=download"
       },
       "gdriveFileId": "13rllknsMy1Vqg3krS9V4bozbaXGcjY9C",
-      "sizeMB": 244
+      "sizeMB": 274
     },
     {
       "realType": "ADP",
       "name": "4K Contest Accurate Dump Pack 1",
       "part": 1,
-      "mapCount": 29,
-      "totalMaps": 43,
+      "mapCount": 41,
+      "totalMaps": 45,
       "lastUpdated": "2026-06-07",
       "links": {
         "r2": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/ADP_1.osz",
         "googleDrive": "https://drive.google.com/uc?id=1iLD7xlRjnoyZbKVTQoMm-J8s73GrJzCD&export=download"
       },
       "gdriveFileId": "1iLD7xlRjnoyZbKVTQoMm-J8s73GrJzCD",
-      "sizeMB": 127
+      "sizeMB": 180
     },
     {
       "realType": "LNmainHB",
@@ -172,7 +200,7 @@
       "realType": "LNMX",
       "name": "4K Contest LN Mixed Pack 1",
       "part": 1,
-      "mapCount": 52,
+      "mapCount": 59,
       "totalMaps": 62,
       "lastUpdated": "2026-06-07",
       "links": {
@@ -180,7 +208,7 @@
         "googleDrive": "https://drive.google.com/uc?id=10dy1Hli09g14xwJDnNAXLHPrV6hjtq3e&export=download"
       },
       "gdriveFileId": "10dy1Hli09g14xwJDnNAXLHPrV6hjtq3e",
-      "sizeMB": 258
+      "sizeMB": 290
     },
     {
       "realType": "SI",
@@ -215,34 +243,34 @@
       "name": "4K Contest Tiebreaker Pack 1",
       "part": 1,
       "mapCount": 80,
-      "totalMaps": 104,
+      "totalMaps": 109,
       "lastUpdated": "2026-06-07",
       "links": {
         "r2": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/TB_1.osz",
         "googleDrive": "https://drive.google.com/uc?id=1MYqcvQ_ntKmP2xWiGouzAi68K2HZidhy&export=download"
       },
       "gdriveFileId": "1MYqcvQ_ntKmP2xWiGouzAi68K2HZidhy",
-      "sizeMB": 785
+      "sizeMB": 802
     },
     {
       "realType": "TB",
       "name": "4K Contest Tiebreaker Pack 2",
       "part": 2,
-      "mapCount": 9,
-      "totalMaps": 104,
+      "mapCount": 26,
+      "totalMaps": 109,
       "lastUpdated": "2026-06-07",
       "links": {
         "r2": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/TB_2.osz",
         "googleDrive": "https://drive.google.com/uc?id=1ySHo1FWnL36TsWfFBS709QIMBEN6Z2ys&export=download"
       },
       "gdriveFileId": "1ySHo1FWnL36TsWfFBS709QIMBEN6Z2ys",
-      "sizeMB": 86
+      "sizeMB": 261
     },
     {
       "realType": "SA",
       "name": "4K Contest Stamina Pack 1",
       "part": 1,
-      "mapCount": 60,
+      "mapCount": 73,
       "totalMaps": 77,
       "lastUpdated": "2026-06-07",
       "links": {
@@ -250,55 +278,69 @@
         "googleDrive": "https://drive.google.com/uc?id=1ZsjfEXUBtfawRIIDGiV-imDf8cV4wbNv&export=download"
       },
       "gdriveFileId": "1ZsjfEXUBtfawRIIDGiV-imDf8cV4wbNv",
-      "sizeMB": 354
+      "sizeMB": 444
     },
     {
       "realType": "MX",
       "name": "4K Contest Rcmix Pack 1",
       "part": 1,
-      "mapCount": 58,
-      "totalMaps": 72,
+      "mapCount": 67,
+      "totalMaps": 74,
       "lastUpdated": "2026-06-07",
       "links": {
         "r2": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/MX_1.osz",
         "googleDrive": "https://drive.google.com/uc?id=1NIgG3vWmSnjHmfar5VROShm7e1HqgQNi&export=download"
       },
       "gdriveFileId": "1NIgG3vWmSnjHmfar5VROShm7e1HqgQNi",
-      "sizeMB": 310
+      "sizeMB": 366
     },
     {
       "realType": "JTC",
       "name": "4K Contest Jack-mained tech Pack 1",
       "part": 1,
-      "mapCount": 17,
-      "totalMaps": 22,
+      "mapCount": 22,
+      "totalMaps": 23,
       "lastUpdated": "2026-06-07",
       "links": {
         "r2": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/JTC_1.osz",
         "googleDrive": "https://drive.google.com/uc?id=1ugQyYSuqeiOtYRE5mWMTKUX1T4lP8Fl5&export=download"
       },
       "gdriveFileId": "1ugQyYSuqeiOtYRE5mWMTKUX1T4lP8Fl5",
-      "sizeMB": 87
+      "sizeMB": 107
     },
     {
       "realType": "HB2",
       "name": "4K Contest Mid-tempo/Jack/Shield Hybrid Pack 1",
       "part": 1,
-      "mapCount": 74,
-      "totalMaps": 90,
+      "mapCount": 80,
+      "totalMaps": 95,
       "lastUpdated": "2026-06-07",
       "links": {
         "r2": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/HB2_1.osz",
         "googleDrive": "https://drive.google.com/uc?id=10dVTXy7uDa8X0nfB8WKp8G-ibJBvL5Tr&export=download"
       },
       "gdriveFileId": "10dVTXy7uDa8X0nfB8WKp8G-ibJBvL5Tr",
-      "sizeMB": 345
+      "sizeMB": 372
+    },
+    {
+      "realType": "HB2",
+      "name": "4K Contest Mid-tempo/Jack/Shield Hybrid Pack 2",
+      "part": 2,
+      "mapCount": 14,
+      "totalMaps": 95,
+      "lastUpdated": "2026-06-07",
+      "links": {
+        "r2": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/HB2_2.osz",
+        "googleDrive": "https://drive.google.com/uc?id=11XLBCYAjkQ6hp3S0jOvQ-GOt4YO38lsb&export=download"
+      },
+      "sizeMB": 64,
+      "gdriveFileId": "11XLBCYAjkQ6hp3S0jOvQ-GOt4YO38lsb"
     },
     {
       "realType": "CO",
       "name": "4K Contest Coordination Pack 1",
       "part": 1,
-      "mapCount": 55,
+      "mapCount": 63,
       "totalMaps": 65,
       "lastUpdated": "2026-06-07",
       "links": {
@@ -306,27 +348,41 @@
         "googleDrive": "https://drive.google.com/uc?id=15FVQl22xu1p6Zcg5LjHwpu09LUJcniHt&export=download"
       },
       "gdriveFileId": "15FVQl22xu1p6Zcg5LjHwpu09LUJcniHt",
-      "sizeMB": 299
+      "sizeMB": 343
     },
     {
       "realType": "CJ",
       "name": "4K Contest Chordjack Pack 1",
       "part": 1,
-      "mapCount": 77,
-      "totalMaps": 93,
+      "mapCount": 80,
+      "totalMaps": 99,
       "lastUpdated": "2026-06-07",
       "links": {
         "r2": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/CJ_1.osz",
         "googleDrive": "https://drive.google.com/uc?id=1t9_X_qJaYozJN7jKPjUaoaRc-qkSAJF5&export=download"
       },
       "gdriveFileId": "1t9_X_qJaYozJN7jKPjUaoaRc-qkSAJF5",
-      "sizeMB": 322
+      "sizeMB": 333
+    },
+    {
+      "realType": "CJ",
+      "name": "4K Contest Chordjack Pack 2",
+      "part": 2,
+      "mapCount": 15,
+      "totalMaps": 99,
+      "lastUpdated": "2026-06-07",
+      "links": {
+        "r2": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/CJ_2.osz",
+        "googleDrive": "https://drive.google.com/uc?id=1uhL9ZiU4nPVmhlsJh7jfJcmrmv2XQ4yR&export=download"
+      },
+      "sizeMB": 69,
+      "gdriveFileId": "1uhL9ZiU4nPVmhlsJh7jfJcmrmv2XQ4yR"
     },
     {
       "realType": "HB3",
       "name": "4K Contest Technical Hybrid Pack 1",
       "part": 1,
-      "mapCount": 64,
+      "mapCount": 74,
       "totalMaps": 77,
       "lastUpdated": "2026-06-07",
       "links": {
@@ -334,55 +390,55 @@
         "googleDrive": "https://drive.google.com/uc?id=1Rqt7o7a1Y74Js0vA6qPgu504l_2zOKcn&export=download"
       },
       "gdriveFileId": "1Rqt7o7a1Y74Js0vA6qPgu504l_2zOKcn",
-      "sizeMB": 305
+      "sizeMB": 352
     },
     {
       "realType": "MTC",
       "name": "4K Contest Minijacktech Pack 1",
       "part": 1,
-      "mapCount": 11,
-      "totalMaps": 15,
+      "mapCount": 16,
+      "totalMaps": 17,
       "lastUpdated": "2026-06-07",
       "links": {
         "r2": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/MTC_1.osz",
         "googleDrive": "https://drive.google.com/uc?id=18unODkgOFADTcVE7vjjpB992d47PmTYt&export=download"
       },
       "gdriveFileId": "18unODkgOFADTcVE7vjjpB992d47PmTYt",
-      "sizeMB": 50
+      "sizeMB": 84
     },
     {
       "realType": "TE",
       "name": "4K Contest Timinghell Pack 1",
       "part": 1,
-      "mapCount": 10,
-      "totalMaps": 19,
+      "mapCount": 21,
+      "totalMaps": 23,
       "lastUpdated": "2026-06-07",
       "links": {
         "r2": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/TE_1.osz",
         "googleDrive": "https://drive.google.com/uc?id=1K-o5X7ty-nVpr9E3TXepz1g8BSoWtnaZ&export=download"
       },
       "gdriveFileId": "1K-o5X7ty-nVpr9E3TXepz1g8BSoWtnaZ",
-      "sizeMB": 51
+      "sizeMB": 113
     },
     {
       "realType": "JW",
       "name": "4K Contest Jacky Wildcard LN Pack 1",
       "part": 1,
-      "mapCount": 22,
-      "totalMaps": 32,
+      "mapCount": 31,
+      "totalMaps": 33,
       "lastUpdated": "2026-06-07",
       "links": {
         "r2": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/JW_1.osz",
         "googleDrive": "https://drive.google.com/uc?id=1c6JkWjLNmqjxwjPMJATGK5xqZrGA0okg&export=download"
       },
       "gdriveFileId": "1c6JkWjLNmqjxwjPMJATGK5xqZrGA0okg",
-      "sizeMB": 117
+      "sizeMB": 161
     },
     {
       "realType": "LNTC",
       "name": "4K Contest Technical LN Pack 1",
       "part": 1,
-      "mapCount": 26,
+      "mapCount": 34,
       "totalMaps": 36,
       "lastUpdated": "2026-06-07",
       "links": {
@@ -390,27 +446,27 @@
         "googleDrive": "https://drive.google.com/uc?id=1dsa0Dp7y4i4Hd9y6MPsB7-NAr_9KUqc1&export=download"
       },
       "gdriveFileId": "1dsa0Dp7y4i4Hd9y6MPsB7-NAr_9KUqc1",
-      "sizeMB": 129
+      "sizeMB": 164
     },
     {
       "realType": "STC",
       "name": "4K Contest Streamtech Pack 1",
       "part": 1,
-      "mapCount": 8,
-      "totalMaps": 11,
+      "mapCount": 10,
+      "totalMaps": 12,
       "lastUpdated": "2026-06-07",
       "links": {
         "r2": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/STC_1.osz",
         "googleDrive": "https://drive.google.com/uc?id=1DjF8Iu1XzX_gwmpm0CzizAEa8-i2JiUJ&export=download"
       },
       "gdriveFileId": "1DjF8Iu1XzX_gwmpm0CzizAEa8-i2JiUJ",
-      "sizeMB": 30
+      "sizeMB": 38
     },
     {
       "realType": "SV2",
       "name": "4K Contest Rhythm SV Pack 1",
       "part": 1,
-      "mapCount": 11,
+      "mapCount": 20,
       "totalMaps": 21,
       "lastUpdated": "2026-06-07",
       "links": {
@@ -418,13 +474,13 @@
         "googleDrive": "https://drive.google.com/uc?id=16XDUX_FlXEYw9Y4EguBauasWZlZ2_SRn&export=download"
       },
       "gdriveFileId": "16XDUX_FlXEYw9Y4EguBauasWZlZ2_SRn",
-      "sizeMB": 57
+      "sizeMB": 105
     },
     {
       "realType": "SVMX",
       "name": "4K Contest Mix SV Pack 1",
       "part": 1,
-      "mapCount": 12,
+      "mapCount": 13,
       "totalMaps": 13,
       "lastUpdated": "2026-06-07",
       "links": {
@@ -432,13 +488,13 @@
         "googleDrive": "https://drive.google.com/uc?id=1I5_nEIbJQ-YxHUaugrVgoHZVETQNynj0&export=download"
       },
       "gdriveFileId": "1I5_nEIbJQ-YxHUaugrVgoHZVETQNynj0",
-      "sizeMB": 58
+      "sizeMB": 61
     },
     {
       "realType": "WTC",
       "name": "4K Contest Wild/Ultra Burst tech Pack 1",
       "part": 1,
-      "mapCount": 17,
+      "mapCount": 20,
       "totalMaps": 23,
       "lastUpdated": "2026-06-07",
       "links": {
@@ -446,21 +502,21 @@
         "googleDrive": "https://drive.google.com/uc?id=1AGZ4kAx15eChDZIQPzIQDJ6lbkgoyaXe&export=download"
       },
       "gdriveFileId": "1AGZ4kAx15eChDZIQPzIQDJ6lbkgoyaXe",
-      "sizeMB": 90
+      "sizeMB": 106
     },
     {
       "realType": "MNTB",
       "name": "4K Contest Mini-Tiebreaker Hybrid Pack 1",
       "part": 1,
-      "mapCount": 13,
-      "totalMaps": 13,
+      "mapCount": 16,
+      "totalMaps": 16,
       "lastUpdated": "2026-06-07",
       "links": {
         "r2": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/MNTB_1.osz",
         "googleDrive": "https://drive.google.com/uc?id=1ax7aNpScmB8BBlZx9udfylKbgQnJ3zuJ&export=download"
       },
       "gdriveFileId": "1ax7aNpScmB8BBlZx9udfylKbgQnJ3zuJ",
-      "sizeMB": 82
+      "sizeMB": 101
     },
     {
       "realType": "HB4",
@@ -480,7 +536,7 @@
       "realType": "SW",
       "name": "4K Contest Speedy Wildcard LN Pack 1",
       "part": 1,
-      "mapCount": 9,
+      "mapCount": 11,
       "totalMaps": 11,
       "lastUpdated": "2026-06-07",
       "links": {
@@ -488,7 +544,7 @@
         "googleDrive": "https://drive.google.com/uc?id=18o64v0VkKMDhDZS9MmmC1XUYg3uTvFQs&export=download"
       },
       "gdriveFileId": "18o64v0VkKMDhDZS9MmmC1XUYg3uTvFQs",
-      "sizeMB": 54
+      "sizeMB": 65
     },
     {
       "realType": "SJ",
@@ -533,5 +589,5 @@
       "sizeMB": 5
     }
   ],
-  "lastGenerated": "2026-06-07T09:03:02.697Z"
+  "lastGenerated": "2026-06-07T12:56:04.711Z"
 }

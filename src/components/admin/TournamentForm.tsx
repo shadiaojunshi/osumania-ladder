@@ -54,8 +54,8 @@ export function TournamentForm({ onUpdate, initialData }: Props) {
   }, [])
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 shadow-sm flex flex-col max-h-[calc(100vh-180px)]">
-      <div className="border-b border-gray-200 px-4 py-3 shrink-0">
+    <div className="bg-white dark:bg-neutral-900 rounded-lg border border-gray-200 dark:border-neutral-800 shadow-sm flex flex-col max-h-[calc(100vh-180px)]">
+      <div className="border-b border-gray-200 dark:border-neutral-800 px-4 py-3 shrink-0">
         <StepIndicator current={step} />
       </div>
 
@@ -190,15 +190,15 @@ function StepIndicator({ current }: { current: number }) {
         <div key={label} className="flex items-center gap-2">
           <div
             className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${
-              i <= current ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-500'
+              i <= current ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-500 dark:bg-neutral-700 dark:text-neutral-400'
             }`}
           >
             {i + 1}
           </div>
-          <span className={`text-sm ${i <= current ? 'text-gray-900' : 'text-gray-400'}`}>
+          <span className={`text-sm ${i <= current ? 'text-gray-900 dark:text-neutral-100' : 'text-gray-400 dark:text-neutral-500'}`}>
             {label}
           </span>
-          {i < steps.length - 1 && <div className="w-8 h-px bg-gray-300" />}
+          {i < steps.length - 1 && <div className="w-8 h-px bg-gray-300 dark:bg-neutral-600" />}
         </div>
       ))}
     </div>
@@ -230,7 +230,7 @@ function BasicInfoStep({
   return (
     <div className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">比赛全称</label>
+        <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-1">比赛全称</label>
         <input
           type="text"
           value={tournament.name}
@@ -241,93 +241,93 @@ function BasicInfoStep({
             }
           }}
           placeholder="例: osu!mania World Cup 2025"
-          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:border-purple-400"
+          className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-700 rounded-md text-sm bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 placeholder:text-gray-400 dark:placeholder:text-neutral-500 focus:outline-none focus:border-purple-400"
         />
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">缩写</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-1">缩写</label>
           <input
             type="text"
             value={tournament.abbreviation}
             onChange={(e) => updateField('abbreviation', e.target.value)}
             placeholder="例: MWC 2025"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:border-purple-400"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-700 rounded-md text-sm bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 placeholder:text-gray-400 dark:placeholder:text-neutral-500 focus:outline-none focus:border-purple-400"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">ID {isEditing ? '(不可修改)' : '(自动生成)'}</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-1">ID {isEditing ? '(不可修改)' : '(自动生成)'}</label>
           <input
             type="text"
             value={tournament.id}
             onChange={(e) => !isEditing && updateField('id', e.target.value)}
             disabled={isEditing}
-            className={`w-full px-3 py-2 border border-gray-200 rounded-md text-sm bg-gray-50 text-gray-600 ${isEditing ? 'cursor-not-allowed opacity-60' : ''}`}
+            className={`w-full px-3 py-2 border border-gray-200 dark:border-neutral-700 rounded-md text-sm bg-gray-50 dark:bg-neutral-800 text-gray-600 dark:text-neutral-400 ${isEditing ? 'cursor-not-allowed opacity-60' : ''}`}
           />
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">键数</label>
-          <div className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm bg-gray-50 text-gray-600">
+          <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-1">键数</label>
+          <div className="w-full px-3 py-2 border border-gray-200 dark:border-neutral-700 rounded-md text-sm bg-gray-50 dark:bg-neutral-800 text-gray-600 dark:text-neutral-400">
             4K（暂不支持其他键数）
           </div>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">年份</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-1">年份</label>
           <input
             type="number"
             value={tournament.year}
             onChange={(e) => updateField('year', Number(e.target.value))}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:border-purple-400"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-700 rounded-md text-sm bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 placeholder:text-gray-400 dark:placeholder:text-neutral-500 focus:outline-none focus:border-purple-400"
           />
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">论坛链接 (可选)</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-1">论坛链接 (可选)</label>
           <input
             type="url"
             value={tournament.forumUrl || ''}
             onChange={(e) => updateField('forumUrl', e.target.value || undefined)}
             placeholder="https://osu.ppy.sh/..."
-            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:border-purple-400"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-700 rounded-md text-sm bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 placeholder:text-gray-400 dark:placeholder:text-neutral-500 focus:outline-none focus:border-purple-400"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Wiki 链接 (可选)</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-1">Wiki 链接 (可选)</label>
           <input
             type="url"
             value={tournament.wikiUrl || ''}
             onChange={(e) => updateField('wikiUrl', e.target.value || undefined)}
             placeholder="https://osu.ppy.sh/wiki/..."
-            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:border-purple-400"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-700 rounded-md text-sm bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 placeholder:text-gray-400 dark:placeholder:text-neutral-500 focus:outline-none focus:border-purple-400"
           />
         </div>
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">主表格链接 (可选)</label>
+        <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-1">主表格链接 (可选)</label>
         <input
           type="url"
           value={tournament.sheetUrl || ''}
           onChange={(e) => updateField('sheetUrl', e.target.value || undefined)}
           placeholder="https://docs.google.com/spreadsheets/..."
-          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:border-purple-400"
+          className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-700 rounded-md text-sm bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 placeholder:text-gray-400 dark:placeholder:text-neutral-500 focus:outline-none focus:border-purple-400"
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">标签 (逗号分隔)</label>
+        <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-1">标签 (逗号分隔)</label>
         <input
           type="text"
           value={(tournament.tags || []).join(', ')}
           onChange={(e) => updateField('tags', e.target.value.split(',').map((s) => s.trim()).filter(Boolean))}
           placeholder="例: community, 4k, chinese"
-          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:border-purple-400"
+          className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-700 rounded-md text-sm bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 placeholder:text-gray-400 dark:placeholder:text-neutral-500 focus:outline-none focus:border-purple-400"
         />
       </div>
 
@@ -390,7 +390,7 @@ function RoundsStep({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-medium text-gray-700">
+        <h3 className="text-sm font-medium text-gray-700 dark:text-neutral-200">
           轮次列表 ({rounds.length} 轮)
         </h3>
         <div className="flex gap-2">
@@ -410,7 +410,7 @@ function RoundsStep({
       </div>
 
       {rounds.length === 0 && (
-        <div className="text-center py-8 text-gray-400 text-sm">
+        <div className="text-center py-8 text-gray-400 dark:text-neutral-500 text-sm">
           还没有轮次，点击上方按钮添加
         </div>
       )}
@@ -428,7 +428,7 @@ function RoundsStep({
       <div className="pt-2 flex justify-between">
         <button
           onClick={onBack}
-          className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md text-sm hover:bg-gray-300"
+          className="px-4 py-2 bg-gray-200 text-gray-700 dark:bg-neutral-700 dark:text-neutral-200 rounded-md text-sm hover:bg-gray-300 dark:hover:bg-neutral-600"
         >
           ← 上一步
         </button>

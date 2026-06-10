@@ -61,52 +61,52 @@ export function TrashManager() {
   }
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
-      <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+    <div className="bg-white dark:bg-neutral-900 rounded-lg border border-gray-200 dark:border-neutral-800 shadow-sm">
+      <div className="px-4 py-3 border-b border-gray-200 dark:border-neutral-800 flex items-center justify-between">
         <div>
-          <h3 className="text-sm font-medium text-gray-900">回收站</h3>
-          <p className="text-xs text-gray-400 mt-0.5">删除的比赛和谱面会在此保留 30 天，到期自动清除。可在保留期内恢复。</p>
+          <h3 className="text-sm font-medium text-gray-900 dark:text-neutral-100">回收站</h3>
+          <p className="text-xs text-gray-400 dark:text-neutral-500 mt-0.5">删除的比赛和谱面会在此保留 30 天，到期自动清除。可在保留期内恢复。</p>
         </div>
         <button
           onClick={fetchTrash}
           disabled={loading}
-          className="px-3 py-1 text-xs bg-gray-100 text-gray-600 rounded hover:bg-gray-200 disabled:opacity-50"
+          className="px-3 py-1 text-xs bg-gray-100 dark:bg-neutral-800 text-gray-600 dark:text-neutral-300 rounded hover:bg-gray-200 dark:hover:bg-neutral-700 disabled:opacity-50"
         >
           刷新
         </button>
       </div>
 
       {status && (
-        <div className={`mx-4 mt-3 px-3 py-2 rounded text-xs ${status.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'}`}>
+        <div className={`mx-4 mt-3 px-3 py-2 rounded text-xs ${status.type === 'success' ? 'bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-200' : 'bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-200'}`}>
           {status.message}
         </div>
       )}
 
-      {loading && <div className="p-8 text-center text-gray-400 text-sm">加载中...</div>}
+      {loading && <div className="p-8 text-center text-gray-400 dark:text-neutral-500 text-sm">加载中...</div>}
 
       {!loading && items.length === 0 && (
-        <div className="p-8 text-center text-gray-400 text-sm">回收站是空的</div>
+        <div className="p-8 text-center text-gray-400 dark:text-neutral-500 text-sm">回收站是空的</div>
       )}
 
       {!loading && items.length > 0 && (
-        <div className="divide-y divide-gray-100">
+        <div className="divide-y divide-gray-100 dark:divide-neutral-800">
           {items.map((item) => (
-            <div key={item.id} className="px-4 py-3 flex items-center justify-between hover:bg-gray-50">
+            <div key={item.id} className="px-4 py-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-neutral-800/50">
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className={`px-2 py-0.5 rounded text-xs font-medium ${item.kind === 'tournament' ? 'bg-orange-50 text-orange-700' : 'bg-cyan-50 text-cyan-700'}`}>
+                  <span className={`px-2 py-0.5 rounded text-xs font-medium ${item.kind === 'tournament' ? 'bg-orange-50 text-orange-700 dark:bg-orange-900/40 dark:text-orange-200' : 'bg-cyan-50 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-200'}`}>
                     {item.kind === 'tournament' ? '比赛' : '谱面'}
                   </span>
-                  <span className="text-sm text-gray-800 font-mono truncate">{item.label}</span>
+                  <span className="text-sm text-gray-800 dark:text-neutral-200 font-mono truncate">{item.label}</span>
                 </div>
-                <div className="text-xs text-gray-400 mt-0.5">
+                <div className="text-xs text-gray-400 dark:text-neutral-500 mt-0.5">
                   {item.deletedByName} 删除于 {formatTime(item.deletedAt)}
                 </div>
               </div>
               <button
                 onClick={() => restore(item)}
                 disabled={busy}
-                className="px-3 py-1 text-xs bg-green-50 text-green-700 rounded hover:bg-green-100 disabled:opacity-50 shrink-0"
+                className="px-3 py-1 text-xs bg-green-50 text-green-700 dark:bg-green-900/40 dark:text-green-200 rounded hover:bg-green-100 dark:hover:bg-green-900/60 disabled:opacity-50 shrink-0"
               >
                 恢复
               </button>

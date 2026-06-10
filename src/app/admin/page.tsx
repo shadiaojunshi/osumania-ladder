@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import Link from 'next/link'
 import { TournamentForm } from '@/components/admin/TournamentForm'
 import { JsonPreview } from '@/components/admin/JsonPreview'
 import { ReferencesEditor } from '@/components/admin/ReferencesEditor'
@@ -57,6 +58,16 @@ export default function AdminPage() {
 
   // 登录态检查
   useEffect(() => {
+    // dev 本地绕过: functions/api/auth/* 是 Cloudflare Pages Functions,
+    // next dev 不 serve, fetch 必然 404。给一个 mock owner session 让前端按钮可点。
+    // 注意: 真正调用后端 API 的按钮(提交/删除/上传等)在本地还是会 404,
+    // 要测后端必须用 `wrangler pages dev` 而不是 `next dev`。
+    // process.env.NODE_ENV 在打包时被替换为字面量,prod build 会 tree-shake 这段。
+    if (process.env.NODE_ENV === 'development') {
+      setUser({ uid: 'dev', username: 'dev-owner', role: 'owner' })
+      setAuthLoading(false)
+      return
+    }
     fetch('/api/auth/me')
       .then((r) => r.json())
       .then((data) => setUser(data.user ?? null))
@@ -168,8 +179,8 @@ export default function AdminPage() {
   // ---------- 加载中 ----------
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-gray-400 text-sm">加载中...</div>
+      <div className="min-h-screen bg-gray-50 dark:bg-neutral-950 flex items-center justify-center">
+        <div className="text-gray-400 dark:text-neutral-500 text-sm">加载中...</div>
       </div>
     )
   }
@@ -177,10 +188,10 @@ export default function AdminPage() {
   // ---------- 未登录 ----------
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-8 w-96">
-          <h1 className="text-lg font-bold text-gray-900 mb-2">比赛数据录入</h1>
-          <p className="text-sm text-gray-500 mb-6">使用 osu! 账号登录以继续</p>
+      <div className="min-h-screen bg-gray-50 dark:bg-neutral-950 flex items-center justify-center">
+        <div className="bg-white dark:bg-neutral-900 rounded-lg border border-gray-200 dark:border-neutral-800 shadow-sm p-8 w-96">
+          <h1 className="text-lg font-bold text-gray-900 dark:text-neutral-100 mb-2">比赛数据录入</h1>
+          <p className="text-sm text-gray-500 dark:text-neutral-400 mb-6">使用 osu! 账号登录以继续</p>
           <button
             onClick={handleLogin}
             className="w-full px-4 py-2.5 bg-pink-500 text-white rounded-md text-sm font-medium hover:bg-pink-600 flex items-center justify-center gap-2"
@@ -188,11 +199,11 @@ export default function AdminPage() {
             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10" /></svg>
             使用 osu! 登录
           </button>
-          <a href="/" className="block text-center text-xs text-gray-400 mt-4 hover:text-purple-600">
+          <Link href="/" className="block text-center text-xs text-gray-400 dark:text-neutral-500 mt-4 hover:text-purple-600 dark:hover:text-purple-300">
             ← 返回天梯榜
-          </a>
-          <div className="mt-5 pt-4 border-t border-gray-100">
-            <p className="text-xs text-gray-400 leading-relaxed">
+          </Link>
+          <div className="mt-5 pt-4 border-t border-gray-100 dark:border-neutral-800">
+            <p className="text-xs text-gray-400 dark:text-neutral-500 leading-relaxed">
               登录后，普通用户仅可浏览。如需添加或编辑比赛数据，请在 QQ 上联系站长获取权限。
             </p>
           </div>
@@ -204,28 +215,28 @@ export default function AdminPage() {
   // ---------- 已登录但无录入权限（readonly）----------
   if (!has('contributor')) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-8 w-96">
-          <h1 className="text-lg font-bold text-gray-900 mb-2">权限不足</h1>
-          <p className="text-sm text-gray-500 mb-1">
+      <div className="min-h-screen bg-gray-50 dark:bg-neutral-950 flex items-center justify-center">
+        <div className="bg-white dark:bg-neutral-900 rounded-lg border border-gray-200 dark:border-neutral-800 shadow-sm p-8 w-96">
+          <h1 className="text-lg font-bold text-gray-900 dark:text-neutral-100 mb-2">权限不足</h1>
+          <p className="text-sm text-gray-500 dark:text-neutral-400 mb-1">
             你已登录为 <strong>{user.username}</strong>（#{user.uid}）
           </p>
-          <p className="text-sm text-gray-500 mb-6">
+          <p className="text-sm text-gray-500 dark:text-neutral-400 mb-6">
             当前角色：{ROLE_LABELS[user.role]}。需要管理员授权才能录入数据。
           </p>
-          <p className="text-xs text-gray-400 mb-6 leading-relaxed">
+          <p className="text-xs text-gray-400 dark:text-neutral-500 mb-6 leading-relaxed">
             请把你的 osu 用户 ID <strong className="font-mono">{user.uid}</strong> 发给站长，由站长在后台授权。
           </p>
           <div className="flex gap-2">
             <button
               onClick={handleLogout}
-              className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-200"
+              className="flex-1 px-4 py-2 bg-gray-100 dark:bg-neutral-800 text-gray-700 dark:text-neutral-200 rounded-md text-sm font-medium hover:bg-gray-200 dark:hover:bg-neutral-700"
             >
               退出登录
             </button>
-            <a href="/" className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-md text-sm font-medium hover:bg-purple-700 text-center">
+            <Link href="/" className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-md text-sm font-medium hover:bg-purple-700 text-center">
               返回天梯榜
-            </a>
+            </Link>
           </div>
         </div>
       </div>
@@ -240,27 +251,27 @@ export default function AdminPage() {
         if (key === 'manage') fetchList()
         setTab(key)
       }}
-      className={`px-4 py-2 rounded-md text-sm font-medium ${tab === key ? 'bg-purple-600 text-white' : 'bg-white text-gray-700 border border-gray-200'}`}
+      className={`px-4 py-2 rounded-md text-sm font-medium ${tab === key ? 'bg-purple-600 text-white' : 'bg-white dark:bg-neutral-900 text-gray-700 dark:text-neutral-200 border border-gray-200 dark:border-neutral-700'}`}
     >
       {label}
     </button>
   )
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-200 px-6 py-4">
+    <div className="min-h-screen bg-gray-50 dark:bg-neutral-950">
+      <header className="bg-white dark:bg-neutral-900 border-b border-gray-200 dark:border-neutral-800 px-6 py-4">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-bold text-gray-900">比赛数据管理</h1>
-            <p className="text-sm text-gray-500 mt-0.5">添加、编辑或删除比赛数据，提交后自动更新网站</p>
+            <h1 className="text-xl font-bold text-gray-900 dark:text-neutral-100">比赛数据管理</h1>
+            <p className="text-sm text-gray-500 dark:text-neutral-400 mt-0.5">添加、编辑或删除比赛数据，提交后自动更新网站</p>
           </div>
           <div className="flex items-center gap-4">
             <div className="text-right">
-              <div className="text-sm text-gray-700">{user.username}</div>
-              <div className="text-xs text-gray-400">{ROLE_LABELS[user.role]} · #{user.uid}</div>
+              <div className="text-sm text-gray-700 dark:text-neutral-200">{user.username}</div>
+              <div className="text-xs text-gray-400 dark:text-neutral-500">{ROLE_LABELS[user.role]} · #{user.uid}</div>
             </div>
-            <button onClick={handleLogout} className="text-sm text-gray-500 hover:text-gray-700">退出</button>
-            <a href="/" className="text-sm text-purple-600 hover:text-purple-800">← 返回天梯榜</a>
+            <button onClick={handleLogout} className="text-sm text-gray-500 hover:text-gray-700 dark:text-neutral-400 dark:hover:text-neutral-200">退出</button>
+            <Link href="/" className="text-sm text-purple-600 hover:text-purple-800 dark:text-purple-300 dark:hover:text-purple-200">← 返回天梯榜</Link>
           </div>
         </div>
       </header>
@@ -280,9 +291,9 @@ export default function AdminPage() {
         {tab === 'create' && (
           <>
             {editingId && (
-              <div className="mb-4 bg-blue-50 border border-blue-200 rounded-md p-3 flex items-center justify-between">
-                <span className="text-sm text-blue-800">正在编辑: <strong>{editingId}</strong></span>
-                <button onClick={handleNewTournament} className="text-xs text-blue-600 hover:text-blue-800">取消编辑，新建比赛</button>
+              <div className="mb-4 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-md p-3 flex items-center justify-between">
+                <span className="text-sm text-blue-800 dark:text-blue-200">正在编辑: <strong>{editingId}</strong></span>
+                <button onClick={handleNewTournament} className="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-300 dark:hover:text-blue-100">取消编辑，新建比赛</button>
               </div>
             )}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -299,33 +310,33 @@ export default function AdminPage() {
         )}
 
         {tab === 'manage' && (
-          <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
-            <div className="px-4 py-3 border-b border-gray-200">
-              <h3 className="text-sm font-medium text-gray-900">已有比赛列表</h3>
-              <p className="text-xs text-gray-400 mt-0.5">
+          <div className="bg-white dark:bg-neutral-900 rounded-lg border border-gray-200 dark:border-neutral-800 shadow-sm">
+            <div className="px-4 py-3 border-b border-gray-200 dark:border-neutral-800">
+              <h3 className="text-sm font-medium text-gray-900 dark:text-neutral-100">已有比赛列表</h3>
+              <p className="text-xs text-gray-400 dark:text-neutral-500 mt-0.5">
                 点击编辑加载到表单{isAdmin ? '，或删除（移入回收站）' : ''}
               </p>
             </div>
-            {loadingList && <div className="p-8 text-center text-gray-400 text-sm">加载中...</div>}
+            {loadingList && <div className="p-8 text-center text-gray-400 dark:text-neutral-500 text-sm">加载中...</div>}
             {!loadingList && existingList.length === 0 && (
-              <div className="p-8 text-center text-gray-400 text-sm">暂无比赛数据</div>
+              <div className="p-8 text-center text-gray-400 dark:text-neutral-500 text-sm">暂无比赛数据</div>
             )}
             {!loadingList && existingList.length > 0 && (
-              <div className="divide-y divide-gray-100">
+              <div className="divide-y divide-gray-100 dark:divide-neutral-800">
                 {existingList.map((item) => (
-                  <div key={item.id} className="px-4 py-3 flex items-center justify-between hover:bg-gray-50">
-                    <span className="text-sm text-gray-700 font-mono">{item.id}</span>
+                  <div key={item.id} className="px-4 py-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-neutral-800/40">
+                    <span className="text-sm text-gray-700 dark:text-neutral-200 font-mono">{item.id}</span>
                     <div className="flex gap-2">
                       <button
                         onClick={() => handleEdit(item.id)}
-                        className="px-3 py-1 text-xs bg-blue-50 text-blue-700 rounded hover:bg-blue-100"
+                        className="px-3 py-1 text-xs bg-blue-50 text-blue-700 rounded hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-200 dark:hover:bg-blue-900/50"
                       >
                         编辑
                       </button>
                       {isAdmin && (
                         <button
                           onClick={() => handleDelete(item.id, item.sha)}
-                          className="px-3 py-1 text-xs bg-red-50 text-red-700 rounded hover:bg-red-100"
+                          className="px-3 py-1 text-xs bg-red-50 text-red-700 rounded hover:bg-red-100 dark:bg-red-900/30 dark:text-red-200 dark:hover:bg-red-900/50"
                         >
                           删除
                         </button>

@@ -28,10 +28,10 @@ const ROLE_DESC: Record<Role, string> = {
 }
 
 const ROLE_BADGE: Record<Role, string> = {
-  readonly: 'bg-gray-100 text-gray-600',
-  contributor: 'bg-green-50 text-green-700',
-  admin: 'bg-blue-50 text-blue-700',
-  owner: 'bg-purple-100 text-purple-700',
+  readonly: 'bg-gray-100 dark:bg-neutral-800 text-gray-600 dark:text-neutral-300',
+  contributor: 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-200',
+  admin: 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-200',
+  owner: 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-200',
 }
 
 export function AdminsManager() {
@@ -136,49 +136,49 @@ export function AdminsManager() {
     : ['contributor']
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
-      <div className="px-4 py-3 border-b border-gray-200">
-        <h3 className="text-sm font-medium text-gray-900">管理员管理</h3>
-        <p className="text-xs text-gray-400 mt-0.5">
+    <div className="bg-white dark:bg-neutral-900 rounded-lg border border-gray-200 dark:border-neutral-800 shadow-sm">
+      <div className="px-4 py-3 border-b border-gray-200 dark:border-neutral-800">
+        <h3 className="text-sm font-medium text-gray-900 dark:text-neutral-100">管理员管理</h3>
+        <p className="text-xs text-gray-400 dark:text-neutral-500 mt-0.5">
           通过 osu 用户 ID 授权。{isOwner ? '你是站长，可管理所有角色。' : '你是管理员，可管理普通管理员。'}
         </p>
       </div>
 
       {status && (
-        <div className={`mx-4 mt-3 px-3 py-2 rounded text-xs ${status.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'}`}>
+        <div className={`mx-4 mt-3 px-3 py-2 rounded text-xs ${status.type === 'success' ? 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-200' : 'bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-200'}`}>
           {status.message}
         </div>
       )}
 
       {/* 新增管理员 */}
-      <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
+      <div className="px-4 py-3 border-b border-gray-100 dark:border-neutral-800 bg-gray-50 dark:bg-neutral-900/50">
         <div className="flex flex-wrap items-end gap-2">
           <div>
-            <label className="block text-xs text-gray-500 mb-1">osu 用户 ID</label>
+            <label className="block text-xs text-gray-500 dark:text-neutral-400 mb-1">osu 用户 ID</label>
             <input
               type="text"
               value={newUid}
               onChange={(e) => setNewUid(e.target.value)}
               placeholder="例如 1234567"
-              className="w-32 px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:border-purple-400"
+              className="w-32 px-2 py-1.5 border border-gray-300 dark:border-neutral-700 rounded text-sm bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 placeholder:text-gray-400 dark:placeholder:text-neutral-500 focus:outline-none focus:border-purple-400"
             />
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">用户名（可选）</label>
+            <label className="block text-xs text-gray-500 dark:text-neutral-400 mb-1">用户名（可选）</label>
             <input
               type="text"
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
               placeholder="备注名"
-              className="w-32 px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:border-purple-400"
+              className="w-32 px-2 py-1.5 border border-gray-300 dark:border-neutral-700 rounded text-sm bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 placeholder:text-gray-400 dark:placeholder:text-neutral-500 focus:outline-none focus:border-purple-400"
             />
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">角色</label>
+            <label className="block text-xs text-gray-500 dark:text-neutral-400 mb-1">角色</label>
             <select
               value={newRole}
               onChange={(e) => setNewRole(e.target.value as Exclude<Role, 'readonly' | 'owner'>)}
-              className="px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:border-purple-400"
+              className="px-2 py-1.5 border border-gray-300 dark:border-neutral-700 rounded text-sm bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 focus:outline-none focus:border-purple-400"
             >
               <option value="contributor">普通管理员</option>
               {isOwner && <option value="admin">管理员</option>}
@@ -192,29 +192,29 @@ export function AdminsManager() {
             添加
           </button>
         </div>
-        <p className="text-xs text-gray-400 mt-2">
+        <p className="text-xs text-gray-400 dark:text-neutral-500 mt-2">
           osu 用户 ID 在个人主页 URL 里：osu.ppy.sh/users/<strong>1234567</strong>
         </p>
       </div>
 
-      {loading && <div className="p-8 text-center text-gray-400 text-sm">加载中...</div>}
+      {loading && <div className="p-8 text-center text-gray-400 dark:text-neutral-500 text-sm">加载中...</div>}
 
       {!loading && (
-        <div className="divide-y divide-gray-100">
+        <div className="divide-y divide-gray-100 dark:divide-neutral-800">
           {admins.map((item) => (
-            <div key={item.uid} className="px-4 py-3 flex items-center justify-between hover:bg-gray-50">
+            <div key={item.uid} className="px-4 py-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-neutral-800/40">
               <div className="flex items-center gap-3 min-w-0">
                 <span className={`px-2 py-0.5 rounded text-xs font-medium ${ROLE_BADGE[item.role]}`}>
                   {ROLE_LABELS[item.role]}
                 </span>
                 <div className="min-w-0">
-                  <div className="text-sm text-gray-800 truncate">
+                  <div className="text-sm text-gray-800 dark:text-neutral-100 truncate">
                     {item.username}
-                    <span className="text-gray-400 font-mono ml-2">#{item.uid}</span>
-                    {item.bootstrap && <span className="ml-2 text-xs text-purple-500">（站长本人）</span>}
-                    {self && item.uid === self.uid && <span className="ml-2 text-xs text-gray-400">（你）</span>}
+                    <span className="text-gray-400 dark:text-neutral-500 font-mono ml-2">#{item.uid}</span>
+                    {item.bootstrap && <span className="ml-2 text-xs text-purple-500 dark:text-purple-300">（站长本人）</span>}
+                    {self && item.uid === self.uid && <span className="ml-2 text-xs text-gray-400 dark:text-neutral-500">（你）</span>}
                   </div>
-                  <div className="text-xs text-gray-400">{ROLE_DESC[item.role]}</div>
+                  <div className="text-xs text-gray-400 dark:text-neutral-500">{ROLE_DESC[item.role]}</div>
                 </div>
               </div>
 
@@ -224,7 +224,7 @@ export function AdminsManager() {
                     value={item.role}
                     onChange={(e) => setRole(item.uid, item.username, e.target.value as Role)}
                     disabled={busy}
-                    className="px-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:border-purple-400"
+                    className="px-2 py-1 border border-gray-300 dark:border-neutral-700 rounded text-xs bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 focus:outline-none focus:border-purple-400"
                   >
                     {/* 当前角色始终可见 */}
                     {!assignableRoles.includes(item.role) && (
@@ -237,7 +237,7 @@ export function AdminsManager() {
                   <button
                     onClick={() => removeAdmin(item.uid, item.username)}
                     disabled={busy}
-                    className="px-2.5 py-1 text-xs bg-red-50 text-red-700 rounded hover:bg-red-100 disabled:opacity-50"
+                    className="px-2.5 py-1 text-xs bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-200 rounded hover:bg-red-100 dark:hover:bg-red-900/50 disabled:opacity-50"
                   >
                     移除
                   </button>
@@ -246,7 +246,7 @@ export function AdminsManager() {
             </div>
           ))}
           {admins.length === 0 && (
-            <div className="p-8 text-center text-gray-400 text-sm">暂无管理员</div>
+            <div className="p-8 text-center text-gray-400 dark:text-neutral-500 text-sm">暂无管理员</div>
           )}
         </div>
       )}

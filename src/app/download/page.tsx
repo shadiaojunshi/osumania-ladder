@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import packsManifest from '@data/packs-manifest.json'
 
 interface Pack {
@@ -43,14 +44,14 @@ export default function DownloadPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-200 px-6 py-4">
+    <div className="min-h-screen bg-gray-50 dark:bg-neutral-950">
+      <header className="bg-white dark:bg-neutral-900 border-b border-gray-200 dark:border-neutral-800 px-6 py-4">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-bold text-gray-900">osu!mania 4K 比赛合包下载</h1>
-            <p className="text-sm text-gray-500 mt-0.5">按真实键型分类，包含所有已收录比赛的对应谱面</p>
+            <h1 className="text-xl font-bold text-gray-900 dark:text-neutral-100">osu!mania 4K 比赛合包下载</h1>
+            <p className="text-sm text-gray-500 dark:text-neutral-400 mt-0.5">按真实键型分类，包含所有已收录比赛的对应谱面</p>
           </div>
-          <a href="/" className="text-sm text-purple-600 hover:text-purple-800">← 返回天梯榜</a>
+          <Link href="/" className="text-sm text-purple-600 hover:text-purple-800 dark:text-purple-300 dark:hover:text-purple-200">← 返回天梯榜</Link>
         </div>
       </header>
 
@@ -64,7 +65,7 @@ export default function DownloadPage() {
 
           return (
             <section key={category.label}>
-              <h2 className="text-sm font-medium text-gray-500 mb-3 border-b border-gray-200 pb-2">
+              <h2 className="text-sm font-medium text-gray-500 dark:text-neutral-400 mb-3 border-b border-gray-200 dark:border-neutral-800 pb-2">
                 {category.label}
               </h2>
               <div className="grid gap-3">
@@ -77,7 +78,7 @@ export default function DownloadPage() {
         })}
 
         {allPacks.length === 0 && (
-          <div className="text-center py-16 text-gray-400">
+          <div className="text-center py-16 text-gray-400 dark:text-neutral-500">
             <p className="text-lg mb-2">暂无合包</p>
             <p className="text-sm">合包生成后会在这里显示下载链接</p>
           </div>
@@ -107,25 +108,25 @@ function PackGroup({ parts }: { parts: Pack[] }) {
   const progress = totalMaps > 0 ? Math.round((totalMapCount / totalMaps) * 100) : 0
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
+    <div className="bg-white dark:bg-neutral-900 rounded-lg border border-gray-200 dark:border-neutral-800 shadow-sm">
       <button
         onClick={() => setExpanded(!expanded)}
-        className="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition"
+        className="w-full p-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-neutral-800/50 transition"
       >
         <div className="flex-1 text-left">
           <div className="flex items-center gap-2">
-            <span className={`text-xs text-gray-400 transition-transform ${expanded ? 'rotate-90' : ''}`}>▶</span>
-            <span className="text-sm font-medium text-gray-900">{baseName}</span>
-            <span className="text-xs font-mono text-gray-400">({realType})</span>
-            <span className="text-xs text-purple-600 bg-purple-50 px-1.5 py-0.5 rounded">{parts.length} 个分包</span>
+            <span className={`text-xs text-gray-400 dark:text-neutral-500 transition-transform ${expanded ? 'rotate-90' : ''}`}>▶</span>
+            <span className="text-sm font-medium text-gray-900 dark:text-neutral-100">{baseName}</span>
+            <span className="text-xs font-mono text-gray-400 dark:text-neutral-500">({realType})</span>
+            <span className="text-xs text-purple-600 bg-purple-50 dark:bg-purple-900/30 dark:text-purple-200 px-1.5 py-0.5 rounded">{parts.length} 个分包</span>
           </div>
-          <div className="flex items-center gap-3 mt-1 ml-5 text-xs text-gray-500">
+          <div className="flex items-center gap-3 mt-1 ml-5 text-xs text-gray-500 dark:text-neutral-400">
             <span>{totalMapCount}/{totalMaps} 张谱面</span>
             {totalSizeMB > 0 && <span>{totalSizeMB}MB</span>}
             {lastUpdated && <span>更新于 {lastUpdated}</span>}
           </div>
           {progress < 100 && (
-            <div className="mt-2 ml-5 w-32 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+            <div className="mt-2 ml-5 w-32 h-1.5 bg-gray-100 dark:bg-neutral-800 rounded-full overflow-hidden">
               <div className="h-full bg-purple-500 rounded-full" style={{ width: `${progress}%` }} />
             </div>
           )}
@@ -133,7 +134,7 @@ function PackGroup({ parts }: { parts: Pack[] }) {
       </button>
 
       {expanded && (
-        <div className="border-t border-gray-100 divide-y divide-gray-100">
+        <div className="border-t border-gray-100 dark:border-neutral-800 divide-y divide-gray-100 dark:divide-neutral-800">
           {parts.map(p => <PackRow key={p.part} pack={p} indent />)}
         </div>
       )}
@@ -146,25 +147,25 @@ function PackRow({ pack, indent, hidePartLabel }: { pack: Pack; indent?: boolean
   const progress = pack.totalMaps > 0 ? Math.round((pack.mapCount / pack.totalMaps) * 100) : 0
 
   return (
-    <div className={`flex items-center justify-between p-4 ${indent ? 'pl-9' : 'bg-white rounded-lg border border-gray-200 shadow-sm'}`}>
+    <div className={`flex items-center justify-between p-4 ${indent ? 'pl-9' : 'bg-white dark:bg-neutral-900 rounded-lg border border-gray-200 dark:border-neutral-800 shadow-sm'}`}>
       <div className="flex-1">
         <div className="flex items-center gap-2">
           {hidePartLabel ? (
             <>
-              <span className="text-sm font-medium text-gray-900">{pack.name}</span>
-              <span className="text-xs font-mono text-gray-400">({pack.realType})</span>
+              <span className="text-sm font-medium text-gray-900 dark:text-neutral-100">{pack.name}</span>
+              <span className="text-xs font-mono text-gray-400 dark:text-neutral-500">({pack.realType})</span>
             </>
           ) : (
-            <span className="text-sm font-medium text-gray-700">Part {pack.part}</span>
+            <span className="text-sm font-medium text-gray-700 dark:text-neutral-300">Part {pack.part}</span>
           )}
         </div>
-        <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
+        <div className="flex items-center gap-3 mt-1 text-xs text-gray-500 dark:text-neutral-400">
           <span>{pack.mapCount} 张</span>
           {pack.sizeMB > 0 && <span>{pack.sizeMB}MB</span>}
           {hidePartLabel && pack.lastUpdated && <span>更新于 {pack.lastUpdated}</span>}
         </div>
         {hidePartLabel && progress < 100 && (
-          <div className="mt-2 w-32 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+          <div className="mt-2 w-32 h-1.5 bg-gray-100 dark:bg-neutral-800 rounded-full overflow-hidden">
             <div className="h-full bg-purple-500 rounded-full" style={{ width: `${progress}%` }} />
           </div>
         )}
@@ -178,13 +179,13 @@ function PackRow({ pack, indent, hidePartLabel }: { pack: Pack; indent?: boolean
               href={url}
               target="_blank"
               rel="noopener noreferrer"
-              className="px-3 py-1.5 text-xs font-medium bg-purple-50 text-purple-700 rounded-md hover:bg-purple-100"
+              className="px-3 py-1.5 text-xs font-medium bg-purple-50 text-purple-700 rounded-md hover:bg-purple-100 dark:bg-purple-900/30 dark:text-purple-200 dark:hover:bg-purple-900/50"
             >
               {LINK_LABELS[key] || key}
             </a>
           ))
         ) : (
-          <span className="text-xs text-gray-400 px-3 py-1.5">暂无下载</span>
+          <span className="text-xs text-gray-400 dark:text-neutral-500 px-3 py-1.5">暂无下载</span>
         )}
       </div>
     </div>

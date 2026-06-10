@@ -333,26 +333,26 @@ export function BulkImporter({ onImport, onClose, existingRoundCount }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] flex flex-col">
-        <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between shrink-0">
-          <h3 className="text-sm font-medium text-gray-900">
+      <div className="bg-white dark:bg-neutral-900 rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] flex flex-col">
+        <div className="px-4 py-3 border-b border-gray-200 dark:border-neutral-800 flex items-center justify-between shrink-0">
+          <h3 className="text-sm font-medium text-gray-900 dark:text-neutral-100">
             从主表格批量导入图池
-            <span className="ml-2 text-xs text-gray-400">
+            <span className="ml-2 text-xs text-gray-400 dark:text-neutral-500">
               {step === 'input' && '步骤 1/3：粘贴'}
               {step === 'confirm' && '步骤 2/3：确认轮次'}
               {step === 'fetch' && '步骤 3/3：查询元数据'}
             </span>
           </h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">✕</button>
+          <button onClick={onClose} className="text-gray-400 dark:text-neutral-500 hover:text-gray-600 dark:hover:text-neutral-300">✕</button>
         </div>
 
         <div className="p-4 overflow-y-auto flex-1 space-y-3">
           {step === 'input' && (
             <>
-              <div className="text-xs text-gray-500 leading-relaxed">
+              <div className="text-xs text-gray-500 dark:text-neutral-400 leading-relaxed">
                 从 Google 主表格选中 <strong>slot 列</strong> 和 <strong>map link/ID 列</strong>(两列),复制粘贴到下方。每行格式自由:tab 或多空格分隔皆可。<br />
-                <strong className="text-gray-700">轮次顺序:</strong>从上往下按比赛进程贴 —— 先粘资格赛(Qualifiers),最后粘决赛(Grand Finals)。默认按淘汰赛从尾倒推命名(最后一轮 = GF,倒数第二轮 = F,以此类推),所以贴反了识别会出错。<br />
-                <strong className="text-gray-700">分轮规则:</strong>用 <strong>空行</strong>分隔不同的轮次(资格赛和决赛之间必须空一行);如果同一个 slot(如 RC1)再次出现,也会自动开新一轮。<br />
+                <strong className="text-gray-700 dark:text-neutral-200">轮次顺序:</strong>从上往下按比赛进程贴 —— 先粘资格赛(Qualifiers),最后粘决赛(Grand Finals)。默认按淘汰赛从尾倒推命名(最后一轮 = GF,倒数第二轮 = F,以此类推),所以贴反了识别会出错。<br />
+                <strong className="text-gray-700 dark:text-neutral-200">分轮规则:</strong>用 <strong>空行</strong>分隔不同的轮次(资格赛和决赛之间必须空一行);如果同一个 slot(如 RC1)再次出现,也会自动开新一轮。<br />
                 支持的 ID 格式:纯数字、<code>osu.ppy.sh/b/数字</code>、<code>osu.ppy.sh/beatmapsets/X#mode/数字</code>。
               </div>
 
@@ -375,20 +375,20 @@ export function BulkImporter({ onImport, onClose, existingRoundCount }: Props) {
                   'TB\t5300210\n'
                 }
                 rows={14}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-xs font-mono focus:outline-none focus:border-purple-400"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-700 rounded-md text-xs font-mono bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 placeholder:text-gray-400 dark:placeholder:text-neutral-500 focus:outline-none focus:border-purple-400"
               />
             </>
           )}
 
           {step === 'confirm' && (
             <>
-              <div className="text-xs text-gray-500 leading-relaxed">
-                识别到 <strong className="text-gray-900">{groupCount} 轮</strong>，每行 <strong>张数</strong> 见右侧。<br />
+              <div className="text-xs text-gray-500 dark:text-neutral-400 leading-relaxed">
+                识别到 <strong className="text-gray-900 dark:text-neutral-100">{groupCount} 轮</strong>，每行 <strong>张数</strong> 见右侧。<br />
                 默认按淘汰赛从尾倒推命名（GF/F/SF/QF/RO16...），<strong>没有 TB</strong> 的轮次默认标为资格赛。请确认或修改。
               </div>
 
-              <div className="border border-gray-200 rounded">
-                <div className="grid grid-cols-[40px_70px_1fr_1fr_60px] gap-2 px-2 py-1.5 bg-gray-50 border-b border-gray-200 font-medium text-xs text-gray-500">
+              <div className="border border-gray-200 dark:border-neutral-800 rounded">
+                <div className="grid grid-cols-[40px_70px_1fr_1fr_60px] gap-2 px-2 py-1.5 bg-gray-50 dark:bg-neutral-900/50 border-b border-gray-200 dark:border-neutral-800 font-medium text-xs text-gray-500 dark:text-neutral-400">
                   <span>轮</span>
                   <span>类型</span>
                   <span>名称</span>
@@ -399,13 +399,13 @@ export function BulkImporter({ onImport, onClose, existingRoundCount }: Props) {
                   if (groupSizes[gi] === 0) return null
                   const groupColor = GROUP_COLORS[gi % GROUP_COLORS.length]
                   return (
-                    <div key={gi} className="grid grid-cols-[40px_70px_1fr_1fr_60px] gap-2 px-2 py-1.5 border-b border-gray-100 items-center">
-                      <span className={`font-mono text-center text-gray-700 rounded text-xs py-1 ${groupColor}`}>
+                    <div key={gi} className="grid grid-cols-[40px_70px_1fr_1fr_60px] gap-2 px-2 py-1.5 border-b border-gray-100 dark:border-neutral-800 items-center">
+                      <span className={`font-mono text-center text-gray-700 dark:text-neutral-200 rounded text-xs py-1 ${groupColor}`}>
                         {gi + 1}
                       </span>
                       <button
                         onClick={() => toggleQualifier(gi)}
-                        className={`text-xs px-2 py-1 rounded ${m.isQualifier ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-600'}`}
+                        className={`text-xs px-2 py-1 rounded ${m.isQualifier ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-200' : 'bg-gray-100 dark:bg-neutral-800 text-gray-600 dark:text-neutral-300'}`}
                         title={`点击切换：当前是${m.isQualifier ? '资格赛' : '淘汰赛'}`}
                       >
                         {m.isQualifier ? '资格赛' : '淘汰赛'}
@@ -415,16 +415,16 @@ export function BulkImporter({ onImport, onClose, existingRoundCount }: Props) {
                         value={m.name}
                         onChange={(e) => updateGroupMeta(gi, 'name', e.target.value)}
                         placeholder="轮次名称"
-                        className="w-full px-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:border-purple-400"
+                        className="w-full px-2 py-1 border border-gray-300 dark:border-neutral-700 rounded text-xs bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 placeholder:text-gray-400 dark:placeholder:text-neutral-500 focus:outline-none focus:border-purple-400"
                       />
                       <input
                         type="text"
                         value={m.abbreviation}
                         onChange={(e) => updateGroupMeta(gi, 'abbreviation', e.target.value)}
                         placeholder="缩写"
-                        className="w-full px-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:border-purple-400"
+                        className="w-full px-2 py-1 border border-gray-300 dark:border-neutral-700 rounded text-xs bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 placeholder:text-gray-400 dark:placeholder:text-neutral-500 focus:outline-none focus:border-purple-400"
                       />
-                      <span className="text-xs text-gray-400 text-right">
+                      <span className="text-xs text-gray-400 dark:text-neutral-500 text-right">
                         {groupSizes[gi]}{!groupHasTb[gi] && <span className="text-orange-600 ml-1" title="无 TB">⚐</span>}
                       </span>
                     </div>
@@ -432,7 +432,7 @@ export function BulkImporter({ onImport, onClose, existingRoundCount }: Props) {
                 })}
               </div>
 
-              <div className="text-xs text-gray-400">
+              <div className="text-xs text-gray-400 dark:text-neutral-500">
                 共 {rows.length} 行，{rows.filter((r) => r.mapId).length} 个有效 mapID。下一步会逐张调 osu! API 拉取元数据，每张约 0.4 秒。
               </div>
             </>
@@ -441,9 +441,9 @@ export function BulkImporter({ onImport, onClose, existingRoundCount }: Props) {
           {step === 'fetch' && (
             <>
               <div className="flex items-center gap-2">
-                <span className="text-xs text-gray-500">
+                <span className="text-xs text-gray-500 dark:text-neutral-400">
                   {okRows.length}/{rows.filter((r) => r.mapId).length} 已查询成功
-                  {failedCount > 0 && <span className="text-yellow-700 ml-2">· {failedCount} 失败</span>}
+                  {failedCount > 0 && <span className="text-yellow-700 dark:text-yellow-300 ml-2">· {failedCount} 失败</span>}
                 </span>
                 {!running && failedCount > 0 && (
                   <button
@@ -455,8 +455,8 @@ export function BulkImporter({ onImport, onClose, existingRoundCount }: Props) {
                 )}
               </div>
 
-              <div className="border border-gray-200 rounded text-xs">
-                <div className="grid grid-cols-[40px_60px_80px_1fr] gap-2 px-2 py-1.5 bg-gray-50 border-b border-gray-200 font-medium text-gray-500">
+              <div className="border border-gray-200 dark:border-neutral-800 rounded text-xs">
+                <div className="grid grid-cols-[40px_60px_80px_1fr] gap-2 px-2 py-1.5 bg-gray-50 dark:bg-neutral-900/50 border-b border-gray-200 dark:border-neutral-800 font-medium text-gray-500 dark:text-neutral-400">
                   <span>轮</span>
                   <span>Slot</span>
                   <span>Map ID</span>
@@ -468,28 +468,28 @@ export function BulkImporter({ onImport, onClose, existingRoundCount }: Props) {
                     return (
                       <div
                         key={i}
-                        className={`grid grid-cols-[40px_60px_80px_1fr] gap-2 px-2 py-1 border-b border-gray-100 ${
-                          r.status === 'error' ? 'bg-yellow-50' : r.status === 'ok' ? '' : 'bg-blue-50'
+                        className={`grid grid-cols-[40px_60px_80px_1fr] gap-2 px-2 py-1 border-b border-gray-100 dark:border-neutral-800 ${
+                          r.status === 'error' ? 'bg-yellow-50 dark:bg-yellow-900/30' : r.status === 'ok' ? '' : 'bg-blue-50 dark:bg-blue-900/30'
                         }`}
                       >
-                        <span className={`font-mono text-center text-gray-700 rounded text-[10px] ${groupColor}`}>
+                        <span className={`font-mono text-center text-gray-700 dark:text-neutral-200 rounded text-[10px] ${groupColor}`}>
                           {r.groupIndex + 1}
                         </span>
-                        <span className="font-mono text-gray-700">{r.slot}</span>
-                        <span className="font-mono text-gray-500">{r.mapId || '—'}</span>
+                        <span className="font-mono text-gray-700 dark:text-neutral-200">{r.slot}</span>
+                        <span className="font-mono text-gray-500 dark:text-neutral-400">{r.mapId || '—'}</span>
                         <span className="truncate">
                           {r.status === 'ok' && r.meta && (
                             <>
-                              <span className="text-gray-700">{r.meta.artist} - {r.meta.title} [{r.meta.version}]</span>
-                              <span className="text-gray-400 ml-2">
+                              <span className="text-gray-700 dark:text-neutral-200">{r.meta.artist} - {r.meta.title} [{r.meta.version}]</span>
+                              <span className="text-gray-400 dark:text-neutral-500 ml-2">
                                 {r.meta.bpm ? `${Math.round(r.meta.bpm)}bpm` : ''} {formatLength(r.meta.length)}
-                                {r.meta.mode !== '3' && <span className="text-orange-600 ml-1">⚠ 非 mania (mode={r.meta.mode})</span>}
+                                {r.meta.mode !== '3' && <span className="text-orange-600 dark:text-orange-300 ml-1">⚠ 非 mania (mode={r.meta.mode})</span>}
                               </span>
                             </>
                           )}
-                          {r.status === 'fetching' && <span className="text-blue-600">查询中...</span>}
-                          {r.status === 'error' && <span className="text-yellow-700">{r.error}</span>}
-                          {r.status === 'pending' && <span className="text-gray-400">待查询</span>}
+                          {r.status === 'fetching' && <span className="text-blue-600 dark:text-blue-300">查询中...</span>}
+                          {r.status === 'error' && <span className="text-yellow-700 dark:text-yellow-300">{r.error}</span>}
+                          {r.status === 'pending' && <span className="text-gray-400 dark:text-neutral-500">待查询</span>}
                         </span>
                       </div>
                     )
@@ -500,10 +500,10 @@ export function BulkImporter({ onImport, onClose, existingRoundCount }: Props) {
           )}
         </div>
 
-        <div className="px-4 py-3 border-t border-gray-200 flex items-center justify-end gap-2 shrink-0">
+        <div className="px-4 py-3 border-t border-gray-200 dark:border-neutral-800 flex items-center justify-end gap-2 shrink-0">
           {step === 'input' && (
             <>
-              <button onClick={onClose} className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800">
+              <button onClick={onClose} className="px-3 py-1.5 text-sm text-gray-600 dark:text-neutral-300 hover:text-gray-800 dark:hover:text-neutral-100">
                 取消
               </button>
               <button
@@ -518,7 +518,7 @@ export function BulkImporter({ onImport, onClose, existingRoundCount }: Props) {
 
           {step === 'confirm' && (
             <>
-              <button onClick={() => setStep('input')} className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800">
+              <button onClick={() => setStep('input')} className="px-3 py-1.5 text-sm text-gray-600 dark:text-neutral-300 hover:text-gray-800 dark:hover:text-neutral-100">
                 ← 返回修改
               </button>
               <button
@@ -533,7 +533,7 @@ export function BulkImporter({ onImport, onClose, existingRoundCount }: Props) {
 
           {step === 'fetch' && (
             <>
-              <button onClick={goBackToConfirm} className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800">
+              <button onClick={goBackToConfirm} className="px-3 py-1.5 text-sm text-gray-600 dark:text-neutral-300 hover:text-gray-800 dark:hover:text-neutral-100">
                 ← 返回确认{running ? '（中断查询）' : ''}
               </button>
               <button

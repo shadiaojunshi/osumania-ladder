@@ -210,7 +210,7 @@ const LeftScaleInner = forwardRef<HTMLDivElement, { containerHeight: number }>(
       : (showBoth ? 110 : 70)
 
     return (
-      <div className={`border-r border-gray-200 overflow-hidden shrink-0`} style={{ width: totalWidth }} ref={ref}>
+      <div className={`border-r border-gray-200 dark:border-neutral-800 overflow-hidden shrink-0`} style={{ width: totalWidth }} ref={ref}>
         <div className="relative" style={{ height: containerHeight }}>
           {/* RF scale - show when not filtering LN/HB only */}
           {!showOnlyLn && reformLevels.map((level) => {
@@ -313,7 +313,7 @@ const RightRefInner = forwardRef<HTMLDivElement, { containerHeight: number }>(
     }
 
     return (
-      <div className="w-[88px] md:w-[160px] border-l border-gray-200 overflow-hidden shrink-0" ref={ref}>
+      <div className="w-[88px] md:w-[160px] border-l border-gray-200 dark:border-neutral-800 overflow-hidden shrink-0" ref={ref}>
         <div className="relative" style={{ height: containerHeight }}>
           {positioned.map((point, i) => (
             <div
@@ -321,8 +321,8 @@ const RightRefInner = forwardRef<HTMLDivElement, { containerHeight: number }>(
               className="absolute left-0 right-0 flex items-center"
               style={{ top: point.displayY - 8 }}
             >
-              <div className={`w-2 md:w-3 h-px mr-1 shrink-0 ${point.type === 'ln' ? 'bg-indigo-400' : 'bg-purple-300'}`} />
-              <span className={`text-[10px] md:text-xs truncate ${point.type === 'ln' ? 'text-indigo-600' : 'text-gray-600'}`}>{point.label}</span>
+              <div className={`w-2 md:w-3 h-px mr-1 shrink-0 ${point.type === 'ln' ? 'bg-indigo-400' : 'bg-purple-300 dark:bg-purple-400'}`} />
+              <span className={`text-[10px] md:text-xs truncate ${point.type === 'ln' ? 'text-indigo-600 dark:text-indigo-300' : 'text-gray-600 dark:text-neutral-300'}`}>{point.label}</span>
             </div>
           ))}
         </div>
@@ -383,7 +383,7 @@ function TournamentColumn({
 
     return (
       <div className="relative shrink-0" style={{ width: columnWidth }}>
-        <div className="text-xs text-center text-gray-500 truncate mb-1 font-medium sticky top-0 bg-white z-20">
+        <div className="text-xs text-center text-gray-500 dark:text-neutral-400 truncate mb-1 font-medium sticky top-0 bg-white dark:bg-neutral-950 z-20">
           {tournament.abbreviation}
         </div>
         <div
@@ -402,7 +402,7 @@ function TournamentColumn({
     const totalRounds = visibleRounds.length
     return (
       <div className="relative shrink-0" style={{ width: columnWidth }}>
-        <div className="text-xs text-center text-gray-500 truncate mb-1 font-medium sticky top-0 bg-white z-20">
+        <div className="text-xs text-center text-gray-500 dark:text-neutral-400 truncate mb-1 font-medium sticky top-0 bg-white dark:bg-neutral-950 z-20">
           {tournament.abbreviation}
         </div>
         {visibleRounds.map((round, idx) => {
@@ -540,7 +540,7 @@ function TournamentColumn({
 
   return (
     <div className="relative shrink-0" style={{ width: columnWidth }}>
-      <div className="text-xs text-center text-gray-500 truncate mb-1 font-medium sticky top-0 bg-white z-20">
+      <div className="text-xs text-center text-gray-500 dark:text-neutral-400 truncate mb-1 font-medium sticky top-0 bg-white dark:bg-neutral-950 z-20">
         {tournament.abbreviation}
       </div>
       {allTypeBoxes.map(({ round, type, adjustedAvg }) => {
@@ -550,8 +550,13 @@ function TournamentColumn({
         const color = getDifficultyColor(adjustedAvg)
         const key = `${round.id}-${type}`
         const info = overlapInfo.get(key)
-        const left = info ? `${(info.idx / info.size) * 100}%` : '4px'
-        const right = info ? `${((info.size - info.idx - 1) / info.size) * 100}%` : '4px'
+        // 重叠时把可用区间(cellWidth - 8px,两侧各留 4px)等分 N,box 变窄不撑总宽。
+        const left = info
+          ? `calc(4px + (100% - 8px) * ${info.idx / info.size})`
+          : '4px'
+        const right = info
+          ? `calc(4px + (100% - 8px) * ${(info.size - info.idx - 1) / info.size})`
+          : '4px'
 
         return (
           <div

@@ -81,40 +81,40 @@ export function PackLinksEditor() {
     }
   }
 
-  if (loading) return <div className="p-8 text-center text-gray-400 text-sm">加载中...</div>
+  if (loading) return <div className="p-8 text-center text-gray-400 dark:text-neutral-500 text-sm">加载中...</div>
 
   if (!manifest || manifest.packs.length === 0) {
     return (
-      <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-8 text-center">
-        <p className="text-gray-500 text-sm">暂无合包数据</p>
-        <p className="text-gray-400 text-xs mt-1">请先通过 GitHub Actions 生成合包</p>
+      <div className="bg-white dark:bg-neutral-900 rounded-lg border border-gray-200 dark:border-neutral-800 shadow-sm p-8 text-center">
+        <p className="text-gray-500 dark:text-neutral-400 text-sm">暂无合包数据</p>
+        <p className="text-gray-400 dark:text-neutral-500 text-xs mt-1">请先通过 GitHub Actions 生成合包</p>
       </div>
     )
   }
 
   return (
     <div className="space-y-4">
-      <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-4">
-        <h3 className="text-sm font-medium text-gray-900 mb-1">合包下载链接管理</h3>
-        <p className="text-xs text-gray-400 mb-4">生成合包后，在这里填写网盘下载链接</p>
+      <div className="bg-white dark:bg-neutral-900 rounded-lg border border-gray-200 dark:border-neutral-800 shadow-sm p-4">
+        <h3 className="text-sm font-medium text-gray-900 dark:text-neutral-100 mb-1">合包下载链接管理</h3>
+        <p className="text-xs text-gray-400 dark:text-neutral-500 mb-4">生成合包后，在这里填写网盘下载链接</p>
 
         <div className="space-y-4">
           {manifest.packs.map(pack => (
-            <div key={`${pack.realType}_${pack.part || 0}`} className="border border-gray-100 rounded-md p-3">
+            <div key={`${pack.realType}_${pack.part || 0}`} className="border border-gray-100 dark:border-neutral-800 rounded-md p-3">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-gray-700">{pack.name}</span>
-                <span className="text-xs text-gray-400">{pack.mapCount} 张 · {pack.sizeMB}MB</span>
+                <span className="text-sm font-medium text-gray-700 dark:text-neutral-200">{pack.name}</span>
+                <span className="text-xs text-gray-400 dark:text-neutral-500">{pack.mapCount} 张 · {pack.sizeMB}MB</span>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {LINK_KEYS.map(lk => (
                   <div key={lk.id} className="flex items-center gap-2">
-                    <span className="text-xs text-gray-500 w-20 shrink-0">{lk.label}</span>
+                    <span className="text-xs text-gray-500 dark:text-neutral-400 w-20 shrink-0">{lk.label}</span>
                     <input
                       type="url"
                       value={pack.links[lk.id] || ''}
                       onChange={e => updateLink(pack.realType, pack.part, lk.id, e.target.value)}
                       placeholder="https://..."
-                      className="flex-1 px-2 py-1 border border-gray-200 rounded text-xs focus:outline-none focus:border-purple-400"
+                      className="flex-1 px-2 py-1 border border-gray-200 dark:border-neutral-700 rounded text-xs bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 placeholder:text-gray-400 dark:placeholder:text-neutral-500 focus:outline-none focus:border-purple-400"
                     />
                   </div>
                 ))}
@@ -132,7 +132,7 @@ export function PackLinksEditor() {
         </button>
 
         {status && (
-          <div className={`mt-3 p-2 rounded text-xs ${status.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+          <div className={`mt-3 p-2 rounded text-xs ${status.type === 'success' ? 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-200' : 'bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-200'}`}>
             {status.message}
           </div>
         )}

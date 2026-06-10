@@ -137,14 +137,14 @@ export function MapUploader() {
 
   return (
     <div className="space-y-4">
-      <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-4">
-        <h3 className="text-sm font-medium text-gray-900 mb-3">谱面文件上传</h3>
-        <p className="text-xs text-gray-400 mb-4">选择比赛后，为每张图上传 .osz 文件（或 .osu + 音频 + 曲绘）。SV 和特殊类型的谱面可额外上传可选的 NSV 文件。单文件最大 {MAX_SIZE / 1024 / 1024}MB。</p>
+      <div className="bg-white dark:bg-neutral-900 rounded-lg border border-gray-200 dark:border-neutral-800 shadow-sm p-4">
+        <h3 className="text-sm font-medium text-gray-900 dark:text-neutral-100 mb-3">谱面文件上传</h3>
+        <p className="text-xs text-gray-400 dark:text-neutral-500 mb-4">选择比赛后，为每张图上传 .osz 文件（或 .osu + 音频 + 曲绘）。SV 和特殊类型的谱面可额外上传可选的 NSV 文件。单文件最大 {MAX_SIZE / 1024 / 1024}MB。</p>
 
         <select
           value={selectedTournament}
           onChange={(e) => loadTournament(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:border-purple-400"
+          className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-700 rounded-md text-sm bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 focus:outline-none focus:border-purple-400"
         >
           <option value="">选择比赛...</option>
           {tournaments.map(t => (
@@ -153,13 +153,13 @@ export function MapUploader() {
         </select>
       </div>
 
-      {loading && <div className="text-center text-gray-400 text-sm py-8">加载中...</div>}
+      {loading && <div className="text-center text-gray-400 dark:text-neutral-500 text-sm py-8">加载中...</div>}
 
       {tournamentData && !loading && (
-        <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-4">
+        <div className="bg-white dark:bg-neutral-900 rounded-lg border border-gray-200 dark:border-neutral-800 shadow-sm p-4">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-medium text-gray-900">{tournamentData.id}</h3>
-            <span className="text-xs text-gray-500">
+            <h3 className="text-sm font-medium text-gray-900 dark:text-neutral-100">{tournamentData.id}</h3>
+            <span className="text-xs text-gray-500 dark:text-neutral-400">
               {uploadedCount}/{totalMaps} 张已上传
             </span>
           </div>
@@ -250,14 +250,14 @@ function RoundUploadSection({
   }
 
   return (
-    <div className="border border-gray-100 rounded-md">
-      <div className="w-full px-3 py-2 flex items-center justify-between hover:bg-gray-50">
+    <div className="border border-gray-100 dark:border-neutral-800 rounded-md">
+      <div className="w-full px-3 py-2 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-neutral-800/40">
         <button
           onClick={() => setExpanded(!expanded)}
           className="flex-1 flex items-center justify-between text-left"
         >
-          <span className="text-sm font-medium text-gray-700">{round.abbreviation}</span>
-          <span className="text-xs text-gray-400">
+          <span className="text-sm font-medium text-gray-700 dark:text-neutral-200">{round.abbreviation}</span>
+          <span className="text-xs text-gray-400 dark:text-neutral-500">
             {uploadedInRound}/{round.maps.length} 张
             {uploadedInRound === round.maps.length && ' ✓'}
           </span>
@@ -265,7 +265,7 @@ function RoundUploadSection({
         {round.maps.length > 0 && !bulkRunning && (
           <button
             onClick={(e) => { e.stopPropagation(); setPasteOpen(true) }}
-            className="ml-3 px-2 py-1 text-xs bg-amber-50 text-amber-700 rounded hover:bg-amber-100 border border-amber-200 shrink-0"
+            className="ml-3 px-2 py-1 text-xs bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-200 rounded hover:bg-amber-100 dark:hover:bg-amber-900/50 border border-amber-200 dark:border-amber-800 shrink-0"
             title="粘贴 slot+BID 逐张拉元数据并自动下载上传(支持手动指派未匹配 slot 和覆盖已上传)"
           >
             贴 BID 补传 ({pasteBadge})
@@ -275,7 +275,7 @@ function RoundUploadSection({
           <button
             onClick={startBulkAuto}
             disabled={bulkRunning}
-            className="ml-2 px-2 py-1 text-xs bg-blue-50 text-blue-700 rounded hover:bg-blue-100 border border-blue-200 disabled:opacity-50 shrink-0"
+            className="ml-2 px-2 py-1 text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-200 rounded hover:bg-blue-100 dark:hover:bg-blue-900/50 border border-blue-200 dark:border-blue-800 disabled:opacity-50 shrink-0"
             title={`一键从镜像自动下载并上传本轮 ${eligibleForBulk.length} 张图(仅主版本)`}
           >
             {bulkRunning ? `下载中 ${bulkProgress.done}/${bulkProgress.total}` : `一键下载上传 (${eligibleForBulk.length})`}
@@ -284,7 +284,7 @@ function RoundUploadSection({
       </div>
 
       {bulkErrors.length > 0 && !bulkRunning && (
-        <div className="px-3 py-1.5 text-xs text-yellow-700 bg-yellow-50 border-t border-yellow-200">
+        <div className="px-3 py-1.5 text-xs text-yellow-700 dark:text-yellow-200 bg-yellow-50 dark:bg-yellow-900/30 border-t border-yellow-200 dark:border-yellow-800">
           {bulkErrors.length} 张失败：{bulkErrors.map(e => `${e.slot}(${e.msg})`).join('，')}
         </div>
       )}
@@ -502,32 +502,32 @@ function PasteBidPanel({
   }
 
   return (
-    <div className="px-3 py-2 border-t border-amber-200 bg-amber-50/50 space-y-2">
+    <div className="px-3 py-2 border-t border-amber-200 dark:border-amber-800 bg-amber-50/50 dark:bg-amber-900/20 space-y-2">
       <div className="flex items-center justify-between">
-        <span className="text-xs text-amber-800 font-medium">
+        <span className="text-xs text-amber-800 dark:text-amber-200 font-medium">
           贴 BID 补传 ·
           {phase === 'input' && ' 步骤 1/3:粘贴'}
           {phase === 'review' && ' 步骤 2/3:确认指派'}
           {phase === 'run' && ' 步骤 3/3:执行'}
         </span>
-        <button onClick={onClose} className="text-xs text-gray-400 hover:text-gray-600" disabled={running}>
+        <button onClick={onClose} className="text-xs text-gray-400 dark:text-neutral-500 hover:text-gray-600 dark:hover:text-neutral-300" disabled={running}>
           关闭
         </button>
       </div>
 
       {phase === 'input' && (
         <>
-          <div className="text-[11px] text-gray-500 leading-relaxed">
+          <div className="text-[11px] text-gray-500 dark:text-neutral-400 leading-relaxed">
             每行格式:<code>slot</code> + tab/空格 + <code>mapID 或链接</code>。<br />
             本轮待补 slot:<span className="font-mono">{unuploadedSlots.join(', ') || '(都已上传)'}</span><br />
-            <span className="text-gray-400">TB / TB1 视作等价。下一步可手动指派识别不出的 slot,或选择覆盖已上传的图。</span>
+            <span className="text-gray-400 dark:text-neutral-500">TB / TB1 视作等价。下一步可手动指派识别不出的 slot,或选择覆盖已上传的图。</span>
           </div>
           <textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
             placeholder={'RC1\t5318853\nRC2\thttps://osu.ppy.sh/b/5318764\nTB\t5318924\n...'}
             rows={6}
-            className="w-full px-2 py-1.5 border border-gray-300 rounded text-xs font-mono focus:outline-none focus:border-amber-400"
+            className="w-full px-2 py-1.5 border border-gray-300 dark:border-neutral-700 rounded text-xs font-mono bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 placeholder:text-gray-400 dark:placeholder:text-neutral-500 focus:outline-none focus:border-amber-400"
           />
           <div className="flex justify-end">
             <button
@@ -543,7 +543,7 @@ function PasteBidPanel({
 
       {phase === 'review' && (
         <>
-          <label className="flex items-center gap-1.5 text-[11px] text-gray-600">
+          <label className="flex items-center gap-1.5 text-[11px] text-gray-600 dark:text-neutral-300">
             <input
               type="checkbox"
               checked={includeUploaded}
@@ -552,8 +552,8 @@ function PasteBidPanel({
             />
             包含已上传(覆盖)— 勾选后可把贴上来的图指派到已传过的 slot,R2 上的源文件会被覆盖。
           </label>
-          <div className="border border-amber-200 rounded bg-white text-[11px] max-h-72 overflow-y-auto">
-            <div className="grid grid-cols-[80px_70px_120px_1fr] gap-2 px-2 py-1 bg-gray-50 border-b border-gray-200 font-medium text-gray-500 sticky top-0">
+          <div className="border border-amber-200 dark:border-amber-800 rounded bg-white dark:bg-neutral-900 text-[11px] max-h-72 overflow-y-auto">
+            <div className="grid grid-cols-[80px_70px_120px_1fr] gap-2 px-2 py-1 bg-gray-50 dark:bg-neutral-900/50 border-b border-gray-200 dark:border-neutral-800 font-medium text-gray-500 dark:text-neutral-400 sticky top-0">
               <span>原 slot</span>
               <span>Map ID</span>
               <span>指派到</span>
@@ -566,19 +566,19 @@ function PasteBidPanel({
               return (
                 <div
                   key={i}
-                  className={`grid grid-cols-[80px_70px_120px_1fr] gap-2 px-2 py-1 border-b border-gray-100 items-center ${
-                    r.state === 'error' ? 'bg-red-50' : isMismatch ? 'bg-yellow-50' : ''
+                  className={`grid grid-cols-[80px_70px_120px_1fr] gap-2 px-2 py-1 border-b border-gray-100 dark:border-neutral-800 items-center ${
+                    r.state === 'error' ? 'bg-red-50 dark:bg-red-900/30' : isMismatch ? 'bg-yellow-50 dark:bg-yellow-900/30' : ''
                   }`}
                 >
-                  <span className="font-mono text-gray-700">{r.rawSlot}</span>
-                  <span className="font-mono text-gray-500">{r.rawMapId || '—'}</span>
+                  <span className="font-mono text-gray-700 dark:text-neutral-200">{r.rawSlot}</span>
+                  <span className="font-mono text-gray-500 dark:text-neutral-400">{r.rawMapId || '—'}</span>
                   {r.state === 'error' ? (
-                    <span className="text-gray-400 text-[10px]">—</span>
+                    <span className="text-gray-400 dark:text-neutral-500 text-[10px]">—</span>
                   ) : (
                     <select
                       value={r.assignedSlot}
                       onChange={(e) => updateAssign(i, e.target.value)}
-                      className="px-1 py-0.5 border border-gray-200 rounded text-[11px] focus:outline-none focus:border-amber-400 font-mono"
+                      className="px-1 py-0.5 border border-gray-200 dark:border-neutral-700 rounded text-[11px] bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 focus:outline-none focus:border-amber-400 font-mono"
                     >
                       <option value="">跳过</option>
                       {opts.map((o) => {
@@ -593,28 +593,28 @@ function PasteBidPanel({
                       })}
                     </select>
                   )}
-                  <span className="text-gray-500">
-                    {r.state === 'error' && <span className="text-red-700">{r.msg}</span>}
+                  <span className="text-gray-500 dark:text-neutral-400">
+                    {r.state === 'error' && <span className="text-red-700 dark:text-red-300">{r.msg}</span>}
                     {r.state !== 'error' && isMismatch && (
-                      <span className="text-yellow-700">本轮没有 {r.rawSlot},请手动指派或跳过</span>
+                      <span className="text-yellow-700 dark:text-yellow-300">本轮没有 {r.rawSlot},请手动指派或跳过</span>
                     )}
                     {r.state !== 'error' && !isMismatch && r.assignedSlot && r.assignedSlot !== matched && (
-                      <span className="text-amber-700">已改派到 {r.assignedSlot}</span>
+                      <span className="text-amber-700 dark:text-amber-300">已改派到 {r.assignedSlot}</span>
                     )}
                   </span>
                 </div>
               )
             })}
           </div>
-          <div className="flex items-center justify-between text-[11px] text-gray-500">
+          <div className="flex items-center justify-between text-[11px] text-gray-500 dark:text-neutral-400">
             <span>
               将处理 {assignableCount} 张
-              {errCount > 0 && <span className="text-red-700 ml-2">· {errCount} 行解析失败</span>}
+              {errCount > 0 && <span className="text-red-700 dark:text-red-300 ml-2">· {errCount} 行解析失败</span>}
             </span>
             <div className="flex gap-2">
               <button
                 onClick={() => setPhase('input')}
-                className="px-3 py-1 text-xs text-gray-600 border border-gray-300 rounded hover:bg-gray-50"
+                className="px-3 py-1 text-xs text-gray-600 dark:text-neutral-300 border border-gray-300 dark:border-neutral-700 rounded hover:bg-gray-50 dark:hover:bg-neutral-800/40"
               >
                 ← 返回修改
               </button>
@@ -632,32 +632,32 @@ function PasteBidPanel({
 
       {phase === 'run' && (
         <>
-          <div className="text-[11px] text-gray-600">
+          <div className="text-[11px] text-gray-600 dark:text-neutral-300">
             进度 {okCount}/{assignableCount}
-            {errCount > 0 && <span className="text-yellow-700 ml-2">· {errCount} 失败</span>}
-            {skipCount > 0 && <span className="text-gray-400 ml-2">· {skipCount} 跳过</span>}
-            {!running && <span className="ml-2 text-green-700">已完成</span>}
+            {errCount > 0 && <span className="text-yellow-700 dark:text-yellow-300 ml-2">· {errCount} 失败</span>}
+            {skipCount > 0 && <span className="text-gray-400 dark:text-neutral-500 ml-2">· {skipCount} 跳过</span>}
+            {!running && <span className="ml-2 text-green-700 dark:text-green-300">已完成</span>}
           </div>
-          <div className="border border-amber-200 rounded bg-white max-h-72 overflow-y-auto text-[11px]">
-            <div className="grid grid-cols-[80px_70px_80px_1fr] gap-2 px-2 py-1 bg-gray-50 border-b border-gray-200 font-medium text-gray-500 sticky top-0">
+          <div className="border border-amber-200 dark:border-amber-800 rounded bg-white dark:bg-neutral-900 max-h-72 overflow-y-auto text-[11px]">
+            <div className="grid grid-cols-[80px_70px_80px_1fr] gap-2 px-2 py-1 bg-gray-50 dark:bg-neutral-900/50 border-b border-gray-200 dark:border-neutral-800 font-medium text-gray-500 dark:text-neutral-400 sticky top-0">
               <span>原 slot</span>
               <span>Map ID</span>
               <span>→ slot</span>
               <span>状态</span>
             </div>
             {rows.map((r, i) => (
-              <div key={i} className="grid grid-cols-[80px_70px_80px_1fr] gap-2 px-2 py-1 border-b border-gray-100">
-                <span className="font-mono text-gray-700">{r.rawSlot}</span>
-                <span className="font-mono text-gray-500">{r.rawMapId || '—'}</span>
-                <span className="font-mono text-gray-600">{r.assignedSlot || '—'}</span>
+              <div key={i} className="grid grid-cols-[80px_70px_80px_1fr] gap-2 px-2 py-1 border-b border-gray-100 dark:border-neutral-800">
+                <span className="font-mono text-gray-700 dark:text-neutral-200">{r.rawSlot}</span>
+                <span className="font-mono text-gray-500 dark:text-neutral-400">{r.rawMapId || '—'}</span>
+                <span className="font-mono text-gray-600 dark:text-neutral-300">{r.assignedSlot || '—'}</span>
                 <span>
-                  {r.state === 'pending' && <span className="text-gray-400">待处理</span>}
-                  {r.state === 'fetching' && <span className="text-blue-600">查元数据...</span>}
-                  {r.state === 'downloading' && <span className="text-blue-600">下载 .osz...</span>}
-                  {r.state === 'uploading' && <span className="text-blue-600">上传中...</span>}
-                  {r.state === 'ok' && <span className="text-green-700">✓ {r.msg || '完成'}</span>}
-                  {r.state === 'error' && <span className="text-yellow-700">{r.msg}</span>}
-                  {r.state === 'skip' && <span className="text-gray-400">{r.msg}</span>}
+                  {r.state === 'pending' && <span className="text-gray-400 dark:text-neutral-500">待处理</span>}
+                  {r.state === 'fetching' && <span className="text-blue-600 dark:text-blue-300">查元数据...</span>}
+                  {r.state === 'downloading' && <span className="text-blue-600 dark:text-blue-300">下载 .osz...</span>}
+                  {r.state === 'uploading' && <span className="text-blue-600 dark:text-blue-300">上传中...</span>}
+                  {r.state === 'ok' && <span className="text-green-700 dark:text-green-300">✓ {r.msg || '完成'}</span>}
+                  {r.state === 'error' && <span className="text-yellow-700 dark:text-yellow-300">{r.msg}</span>}
+                  {r.state === 'skip' && <span className="text-gray-400 dark:text-neutral-500">{r.msg}</span>}
                 </span>
               </div>
             ))}
@@ -666,7 +666,7 @@ function PasteBidPanel({
             <div className="flex justify-end gap-2">
               <button
                 onClick={reset}
-                className="px-3 py-1 text-xs text-gray-600 border border-gray-300 rounded hover:bg-gray-50"
+                className="px-3 py-1 text-xs text-gray-600 dark:text-neutral-300 border border-gray-300 dark:border-neutral-700 rounded hover:bg-gray-50 dark:hover:bg-neutral-800/40"
               >
                 再补一批
               </button>
@@ -862,10 +862,10 @@ function MapUploadRow({
   const expectedVersion = extractVersionFromName(name)
 
   return (
-    <div className="flex items-stretch gap-2 p-2 bg-gray-50 rounded border border-gray-100">
+    <div className="flex items-stretch gap-2 p-2 bg-gray-50 dark:bg-neutral-900/50 rounded border border-gray-100 dark:border-neutral-800">
       <div className="flex flex-col w-32 shrink-0 self-center">
-        <span className="text-xs font-mono text-gray-600">{slot}</span>
-        {name && <span className="text-[10px] text-gray-400 truncate" title={name}>{name}</span>}
+        <span className="text-xs font-mono text-gray-600 dark:text-neutral-300">{slot}</span>
+        {name && <span className="text-[10px] text-gray-400 dark:text-neutral-500 truncate" title={name}>{name}</span>}
       </div>
 
       <div className={showNsv ? 'flex-1 grid grid-cols-2 gap-2' : 'flex-1'}>
@@ -1042,9 +1042,9 @@ function MapUploadCell({
 
   if (availableDiffs.length > 0) {
     return (
-      <div className="p-2 bg-yellow-50 rounded border border-yellow-200">
+      <div className="p-2 bg-yellow-50 dark:bg-yellow-900/30 rounded border border-yellow-200 dark:border-yellow-800">
         <div className="flex items-center gap-2 mb-2">
-          <span className="text-xs text-yellow-700">{isNsv ? 'NSV: ' : ''}检测到 {availableDiffs.length} 个难度，请选择：</span>
+          <span className="text-xs text-yellow-700 dark:text-yellow-200">{isNsv ? 'NSV: ' : ''}检测到 {availableDiffs.length} 个难度，请选择：</span>
         </div>
         <div className="space-y-1 mb-2">
           {availableDiffs.map((diff, i) => (
@@ -1056,9 +1056,9 @@ function MapUploadCell({
                 onChange={() => setSelectedDiff(i)}
                 className="text-purple-600"
               />
-              <span className="text-xs text-gray-700">[{diff.version}]</span>
+              <span className="text-xs text-gray-700 dark:text-neutral-200">[{diff.version}]</span>
               {diff.artist && diff.title && (
-                <span className="text-xs text-gray-400 truncate">{diff.artist} - {diff.title}</span>
+                <span className="text-xs text-gray-400 dark:text-neutral-500 truncate">{diff.artist} - {diff.title}</span>
               )}
             </label>
           ))}
@@ -1072,7 +1072,7 @@ function MapUploadCell({
           </button>
           <button
             onClick={cancelDiffSelect}
-            className="px-3 py-1 text-xs text-gray-500 border border-gray-300 rounded hover:bg-gray-100"
+            className="px-3 py-1 text-xs text-gray-500 dark:text-neutral-400 border border-gray-300 dark:border-neutral-700 rounded hover:bg-gray-100 dark:hover:bg-neutral-800"
           >
             取消
           </button>
@@ -1084,21 +1084,21 @@ function MapUploadCell({
   return (
     <div className="flex items-center gap-2" title={mapName}>
       {isUploaded && !isUploading && uploadStatus !== 'error' && !reuploading && (
-        <span className="text-xs text-green-600 flex items-center gap-1" title={mapName}>
+        <span className="text-xs text-green-600 dark:text-green-300 flex items-center gap-1" title={mapName}>
           <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
           </svg>
           {isNsv ? 'NSV 已上传' : '已上传'}
           <button
             onClick={() => setReuploading(true)}
-            className="ml-1 text-blue-400 hover:text-blue-600"
+            className="ml-1 text-blue-400 dark:text-blue-300 hover:text-blue-600 dark:hover:text-blue-200"
             title="重新上传(覆盖)"
           >
             ⟳
           </button>
           <button
             onClick={() => onDelete(roundId, slot, isNsv)}
-            className="text-red-400 hover:text-red-600"
+            className="text-red-400 dark:text-red-300 hover:text-red-600 dark:hover:text-red-200"
             title="删除文件"
           >
             ✕
@@ -1107,11 +1107,11 @@ function MapUploadCell({
       )}
 
       {isUploading && (
-        <span className="text-xs text-blue-600">上传中...</span>
+        <span className="text-xs text-blue-600 dark:text-blue-300">上传中...</span>
       )}
 
       {uploadStatus === 'error' && (
-        <span className="text-xs text-red-600">上传失败</span>
+        <span className="text-xs text-red-600 dark:text-red-300">上传失败</span>
       )}
 
       {!isUploading && (!isUploaded || reuploading) && (
@@ -1119,7 +1119,7 @@ function MapUploadCell({
           {reuploading && (
             <button
               onClick={() => { setReuploading(false); setAutoError(null) }}
-              className="text-xs text-gray-400 hover:text-gray-600 shrink-0"
+              className="text-xs text-gray-400 dark:text-neutral-500 hover:text-gray-600 dark:hover:text-neutral-300 shrink-0"
               title="取消重传"
             >
               ←
@@ -1128,13 +1128,13 @@ function MapUploadCell({
           <div className="flex gap-1 shrink-0">
             <button
               onClick={() => setMode('osz')}
-              className={`px-2 py-0.5 text-xs rounded ${mode === 'osz' ? 'bg-purple-100 text-purple-700' : 'text-gray-400 hover:text-gray-600'}`}
+              className={`px-2 py-0.5 text-xs rounded ${mode === 'osz' ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-200' : 'text-gray-400 dark:text-neutral-500 hover:text-gray-600 dark:hover:text-neutral-300'}`}
             >
               .osz
             </button>
             <button
               onClick={() => setMode('three')}
-              className={`px-2 py-0.5 text-xs rounded ${mode === 'three' ? 'bg-purple-100 text-purple-700' : 'text-gray-400 hover:text-gray-600'}`}
+              className={`px-2 py-0.5 text-xs rounded ${mode === 'three' ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-200' : 'text-gray-400 dark:text-neutral-500 hover:text-gray-600 dark:hover:text-neutral-300'}`}
             >
               3文件
             </button>
@@ -1143,7 +1143,7 @@ function MapUploadCell({
           {mode === 'osz' && (
             <div className="flex-1 min-w-0 flex items-center gap-1">
               <div
-                className={`flex-1 min-w-0 border border-dashed rounded px-2 py-1 text-xs text-center cursor-pointer hover:border-purple-400 hover:text-purple-500 ${isNsv ? 'border-amber-300 text-amber-600' : 'border-gray-300 text-gray-400'}`}
+                className={`flex-1 min-w-0 border border-dashed rounded px-2 py-1 text-xs text-center cursor-pointer hover:border-purple-400 hover:text-purple-500 ${isNsv ? 'border-amber-300 dark:border-amber-700 text-amber-600 dark:text-amber-300' : 'border-gray-300 dark:border-neutral-700 text-gray-400 dark:text-neutral-500'}`}
                 title={mapName || placeholderText}
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={handleOszDrop}
@@ -1161,7 +1161,7 @@ function MapUploadCell({
               {beatmapsetId && !isNsv && !autoDownloading && (
                 <button
                   onClick={handleAutoDownload}
-                  className="px-2 py-1 text-xs bg-blue-50 text-blue-700 rounded hover:bg-blue-100 border border-blue-200 shrink-0"
+                  className="px-2 py-1 text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-200 rounded hover:bg-blue-100 dark:hover:bg-blue-900/50 border border-blue-200 dark:border-blue-800 shrink-0"
                   title={`从镜像自动下载 set ${beatmapsetId}${expectedVersion ? ` 的 [${expectedVersion}]` : ''}${mapName ? `\n${mapName}` : ''}`}
                 >
                   自动
@@ -1172,15 +1172,15 @@ function MapUploadCell({
 
           {mode === 'three' && (
             <div className="flex-1 flex items-center gap-1 min-w-0">
-              <label className="text-xs text-gray-500 cursor-pointer hover:text-purple-600">
+              <label className="text-xs text-gray-500 dark:text-neutral-400 cursor-pointer hover:text-purple-600">
                 .osu{osuFile && ' ✓'}
                 <input type="file" accept=".osu" className="hidden" onChange={e => setOsuFile(e.target.files?.[0] || null)} />
               </label>
-              <label className="text-xs text-gray-500 cursor-pointer hover:text-purple-600">
+              <label className="text-xs text-gray-500 dark:text-neutral-400 cursor-pointer hover:text-purple-600">
                 音频{audioFile && ' ✓'}
                 <input type="file" accept=".mp3,.ogg,.wav" className="hidden" onChange={e => setAudioFile(e.target.files?.[0] || null)} />
               </label>
-              <label className="text-xs text-gray-500 cursor-pointer hover:text-purple-600">
+              <label className="text-xs text-gray-500 dark:text-neutral-400 cursor-pointer hover:text-purple-600">
                 曲绘{bgFile && ' ✓'}
                 <input type="file" accept=".jpg,.jpeg,.png" className="hidden" onChange={e => setBgFile(e.target.files?.[0] || null)} />
               </label>

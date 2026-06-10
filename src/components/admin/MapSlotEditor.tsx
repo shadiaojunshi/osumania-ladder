@@ -122,9 +122,9 @@ export function MapSlotEditor({ map, onChange, onRemove }: Props) {
   }
 
   return (
-    <div className="flex items-start gap-2 p-2 bg-gray-50 rounded border border-gray-100">
+    <div className="flex items-start gap-2 p-2 bg-gray-50 dark:bg-neutral-900/50 rounded border border-gray-100 dark:border-neutral-800">
       <div
-        className="w-1.5 self-stretch rounded-full shrink-0"
+        className="category-swatch w-1.5 self-stretch rounded-full shrink-0"
         style={{ background: CATEGORY_COLORS[map.category] || '#9ca3af' }}
       />
 
@@ -134,14 +134,14 @@ export function MapSlotEditor({ map, onChange, onRemove }: Props) {
             type="text"
             value={map.slot}
             onChange={(e) => updateField('slot', e.target.value)}
-            className="w-14 px-1.5 py-1 border border-gray-200 rounded text-xs font-mono text-center focus:outline-none focus:border-purple-400"
+            className="w-14 px-1.5 py-1 border border-gray-200 dark:border-neutral-700 rounded text-xs font-mono text-center bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 focus:outline-none focus:border-purple-400"
             title="槽位名称 (如 RC1, EX1)"
           />
 
           <select
             value={map.category}
             onChange={(e) => handleCategoryChange(e.target.value as MapCategory)}
-            className="px-1.5 py-1 border border-gray-200 rounded text-xs focus:outline-none focus:border-purple-400"
+            className="px-1.5 py-1 border border-gray-200 dark:border-neutral-700 rounded text-xs bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 focus:outline-none focus:border-purple-400"
           >
             {CATEGORIES.map((c) => (
               <option key={c.id} value={c.id}>{c.label}</option>
@@ -154,7 +154,7 @@ export function MapSlotEditor({ map, onChange, onRemove }: Props) {
               value={map.type}
               onChange={(e) => updateField('type', e.target.value.toUpperCase())}
               placeholder="类型名 (如 EX)"
-              className="w-16 px-1.5 py-1 border border-gray-200 rounded text-xs font-mono text-center focus:outline-none focus:border-purple-400"
+              className="w-16 px-1.5 py-1 border border-gray-200 dark:border-neutral-700 rounded text-xs font-mono text-center bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 focus:outline-none focus:border-purple-400"
               title="在天梯榜中显示的类型名"
             />
           )}
@@ -163,7 +163,7 @@ export function MapSlotEditor({ map, onChange, onRemove }: Props) {
             <select
               value={map.realType}
               onChange={(e) => updateField('realType', e.target.value)}
-              className="px-1.5 py-1 border border-gray-200 rounded text-xs flex-1 min-w-0 focus:outline-none focus:border-purple-400"
+              className="px-1.5 py-1 border border-gray-200 dark:border-neutral-700 rounded text-xs flex-1 min-w-0 bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 focus:outline-none focus:border-purple-400"
             >
               {realTypeOptions.map((rt) => (
                 <option key={rt.id} value={rt.id}>{rt.name}</option>
@@ -177,7 +177,7 @@ export function MapSlotEditor({ map, onChange, onRemove }: Props) {
               value={map.realType}
               onChange={(e) => updateField('realType', e.target.value)}
               placeholder="自定义类型"
-              className="px-1.5 py-1 border border-gray-200 rounded text-xs flex-1 min-w-0 focus:outline-none focus:border-purple-400"
+              className="px-1.5 py-1 border border-gray-200 dark:border-neutral-700 rounded text-xs flex-1 min-w-0 bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 placeholder:text-gray-400 dark:placeholder:text-neutral-500 focus:outline-none focus:border-purple-400"
             />
           )}
         </div>
@@ -192,9 +192,9 @@ export function MapSlotEditor({ map, onChange, onRemove }: Props) {
               value={map.difficulty || ''}
               onChange={(e) => updateField('difficulty', Number(e.target.value))}
               placeholder={getDiffLabel(map.category)}
-              className="w-16 px-1.5 py-1 border border-gray-200 rounded text-xs text-center focus:outline-none focus:border-purple-400"
+              className="w-16 px-1.5 py-1 border border-gray-200 dark:border-neutral-700 rounded text-xs text-center bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 placeholder:text-gray-400 dark:placeholder:text-neutral-500 focus:outline-none focus:border-purple-400"
             />
-            <span className="text-xs text-gray-400">{getDiffLabel(map.category)}</span>
+            <span className="text-xs text-gray-400 dark:text-neutral-500">{getDiffLabel(map.category)}</span>
           </div>
 
           {dual && (
@@ -207,9 +207,9 @@ export function MapSlotEditor({ map, onChange, onRemove }: Props) {
                 value={map.difficultyLn || ''}
                 onChange={(e) => updateField('difficultyLn', Number(e.target.value) || undefined)}
                 placeholder="ln"
-                className="w-16 px-1.5 py-1 border border-gray-200 rounded text-xs text-center focus:outline-none focus:border-purple-400"
+                className="w-16 px-1.5 py-1 border border-gray-200 dark:border-neutral-700 rounded text-xs text-center bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 placeholder:text-gray-400 dark:placeholder:text-neutral-500 focus:outline-none focus:border-purple-400"
               />
-              <span className="text-xs text-gray-400">ln</span>
+              <span className="text-xs text-gray-400 dark:text-neutral-500">ln</span>
             </div>
           )}
         </div>
@@ -217,7 +217,7 @@ export function MapSlotEditor({ map, onChange, onRemove }: Props) {
 
       <button
         onClick={onRemove}
-        className="text-gray-300 hover:text-red-500 shrink-0 mt-1"
+        className="text-gray-300 dark:text-neutral-600 hover:text-red-500 shrink-0 mt-1"
         title="删除"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

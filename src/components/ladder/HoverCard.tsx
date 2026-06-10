@@ -44,15 +44,15 @@ export function HoverCard({
 
   return (
     <div
-      className="fixed z-50 bg-white border border-gray-200 rounded-lg shadow-lg p-3 max-w-xs"
+      className="fixed z-50 bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-700 rounded-lg shadow-lg dark:shadow-black/40 p-3 max-w-xs"
       style={{ left: cardX, top: cardY }}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
     >
-      <div className="font-semibold text-sm mb-1">
+      <div className="font-semibold text-sm mb-1 text-gray-900 dark:text-neutral-100">
         {tournament.abbreviation} {round.abbreviation}{hoveredType ? ` ${hoveredType}` : ''}
       </div>
-      <div className="text-xs text-gray-700 mb-2 font-mono">
+      <div className="text-xs text-gray-700 dark:text-neutral-300 mb-2 font-mono">
         {diffLabel}
       </div>
       {tournament.forumUrl && (
@@ -60,7 +60,7 @@ export function HoverCard({
           href={tournament.forumUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-xs text-blue-500 hover:underline block mb-0.5"
+          className="text-xs text-blue-500 dark:text-blue-300 hover:underline block mb-0.5"
         >
           论坛帖
         </a>
@@ -70,7 +70,7 @@ export function HoverCard({
           href={tournament.wikiUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-xs text-blue-500 hover:underline block mb-0.5"
+          className="text-xs text-blue-500 dark:text-blue-300 hover:underline block mb-0.5"
         >
           Wiki
         </a>
@@ -80,12 +80,12 @@ export function HoverCard({
           href={tournament.sheetUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-xs text-blue-500 hover:underline block mb-0.5"
+          className="text-xs text-blue-500 dark:text-blue-300 hover:underline block mb-0.5"
         >
           主表格
         </a>
       )}
-      <div className="text-xs text-gray-400 mt-1.5 pt-1.5 border-t border-gray-100">
+      <div className="text-xs text-gray-400 dark:text-neutral-500 mt-1.5 pt-1.5 border-t border-gray-100 dark:border-neutral-800">
         {typeMaps.length} 张谱面 · 难度 {minDiff.toFixed(1)} ~ {maxDiff.toFixed(1)}
       </div>
     </div>

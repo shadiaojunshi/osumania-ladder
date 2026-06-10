@@ -12,9 +12,9 @@
       "abbreviation": "Qual",
       "order": 1,
       "difficulty": {
-        "min": 4,
+        "min": 6.5,
         "max": 9,
-        "average": 7.3
+        "average": 7.7
       },
       "maps": [
         {
@@ -29,14 +29,14 @@
           "type": "RC",
           "realType": "TC",
           "name": "RC1",
-          "difficulty": 4
+          "difficulty": 6.5
         },
         {
           "slot": "HB1",
           "type": "HB",
           "realType": "HB1",
           "name": "HB1",
-          "difficulty": 6,
+          "difficulty": 6.5,
           "difficultyLn": 7
         },
         {

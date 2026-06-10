@@ -8,6 +8,9 @@
 // 设计要点：
 //   - 保留期 RETENTION_DAYS，靠 KV expirationTtl 自动过期，无需手动清空。
 //   - key 用「逆时间戳」让 list 默认升序时最新的排在最前。
+//   - 列表展示用的 slim 元数据同时写到 KV value 与 list metadata；
+//     listTrash 只 list 不 get，避免 N+1。tournament 的完整 payload 留在 value，
+//     仅在 restore 时按 id get（payload 可达数百 KB，不适合放 metadata）。
 
 export type TrashKind = 'tournament' | 'map'
 
@@ -27,6 +30,13 @@ export interface TrashEntry {
   restoreKey?: string
 }
 
+// 列表渲染只用得上这几个字段，写到 metadata 里。
+// payload / originalKey / restoreKey 不进 metadata（payload 太大，restore 路径才需要）。
+export type TrashListItem = Pick<
+  TrashEntry,
+  'id' | 'kind' | 'label' | 'deletedAt' | 'deletedByName'
+>
+
 const TRASH_PREFIX = 'trash:'
 // 回收站保留 30 天，到期 KV 自动删除（map 的 R2 文件由每日清理 Action 处理）
 const RETENTION_SECONDS = 30 * 24 * 60 * 60
@@ -44,8 +54,16 @@ export async function addTrash(
 ): Promise<TrashEntry> {
   const id = newTrashId()
   const full: TrashEntry = { id, deletedAt: Date.now(), ...entry }
+  const meta: TrashListItem = {
+    id: full.id,
+    kind: full.kind,
+    label: full.label,
+    deletedAt: full.deletedAt,
+    deletedByName: full.deletedByName,
+  }
   await kv.put(`${TRASH_PREFIX}${id}`, JSON.stringify(full), {
     expirationTtl: RETENTION_SECONDS,
+    metadata: meta,
   })
   return full
 }
@@ -59,12 +77,36 @@ export async function removeTrash(kv: KVNamespace, id: string): Promise<void> {
   await kv.delete(`${TRASH_PREFIX}${id}`)
 }
 
-export async function listTrash(kv: KVNamespace, limit = 200): Promise<TrashEntry[]> {
-  const listed = await kv.list({ prefix: TRASH_PREFIX, limit })
-  const out: TrashEntry[] = []
+/**
+ * 列出回收站。只返回展示用的 slim 元数据（不含 payload）。
+ * 优先用 list metadata；旧 key 没 metadata 时降级到 get。
+ */
+export async function listTrash(kv: KVNamespace, limit = 200): Promise<TrashListItem[]> {
+  const listed = await kv.list<TrashListItem>({ prefix: TRASH_PREFIX, limit })
+  const out: TrashListItem[] = []
+  const fallbacks: string[] = []
   for (const k of listed.keys) {
-    const val = (await kv.get(k.name, 'json')) as TrashEntry | null
-    if (val) out.push(val)
+    if (k.metadata) {
+      out.push(k.metadata)
+    } else {
+      fallbacks.push(k.name)
+    }
+  }
+  if (fallbacks.length) {
+    const fetched = await Promise.all(
+      fallbacks.map((name) => kv.get(name, 'json') as Promise<TrashEntry | null>),
+    )
+    for (const v of fetched) {
+      if (!v) continue
+      out.push({
+        id: v.id,
+        kind: v.kind,
+        label: v.label,
+        deletedAt: v.deletedAt,
+        deletedByName: v.deletedByName,
+      })
+    }
+    out.sort((a, b) => b.deletedAt - a.deletedAt)
   }
   return out
 }

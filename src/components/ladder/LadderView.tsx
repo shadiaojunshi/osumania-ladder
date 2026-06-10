@@ -153,6 +153,8 @@ import { difficultyToY as d2y } from '@/lib/difficulty'
 import reformDanData from '@data/scales/reform-dan.json'
 import lnDanData from '@data/scales/ln-dan.json'
 import type { DanLevel } from '@/lib/types'
+import { adjustScaleColorForTheme } from '@/lib/scaleColor'
+import { usePrefsStore } from '@/stores/prefsStore'
 
 const reformLevels = reformDanData.levels as DanLevel[]
 const lnLevels = lnDanData.levels as DanLevel[]
@@ -195,6 +197,7 @@ function useViewportTier(): ViewportTier {
 const LeftScaleInner = forwardRef<HTMLDivElement, { containerHeight: number }>(
   function LeftScaleInner({ containerHeight }, ref) {
     const { activeFilter, rfLnOffset } = useViewStore()
+    const theme = usePrefsStore((s) => s.theme)
     const showOnlyLn = activeFilter === 'LN' || activeFilter === 'HB'
     const showOnlyRf = activeFilter === 'RC' || activeFilter === 'SV'
     const showBoth = !showOnlyLn && !showOnlyRf
@@ -233,7 +236,7 @@ const LeftScaleInner = forwardRef<HTMLDivElement, { containerHeight: number }>(
                 <span
                   className={`scale-label ${padCls}`}
                   style={{
-                    color: level.color,
+                    color: adjustScaleColorForTheme(level.color, theme),
                     fontSize: isMajor ? fontMajor : fontMinor,
                     opacity: isMajor ? 1 : 0.4,
                   }}

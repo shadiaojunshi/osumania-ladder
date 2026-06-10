@@ -51,7 +51,7 @@ export function AuditLog() {
     setLoading(true)
     setError('')
     try {
-      const res = await fetch('/api/audit?limit=200')
+      const res = await fetch('/api/audit?limit=100')
       if (!res.ok) throw new Error('加载失败')
       const data = await res.json()
       setEntries(data.entries || [])

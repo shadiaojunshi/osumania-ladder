@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useT, type MessageKey } from '@/lib/i18n'
 
 interface Pack {
   realType: string
@@ -18,14 +19,15 @@ interface Manifest {
   lastGenerated: string
 }
 
-const LINK_KEYS = [
-  { id: 'drive123', label: '123网盘' },
-  { id: 'googleDrive', label: 'Google Drive' },
-  { id: 'baiduPan', label: '百度网盘' },
-  { id: 'quark', label: '夸克网盘' },
+const LINK_KEYS: { id: string; labelKey: MessageKey }[] = [
+  { id: 'drive123', labelKey: 'download.link.drive123' },
+  { id: 'googleDrive', labelKey: 'download.link.googleDrive' },
+  { id: 'baiduPan', labelKey: 'download.link.baiduPan' },
+  { id: 'quark', labelKey: 'download.link.quark' },
 ]
 
 export function PackLinksEditor() {
+  const t = useT()
   const [manifest, setManifest] = useState<Manifest | null>(null)
   const [sha, setSha] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -43,7 +45,7 @@ export function PackLinksEditor() {
       setManifest(m)
       setSha(s)
     } catch {
-      setStatus({ type: 'error', message: '加载合包清单失败' })
+      setStatus({ type: 'error', message: t('packs.loadFailed') })
     } finally {
       setLoading(false)
     }
@@ -72,22 +74,22 @@ export function PackLinksEditor() {
         body: JSON.stringify({ manifest, sha }),
       })
       if (!res.ok) throw new Error()
-      setStatus({ type: 'success', message: '下载链接已更新' })
+      setStatus({ type: 'success', message: t('packs.saved') })
       fetchManifest()
     } catch {
-      setStatus({ type: 'error', message: '保存失败' })
+      setStatus({ type: 'error', message: t('packs.saveFailed') })
     } finally {
       setSubmitting(false)
     }
   }
 
-  if (loading) return <div className="p-8 text-center text-gray-400 dark:text-neutral-500 text-sm">加载中...</div>
+  if (loading) return <div className="p-8 text-center text-gray-400 dark:text-neutral-500 text-sm">{t('admin.loading')}</div>
 
   if (!manifest || manifest.packs.length === 0) {
     return (
       <div className="bg-white dark:bg-neutral-900 rounded-lg border border-gray-200 dark:border-neutral-800 shadow-sm p-8 text-center">
-        <p className="text-gray-500 dark:text-neutral-400 text-sm">暂无合包数据</p>
-        <p className="text-gray-400 dark:text-neutral-500 text-xs mt-1">请先通过 GitHub Actions 生成合包</p>
+        <p className="text-gray-500 dark:text-neutral-400 text-sm">{t('packs.empty')}</p>
+        <p className="text-gray-400 dark:text-neutral-500 text-xs mt-1">{t('packs.emptyHint')}</p>
       </div>
     )
   }
@@ -95,20 +97,20 @@ export function PackLinksEditor() {
   return (
     <div className="space-y-4">
       <div className="bg-white dark:bg-neutral-900 rounded-lg border border-gray-200 dark:border-neutral-800 shadow-sm p-4">
-        <h3 className="text-sm font-medium text-gray-900 dark:text-neutral-100 mb-1">合包下载链接管理</h3>
-        <p className="text-xs text-gray-400 dark:text-neutral-500 mb-4">生成合包后，在这里填写网盘下载链接</p>
+        <h3 className="text-sm font-medium text-gray-900 dark:text-neutral-100 mb-1">{t('packs.title')}</h3>
+        <p className="text-xs text-gray-400 dark:text-neutral-500 mb-4">{t('packs.subtitle')}</p>
 
         <div className="space-y-4">
           {manifest.packs.map(pack => (
             <div key={`${pack.realType}_${pack.part || 0}`} className="border border-gray-100 dark:border-neutral-800 rounded-md p-3">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-medium text-gray-700 dark:text-neutral-200">{pack.name}</span>
-                <span className="text-xs text-gray-400 dark:text-neutral-500">{pack.mapCount} 张 · {pack.sizeMB}MB</span>
+                <span className="text-xs text-gray-400 dark:text-neutral-500">{t('packs.maps', { n: pack.mapCount })} · {t('packs.size', { n: pack.sizeMB })}</span>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {LINK_KEYS.map(lk => (
                   <div key={lk.id} className="flex items-center gap-2">
-                    <span className="text-xs text-gray-500 dark:text-neutral-400 w-20 shrink-0">{lk.label}</span>
+                    <span className="text-xs text-gray-500 dark:text-neutral-400 w-20 shrink-0">{t(lk.labelKey)}</span>
                     <input
                       type="url"
                       value={pack.links[lk.id] || ''}
@@ -128,7 +130,7 @@ export function PackLinksEditor() {
           disabled={submitting}
           className="mt-4 w-full px-4 py-2 bg-purple-600 text-white rounded-md text-sm font-medium hover:bg-purple-700 disabled:opacity-50"
         >
-          {submitting ? '保存中...' : '保存链接'}
+          {submitting ? t('packs.saving') : t('packs.save')}
         </button>
 
         {status && (

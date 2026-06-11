@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { useT, type MessageKey } from '@/lib/i18n'
 
 type Role = 'readonly' | 'contributor' | 'admin' | 'owner'
 
@@ -13,18 +14,18 @@ interface AdminItem {
   bootstrap?: boolean
 }
 
-const ROLE_LABELS: Record<Role, string> = {
-  readonly: '普通用户',
-  contributor: '普通管理员',
-  admin: '管理员',
-  owner: '站长',
+const ROLE_LABEL_KEYS: Record<Role, MessageKey> = {
+  readonly: 'admin.role.readonly',
+  contributor: 'admin.role.contributor',
+  admin: 'admin.role.admin',
+  owner: 'admin.role.owner',
 }
 
-const ROLE_DESC: Record<Role, string> = {
-  readonly: '仅浏览',
-  contributor: '可新增/编辑比赛、上传谱面，不能删除',
-  admin: '可删除、管理回收站、管理普通管理员',
-  owner: '最高权限，可管理所有人',
+const ROLE_DESC_KEYS: Record<Role, MessageKey> = {
+  readonly: 'admin.role.desc.readonly',
+  contributor: 'admin.role.desc.contributor',
+  admin: 'admin.role.desc.admin',
+  owner: 'admin.role.desc.owner',
 }
 
 const ROLE_BADGE: Record<Role, string> = {
@@ -35,6 +36,7 @@ const ROLE_BADGE: Record<Role, string> = {
 }
 
 export function AdminsManager() {
+  const t = useT()
   const [admins, setAdmins] = useState<AdminItem[]>([])
   const [self, setSelf] = useState<{ uid: string; role: Role } | null>(null)
   const [loading, setLoading] = useState(true)
@@ -50,16 +52,16 @@ export function AdminsManager() {
     setLoading(true)
     try {
       const res = await fetch('/api/admins')
-      if (!res.ok) throw new Error('加载失败')
+      if (!res.ok) throw new Error('failed')
       const data = await res.json()
       setAdmins(data.admins || [])
       setSelf(data.self || null)
     } catch {
-      setStatus({ type: 'error', message: '加载管理员名单失败' })
+      setStatus({ type: 'error', message: t('admins.loadFailed') })
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [t])
 
   useEffect(() => {
     fetchAdmins()
@@ -78,8 +80,8 @@ export function AdminsManager() {
         body: JSON.stringify({ uid, username, role }),
       })
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error || '操作失败')
-      setStatus({ type: 'success', message: `已将 ${username || uid} 设为 ${ROLE_LABELS[role]}` })
+      if (!res.ok) throw new Error(data.error || t('admins.opFailed'))
+      setStatus({ type: 'success', message: t('admins.roleSet', { name: username || uid, role: t(ROLE_LABEL_KEYS[role]) }) })
       fetchAdmins()
     } catch (e) {
       setStatus({ type: 'error', message: (e as Error).message })
@@ -89,7 +91,7 @@ export function AdminsManager() {
   }
 
   const removeAdmin = async (uid: string, username: string) => {
-    if (!confirm(`确定移除 ${username || uid} 的管理权限吗？（降为普通用户）`)) return
+    if (!confirm(t('admins.removeConfirm', { name: username || uid }))) return
     setBusy(true)
     setStatus(null)
     try {
@@ -99,8 +101,8 @@ export function AdminsManager() {
         body: JSON.stringify({ uid }),
       })
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error || '移除失败')
-      setStatus({ type: 'success', message: `已移除 ${username || uid}` })
+      if (!res.ok) throw new Error(data.error || t('admins.removeFailed'))
+      setStatus({ type: 'success', message: t('admins.removed', { name: username || uid }) })
       fetchAdmins()
     } catch (e) {
       setStatus({ type: 'error', message: (e as Error).message })
@@ -112,7 +114,7 @@ export function AdminsManager() {
   const addAdmin = async () => {
     const uid = newUid.trim()
     if (!/^\d+$/.test(uid)) {
-      setStatus({ type: 'error', message: 'osu 用户 ID 必须是数字' })
+      setStatus({ type: 'error', message: t('admins.uidNotNumeric') })
       return
     }
     await setRole(uid, newName.trim(), newRole)
@@ -138,9 +140,9 @@ export function AdminsManager() {
   return (
     <div className="bg-white dark:bg-neutral-900 rounded-lg border border-gray-200 dark:border-neutral-800 shadow-sm">
       <div className="px-4 py-3 border-b border-gray-200 dark:border-neutral-800">
-        <h3 className="text-sm font-medium text-gray-900 dark:text-neutral-100">管理员管理</h3>
+        <h3 className="text-sm font-medium text-gray-900 dark:text-neutral-100">{t('admins.title')}</h3>
         <p className="text-xs text-gray-400 dark:text-neutral-500 mt-0.5">
-          通过 osu 用户 ID 授权。{isOwner ? '你是站长，可管理所有角色。' : '你是管理员，可管理普通管理员。'}
+          {isOwner ? t('admins.subtitle.owner') : t('admins.subtitle.admin')}
         </p>
       </div>
 
@@ -154,34 +156,34 @@ export function AdminsManager() {
       <div className="px-4 py-3 border-b border-gray-100 dark:border-neutral-800 bg-gray-50 dark:bg-neutral-900/50">
         <div className="flex flex-wrap items-end gap-2">
           <div>
-            <label className="block text-xs text-gray-500 dark:text-neutral-400 mb-1">osu 用户 ID</label>
+            <label className="block text-xs text-gray-500 dark:text-neutral-400 mb-1">{t('admins.uid')}</label>
             <input
               type="text"
               value={newUid}
               onChange={(e) => setNewUid(e.target.value)}
-              placeholder="例如 1234567"
+              placeholder={t('admins.uid.placeholder')}
               className="w-32 px-2 py-1.5 border border-gray-300 dark:border-neutral-700 rounded text-sm bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 placeholder:text-gray-400 dark:placeholder:text-neutral-500 focus:outline-none focus:border-purple-400"
             />
           </div>
           <div>
-            <label className="block text-xs text-gray-500 dark:text-neutral-400 mb-1">用户名（可选）</label>
+            <label className="block text-xs text-gray-500 dark:text-neutral-400 mb-1">{t('admins.username')}</label>
             <input
               type="text"
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
-              placeholder="备注名"
+              placeholder={t('admins.username.placeholder')}
               className="w-32 px-2 py-1.5 border border-gray-300 dark:border-neutral-700 rounded text-sm bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 placeholder:text-gray-400 dark:placeholder:text-neutral-500 focus:outline-none focus:border-purple-400"
             />
           </div>
           <div>
-            <label className="block text-xs text-gray-500 dark:text-neutral-400 mb-1">角色</label>
+            <label className="block text-xs text-gray-500 dark:text-neutral-400 mb-1">{t('admins.role')}</label>
             <select
               value={newRole}
               onChange={(e) => setNewRole(e.target.value as Exclude<Role, 'readonly' | 'owner'>)}
               className="px-2 py-1.5 border border-gray-300 dark:border-neutral-700 rounded text-sm bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 focus:outline-none focus:border-purple-400"
             >
-              <option value="contributor">普通管理员</option>
-              {isOwner && <option value="admin">管理员</option>}
+              <option value="contributor">{t('admin.role.contributor')}</option>
+              {isOwner && <option value="admin">{t('admin.role.admin')}</option>}
             </select>
           </div>
           <button
@@ -189,15 +191,15 @@ export function AdminsManager() {
             disabled={busy}
             className="px-3 py-1.5 bg-purple-600 text-white rounded text-sm font-medium hover:bg-purple-700 disabled:opacity-50"
           >
-            添加
+            {t('admins.add')}
           </button>
         </div>
         <p className="text-xs text-gray-400 dark:text-neutral-500 mt-2">
-          osu 用户 ID 在个人主页 URL 里：osu.ppy.sh/users/<strong>1234567</strong>
+          {t('admins.uidHintPrefix')}<strong>1234567</strong>
         </p>
       </div>
 
-      {loading && <div className="p-8 text-center text-gray-400 dark:text-neutral-500 text-sm">加载中...</div>}
+      {loading && <div className="p-8 text-center text-gray-400 dark:text-neutral-500 text-sm">{t('admin.loading')}</div>}
 
       {!loading && (
         <div className="divide-y divide-gray-100 dark:divide-neutral-800">
@@ -205,16 +207,16 @@ export function AdminsManager() {
             <div key={item.uid} className="px-4 py-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-neutral-800/40">
               <div className="flex items-center gap-3 min-w-0">
                 <span className={`px-2 py-0.5 rounded text-xs font-medium ${ROLE_BADGE[item.role]}`}>
-                  {ROLE_LABELS[item.role]}
+                  {t(ROLE_LABEL_KEYS[item.role])}
                 </span>
                 <div className="min-w-0">
                   <div className="text-sm text-gray-800 dark:text-neutral-100 truncate">
                     {item.username}
                     <span className="text-gray-400 dark:text-neutral-500 font-mono ml-2">#{item.uid}</span>
-                    {item.bootstrap && <span className="ml-2 text-xs text-purple-500 dark:text-purple-300">（站长本人）</span>}
-                    {self && item.uid === self.uid && <span className="ml-2 text-xs text-gray-400 dark:text-neutral-500">（你）</span>}
+                    {item.bootstrap && <span className="ml-2 text-xs text-purple-500 dark:text-purple-300">{t('admins.bootstrap')}</span>}
+                    {self && item.uid === self.uid && <span className="ml-2 text-xs text-gray-400 dark:text-neutral-500">{t('admins.you')}</span>}
                   </div>
-                  <div className="text-xs text-gray-400 dark:text-neutral-500">{ROLE_DESC[item.role]}</div>
+                  <div className="text-xs text-gray-400 dark:text-neutral-500">{t(ROLE_DESC_KEYS[item.role])}</div>
                 </div>
               </div>
 
@@ -228,10 +230,10 @@ export function AdminsManager() {
                   >
                     {/* 当前角色始终可见 */}
                     {!assignableRoles.includes(item.role) && (
-                      <option value={item.role}>{ROLE_LABELS[item.role]}</option>
+                      <option value={item.role}>{t(ROLE_LABEL_KEYS[item.role])}</option>
                     )}
                     {assignableRoles.map((r) => (
-                      <option key={r} value={r}>{ROLE_LABELS[r]}</option>
+                      <option key={r} value={r}>{t(ROLE_LABEL_KEYS[r])}</option>
                     ))}
                   </select>
                   <button
@@ -239,14 +241,14 @@ export function AdminsManager() {
                     disabled={busy}
                     className="px-2.5 py-1 text-xs bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-200 rounded hover:bg-red-100 dark:hover:bg-red-900/50 disabled:opacity-50"
                   >
-                    移除
+                    {t('admins.remove')}
                   </button>
                 </div>
               )}
             </div>
           ))}
           {admins.length === 0 && (
-            <div className="p-8 text-center text-gray-400 dark:text-neutral-500 text-sm">暂无管理员</div>
+            <div className="p-8 text-center text-gray-400 dark:text-neutral-500 text-sm">{t('admins.empty')}</div>
           )}
         </div>
       )}

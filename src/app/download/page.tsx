@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import packsManifest from '@data/packs-manifest.json'
+import { useT, type MessageKey } from '@/lib/i18n'
 
 interface Pack {
   realType: string
@@ -15,23 +16,24 @@ interface Pack {
   sizeMB: number
 }
 
-const CATEGORIES: { label: string; types: string[] }[] = [
-  { label: 'Rice 类', types: ['SS', 'JS', 'SA', 'CJ', 'SJ', 'MX', 'DP', 'ADP', 'STC', 'MTC', 'JTC', 'WTC', 'TC', 'ORC'] },
-  { label: 'LN 类', types: ['RE', 'CO', 'TE', 'DE', 'SW', 'JW', 'IN', 'LNMX', 'LNTC', 'OLN'] },
-  { label: 'Hybrid 类', types: ['HB1', 'HB2', 'HB3', 'HB4', 'HB5', 'RCmainHB', 'LNmainHB', 'MNTB', 'OHB'] },
-  { label: 'SV 类', types: ['SV1', 'SV2', 'SI', 'ME', 'SVMX'] },
-  { label: '其他', types: ['TB'] },
+const CATEGORIES: { labelKey: MessageKey; types: string[] }[] = [
+  { labelKey: 'download.cat.rice', types: ['SS', 'JS', 'SA', 'CJ', 'SJ', 'MX', 'DP', 'ADP', 'STC', 'MTC', 'JTC', 'WTC', 'TC', 'ORC'] },
+  { labelKey: 'download.cat.ln', types: ['RE', 'CO', 'TE', 'DE', 'SW', 'JW', 'IN', 'LNMX', 'LNTC', 'OLN'] },
+  { labelKey: 'download.cat.hb', types: ['HB1', 'HB2', 'HB3', 'HB4', 'HB5', 'RCmainHB', 'LNmainHB', 'MNTB', 'OHB'] },
+  { labelKey: 'download.cat.sv', types: ['SV1', 'SV2', 'SI', 'ME', 'SVMX'] },
+  { labelKey: 'download.cat.other', types: ['TB'] },
 ]
 
-const LINK_LABELS: Record<string, string> = {
-  r2: 'Cloudflare 直链',
-  drive123: '123网盘',
-  googleDrive: 'Google Drive',
-  baiduPan: '百度网盘',
-  quark: '夸克网盘',
+const LINK_LABEL_KEYS: Record<string, MessageKey> = {
+  r2: 'download.link.r2',
+  drive123: 'download.link.drive123',
+  googleDrive: 'download.link.googleDrive',
+  baiduPan: 'download.link.baiduPan',
+  quark: 'download.link.quark',
 }
 
 export default function DownloadPage() {
+  const t = useT()
   const allPacks = (packsManifest.packs || []) as Pack[]
   // 按 realType 分组,每组按 part 升序排
   const groupsByType = new Map<string, Pack[]>()
@@ -48,10 +50,10 @@ export default function DownloadPage() {
       <header className="bg-white dark:bg-neutral-900 border-b border-gray-200 dark:border-neutral-800 px-6 py-4">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-bold text-gray-900 dark:text-neutral-100">osu!mania 4K 比赛合包下载</h1>
-            <p className="text-sm text-gray-500 dark:text-neutral-400 mt-0.5">按真实键型分类，包含所有已收录比赛的对应谱面</p>
+            <h1 className="text-xl font-bold text-gray-900 dark:text-neutral-100">{t('download.title')}</h1>
+            <p className="text-sm text-gray-500 dark:text-neutral-400 mt-0.5">{t('download.subtitle')}</p>
           </div>
-          <Link href="/" className="text-sm text-purple-600 hover:text-purple-800 dark:text-purple-300 dark:hover:text-purple-200">← 返回天梯榜</Link>
+          <Link href="/" className="text-sm text-purple-600 hover:text-purple-800 dark:text-purple-300 dark:hover:text-purple-200">{t('download.back')}</Link>
         </div>
       </header>
 
@@ -64,9 +66,9 @@ export default function DownloadPage() {
           if (categoryGroups.length === 0) return null
 
           return (
-            <section key={category.label}>
+            <section key={category.labelKey}>
               <h2 className="text-sm font-medium text-gray-500 dark:text-neutral-400 mb-3 border-b border-gray-200 dark:border-neutral-800 pb-2">
-                {category.label}
+                {t(category.labelKey)}
               </h2>
               <div className="grid gap-3">
                 {categoryGroups.map(g => (
@@ -79,8 +81,8 @@ export default function DownloadPage() {
 
         {allPacks.length === 0 && (
           <div className="text-center py-16 text-gray-400 dark:text-neutral-500">
-            <p className="text-lg mb-2">暂无合包</p>
-            <p className="text-sm">合包生成后会在这里显示下载链接</p>
+            <p className="text-lg mb-2">{t('download.empty')}</p>
+            <p className="text-sm">{t('download.emptyHint')}</p>
           </div>
         )}
       </main>
@@ -89,6 +91,7 @@ export default function DownloadPage() {
 }
 
 function PackGroup({ parts }: { parts: Pack[] }) {
+  const t = useT()
   // 同 realType 的多个 part 共享 mapCount/totalMaps 求和;name 取去掉" Pack N"后缀的根名
   const totalMaps = parts[0].totalMaps
   const totalMapCount = parts.reduce((s, p) => s + p.mapCount, 0)
@@ -118,12 +121,12 @@ function PackGroup({ parts }: { parts: Pack[] }) {
             <span className={`text-xs text-gray-400 dark:text-neutral-500 transition-transform ${expanded ? 'rotate-90' : ''}`}>▶</span>
             <span className="text-sm font-medium text-gray-900 dark:text-neutral-100">{baseName}</span>
             <span className="text-xs font-mono text-gray-400 dark:text-neutral-500">({realType})</span>
-            <span className="text-xs text-purple-600 bg-purple-50 dark:bg-purple-900/30 dark:text-purple-200 px-1.5 py-0.5 rounded">{parts.length} 个分包</span>
+            <span className="text-xs text-purple-600 bg-purple-50 dark:bg-purple-900/30 dark:text-purple-200 px-1.5 py-0.5 rounded">{t('download.parts', { n: parts.length })}</span>
           </div>
           <div className="flex items-center gap-3 mt-1 ml-5 text-xs text-gray-500 dark:text-neutral-400">
-            <span>{totalMapCount}/{totalMaps} 张谱面</span>
+            <span>{t('download.maps', { cur: totalMapCount, total: totalMaps })}</span>
             {totalSizeMB > 0 && <span>{totalSizeMB}MB</span>}
-            {lastUpdated && <span>更新于 {lastUpdated}</span>}
+            {lastUpdated && <span>{t('download.updated', { date: lastUpdated })}</span>}
           </div>
           {progress < 100 && (
             <div className="mt-2 ml-5 w-32 h-1.5 bg-gray-100 dark:bg-neutral-800 rounded-full overflow-hidden">
@@ -143,6 +146,7 @@ function PackGroup({ parts }: { parts: Pack[] }) {
 }
 
 function PackRow({ pack, indent, hidePartLabel }: { pack: Pack; indent?: boolean; hidePartLabel?: boolean }) {
+  const t = useT()
   const hasLinks = Object.keys(pack.links).length > 0
   const progress = pack.totalMaps > 0 ? Math.round((pack.mapCount / pack.totalMaps) * 100) : 0
 
@@ -160,9 +164,9 @@ function PackRow({ pack, indent, hidePartLabel }: { pack: Pack; indent?: boolean
           )}
         </div>
         <div className="flex items-center gap-3 mt-1 text-xs text-gray-500 dark:text-neutral-400">
-          <span>{pack.mapCount} 张</span>
+          <span>{t('download.mapsSimple', { n: pack.mapCount })}</span>
           {pack.sizeMB > 0 && <span>{pack.sizeMB}MB</span>}
-          {hidePartLabel && pack.lastUpdated && <span>更新于 {pack.lastUpdated}</span>}
+          {hidePartLabel && pack.lastUpdated && <span>{t('download.updated', { date: pack.lastUpdated })}</span>}
         </div>
         {hidePartLabel && progress < 100 && (
           <div className="mt-2 w-32 h-1.5 bg-gray-100 dark:bg-neutral-800 rounded-full overflow-hidden">
@@ -181,11 +185,11 @@ function PackRow({ pack, indent, hidePartLabel }: { pack: Pack; indent?: boolean
               rel="noopener noreferrer"
               className="px-3 py-1.5 text-xs font-medium bg-purple-50 text-purple-700 rounded-md hover:bg-purple-100 dark:bg-purple-900/30 dark:text-purple-200 dark:hover:bg-purple-900/50"
             >
-              {LINK_LABELS[key] || key}
+              {LINK_LABEL_KEYS[key] ? t(LINK_LABEL_KEYS[key]) : key}
             </a>
           ))
         ) : (
-          <span className="text-xs text-gray-400 dark:text-neutral-500 px-3 py-1.5">暂无下载</span>
+          <span className="text-xs text-gray-400 dark:text-neutral-500 px-3 py-1.5">{t('download.noLinks')}</span>
         )}
       </div>
     </div>

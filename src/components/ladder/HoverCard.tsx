@@ -2,6 +2,7 @@
 
 import type { Round, Tournament } from '@/lib/types'
 import { useViewStore } from '@/stores/viewStore'
+import { useT } from '@/lib/i18n'
 import reformDanData from '@data/scales/reform-dan.json'
 import lnDanData from '@data/scales/ln-dan.json'
 
@@ -27,6 +28,7 @@ export function HoverCard({
   onMouseLeave: () => void
 }) {
   const { activeFilter } = useViewStore()
+  const t = useT()
   const diffLabel = buildDifficultyLabel(round, activeFilter, hoveredType)
 
   const cardX = typeof window !== 'undefined' ? Math.min(x + 12, window.innerWidth - 300) : x + 12
@@ -62,7 +64,7 @@ export function HoverCard({
           rel="noopener noreferrer"
           className="text-xs text-blue-500 dark:text-blue-300 hover:underline block mb-0.5"
         >
-          论坛帖
+          {t('hover.forum')}
         </a>
       )}
       {tournament.wikiUrl && (
@@ -72,7 +74,7 @@ export function HoverCard({
           rel="noopener noreferrer"
           className="text-xs text-blue-500 dark:text-blue-300 hover:underline block mb-0.5"
         >
-          Wiki
+          {t('hover.wiki')}
         </a>
       )}
       {tournament.sheetUrl && (
@@ -82,11 +84,11 @@ export function HoverCard({
           rel="noopener noreferrer"
           className="text-xs text-blue-500 dark:text-blue-300 hover:underline block mb-0.5"
         >
-          主表格
+          {t('hover.sheet')}
         </a>
       )}
       <div className="text-xs text-gray-400 dark:text-neutral-500 mt-1.5 pt-1.5 border-t border-gray-100 dark:border-neutral-800">
-        {typeMaps.length} 张谱面 · 难度 {minDiff.toFixed(1)} ~ {maxDiff.toFixed(1)}
+        {t('hover.summary', { count: typeMaps.length, min: minDiff.toFixed(1), max: maxDiff.toFixed(1) })}
       </div>
     </div>
   )

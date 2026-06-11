@@ -11,15 +11,16 @@ import { AdminsManager } from '@/components/admin/AdminsManager'
 import { TrashManager } from '@/components/admin/TrashManager'
 import { AuditLog } from '@/components/admin/AuditLog'
 import type { Tournament } from '@/lib/types'
+import { useT, type MessageKey } from '@/lib/i18n'
 
 type Role = 'readonly' | 'contributor' | 'admin' | 'owner'
 
 const ROLE_RANK: Record<Role, number> = { readonly: 0, contributor: 1, admin: 2, owner: 3 }
-const ROLE_LABELS: Record<Role, string> = {
-  readonly: '普通用户',
-  contributor: '普通管理员',
-  admin: '管理员',
-  owner: '站长',
+const ROLE_LABEL_KEYS: Record<Role, MessageKey> = {
+  readonly: 'admin.role.readonly',
+  contributor: 'admin.role.contributor',
+  admin: 'admin.role.admin',
+  owner: 'admin.role.owner',
 }
 
 interface SessionUser {
@@ -36,6 +37,7 @@ interface TournamentListItem {
 type Tab = 'create' | 'manage' | 'references' | 'upload' | 'packs' | 'admins' | 'trash' | 'audit'
 
 export default function AdminPage() {
+  const t = useT()
   const [authLoading, setAuthLoading] = useState(true)
   const [user, setUser] = useState<SessionUser | null>(null)
 
@@ -119,16 +121,16 @@ export default function AdminPage() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ tournament, sha: editingSha }),
         })
-        if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || '更新失败')
-        setSubmitStatus({ type: 'success', message: `已更新 ${tournament.id}，网站将在几分钟内自动重建` })
+        if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || t('admin.update.error'))
+        setSubmitStatus({ type: 'success', message: t('admin.update.success', { id: tournament.id }) })
       } else {
         const res = await fetch('/api/tournaments', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(tournament),
         })
-        if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || '提交失败')
-        setSubmitStatus({ type: 'success', message: `已提交 ${tournament.id}，网站将在几分钟内自动重建` })
+        if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || t('admin.create.error'))
+        setSubmitStatus({ type: 'success', message: t('admin.create.success', { id: tournament.id }) })
       }
       fetchList()
     } catch (e) {
@@ -141,27 +143,27 @@ export default function AdminPage() {
   const handleEdit = async (id: string) => {
     try {
       const res = await fetch(`/api/tournaments/${id}`)
-      if (!res.ok) throw new Error('加载失败')
+      if (!res.ok) throw new Error(t('admin.load.error'))
       const { tournament: data, sha } = await res.json()
       setEditingId(id)
       setEditingSha(sha)
       setEditInitialData(data)
       setTab('create')
     } catch {
-      alert('加载比赛数据失败')
+      alert(t('admin.load.errorAlert'))
     }
   }
 
   const handleDelete = async (id: string, sha: string) => {
-    if (!confirm(`确定要删除 ${id} 吗？将移入回收站，30 天内可恢复。`)) return
+    if (!confirm(t('admin.deleteConfirm', { id }))) return
     try {
       const res = await fetch(`/api/tournaments/${id}`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sha }),
       })
-      if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || '删除失败')
-      setSubmitStatus({ type: 'success', message: `已删除 ${id}（已移入回收站）` })
+      if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || t('admin.delete.error'))
+      setSubmitStatus({ type: 'success', message: t('admin.delete.success', { id }) })
       fetchList()
     } catch (e) {
       alert((e as Error).message)
@@ -180,7 +182,7 @@ export default function AdminPage() {
   if (authLoading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-neutral-950 flex items-center justify-center">
-        <div className="text-gray-400 dark:text-neutral-500 text-sm">加载中...</div>
+        <div className="text-gray-400 dark:text-neutral-500 text-sm">{t('admin.loading')}</div>
       </div>
     )
   }
@@ -190,21 +192,21 @@ export default function AdminPage() {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-neutral-950 flex items-center justify-center">
         <div className="bg-white dark:bg-neutral-900 rounded-lg border border-gray-200 dark:border-neutral-800 shadow-sm p-8 w-96">
-          <h1 className="text-lg font-bold text-gray-900 dark:text-neutral-100 mb-2">比赛数据录入</h1>
-          <p className="text-sm text-gray-500 dark:text-neutral-400 mb-6">使用 osu! 账号登录以继续</p>
+          <h1 className="text-lg font-bold text-gray-900 dark:text-neutral-100 mb-2">{t('admin.login.title')}</h1>
+          <p className="text-sm text-gray-500 dark:text-neutral-400 mb-6">{t('admin.login.subtitle')}</p>
           <button
             onClick={handleLogin}
             className="w-full px-4 py-2.5 bg-pink-500 text-white rounded-md text-sm font-medium hover:bg-pink-600 flex items-center justify-center gap-2"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10" /></svg>
-            使用 osu! 登录
+            {t('admin.login.button')}
           </button>
           <Link href="/" className="block text-center text-xs text-gray-400 dark:text-neutral-500 mt-4 hover:text-purple-600 dark:hover:text-purple-300">
-            ← 返回天梯榜
+            {t('admin.user.back')}
           </Link>
           <div className="mt-5 pt-4 border-t border-gray-100 dark:border-neutral-800">
             <p className="text-xs text-gray-400 dark:text-neutral-500 leading-relaxed">
-              登录后，普通用户仅可浏览。如需添加或编辑比赛数据，请在 QQ 上联系站长获取权限。
+              {t('admin.login.note')}
             </p>
           </div>
         </div>
@@ -217,25 +219,25 @@ export default function AdminPage() {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-neutral-950 flex items-center justify-center">
         <div className="bg-white dark:bg-neutral-900 rounded-lg border border-gray-200 dark:border-neutral-800 shadow-sm p-8 w-96">
-          <h1 className="text-lg font-bold text-gray-900 dark:text-neutral-100 mb-2">权限不足</h1>
+          <h1 className="text-lg font-bold text-gray-900 dark:text-neutral-100 mb-2">{t('admin.permission.title')}</h1>
           <p className="text-sm text-gray-500 dark:text-neutral-400 mb-1">
-            你已登录为 <strong>{user.username}</strong>（#{user.uid}）
+            {t('admin.permission.signedIn', { name: user.username, uid: user.uid })}
           </p>
           <p className="text-sm text-gray-500 dark:text-neutral-400 mb-6">
-            当前角色：{ROLE_LABELS[user.role]}。需要管理员授权才能录入数据。
+            {t('admin.permission.role', { role: t(ROLE_LABEL_KEYS[user.role]) })}
           </p>
           <p className="text-xs text-gray-400 dark:text-neutral-500 mb-6 leading-relaxed">
-            请把你的 osu 用户 ID <strong className="font-mono">{user.uid}</strong> 发给站长，由站长在后台授权。
+            {t('admin.permission.howto', { uid: user.uid })}
           </p>
           <div className="flex gap-2">
             <button
               onClick={handleLogout}
               className="flex-1 px-4 py-2 bg-gray-100 dark:bg-neutral-800 text-gray-700 dark:text-neutral-200 rounded-md text-sm font-medium hover:bg-gray-200 dark:hover:bg-neutral-700"
             >
-              退出登录
+              {t('admin.permission.logout')}
             </button>
             <Link href="/" className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-md text-sm font-medium hover:bg-purple-700 text-center">
-              返回天梯榜
+              {t('admin.permission.back')}
             </Link>
           </div>
         </div>
@@ -262,38 +264,38 @@ export default function AdminPage() {
       <header className="bg-white dark:bg-neutral-900 border-b border-gray-200 dark:border-neutral-800 px-6 py-4">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-bold text-gray-900 dark:text-neutral-100">比赛数据管理</h1>
-            <p className="text-sm text-gray-500 dark:text-neutral-400 mt-0.5">添加、编辑或删除比赛数据，提交后自动更新网站</p>
+            <h1 className="text-xl font-bold text-gray-900 dark:text-neutral-100">{t('admin.title')}</h1>
+            <p className="text-sm text-gray-500 dark:text-neutral-400 mt-0.5">{t('admin.subtitle')}</p>
           </div>
           <div className="flex items-center gap-4">
             <div className="text-right">
               <div className="text-sm text-gray-700 dark:text-neutral-200">{user.username}</div>
-              <div className="text-xs text-gray-400 dark:text-neutral-500">{ROLE_LABELS[user.role]} · #{user.uid}</div>
+              <div className="text-xs text-gray-400 dark:text-neutral-500">{t(ROLE_LABEL_KEYS[user.role])} · #{user.uid}</div>
             </div>
-            <button onClick={handleLogout} className="text-sm text-gray-500 hover:text-gray-700 dark:text-neutral-400 dark:hover:text-neutral-200">退出</button>
-            <Link href="/" className="text-sm text-purple-600 hover:text-purple-800 dark:text-purple-300 dark:hover:text-purple-200">← 返回天梯榜</Link>
+            <button onClick={handleLogout} className="text-sm text-gray-500 hover:text-gray-700 dark:text-neutral-400 dark:hover:text-neutral-200">{t('admin.user.logout')}</button>
+            <Link href="/" className="text-sm text-purple-600 hover:text-purple-800 dark:text-purple-300 dark:hover:text-purple-200">{t('admin.user.back')}</Link>
           </div>
         </div>
       </header>
 
       <main className="max-w-6xl mx-auto px-6 py-6">
         <div className="flex flex-wrap gap-3 mb-6">
-          {tabBtn('create', editingId ? '编辑比赛' : '添加比赛')}
-          {tabBtn('manage', `管理已有比赛 (${existingList.length})`)}
-          {tabBtn('references', '参考点管理')}
-          {tabBtn('upload', '上传谱面')}
-          {tabBtn('packs', '合包管理')}
-          {isAdmin && tabBtn('trash', '回收站')}
-          {isAdmin && tabBtn('admins', '管理员管理')}
-          {isAdmin && tabBtn('audit', '操作日志')}
+          {tabBtn('create', editingId ? t('admin.tab.editing') : t('admin.tab.create'))}
+          {tabBtn('manage', t('admin.tab.manage', { n: existingList.length }))}
+          {tabBtn('references', t('admin.tab.references'))}
+          {tabBtn('upload', t('admin.tab.upload'))}
+          {tabBtn('packs', t('admin.tab.packs'))}
+          {isAdmin && tabBtn('trash', t('admin.tab.trash'))}
+          {isAdmin && tabBtn('admins', t('admin.tab.admins'))}
+          {isAdmin && tabBtn('audit', t('admin.tab.audit'))}
         </div>
 
         {tab === 'create' && (
           <>
             {editingId && (
               <div className="mb-4 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-md p-3 flex items-center justify-between">
-                <span className="text-sm text-blue-800 dark:text-blue-200">正在编辑: <strong>{editingId}</strong></span>
-                <button onClick={handleNewTournament} className="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-300 dark:hover:text-blue-100">取消编辑，新建比赛</button>
+                <span className="text-sm text-blue-800 dark:text-blue-200">{t('admin.editing.banner', { id: editingId })}</span>
+                <button onClick={handleNewTournament} className="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-300 dark:hover:text-blue-100">{t('admin.editing.cancel')}</button>
               </div>
             )}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -312,14 +314,14 @@ export default function AdminPage() {
         {tab === 'manage' && (
           <div className="bg-white dark:bg-neutral-900 rounded-lg border border-gray-200 dark:border-neutral-800 shadow-sm">
             <div className="px-4 py-3 border-b border-gray-200 dark:border-neutral-800">
-              <h3 className="text-sm font-medium text-gray-900 dark:text-neutral-100">已有比赛列表</h3>
+              <h3 className="text-sm font-medium text-gray-900 dark:text-neutral-100">{t('admin.list.title')}</h3>
               <p className="text-xs text-gray-400 dark:text-neutral-500 mt-0.5">
-                点击编辑加载到表单{isAdmin ? '，或删除（移入回收站）' : ''}
+                {isAdmin ? t('admin.list.subtitle.admin') : t('admin.list.subtitle.contributor')}
               </p>
             </div>
-            {loadingList && <div className="p-8 text-center text-gray-400 dark:text-neutral-500 text-sm">加载中...</div>}
+            {loadingList && <div className="p-8 text-center text-gray-400 dark:text-neutral-500 text-sm">{t('admin.loading')}</div>}
             {!loadingList && existingList.length === 0 && (
-              <div className="p-8 text-center text-gray-400 dark:text-neutral-500 text-sm">暂无比赛数据</div>
+              <div className="p-8 text-center text-gray-400 dark:text-neutral-500 text-sm">{t('admin.list.empty')}</div>
             )}
             {!loadingList && existingList.length > 0 && (
               <div className="divide-y divide-gray-100 dark:divide-neutral-800">
@@ -331,14 +333,14 @@ export default function AdminPage() {
                         onClick={() => handleEdit(item.id)}
                         className="px-3 py-1 text-xs bg-blue-50 text-blue-700 rounded hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-200 dark:hover:bg-blue-900/50"
                       >
-                        编辑
+                        {t('admin.list.edit')}
                       </button>
                       {isAdmin && (
                         <button
                           onClick={() => handleDelete(item.id, item.sha)}
                           className="px-3 py-1 text-xs bg-red-50 text-red-700 rounded hover:bg-red-100 dark:bg-red-900/30 dark:text-red-200 dark:hover:bg-red-900/50"
                         >
-                          删除
+                          {t('admin.list.delete')}
                         </button>
                       )}
                     </div>

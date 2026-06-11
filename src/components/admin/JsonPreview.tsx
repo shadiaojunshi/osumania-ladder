@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import type { Tournament } from '@/lib/types'
+import { useT } from '@/lib/i18n'
 
 interface Props {
   tournament: Tournament | null
@@ -12,14 +13,15 @@ interface Props {
 }
 
 export function JsonPreview({ tournament, onSubmit, submitting, submitStatus, isEditing }: Props) {
+  const t = useT()
   const [copied, setCopied] = useState(false)
 
   if (!tournament) {
     return (
       <div className="bg-white dark:bg-neutral-900 rounded-lg border border-gray-200 dark:border-neutral-800 shadow-sm p-6 sticky top-6">
         <div className="text-center text-gray-400 dark:text-neutral-500 text-sm">
-          <p className="mb-2">填写左侧表单后，JSON 预览将显示在这里</p>
-          <p className="text-xs">完成后点击提交，数据将自动更新到网站</p>
+          <p className="mb-2">{t('json.empty.line1')}</p>
+          <p className="text-xs">{t('json.empty.line2')}</p>
         </div>
       </div>
     )
@@ -38,7 +40,7 @@ export function JsonPreview({ tournament, onSubmit, submitting, submitStatus, is
     <div className="bg-white dark:bg-neutral-900 rounded-lg border border-gray-200 dark:border-neutral-800 shadow-sm flex flex-col max-h-[calc(100vh-180px)] sticky top-6">
       <div className="border-b border-gray-200 dark:border-neutral-800 px-4 py-3 flex items-center justify-between shrink-0">
         <div>
-          <h3 className="text-sm font-medium text-gray-900 dark:text-neutral-100">JSON 预览</h3>
+          <h3 className="text-sm font-medium text-gray-900 dark:text-neutral-100">{t('json.title')}</h3>
           <p className="text-xs text-gray-400 dark:text-neutral-500 mt-0.5">{filename}</p>
         </div>
         <div className="flex gap-2">
@@ -46,7 +48,7 @@ export function JsonPreview({ tournament, onSubmit, submitting, submitStatus, is
             onClick={handleCopy}
             className="px-3 py-1.5 text-xs bg-gray-100 dark:bg-neutral-800 text-gray-700 dark:text-neutral-200 rounded hover:bg-gray-200 dark:hover:bg-neutral-700"
           >
-            {copied ? '已复制' : '复制'}
+            {copied ? t('json.copied') : t('json.copy')}
           </button>
         </div>
       </div>
@@ -68,10 +70,10 @@ export function JsonPreview({ tournament, onSubmit, submitting, submitStatus, is
           disabled={submitting}
           className="w-full px-4 py-2.5 bg-purple-600 text-white rounded-md text-sm font-medium hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {submitting ? '提交中...' : isEditing ? '更新比赛数据' : '提交新比赛'}
+          {submitting ? t('json.submitting') : isEditing ? t('json.update') : t('json.create')}
         </button>
         <p className="text-xs text-gray-400 dark:text-neutral-500 text-center">
-          提交后会自动 commit 到 GitHub 并触发网站重建
+          {t('json.note')}
         </p>
       </div>
     </div>

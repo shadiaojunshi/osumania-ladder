@@ -3,11 +3,12 @@
 import Link from 'next/link'
 import { useViewStore } from '@/stores/viewStore'
 import { tournaments } from '@/generated/tournaments'
+import { useT, type MessageKey } from '@/lib/i18n'
 
 const VIEW_MODES = [
-  { key: 'tournament' as const, label: '整场比赛', num: '0' },
-  { key: 'round' as const, label: '每轮图池', num: '1' },
-  { key: 'type' as const, label: '每轮键型', num: '2' },
+  { key: 'tournament' as const, labelKey: 'header.viewMode.tournament' as MessageKey, num: '0' },
+  { key: 'round' as const, labelKey: 'header.viewMode.round' as MessageKey, num: '1' },
+  { key: 'type' as const, labelKey: 'header.viewMode.type' as MessageKey, num: '2' },
 ]
 
 const STANDARD_TYPES = ['RC', 'HB', 'LN', 'SV', 'TB']
@@ -29,11 +30,12 @@ function getAllTypes(): string[] {
 export function Header() {
   const { mode, setMode, activeFilter, setActiveFilter, searchQuery, setSearchQuery } = useViewStore()
   const allTypes = getAllTypes()
+  const t = useT()
 
   return (
     <header className="border-b border-gray-200 dark:border-neutral-800 flex items-center px-2 sm:px-4 gap-2 sm:gap-4 shrink-0 flex-wrap md:flex-nowrap min-h-14 py-1 md:py-0 md:h-14 bg-white dark:bg-neutral-950">
       <h1 className="text-base sm:text-lg font-bold whitespace-nowrap">
-        <span className="text-purple-700 dark:text-purple-300">osu!mania</span> <span className="hidden sm:inline">比赛谱面</span>天梯榜
+        <span className="text-purple-700 dark:text-purple-300">{t('header.brand')}</span><span className="hidden sm:inline">{t('header.titleFull')}</span><span className="sm:hidden">{t('header.titleCompact')}</span>
       </h1>
 
       <div className="flex items-center gap-1 sm:ml-4 flex-wrap">
@@ -47,7 +49,7 @@ export function Header() {
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700'
             }`}
           >
-            {vm.label}
+            {t(vm.labelKey)}
           </button>
         ))}
       </div>
@@ -61,7 +63,7 @@ export function Header() {
               : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700'
           }`}
         >
-          全部
+          {t('header.filter.all')}
         </button>
         {allTypes.map((f) => (
           <button
@@ -83,7 +85,7 @@ export function Header() {
       <div className="md:ml-auto flex items-center gap-1 sm:gap-2 flex-wrap">
         <input
           type="text"
-          placeholder="搜索..."
+          placeholder={t('header.search.placeholder')}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="px-2 sm:px-3 py-1 sm:py-1.5 border border-gray-300 dark:border-neutral-700 rounded text-xs sm:text-sm w-28 sm:w-48 focus:outline-none focus:border-purple-400 bg-white dark:bg-neutral-900 dark:text-neutral-100 dark:placeholder:text-neutral-500"
@@ -92,13 +94,13 @@ export function Header() {
           href="/download"
           className="px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm text-gray-500 hover:text-purple-600 border border-gray-200 rounded hover:border-purple-300 whitespace-nowrap dark:text-neutral-400 dark:border-neutral-700 dark:hover:text-purple-300 dark:hover:border-purple-700"
         >
-          下载合包
+          {t('header.nav.download')}
         </Link>
         <Link
           href="/admin"
           className="px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm text-gray-500 hover:text-purple-600 border border-gray-200 rounded hover:border-purple-300 whitespace-nowrap dark:text-neutral-400 dark:border-neutral-700 dark:hover:text-purple-300 dark:hover:border-purple-700"
         >
-          录入数据
+          {t('header.nav.admin')}
         </Link>
       </div>
     </header>

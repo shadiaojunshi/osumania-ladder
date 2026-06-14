@@ -5,6 +5,7 @@ import type { Tournament, Round } from '@/lib/types'
 import { RoundEditor, type RoundWithMeta } from './RoundEditor'
 import type { MapCategory, ExtendedMap } from './MapSlotEditor'
 import { BulkImporter } from './BulkImporter'
+import { useT, type MessageKey } from '@/lib/i18n'
 
 interface Props {
   onUpdate: (tournament: Tournament | null) => void
@@ -183,11 +184,12 @@ function roundToMeta(r: Round): RoundWithMeta {
 }
 
 function StepIndicator({ current }: { current: number }) {
-  const steps = ['基本信息', '轮次与谱面']
+  const t = useT()
+  const steps: MessageKey[] = ['form.step.basic', 'form.step.rounds']
   return (
     <div className="flex items-center gap-2">
-      {steps.map((label, i) => (
-        <div key={label} className="flex items-center gap-2">
+      {steps.map((labelKey, i) => (
+        <div key={labelKey} className="flex items-center gap-2">
           <div
             className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${
               i <= current ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-500 dark:bg-neutral-700 dark:text-neutral-400'
@@ -196,7 +198,7 @@ function StepIndicator({ current }: { current: number }) {
             {i + 1}
           </div>
           <span className={`text-sm ${i <= current ? 'text-gray-900 dark:text-neutral-100' : 'text-gray-400 dark:text-neutral-500'}`}>
-            {label}
+            {t(labelKey)}
           </span>
           {i < steps.length - 1 && <div className="w-8 h-px bg-gray-300 dark:bg-neutral-600" />}
         </div>
@@ -216,6 +218,7 @@ function BasicInfoStep({
   onNext: () => void
   isEditing: boolean
 }) {
+  const t = useT()
   const canProceed = tournament.name.trim() && tournament.abbreviation.trim()
 
   const autoId = (name: string) => {
@@ -230,7 +233,7 @@ function BasicInfoStep({
   return (
     <div className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-1">比赛全称</label>
+        <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-1">{t('form.label.name')}</label>
         <input
           type="text"
           value={tournament.name}
@@ -240,24 +243,24 @@ function BasicInfoStep({
               updateField('id', autoId(e.target.value))
             }
           }}
-          placeholder="例: osu!mania World Cup 2025"
+          placeholder={t('form.placeholder.name')}
           className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-700 rounded-md text-sm bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 placeholder:text-gray-400 dark:placeholder:text-neutral-500 focus:outline-none focus:border-purple-400"
         />
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-1">缩写</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-1">{t('form.label.abbr')}</label>
           <input
             type="text"
             value={tournament.abbreviation}
             onChange={(e) => updateField('abbreviation', e.target.value)}
-            placeholder="例: MWC 2025"
+            placeholder={t('form.placeholder.abbr')}
             className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-700 rounded-md text-sm bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 placeholder:text-gray-400 dark:placeholder:text-neutral-500 focus:outline-none focus:border-purple-400"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-1">ID {isEditing ? '(不可修改)' : '(自动生成)'}</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-1">{t('form.label.id')} {isEditing ? t('form.id.editing') : t('form.id.auto')}</label>
           <input
             type="text"
             value={tournament.id}
@@ -270,13 +273,13 @@ function BasicInfoStep({
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-1">键数</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-1">{t('form.label.keyCount')}</label>
           <div className="w-full px-3 py-2 border border-gray-200 dark:border-neutral-700 rounded-md text-sm bg-gray-50 dark:bg-neutral-800 text-gray-600 dark:text-neutral-400">
-            4K（暂不支持其他键数）
+            {t('form.keyCount.note')}
           </div>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-1">年份</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-1">{t('form.label.year')}</label>
           <input
             type="number"
             value={tournament.year}
@@ -288,7 +291,7 @@ function BasicInfoStep({
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-1">论坛链接 (可选)</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-1">{t('form.label.forumUrl')}</label>
           <input
             type="url"
             value={tournament.forumUrl || ''}
@@ -298,7 +301,7 @@ function BasicInfoStep({
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-1">Wiki 链接 (可选)</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-1">{t('form.label.wikiUrl')}</label>
           <input
             type="url"
             value={tournament.wikiUrl || ''}
@@ -310,7 +313,7 @@ function BasicInfoStep({
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-1">主表格链接 (可选)</label>
+        <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-1">{t('form.label.sheetUrl')}</label>
         <input
           type="url"
           value={tournament.sheetUrl || ''}
@@ -321,12 +324,12 @@ function BasicInfoStep({
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-1">标签 (逗号分隔)</label>
+        <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-1">{t('form.label.tags')}</label>
         <input
           type="text"
           value={(tournament.tags || []).join(', ')}
           onChange={(e) => updateField('tags', e.target.value.split(',').map((s) => s.trim()).filter(Boolean))}
-          placeholder="例: community, 4k, chinese"
+          placeholder={t('form.placeholder.tags')}
           className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-700 rounded-md text-sm bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 placeholder:text-gray-400 dark:placeholder:text-neutral-500 focus:outline-none focus:border-purple-400"
         />
       </div>
@@ -337,7 +340,7 @@ function BasicInfoStep({
           disabled={!canProceed}
           className="px-4 py-2 bg-purple-600 text-white rounded-md text-sm font-medium hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          下一步: 添加轮次 →
+          {t('form.next')}
         </button>
       </div>
     </div>
@@ -353,6 +356,7 @@ function RoundsStep({
   onUpdate: (rounds: RoundWithMeta[]) => void
   onBack: () => void
 }) {
+  const t = useT()
   const [importerOpen, setImporterOpen] = useState(false)
 
   const addRound = () => {
@@ -391,27 +395,27 @@ function RoundsStep({
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-medium text-gray-700 dark:text-neutral-200">
-          轮次列表 ({rounds.length} 轮)
+          {t('form.rounds.title', { n: rounds.length })}
         </h3>
         <div className="flex gap-2">
           <button
             onClick={() => setImporterOpen(true)}
             className="px-3 py-1.5 bg-purple-600 text-white rounded text-sm hover:bg-purple-700"
           >
-            从主表格导入
+            {t('form.import')}
           </button>
           <button
             onClick={addRound}
             className="px-3 py-1.5 bg-green-600 text-white rounded text-sm hover:bg-green-700"
           >
-            + 添加轮次
+            {t('form.addRound')}
           </button>
         </div>
       </div>
 
       {rounds.length === 0 && (
         <div className="text-center py-8 text-gray-400 dark:text-neutral-500 text-sm">
-          还没有轮次，点击上方按钮添加
+          {t('form.rounds.empty')}
         </div>
       )}
 
@@ -430,7 +434,7 @@ function RoundsStep({
           onClick={onBack}
           className="px-4 py-2 bg-gray-200 text-gray-700 dark:bg-neutral-700 dark:text-neutral-200 rounded-md text-sm hover:bg-gray-300 dark:hover:bg-neutral-600"
         >
-          ← 上一步
+          {t('form.back')}
         </button>
       </div>
 

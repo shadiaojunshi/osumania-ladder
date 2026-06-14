@@ -4,6 +4,7 @@ import { useState } from 'react'
 import type { Round, BeatmapMeta } from '@/lib/types'
 import { MapSlotEditor, type ExtendedMap, type MapCategory, REAL_TYPES } from './MapSlotEditor'
 import { getTemplatesByBestOf, type PoolTemplate } from '@/lib/poolTemplates'
+import { useT } from '@/lib/i18n'
 
 const ROUND_PRESETS = [
   { name: 'Qualifiers', abbreviation: 'Qual', isQualifier: true },
@@ -37,6 +38,7 @@ interface Props {
 }
 
 export function RoundEditor({ round, index, onChange, onRemove }: Props) {
+  const t = useT()
   const [expanded, setExpanded] = useState(true)
   const [customSlotName, setCustomSlotName] = useState('')
 
@@ -136,11 +138,11 @@ export function RoundEditor({ round, index, onChange, onRemove }: Props) {
         <div className="flex items-center gap-2">
           <span className="text-xs text-gray-400 dark:text-neutral-500 font-mono">#{index + 1}</span>
           <span className="text-sm font-medium">
-            {round.name || round.abbreviation || '未命名轮次'}
+            {round.name || round.abbreviation || t('round.untitled')}
           </span>
           {round._maps.length > 0 && (
             <span className="text-xs text-gray-400 dark:text-neutral-500">
-              ({round._maps.length} 张谱面)
+              {t('round.mapsCount', { n: round._maps.length })}
             </span>
           )}
         </div>
@@ -149,7 +151,7 @@ export function RoundEditor({ round, index, onChange, onRemove }: Props) {
             onClick={(e) => { e.stopPropagation(); onRemove() }}
             className="text-xs text-red-500 hover:text-red-700"
           >
-            删除
+            {t('round.delete')}
           </button>
           <span className="text-gray-400 dark:text-neutral-500">{expanded ? '▼' : '▶'}</span>
         </div>
@@ -158,7 +160,7 @@ export function RoundEditor({ round, index, onChange, onRemove }: Props) {
       {expanded && (
         <div className="p-3 space-y-3">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-xs text-gray-500 dark:text-neutral-400">快速填充:</span>
+            <span className="text-xs text-gray-500 dark:text-neutral-400">{t('round.preset.label')}</span>
             {ROUND_PRESETS.map((p) => (
               <button
                 key={p.abbreviation}
@@ -172,28 +174,28 @@ export function RoundEditor({ round, index, onChange, onRemove }: Props) {
 
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className="block text-xs text-gray-500 dark:text-neutral-400 mb-0.5">轮次名称</label>
+              <label className="block text-xs text-gray-500 dark:text-neutral-400 mb-0.5">{t('round.label.name')}</label>
               <input
                 type="text"
                 value={round.name}
                 onChange={(e) => updateField('name', e.target.value)}
-                placeholder="Quarterfinals"
+                placeholder={t('round.placeholder.name')}
                 className="w-full px-2 py-1.5 border border-gray-300 dark:border-neutral-700 rounded text-sm bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 placeholder:text-gray-400 dark:placeholder:text-neutral-500 focus:outline-none focus:border-purple-400"
               />
             </div>
             <div>
-              <label className="block text-xs text-gray-500 dark:text-neutral-400 mb-0.5">缩写</label>
+              <label className="block text-xs text-gray-500 dark:text-neutral-400 mb-0.5">{t('round.label.abbr')}</label>
               <input
                 type="text"
                 value={round.abbreviation}
                 onChange={(e) => updateField('abbreviation', e.target.value)}
-                placeholder="QF"
+                placeholder={t('round.placeholder.abbr')}
                 className="w-full px-2 py-1.5 border border-gray-300 dark:border-neutral-700 rounded text-sm bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 placeholder:text-gray-400 dark:placeholder:text-neutral-500 focus:outline-none focus:border-purple-400"
               />
             </div>
             <div>
               <label className="block text-xs text-gray-500 dark:text-neutral-400 mb-0.5">
-                {round.isQualifier ? '谱面数量' : 'BO (Best Of)'}
+                {round.isQualifier ? t('round.label.qualMaps') : t('round.label.bo')}
               </label>
               <input
                 type="number"
@@ -207,7 +209,7 @@ export function RoundEditor({ round, index, onChange, onRemove }: Props) {
 
           {round.bestOf && getTemplates(round.bestOf, !!round.isQualifier).length > 0 && (
             <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="text-xs text-gray-500 dark:text-neutral-400">图池模板:</span>
+              <span className="text-xs text-gray-500 dark:text-neutral-400">{t('round.template.label')}</span>
               {getTemplates(round.bestOf, !!round.isQualifier).map((tpl, i) => (
                 <button
                   key={i}
@@ -222,19 +224,19 @@ export function RoundEditor({ round, index, onChange, onRemove }: Props) {
 
           <div className="border-t border-gray-100 dark:border-neutral-800 pt-3">
             <div className="flex items-center justify-between mb-2">
-              <label className="text-xs font-medium text-gray-700 dark:text-neutral-200">难度输入</label>
+              <label className="text-xs font-medium text-gray-700 dark:text-neutral-200">{t('round.diff.input')}</label>
               <div className="flex items-center gap-1">
                 <button
                   onClick={() => updateField('_diffMode', 'perMap')}
                   className={`px-2 py-0.5 text-xs rounded ${round._diffMode === 'perMap' ? 'bg-purple-600 text-white' : 'bg-gray-100 dark:bg-neutral-800 text-gray-600 dark:text-neutral-300'}`}
                 >
-                  逐图填写
+                  {t('round.diff.perMap')}
                 </button>
                 <button
                   onClick={() => updateField('_diffMode', 'summary')}
                   className={`px-2 py-0.5 text-xs rounded ${round._diffMode === 'summary' ? 'bg-purple-600 text-white' : 'bg-gray-100 dark:bg-neutral-800 text-gray-600 dark:text-neutral-300'}`}
                 >
-                  只填范围
+                  {t('round.diff.summary')}
                 </button>
               </div>
             </div>
@@ -243,9 +245,9 @@ export function RoundEditor({ round, index, onChange, onRemove }: Props) {
               <div className="space-y-2">
                 <div className="grid grid-cols-4 gap-2 items-end">
                   <div className="text-xs text-gray-500 dark:text-neutral-400 font-medium"></div>
-                  <div className="text-xs text-gray-400 dark:text-neutral-500 text-center">最低</div>
-                  <div className="text-xs text-gray-400 dark:text-neutral-500 text-center">最高</div>
-                  <div className="text-xs text-gray-400 dark:text-neutral-500 text-center">平均</div>
+                  <div className="text-xs text-gray-400 dark:text-neutral-500 text-center">{t('round.diff.min')}</div>
+                  <div className="text-xs text-gray-400 dark:text-neutral-500 text-center">{t('round.diff.max')}</div>
+                  <div className="text-xs text-gray-400 dark:text-neutral-500 text-center">{t('round.diff.avg')}</div>
                 </div>
                 <div className="grid grid-cols-4 gap-2 items-center">
                   <span className="text-xs text-blue-600 dark:text-blue-300 font-medium">RC (rf)</span>
@@ -271,11 +273,11 @@ export function RoundEditor({ round, index, onChange, onRemove }: Props) {
                   <input type="number" step="0.5" value={round._typeDiffs.svMax || ''} onChange={(e) => updateTypeDiff('svMax', Number(e.target.value))} className="w-full px-1.5 py-1 border border-gray-200 dark:border-neutral-700 rounded text-xs text-center bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 focus:outline-none focus:border-amber-400" />
                   <input type="number" step="0.5" value={round._typeDiffs.sv || ''} onChange={(e) => updateTypeDiff('sv', Number(e.target.value))} className="w-full px-1.5 py-1 border border-gray-200 dark:border-neutral-700 rounded text-xs text-center bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 focus:outline-none focus:border-amber-400" />
                 </div>
-                <p className="text-xs text-gray-400 dark:text-neutral-500">只填范围模式下，每张谱面的难度会自动设为对应键型的平均值</p>
+                <p className="text-xs text-gray-400 dark:text-neutral-500">{t('round.diff.summaryHint')}</p>
               </div>
             ) : (
               <div>
-                <label className="block text-xs text-gray-500 dark:text-neutral-400 mb-2">各键型平均难度（留空自动计算）</label>
+                <label className="block text-xs text-gray-500 dark:text-neutral-400 mb-2">{t('round.diff.avgHint')}</label>
                 <div className="grid grid-cols-5 gap-2">
                   <div>
                     <label className="block text-xs text-blue-600 dark:text-blue-300 mb-0.5">RC (rf)</label>
@@ -304,7 +306,7 @@ export function RoundEditor({ round, index, onChange, onRemove }: Props) {
 
           <div className="border-t border-gray-100 dark:border-neutral-800 pt-3">
             <div className="flex items-center justify-between mb-2">
-              <label className="text-xs font-medium text-gray-700 dark:text-neutral-200">谱面列表</label>
+              <label className="text-xs font-medium text-gray-700 dark:text-neutral-200">{t('round.maps.title')}</label>
               <div className="flex gap-1 flex-wrap">
                 {STANDARD_TYPES.map((type) => (
                   <button
@@ -324,7 +326,7 @@ export function RoundEditor({ round, index, onChange, onRemove }: Props) {
                 value={customSlotName}
                 onChange={(e) => setCustomSlotName(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && addCustomMap()}
-                placeholder="自定义键型名 (如 EX, DF)"
+                placeholder={t('round.custom.placeholder')}
                 className="px-2 py-1 border border-gray-200 dark:border-neutral-700 rounded text-xs w-36 bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 placeholder:text-gray-400 dark:placeholder:text-neutral-500 focus:outline-none focus:border-green-400"
               />
               <button
@@ -332,13 +334,13 @@ export function RoundEditor({ round, index, onChange, onRemove }: Props) {
                 disabled={!customSlotName.trim()}
                 className="px-2 py-1 text-xs bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-200 rounded hover:bg-emerald-100 dark:hover:bg-emerald-900/50 disabled:opacity-40"
               >
-                +添加
+                {t('round.custom.add')}
               </button>
             </div>
 
             {round._maps.length === 0 && (
               <div className="text-center py-4 text-gray-400 dark:text-neutral-500 text-xs border border-dashed border-gray-200 dark:border-neutral-700 rounded">
-                点击上方按钮添加谱面槽位
+                {t('round.maps.empty')}
               </div>
             )}
 
@@ -356,7 +358,11 @@ export function RoundEditor({ round, index, onChange, onRemove }: Props) {
 
           {round._maps.length > 0 && (
             <div className="text-xs text-gray-400 dark:text-neutral-500 pt-1 border-t border-gray-100 dark:border-neutral-800">
-              难度范围: {round.difficulty.min.toFixed(1)} ~ {round.difficulty.max.toFixed(1)} (平均 {round.difficulty.average.toFixed(1)})
+              {t('round.diff.range', {
+                min: round.difficulty.min.toFixed(1),
+                max: round.difficulty.max.toFixed(1),
+                avg: round.difficulty.average.toFixed(1),
+              })}
             </div>
           )}
         </div>

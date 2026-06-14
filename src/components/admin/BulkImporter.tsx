@@ -5,6 +5,7 @@ import type { RoundWithMeta } from './RoundEditor'
 import type { ExtendedMap, MapCategory } from './MapSlotEditor'
 import { REAL_TYPES } from './MapSlotEditor'
 import { findMatchingTemplate, applyTemplateRealTypes } from '@/lib/poolTemplates'
+import { useT, type MessageKey } from '@/lib/i18n'
 
 interface BeatmapApiResponse {
   beatmapId: string
@@ -28,6 +29,7 @@ interface ParsedRow {
   status: RowStatus
   meta?: BeatmapApiResponse
   error?: string
+  errorKey?: MessageKey
 }
 
 interface GroupMeta {
@@ -92,7 +94,7 @@ function parseInput(text: string): ParsedRow[] {
 
     const parts = line.split(/\s*\t\s*|\s{2,}|\s+/).filter(Boolean)
     if (parts.length < 2) {
-      rows.push({ raw: line, slot: parts[0] || '', mapId: '', groupIndex, status: 'error', error: '缺少 slot 或 ID' })
+      rows.push({ raw: line, slot: parts[0] || '', mapId: '', groupIndex, status: 'error', errorKey: 'bulk.parseError.missingSlotOrId' })
       continue
     }
     const slot = parts[0].toUpperCase()
@@ -105,7 +107,7 @@ function parseInput(text: string): ParsedRow[] {
     seenSlotsInGroup.add(slot)
 
     if (!mapId) {
-      rows.push({ raw: line, slot, mapId: '', groupIndex, status: 'error', error: '无法提取 mapID' })
+      rows.push({ raw: line, slot, mapId: '', groupIndex, status: 'error', errorKey: 'bulk.parseError.cannotExtract' })
       continue
     }
     rows.push({ raw: line, slot, mapId, groupIndex, status: 'pending' })
@@ -148,13 +150,22 @@ function buildDefaultGroupMetas(groupCount: number, qualifierMask: boolean[]): G
   return result
 }
 
+// 已知错误带 errorKey,可被 i18n 翻译;未知错误(API 原文)走 message。
+class BulkFetchError extends Error {
+  errorKey?: MessageKey
+  constructor(message: string, errorKey?: MessageKey) {
+    super(message)
+    this.errorKey = errorKey
+  }
+}
+
 async function fetchBeatmap(mapId: string): Promise<BeatmapApiResponse> {
   const res = await fetch(`/api/osu/beatmap?id=${mapId}`)
   if (!res.ok) {
     const body = await res.json().catch(() => ({}))
     const err = body as { error?: string; status?: number }
     if (res.status === 429 || err.status === 429) {
-      throw new Error('被限流 (429)，建议稍后重试这一行')
+      throw new BulkFetchError('rate-limited', 'bulk.error.rateLimited')
     }
     throw new Error(err.error || `HTTP ${res.status}`)
   }
@@ -171,6 +182,7 @@ function formatLength(seconds: number | null): string {
 const GROUP_COLORS = ['bg-purple-100', 'bg-blue-100', 'bg-emerald-100', 'bg-pink-100', 'bg-amber-100', 'bg-indigo-100', 'bg-teal-100', 'bg-rose-100']
 
 export function BulkImporter({ onImport, onClose, existingRoundCount }: Props) {
+  const t = useT()
   const [step, setStep] = useState<Step>('input')
   const [text, setText] = useState('')
   const [rows, setRows] = useState<ParsedRow[]>([])
@@ -192,7 +204,7 @@ export function BulkImporter({ onImport, onClose, existingRoundCount }: Props) {
   const parse = () => {
     const parsed = parseInput(text)
     if (parsed.length > 200) {
-      alert('单次导入最多 200 行，请分批处理')
+      alert(t('bulk.parseError.tooMany'))
       return
     }
     setRows(parsed)
@@ -225,9 +237,13 @@ export function BulkImporter({ onImport, onClose, existingRoundCount }: Props) {
       setRows([...next])
       try {
         const meta = await fetchBeatmap(next[i].mapId)
-        next[i] = { ...next[i], status: 'ok', meta }
+        next[i] = { ...next[i], status: 'ok', meta, error: undefined, errorKey: undefined }
       } catch (err) {
-        next[i] = { ...next[i], status: 'error', error: err instanceof Error ? err.message : String(err) }
+        if (err instanceof BulkFetchError && err.errorKey) {
+          next[i] = { ...next[i], status: 'error', error: undefined, errorKey: err.errorKey }
+        } else {
+          next[i] = { ...next[i], status: 'error', error: err instanceof Error ? err.message : String(err), errorKey: undefined }
+        }
       }
       setRows([...next])
       if (abortRef.current) break
@@ -247,9 +263,13 @@ export function BulkImporter({ onImport, onClose, existingRoundCount }: Props) {
       setRows([...next])
       try {
         const meta = await fetchBeatmap(next[i].mapId)
-        next[i] = { ...next[i], status: 'ok', meta }
+        next[i] = { ...next[i], status: 'ok', meta, error: undefined, errorKey: undefined }
       } catch (err) {
-        next[i] = { ...next[i], status: 'error', error: err instanceof Error ? err.message : String(err) }
+        if (err instanceof BulkFetchError && err.errorKey) {
+          next[i] = { ...next[i], status: 'error', error: undefined, errorKey: err.errorKey }
+        } else {
+          next[i] = { ...next[i], status: 'error', error: err instanceof Error ? err.message : String(err), errorKey: undefined }
+        }
       }
       setRows([...next])
       if (abortRef.current) break
@@ -336,11 +356,11 @@ export function BulkImporter({ onImport, onClose, existingRoundCount }: Props) {
       <div className="bg-white dark:bg-neutral-900 rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] flex flex-col">
         <div className="px-4 py-3 border-b border-gray-200 dark:border-neutral-800 flex items-center justify-between shrink-0">
           <h3 className="text-sm font-medium text-gray-900 dark:text-neutral-100">
-            从主表格批量导入图池
+            {t('bulk.title')}
             <span className="ml-2 text-xs text-gray-400 dark:text-neutral-500">
-              {step === 'input' && '步骤 1/3：粘贴'}
-              {step === 'confirm' && '步骤 2/3：确认轮次'}
-              {step === 'fetch' && '步骤 3/3：查询元数据'}
+              {step === 'input' && t('bulk.step.input')}
+              {step === 'confirm' && t('bulk.step.confirm')}
+              {step === 'fetch' && t('bulk.step.fetch')}
             </span>
           </h3>
           <button onClick={onClose} className="text-gray-400 dark:text-neutral-500 hover:text-gray-600 dark:hover:text-neutral-300">✕</button>
@@ -349,18 +369,16 @@ export function BulkImporter({ onImport, onClose, existingRoundCount }: Props) {
         <div className="p-4 overflow-y-auto flex-1 space-y-3">
           {step === 'input' && (
             <>
-              <div className="text-xs text-gray-500 dark:text-neutral-400 leading-relaxed">
-                从 Google 主表格选中 <strong>slot 列</strong> 和 <strong>map link/ID 列</strong>(两列),复制粘贴到下方。每行格式自由:tab 或多空格分隔皆可。<br />
-                <strong className="text-gray-700 dark:text-neutral-200">轮次顺序:</strong>从上往下按比赛进程贴 —— 先粘资格赛(Qualifiers),最后粘决赛(Grand Finals)。默认按淘汰赛从尾倒推命名(最后一轮 = GF,倒数第二轮 = F,以此类推),所以贴反了识别会出错。<br />
-                <strong className="text-gray-700 dark:text-neutral-200">分轮规则:</strong>用 <strong>空行</strong>分隔不同的轮次(资格赛和决赛之间必须空一行);如果同一个 slot(如 RC1)再次出现,也会自动开新一轮。<br />
-                支持的 ID 格式:纯数字、<code>osu.ppy.sh/b/数字</code>、<code>osu.ppy.sh/beatmapsets/X#mode/数字</code>。
-              </div>
+              <div
+                className="text-xs text-gray-500 dark:text-neutral-400 leading-relaxed"
+                dangerouslySetInnerHTML={{ __html: t('bulk.input.hint.html') }}
+              />
 
               <textarea
                 value={text}
                 onChange={(e) => setText(e.target.value)}
                 placeholder={
-                  '示例(三轮:Qual → F → GF,空行分隔。无 TB 的轮默认识别为 Qual,有 TB 的从尾倒推命名):\n\n' +
+                  t('bulk.input.placeholder.header') + '\n\n' +
                   'RC1\thttps://osu.ppy.sh/b/5318853\n' +
                   'RC2\t5318764\n' +
                   'HB1\t5318882\n' +
@@ -383,21 +401,23 @@ export function BulkImporter({ onImport, onClose, existingRoundCount }: Props) {
           {step === 'confirm' && (
             <>
               <div className="text-xs text-gray-500 dark:text-neutral-400 leading-relaxed">
-                识别到 <strong className="text-gray-900 dark:text-neutral-100">{groupCount} 轮</strong>，每行 <strong>张数</strong> 见右侧。<br />
-                默认按淘汰赛从尾倒推命名（GF/F/SF/QF/RO16...），<strong>没有 TB</strong> 的轮次默认标为资格赛。请确认或修改。
+                <span dangerouslySetInnerHTML={{ __html: t('bulk.confirm.detected.html', { n: String(groupCount) }) }} />
+                <br />
+                <span dangerouslySetInnerHTML={{ __html: t('bulk.confirm.hint.html') }} />
               </div>
 
               <div className="border border-gray-200 dark:border-neutral-800 rounded">
                 <div className="grid grid-cols-[40px_70px_1fr_1fr_60px] gap-2 px-2 py-1.5 bg-gray-50 dark:bg-neutral-900/50 border-b border-gray-200 dark:border-neutral-800 font-medium text-xs text-gray-500 dark:text-neutral-400">
-                  <span>轮</span>
-                  <span>类型</span>
-                  <span>名称</span>
-                  <span>缩写</span>
-                  <span className="text-right">张数</span>
+                  <span>{t('bulk.col.round')}</span>
+                  <span>{t('bulk.col.type')}</span>
+                  <span>{t('bulk.col.name')}</span>
+                  <span>{t('bulk.col.abbr')}</span>
+                  <span className="text-right">{t('bulk.col.maps')}</span>
                 </div>
                 {groupMetas.map((m, gi) => {
                   if (groupSizes[gi] === 0) return null
                   const groupColor = GROUP_COLORS[gi % GROUP_COLORS.length]
+                  const typeLabel = m.isQualifier ? t('bulk.type.qual') : t('bulk.type.elim')
                   return (
                     <div key={gi} className="grid grid-cols-[40px_70px_1fr_1fr_60px] gap-2 px-2 py-1.5 border-b border-gray-100 dark:border-neutral-800 items-center">
                       <span className={`font-mono text-center text-gray-700 dark:text-neutral-200 rounded text-xs py-1 ${groupColor}`}>
@@ -406,26 +426,26 @@ export function BulkImporter({ onImport, onClose, existingRoundCount }: Props) {
                       <button
                         onClick={() => toggleQualifier(gi)}
                         className={`text-xs px-2 py-1 rounded ${m.isQualifier ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-200' : 'bg-gray-100 dark:bg-neutral-800 text-gray-600 dark:text-neutral-300'}`}
-                        title={`点击切换：当前是${m.isQualifier ? '资格赛' : '淘汰赛'}`}
+                        title={t('bulk.toggleTitle', { type: typeLabel })}
                       >
-                        {m.isQualifier ? '资格赛' : '淘汰赛'}
+                        {typeLabel}
                       </button>
                       <input
                         type="text"
                         value={m.name}
                         onChange={(e) => updateGroupMeta(gi, 'name', e.target.value)}
-                        placeholder="轮次名称"
+                        placeholder={t('bulk.placeholder.roundName')}
                         className="w-full px-2 py-1 border border-gray-300 dark:border-neutral-700 rounded text-xs bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 placeholder:text-gray-400 dark:placeholder:text-neutral-500 focus:outline-none focus:border-purple-400"
                       />
                       <input
                         type="text"
                         value={m.abbreviation}
                         onChange={(e) => updateGroupMeta(gi, 'abbreviation', e.target.value)}
-                        placeholder="缩写"
+                        placeholder={t('bulk.placeholder.roundAbbr')}
                         className="w-full px-2 py-1 border border-gray-300 dark:border-neutral-700 rounded text-xs bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 placeholder:text-gray-400 dark:placeholder:text-neutral-500 focus:outline-none focus:border-purple-400"
                       />
                       <span className="text-xs text-gray-400 dark:text-neutral-500 text-right">
-                        {groupSizes[gi]}{!groupHasTb[gi] && <span className="text-orange-600 ml-1" title="无 TB">⚐</span>}
+                        {groupSizes[gi]}{!groupHasTb[gi] && <span className="text-orange-600 ml-1" title={t('bulk.noTb')}>⚐</span>}
                       </span>
                     </div>
                   )
@@ -433,7 +453,7 @@ export function BulkImporter({ onImport, onClose, existingRoundCount }: Props) {
               </div>
 
               <div className="text-xs text-gray-400 dark:text-neutral-500">
-                共 {rows.length} 行，{rows.filter((r) => r.mapId).length} 个有效 mapID。下一步会逐张调 osu! API 拉取元数据，每张约 0.4 秒。
+                {t('bulk.summary', { total: String(rows.length), valid: String(rows.filter((r) => r.mapId).length) })}
               </div>
             </>
           )}
@@ -442,25 +462,25 @@ export function BulkImporter({ onImport, onClose, existingRoundCount }: Props) {
             <>
               <div className="flex items-center gap-2">
                 <span className="text-xs text-gray-500 dark:text-neutral-400">
-                  {okRows.length}/{rows.filter((r) => r.mapId).length} 已查询成功
-                  {failedCount > 0 && <span className="text-yellow-700 dark:text-yellow-300 ml-2">· {failedCount} 失败</span>}
+                  {t('bulk.fetch.progress', { ok: String(okRows.length), total: String(rows.filter((r) => r.mapId).length) })}
+                  {failedCount > 0 && <span className="text-yellow-700 dark:text-yellow-300 ml-2">{t('bulk.fetch.failed', { n: String(failedCount) })}</span>}
                 </span>
                 {!running && failedCount > 0 && (
                   <button
                     onClick={retryFailed}
                     className="px-2 py-1 text-xs bg-purple-600 text-white rounded hover:bg-purple-700 ml-auto"
                   >
-                    重试失败
+                    {t('bulk.fetch.retry')}
                   </button>
                 )}
               </div>
 
               <div className="border border-gray-200 dark:border-neutral-800 rounded text-xs">
                 <div className="grid grid-cols-[40px_60px_80px_1fr] gap-2 px-2 py-1.5 bg-gray-50 dark:bg-neutral-900/50 border-b border-gray-200 dark:border-neutral-800 font-medium text-gray-500 dark:text-neutral-400">
-                  <span>轮</span>
-                  <span>Slot</span>
-                  <span>Map ID</span>
-                  <span>结果</span>
+                  <span>{t('bulk.col.round')}</span>
+                  <span>{t('bulk.col.slot')}</span>
+                  <span>{t('bulk.col.mapId')}</span>
+                  <span>{t('bulk.col.result')}</span>
                 </div>
                 <div className="max-h-72 overflow-y-auto">
                   {rows.map((r, i) => {
@@ -483,13 +503,13 @@ export function BulkImporter({ onImport, onClose, existingRoundCount }: Props) {
                               <span className="text-gray-700 dark:text-neutral-200">{r.meta.artist} - {r.meta.title} [{r.meta.version}]</span>
                               <span className="text-gray-400 dark:text-neutral-500 ml-2">
                                 {r.meta.bpm ? `${Math.round(r.meta.bpm)}bpm` : ''} {formatLength(r.meta.length)}
-                                {r.meta.mode !== '3' && <span className="text-orange-600 dark:text-orange-300 ml-1">⚠ 非 mania (mode={r.meta.mode})</span>}
+                                {r.meta.mode !== '3' && <span className="text-orange-600 dark:text-orange-300 ml-1">{t('bulk.fetch.notMania', { mode: r.meta.mode })}</span>}
                               </span>
                             </>
                           )}
-                          {r.status === 'fetching' && <span className="text-blue-600 dark:text-blue-300">查询中...</span>}
-                          {r.status === 'error' && <span className="text-yellow-700 dark:text-yellow-300">{r.error}</span>}
-                          {r.status === 'pending' && <span className="text-gray-400 dark:text-neutral-500">待查询</span>}
+                          {r.status === 'fetching' && <span className="text-blue-600 dark:text-blue-300">{t('bulk.fetch.fetching')}</span>}
+                          {r.status === 'error' && <span className="text-yellow-700 dark:text-yellow-300">{r.errorKey ? t(r.errorKey) : r.error}</span>}
+                          {r.status === 'pending' && <span className="text-gray-400 dark:text-neutral-500">{t('bulk.fetch.pending')}</span>}
                         </span>
                       </div>
                     )
@@ -504,14 +524,14 @@ export function BulkImporter({ onImport, onClose, existingRoundCount }: Props) {
           {step === 'input' && (
             <>
               <button onClick={onClose} className="px-3 py-1.5 text-sm text-gray-600 dark:text-neutral-300 hover:text-gray-800 dark:hover:text-neutral-100">
-                取消
+                {t('bulk.cancel')}
               </button>
               <button
                 onClick={parse}
                 disabled={!text.trim()}
                 className="px-3 py-1.5 bg-purple-600 text-white rounded text-sm hover:bg-purple-700 disabled:opacity-40"
               >
-                解析 →
+                {t('bulk.parse')}
               </button>
             </>
           )}
@@ -519,14 +539,14 @@ export function BulkImporter({ onImport, onClose, existingRoundCount }: Props) {
           {step === 'confirm' && (
             <>
               <button onClick={() => setStep('input')} className="px-3 py-1.5 text-sm text-gray-600 dark:text-neutral-300 hover:text-gray-800 dark:hover:text-neutral-100">
-                ← 返回修改
+                {t('bulk.backToInput')}
               </button>
               <button
                 onClick={startFetch}
                 disabled={rows.filter((r) => r.mapId).length === 0}
                 className="px-3 py-1.5 bg-purple-600 text-white rounded text-sm hover:bg-purple-700 disabled:opacity-40"
               >
-                确认并查询元数据 →
+                {t('bulk.confirmAndFetch')}
               </button>
             </>
           )}
@@ -534,14 +554,18 @@ export function BulkImporter({ onImport, onClose, existingRoundCount }: Props) {
           {step === 'fetch' && (
             <>
               <button onClick={goBackToConfirm} className="px-3 py-1.5 text-sm text-gray-600 dark:text-neutral-300 hover:text-gray-800 dark:hover:text-neutral-100">
-                ← 返回确认{running ? '（中断查询）' : ''}
+                {running ? t('bulk.backToConfirmRunning') : t('bulk.backToConfirm')}
               </button>
               <button
                 onClick={doImport}
                 disabled={!canImport}
                 className="px-3 py-1.5 bg-green-600 text-white rounded text-sm hover:bg-green-700 disabled:opacity-40"
               >
-                导入 {groupedAll.filter((g) => g && g.length > 0).length} 轮（{importableRows.length} 张{failedCount > 0 ? `，${failedCount} 张元数据失败仍会创建` : ''}）
+                {t('bulk.import', {
+                  rounds: String(groupedAll.filter((g) => g && g.length > 0).length),
+                  maps: String(importableRows.length),
+                  failedNote: failedCount > 0 ? t('bulk.import.failedNote', { n: String(failedCount) }) : '',
+                })}
               </button>
             </>
           )}

@@ -1,6 +1,7 @@
 'use client'
 
 import type { BeatmapMeta } from '@/lib/types'
+import { useT, type MessageKey } from '@/lib/i18n'
 
 export type MapCategory = 'RC' | 'LN' | 'HB' | 'SV' | 'TB' | 'SPECIAL'
 
@@ -66,13 +67,13 @@ const CATEGORY_COLORS: Record<string, string> = {
   SPECIAL: '#10b981',
 }
 
-const CATEGORIES: { id: MapCategory; label: string }[] = [
+const CATEGORIES: { id: MapCategory; label: string; labelKey?: MessageKey }[] = [
   { id: 'RC', label: 'RC' },
   { id: 'LN', label: 'LN' },
   { id: 'HB', label: 'HB' },
   { id: 'SV', label: 'SV' },
   { id: 'TB', label: 'TB' },
-  { id: 'SPECIAL', label: '特殊' },
+  { id: 'SPECIAL', label: '特殊', labelKey: 'mapSlot.cat.special' },
 ]
 
 export interface ExtendedMap extends BeatmapMeta {
@@ -98,6 +99,7 @@ function getDiffLabel(category: MapCategory): string {
 }
 
 export function MapSlotEditor({ map, onChange, onRemove }: Props) {
+  const t = useT()
   const dual = needsDualDifficulty(map.category)
   const realTypeOptions = map.category === 'SPECIAL'
     ? Object.entries(REAL_TYPES).flatMap(([cat, types]) =>
@@ -135,7 +137,7 @@ export function MapSlotEditor({ map, onChange, onRemove }: Props) {
             value={map.slot}
             onChange={(e) => updateField('slot', e.target.value)}
             className="w-14 px-1.5 py-1 border border-gray-200 dark:border-neutral-700 rounded text-xs font-mono text-center bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 focus:outline-none focus:border-purple-400"
-            title="槽位名称 (如 RC1, EX1)"
+            title={t('mapSlot.slot.title')}
           />
 
           <select
@@ -144,7 +146,7 @@ export function MapSlotEditor({ map, onChange, onRemove }: Props) {
             className="px-1.5 py-1 border border-gray-200 dark:border-neutral-700 rounded text-xs bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 focus:outline-none focus:border-purple-400"
           >
             {CATEGORIES.map((c) => (
-              <option key={c.id} value={c.id}>{c.label}</option>
+              <option key={c.id} value={c.id}>{c.labelKey ? t(c.labelKey) : c.label}</option>
             ))}
           </select>
 
@@ -153,9 +155,9 @@ export function MapSlotEditor({ map, onChange, onRemove }: Props) {
               type="text"
               value={map.type}
               onChange={(e) => updateField('type', e.target.value.toUpperCase())}
-              placeholder="类型名 (如 EX)"
+              placeholder={t('mapSlot.special.placeholder')}
               className="w-16 px-1.5 py-1 border border-gray-200 dark:border-neutral-700 rounded text-xs font-mono text-center bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 focus:outline-none focus:border-purple-400"
-              title="在天梯榜中显示的类型名"
+              title={t('mapSlot.special.title')}
             />
           )}
 
@@ -176,7 +178,7 @@ export function MapSlotEditor({ map, onChange, onRemove }: Props) {
               type="text"
               value={map.realType}
               onChange={(e) => updateField('realType', e.target.value)}
-              placeholder="自定义类型"
+              placeholder={t('mapSlot.realType.custom')}
               className="px-1.5 py-1 border border-gray-200 dark:border-neutral-700 rounded text-xs flex-1 min-w-0 bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 placeholder:text-gray-400 dark:placeholder:text-neutral-500 focus:outline-none focus:border-purple-400"
             />
           )}
@@ -218,7 +220,7 @@ export function MapSlotEditor({ map, onChange, onRemove }: Props) {
       <button
         onClick={onRemove}
         className="text-gray-300 dark:text-neutral-600 hover:text-red-500 shrink-0 mt-1"
-        title="删除"
+        title={t('mapSlot.remove')}
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

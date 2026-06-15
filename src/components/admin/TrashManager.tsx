@@ -20,6 +20,7 @@ function formatTime(ts: number, lang: 'zh' | 'en'): string {
 export function TrashManager() {
   const t = useT()
   const lang = usePrefsStore((s) => s.lang)
+  if (typeof window !== 'undefined') console.count('[TrashManager render]')
   const [items, setItems] = useState<TrashItem[]>([])
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)

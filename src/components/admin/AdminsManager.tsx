@@ -37,6 +37,7 @@ const ROLE_BADGE: Record<Role, string> = {
 
 export function AdminsManager() {
   const t = useT()
+  if (typeof window !== 'undefined') console.count('[AdminsManager render]')
   const [admins, setAdmins] = useState<AdminItem[]>([])
   const [self, setSelf] = useState<{ uid: string; role: Role } | null>(null)
   const [loading, setLoading] = useState(true)

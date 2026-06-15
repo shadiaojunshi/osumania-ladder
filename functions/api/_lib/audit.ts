@@ -53,11 +53,22 @@ export async function writeAudit(
 /**
  * 读取最近的审计日志（最新在前）。
  * 优先用 list metadata；旧 key 没 metadata 时降级到 get。
+ *
+ * 加 5s isolate 内存缓存:防失控请求把 KV list 配额打爆。
+ * 缓存按 limit 分键(不同 limit 不复用同一份)。
+ * writeAudit 写后让缓存自然过期(日志列表延迟 5s 可接受)。
  */
+let auditCache: { value: AuditEntry[]; limit: number; expiresAt: number } | null = null
+const AUDIT_LIST_TTL_MS = 5_000
+
 export async function listAudit(
   kv: KVNamespace,
   limit = 100,
 ): Promise<AuditEntry[]> {
+  const now = Date.now()
+  if (auditCache && auditCache.limit === limit && auditCache.expiresAt > now) {
+    return auditCache.value
+  }
   const listed = await kv.list<AuditEntry>({ prefix: AUDIT_PREFIX, limit })
   const entries: AuditEntry[] = []
   const fallbacks: string[] = []
@@ -76,5 +87,6 @@ export async function listAudit(
     // 维持时间倒序（list 已按 key 升序，inverseTs 即时间倒序，但 fallback 拼回去后顺序错了）
     entries.sort((a, b) => b.ts - a.ts)
   }
+  auditCache = { value: entries, limit, expiresAt: now + AUDIT_LIST_TTL_MS }
   return entries
 }

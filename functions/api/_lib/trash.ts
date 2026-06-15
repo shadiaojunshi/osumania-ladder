@@ -80,8 +80,18 @@ export async function removeTrash(kv: KVNamespace, id: string): Promise<void> {
 /**
  * 列出回收站。只返回展示用的 slim 元数据（不含 payload）。
  * 优先用 list metadata；旧 key 没 metadata 时降级到 get。
+ *
+ * 加 5s isolate 内存缓存:防失控请求把 KV list 配额打爆。
+ * addTrash / removeTrash 写后让缓存自然过期(回收站列表延迟 5s 可接受)。
  */
+let trashListCache: { value: TrashListItem[]; limit: number; expiresAt: number } | null = null
+const TRASH_LIST_TTL_MS = 5_000
+
 export async function listTrash(kv: KVNamespace, limit = 200): Promise<TrashListItem[]> {
+  const now = Date.now()
+  if (trashListCache && trashListCache.limit === limit && trashListCache.expiresAt > now) {
+    return trashListCache.value
+  }
   const listed = await kv.list<TrashListItem>({ prefix: TRASH_PREFIX, limit })
   const out: TrashListItem[] = []
   const fallbacks: string[] = []
@@ -108,6 +118,7 @@ export async function listTrash(kv: KVNamespace, limit = 200): Promise<TrashList
     }
     out.sort((a, b) => b.deletedAt - a.deletedAt)
   }
+  trashListCache = { value: out, limit, expiresAt: now + TRASH_LIST_TTL_MS }
   return out
 }
 

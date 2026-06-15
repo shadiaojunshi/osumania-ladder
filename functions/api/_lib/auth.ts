@@ -163,18 +163,34 @@ function readCookie(request: Request, name: string): string | null {
 
 // ---------- admin list (KV) ----------
 
+// 5 秒 isolate 内存缓存,防失控请求把 KV 配额打爆。
+// 同一个 Cloudflare 边缘节点上的同一 isolate 内重复调用都命中缓存;
+// putAdminMap 写后立即失效(角色变更不能延迟生效)。
+let adminMapCache: { value: AdminMap; expiresAt: number } | null = null
+const ADMIN_MAP_TTL_MS = 5_000
+
 export async function getAdminMap(env: AuthEnv): Promise<AdminMap> {
-  const raw = await env.LADDER_KV.get(ADMINS_KEY)
-  if (!raw) return {}
-  try {
-    return JSON.parse(raw) as AdminMap
-  } catch {
-    return {}
+  const now = Date.now()
+  if (adminMapCache && adminMapCache.expiresAt > now) {
+    return adminMapCache.value
   }
+  const raw = await env.LADDER_KV.get(ADMINS_KEY)
+  let value: AdminMap = {}
+  if (raw) {
+    try {
+      value = JSON.parse(raw) as AdminMap
+    } catch {
+      value = {}
+    }
+  }
+  adminMapCache = { value, expiresAt: now + ADMIN_MAP_TTL_MS }
+  return value
 }
 
 export async function putAdminMap(env: AuthEnv, map: AdminMap): Promise<void> {
   await env.LADDER_KV.put(ADMINS_KEY, JSON.stringify(map))
+  // 同一 isolate 立即看到新值;别的 isolate 最多 5s 后看到。
+  adminMapCache = { value: map, expiresAt: Date.now() + ADMIN_MAP_TTL_MS }
 }
 
 export async function resolveRole(env: AuthEnv, uid: string): Promise<Role> {

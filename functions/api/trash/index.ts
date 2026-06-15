@@ -32,10 +32,18 @@ export const onRequestGet: PagesFunction<Env> = async ({ env, data }) => {
     return jsonResponse({ error: '需要 admin 及以上权限', code: 'FORBIDDEN' }, 403)
   }
 
-  // listTrash 已只返回展示用 slim（id/kind/label/deletedAt/deletedByName），
-  // tournament 的 payload 不会回传，恢复路径再按 id 取。
-  const items = await listTrash(env.LADDER_KV)
-  return jsonResponse({ items })
+  try {
+    // listTrash 已只返回展示用 slim（id/kind/label/deletedAt/deletedByName），
+    // tournament 的 payload 不会回传，恢复路径再按 id 取。
+    const items = await listTrash(env.LADDER_KV)
+    return jsonResponse({ items })
+  } catch (e) {
+    return jsonResponse({
+      error: '读取回收站失败',
+      detail: (e as Error).message ?? String(e),
+      kvBound: typeof env.LADDER_KV !== 'undefined',
+    }, 500)
+  }
 }
 
 // 恢复：admin 及以上。body = { id }

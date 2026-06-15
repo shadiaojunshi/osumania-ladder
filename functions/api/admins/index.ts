@@ -23,25 +23,33 @@ export const onRequestGet: PagesFunction<Env> = async ({ env, data }) => {
     return jsonResponse({ error: '需要 admin 及以上权限', code: 'FORBIDDEN' }, 403)
   }
 
-  const map = await getAdminMap(env)
-  const list: Array<{ uid: string; role: Role; username: string; addedBy?: string; addedAt?: string; bootstrap?: boolean }> = []
+  try {
+    const map = await getAdminMap(env)
+    const list: Array<{ uid: string; role: Role; username: string; addedBy?: string; addedAt?: string; bootstrap?: boolean }> = []
 
-  // bootstrap owner 始终在列表里且不可被改动
-  const bootUid = env.BOOTSTRAP_OWNER_UID
-  if (bootUid) {
-    list.push({
-      uid: bootUid,
-      role: 'owner',
-      username: map[bootUid]?.username ?? '(站长)',
-      bootstrap: true,
-    })
-  }
-  for (const [uid, rec] of Object.entries(map)) {
-    if (uid === bootUid) continue
-    list.push({ uid, role: rec.role, username: rec.username, addedBy: rec.addedBy, addedAt: rec.addedAt })
-  }
+    // bootstrap owner 始终在列表里且不可被改动
+    const bootUid = env.BOOTSTRAP_OWNER_UID
+    if (bootUid) {
+      list.push({
+        uid: bootUid,
+        role: 'owner',
+        username: map[bootUid]?.username ?? '(站长)',
+        bootstrap: true,
+      })
+    }
+    for (const [uid, rec] of Object.entries(map)) {
+      if (uid === bootUid) continue
+      list.push({ uid, role: rec.role, username: rec.username, addedBy: rec.addedBy, addedAt: rec.addedAt })
+    }
 
-  return jsonResponse({ admins: list, self: { uid: user!.uid, role: user!.role } })
+    return jsonResponse({ admins: list, self: { uid: user!.uid, role: user!.role } })
+  } catch (e) {
+    return jsonResponse({
+      error: '读取管理员名单失败',
+      detail: (e as Error).message ?? String(e),
+      kvBound: typeof env.LADDER_KV !== 'undefined',
+    }, 500)
+  }
 }
 
 // 校验「caller 能否把 target 设为 newRole / 移除 target」。

@@ -17,6 +17,14 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env, data }) =
   const limitParam = Number(url.searchParams.get('limit'))
   const limit = Number.isFinite(limitParam) && limitParam > 0 ? Math.min(limitParam, 500) : 100
 
-  const entries = await listAudit(env.LADDER_KV, limit)
-  return jsonResponse({ entries })
+  try {
+    const entries = await listAudit(env.LADDER_KV, limit)
+    return jsonResponse({ entries })
+  } catch (e) {
+    return jsonResponse({
+      error: '读取审计日志失败',
+      detail: (e as Error).message ?? String(e),
+      kvBound: typeof env.LADDER_KV !== 'undefined',
+    }, 500)
+  }
 }

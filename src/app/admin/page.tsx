@@ -38,7 +38,6 @@ type Tab = 'create' | 'manage' | 'references' | 'upload' | 'packs' | 'admins' | 
 
 export default function AdminPage() {
   const t = useT()
-  if (typeof window !== 'undefined') console.count('[AdminPage render]')
   const [authLoading, setAuthLoading] = useState(true)
   const [user, setUser] = useState<SessionUser | null>(null)
 

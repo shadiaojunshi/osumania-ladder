@@ -47,7 +47,6 @@ function formatTime(ts: number, lang: 'zh' | 'en'): string {
 export function AuditLog() {
   const t = useT()
   const lang = usePrefsStore((s) => s.lang)
-  if (typeof window !== 'undefined') console.count('[AuditLog render]')
   const [entries, setEntries] = useState<AuditEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')

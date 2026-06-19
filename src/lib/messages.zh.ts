@@ -209,6 +209,25 @@ export const messagesZh = {
   'refs.preview.title': '预览',
   'refs.preview.hint': '紫色=RF参考点，蓝色=LN参考点（跟随对齐滑条）',
 
+  // ---------- DifficultyRefPicker ----------
+  'refPicker.button': '参考',
+  'refPicker.title': '参考点选择',
+  'refPicker.current': '当前: {value}',
+  'refPicker.tournament': '比赛',
+  'refPicker.type': '键型',
+  'refPicker.leftRound': '左锚点 (低)',
+  'refPicker.rightRound': '右锚点 (高)',
+  'refPicker.position': '位置',
+  'refPicker.position.left': '{round} 本身',
+  'refPicker.position.third1': '+1/3',
+  'refPicker.position.third2': '+2/3',
+  'refPicker.position.right': '{round} 本身',
+  'refPicker.preview': '预览: ≈ {value}',
+  'refPicker.previewNoData': '无数据',
+  'refPicker.apply': '应用 {value}',
+  'refPicker.cancel': '取消',
+  'refPicker.noRounds': '暂无 {type} 数据',
+
   // ---------- TournamentForm ----------
   'form.step.basic': '基本信息',
   'form.step.rounds': '轮次与谱面',

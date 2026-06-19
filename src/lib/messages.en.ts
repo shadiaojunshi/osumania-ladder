@@ -210,6 +210,25 @@ export const messagesEn: Record<keyof typeof messagesZh, string> = {
   'refs.preview.title': 'Preview',
   'refs.preview.hint': 'Purple = RF point, blue = LN point (follows the align slider)',
 
+  // ---------- DifficultyRefPicker ----------
+  'refPicker.button': 'Ref',
+  'refPicker.title': 'Reference picker',
+  'refPicker.current': 'Current: {value}',
+  'refPicker.tournament': 'Tournament',
+  'refPicker.type': 'Type',
+  'refPicker.leftRound': 'Left anchor (low)',
+  'refPicker.rightRound': 'Right anchor (high)',
+  'refPicker.position': 'Position',
+  'refPicker.position.left': '{round} itself',
+  'refPicker.position.third1': '+1/3',
+  'refPicker.position.third2': '+2/3',
+  'refPicker.position.right': '{round} itself',
+  'refPicker.preview': 'Preview: ≈ {value}',
+  'refPicker.previewNoData': 'No data',
+  'refPicker.apply': 'Apply {value}',
+  'refPicker.cancel': 'Cancel',
+  'refPicker.noRounds': 'No {type} data',
+
   // ---------- TournamentForm ----------
   'form.step.basic': 'Basic info',
   'form.step.rounds': 'Rounds & maps',

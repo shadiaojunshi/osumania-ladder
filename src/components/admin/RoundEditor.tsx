@@ -5,6 +5,7 @@ import type { Round, BeatmapMeta } from '@/lib/types'
 import { MapSlotEditor, type ExtendedMap, type MapCategory, REAL_TYPES } from './MapSlotEditor'
 import { getTemplatesByBestOf, type PoolTemplate } from '@/lib/poolTemplates'
 import { useT } from '@/lib/i18n'
+import { DifficultyRefPicker } from './DifficultyRefPicker'
 
 const ROUND_PRESETS = [
   { name: 'Qualifiers', abbreviation: 'Qual', isQualifier: true },
@@ -253,25 +254,37 @@ export function RoundEditor({ round, index, onChange, onRemove }: Props) {
                   <span className="text-xs text-blue-600 dark:text-blue-300 font-medium">RC (rf)</span>
                   <input type="number" step="0.5" value={round._typeDiffs.rcMin || ''} onChange={(e) => updateTypeDiff('rcMin', Number(e.target.value))} className="w-full px-1.5 py-1 border border-gray-200 dark:border-neutral-700 rounded text-xs text-center bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 focus:outline-none focus:border-blue-400" />
                   <input type="number" step="0.5" value={round._typeDiffs.rcMax || ''} onChange={(e) => updateTypeDiff('rcMax', Number(e.target.value))} className="w-full px-1.5 py-1 border border-gray-200 dark:border-neutral-700 rounded text-xs text-center bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 focus:outline-none focus:border-blue-400" />
-                  <input type="number" step="0.5" value={round._typeDiffs.rc || ''} onChange={(e) => updateTypeDiff('rc', Number(e.target.value))} className="w-full px-1.5 py-1 border border-gray-200 dark:border-neutral-700 rounded text-xs text-center bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 focus:outline-none focus:border-blue-400" />
+                  <div className="flex items-center gap-1">
+                    <input type="number" step="0.5" value={round._typeDiffs.rc || ''} onChange={(e) => updateTypeDiff('rc', Number(e.target.value))} className="flex-1 min-w-0 px-1.5 py-1 border border-gray-200 dark:border-neutral-700 rounded text-xs text-center bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 focus:outline-none focus:border-blue-400" />
+                    <DifficultyRefPicker value={round._typeDiffs.rc || 0} onChange={(n) => updateTypeDiff('rc', n)} type="RC" field="rf" />
+                  </div>
                 </div>
                 <div className="grid grid-cols-4 gap-2 items-center">
                   <span className="text-xs text-purple-600 dark:text-purple-300 font-medium">HB (ln)</span>
                   <input type="number" step="0.5" value={round._typeDiffs.hbMin || ''} onChange={(e) => updateTypeDiff('hbMin', Number(e.target.value))} className="w-full px-1.5 py-1 border border-gray-200 dark:border-neutral-700 rounded text-xs text-center bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 focus:outline-none focus:border-purple-400" />
                   <input type="number" step="0.5" value={round._typeDiffs.hbMax || ''} onChange={(e) => updateTypeDiff('hbMax', Number(e.target.value))} className="w-full px-1.5 py-1 border border-gray-200 dark:border-neutral-700 rounded text-xs text-center bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 focus:outline-none focus:border-purple-400" />
-                  <input type="number" step="0.5" value={round._typeDiffs.hbLn || ''} onChange={(e) => updateTypeDiff('hbLn', Number(e.target.value))} className="w-full px-1.5 py-1 border border-gray-200 dark:border-neutral-700 rounded text-xs text-center bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 focus:outline-none focus:border-purple-400" />
+                  <div className="flex items-center gap-1">
+                    <input type="number" step="0.5" value={round._typeDiffs.hbLn || ''} onChange={(e) => updateTypeDiff('hbLn', Number(e.target.value))} className="flex-1 min-w-0 px-1.5 py-1 border border-gray-200 dark:border-neutral-700 rounded text-xs text-center bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 focus:outline-none focus:border-purple-400" />
+                    <DifficultyRefPicker value={round._typeDiffs.hbLn || 0} onChange={(n) => updateTypeDiff('hbLn', n)} type="HB" field="ln" />
+                  </div>
                 </div>
                 <div className="grid grid-cols-4 gap-2 items-center">
                   <span className="text-xs text-indigo-600 dark:text-indigo-300 font-medium">LN (ln)</span>
                   <input type="number" step="0.5" value={round._typeDiffs.lnMin || ''} onChange={(e) => updateTypeDiff('lnMin', Number(e.target.value))} className="w-full px-1.5 py-1 border border-gray-200 dark:border-neutral-700 rounded text-xs text-center bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 focus:outline-none focus:border-indigo-400" />
                   <input type="number" step="0.5" value={round._typeDiffs.lnMax || ''} onChange={(e) => updateTypeDiff('lnMax', Number(e.target.value))} className="w-full px-1.5 py-1 border border-gray-200 dark:border-neutral-700 rounded text-xs text-center bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 focus:outline-none focus:border-indigo-400" />
-                  <input type="number" step="0.5" value={round._typeDiffs.ln || ''} onChange={(e) => updateTypeDiff('ln', Number(e.target.value))} className="w-full px-1.5 py-1 border border-gray-200 dark:border-neutral-700 rounded text-xs text-center bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 focus:outline-none focus:border-indigo-400" />
+                  <div className="flex items-center gap-1">
+                    <input type="number" step="0.5" value={round._typeDiffs.ln || ''} onChange={(e) => updateTypeDiff('ln', Number(e.target.value))} className="flex-1 min-w-0 px-1.5 py-1 border border-gray-200 dark:border-neutral-700 rounded text-xs text-center bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 focus:outline-none focus:border-indigo-400" />
+                    <DifficultyRefPicker value={round._typeDiffs.ln || 0} onChange={(n) => updateTypeDiff('ln', n)} type="LN" field="ln" />
+                  </div>
                 </div>
                 <div className="grid grid-cols-4 gap-2 items-center">
                   <span className="text-xs text-amber-600 dark:text-amber-300 font-medium">SV (rf)</span>
                   <input type="number" step="0.5" value={round._typeDiffs.svMin || ''} onChange={(e) => updateTypeDiff('svMin', Number(e.target.value))} className="w-full px-1.5 py-1 border border-gray-200 dark:border-neutral-700 rounded text-xs text-center bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 focus:outline-none focus:border-amber-400" />
                   <input type="number" step="0.5" value={round._typeDiffs.svMax || ''} onChange={(e) => updateTypeDiff('svMax', Number(e.target.value))} className="w-full px-1.5 py-1 border border-gray-200 dark:border-neutral-700 rounded text-xs text-center bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 focus:outline-none focus:border-amber-400" />
-                  <input type="number" step="0.5" value={round._typeDiffs.sv || ''} onChange={(e) => updateTypeDiff('sv', Number(e.target.value))} className="w-full px-1.5 py-1 border border-gray-200 dark:border-neutral-700 rounded text-xs text-center bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 focus:outline-none focus:border-amber-400" />
+                  <div className="flex items-center gap-1">
+                    <input type="number" step="0.5" value={round._typeDiffs.sv || ''} onChange={(e) => updateTypeDiff('sv', Number(e.target.value))} className="flex-1 min-w-0 px-1.5 py-1 border border-gray-200 dark:border-neutral-700 rounded text-xs text-center bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 focus:outline-none focus:border-amber-400" />
+                    <DifficultyRefPicker value={round._typeDiffs.sv || 0} onChange={(n) => updateTypeDiff('sv', n)} type="SV" field="rf" />
+                  </div>
                 </div>
                 <p className="text-xs text-gray-400 dark:text-neutral-500">{t('round.diff.summaryHint')}</p>
               </div>

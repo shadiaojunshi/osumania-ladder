@@ -2,6 +2,8 @@
 
 import type { BeatmapMeta } from '@/lib/types'
 import { useT, type MessageKey } from '@/lib/i18n'
+import { DifficultyRefPicker } from './DifficultyRefPicker'
+import type { RefType } from '@/lib/referenceData'
 
 export type MapCategory = 'RC' | 'LN' | 'HB' | 'SV' | 'TB' | 'SPECIAL'
 
@@ -95,6 +97,18 @@ function getDiffLabel(category: MapCategory): string {
     case 'RC': case 'SV': return 'rf'
     case 'LN': return 'ln'
     case 'HB': case 'TB': case 'SPECIAL': return 'rf'
+  }
+}
+
+// MapCategory → RefType。picker 只认 RC/HB/LN/SV/TB,SPECIAL 当 RC 处理(常见情况)
+function toRefType(category: MapCategory): RefType {
+  switch (category) {
+    case 'RC': return 'RC'
+    case 'HB': return 'HB'
+    case 'LN': return 'LN'
+    case 'SV': return 'SV'
+    case 'TB': return 'TB'
+    case 'SPECIAL': return 'RC'
   }
 }
 
@@ -197,6 +211,12 @@ export function MapSlotEditor({ map, onChange, onRemove }: Props) {
               className="w-16 px-1.5 py-1 border border-gray-200 dark:border-neutral-700 rounded text-xs text-center bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 placeholder:text-gray-400 dark:placeholder:text-neutral-500 focus:outline-none focus:border-purple-400"
             />
             <span className="text-xs text-gray-400 dark:text-neutral-500">{getDiffLabel(map.category)}</span>
+            <DifficultyRefPicker
+              value={map.difficulty || 0}
+              onChange={(n) => updateField('difficulty', n)}
+              type={toRefType(map.category)}
+              field={map.category === 'LN' ? 'ln' : 'rf'}
+            />
           </div>
 
           {dual && (
@@ -212,6 +232,12 @@ export function MapSlotEditor({ map, onChange, onRemove }: Props) {
                 className="w-16 px-1.5 py-1 border border-gray-200 dark:border-neutral-700 rounded text-xs text-center bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 placeholder:text-gray-400 dark:placeholder:text-neutral-500 focus:outline-none focus:border-purple-400"
               />
               <span className="text-xs text-gray-400 dark:text-neutral-500">ln</span>
+              <DifficultyRefPicker
+                value={map.difficultyLn || 0}
+                onChange={(n) => updateField('difficultyLn', n || undefined)}
+                type={toRefType(map.category)}
+                field="ln"
+              />
             </div>
           )}
         </div>

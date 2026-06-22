@@ -7,14 +7,19 @@ import { getTemplatesByBestOf, type PoolTemplate } from '@/lib/poolTemplates'
 import { useT } from '@/lib/i18n'
 import { DifficultyRefPicker } from './DifficultyRefPicker'
 
-const ROUND_PRESETS = [
+const ROUND_PRESETS: {
+  name: string
+  abbreviation: string
+  isQualifier?: boolean
+  defaultBo?: number
+}[] = [
   { name: 'Qualifiers', abbreviation: 'Qual', isQualifier: true },
-  { name: 'Round of 32', abbreviation: 'RO32' },
-  { name: 'Round of 16', abbreviation: 'RO16' },
-  { name: 'Quarterfinals', abbreviation: 'QF' },
-  { name: 'Semifinals', abbreviation: 'SF' },
-  { name: 'Finals', abbreviation: 'F' },
-  { name: 'Grand Finals', abbreviation: 'GF' },
+  { name: 'Round of 32', abbreviation: 'RO32', defaultBo: 9 },
+  { name: 'Round of 16', abbreviation: 'RO16', defaultBo: 9 },
+  { name: 'Quarterfinals', abbreviation: 'QF', defaultBo: 11 },
+  { name: 'Semifinals', abbreviation: 'SF', defaultBo: 11 },
+  { name: 'Finals', abbreviation: 'F', defaultBo: 13 },
+  { name: 'Grand Finals', abbreviation: 'GF', defaultBo: 13 },
 ]
 
 const STANDARD_TYPES = ['RC', 'HB', 'LN', 'SV', 'TB'] as const
@@ -26,8 +31,9 @@ interface RoundWithMeta extends Round {
     hbRf: number; hbLn: number; hbMin: number; hbMax: number
     ln: number; lnMin: number; lnMax: number
     sv: number; svMin: number; svMax: number
+    tbRf: number; tbLn: number; tbMin: number; tbMax: number
   }
-  _typeDiffsLocked: { rc: boolean; hbRf: boolean; hbLn: boolean; ln: boolean; sv: boolean }
+  _typeDiffsLocked: { rc: boolean; hbRf: boolean; hbLn: boolean; ln: boolean; sv: boolean; tbRf: boolean; tbLn: boolean }
   _diffMode: 'perMap' | 'summary'
 }
 
@@ -95,11 +101,17 @@ export function RoundEditor({ round, index, onChange, onRemove }: Props) {
   }
 
   const applyPreset = (preset: typeof ROUND_PRESETS[number]) => {
+    // BO 默认值只在用户没填时补;已填值不动,避免覆盖手改。
+    const nextBo =
+      !preset.isQualifier && preset.defaultBo && !round.bestOf
+        ? preset.defaultBo
+        : round.bestOf
     onChange({
       ...round,
       name: preset.name,
       abbreviation: preset.abbreviation,
       isQualifier: preset.isQualifier || undefined,
+      bestOf: nextBo,
     })
   }
 
@@ -286,6 +298,24 @@ export function RoundEditor({ round, index, onChange, onRemove }: Props) {
                     <DifficultyRefPicker value={round._typeDiffs.sv || 0} onChange={(n) => updateTypeDiff('sv', n)} type="SV" field="rf" />
                   </div>
                 </div>
+                <div className="grid grid-cols-4 gap-2 items-center">
+                  <span className="text-xs text-rose-600 dark:text-rose-300 font-medium">TB (rf)</span>
+                  <input type="number" step="0.5" value={round._typeDiffs.tbMin || ''} onChange={(e) => updateTypeDiff('tbMin', Number(e.target.value))} className="w-full px-1.5 py-1 border border-gray-200 dark:border-neutral-700 rounded text-xs text-center bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 focus:outline-none focus:border-rose-400" />
+                  <input type="number" step="0.5" value={round._typeDiffs.tbMax || ''} onChange={(e) => updateTypeDiff('tbMax', Number(e.target.value))} className="w-full px-1.5 py-1 border border-gray-200 dark:border-neutral-700 rounded text-xs text-center bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 focus:outline-none focus:border-rose-400" />
+                  <div className="flex items-center gap-1">
+                    <input type="number" step="0.5" value={round._typeDiffs.tbRf || ''} onChange={(e) => updateTypeDiff('tbRf', Number(e.target.value))} className="flex-1 min-w-0 px-1.5 py-1 border border-gray-200 dark:border-neutral-700 rounded text-xs text-center bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 focus:outline-none focus:border-rose-400" />
+                    <DifficultyRefPicker value={round._typeDiffs.tbRf || 0} onChange={(n) => updateTypeDiff('tbRf', n)} type="TB" field="rf" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-4 gap-2 items-center">
+                  <span className="text-xs text-rose-600 dark:text-rose-300 font-medium">TB (ln)</span>
+                  <div className="text-xs text-gray-300 dark:text-neutral-600 text-center">—</div>
+                  <div className="text-xs text-gray-300 dark:text-neutral-600 text-center">—</div>
+                  <div className="flex items-center gap-1">
+                    <input type="number" step="0.5" value={round._typeDiffs.tbLn || ''} onChange={(e) => updateTypeDiff('tbLn', Number(e.target.value))} className="flex-1 min-w-0 px-1.5 py-1 border border-gray-200 dark:border-neutral-700 rounded text-xs text-center bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 focus:outline-none focus:border-rose-400" />
+                    <DifficultyRefPicker value={round._typeDiffs.tbLn || 0} onChange={(n) => updateTypeDiff('tbLn', n)} type="TB" field="ln" />
+                  </div>
+                </div>
                 <p className="text-xs text-gray-400 dark:text-neutral-500">{t('round.diff.summaryHint')}</p>
               </div>
             ) : (
@@ -413,6 +443,8 @@ function autoCalcTypeDiffs(
   if (!locked.hbLn) result.hbLn = avg('HB', 'difficultyLn')
   if (!locked.ln) result.ln = avg('LN')
   if (!locked.sv) result.sv = avg('SV')
+  if (!locked.tbRf) result.tbRf = avg('TB', 'difficulty')
+  if (!locked.tbLn) result.tbLn = avg('TB', 'difficultyLn')
   return result
 }
 

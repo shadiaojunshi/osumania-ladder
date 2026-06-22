@@ -118,11 +118,11 @@ function roundWithMetaToOutput(r: RoundWithMeta): Round {
   distributeDiffsForType(maps.filter((m) => m.type === 'HB'), _typeDiffs.hbMin, _typeDiffs.hbMax, _typeDiffs.hbLn, 'difficultyLn')
   distributeDiffsForType(maps.filter((m) => m.type === 'HB'), 0, 0, _typeDiffs.hbRf, 'difficulty')
   distributeDiffsForType(maps.filter((m) => m.type === 'SV'), _typeDiffs.svMin, _typeDiffs.svMax, _typeDiffs.sv, 'difficulty')
-  // TB 双字段:rf 走 difficulty,ln 走 difficultyLn。
+  // TB 双字段:rf 走 difficulty 用 tbMin/tbMax,ln 走 difficultyLn 用 tbLnMin/tbLnMax。
   // 纯米 TB 不填 ln(=0),纯长 TB 不填 rf(=0),distributeDiffsForType 在 avg/min/max 全 0
   // 时不会动 map 上的字段,自然就让计算路径忽略掉那一面。
   distributeDiffsForType(maps.filter((m) => m.type === 'TB'), _typeDiffs.tbMin, _typeDiffs.tbMax, _typeDiffs.tbRf, 'difficulty')
-  distributeDiffsForType(maps.filter((m) => m.type === 'TB'), 0, 0, _typeDiffs.tbLn, 'difficultyLn')
+  distributeDiffsForType(maps.filter((m) => m.type === 'TB'), _typeDiffs.tbLnMin, _typeDiffs.tbLnMax, _typeDiffs.tbLn, 'difficultyLn')
 
   const nonTbDiffs = maps
     .filter((m) => m.type !== 'TB')
@@ -177,7 +177,7 @@ function roundToMeta(r: Round): RoundWithMeta {
       hbRf: td.HB?.rf || 0, hbLn: td.HB?.ln || 0, hbMin: 0, hbMax: 0,
       ln: td.LN?.ln || 0, lnMin: 0, lnMax: 0,
       sv: td.SV?.rf || 0, svMin: 0, svMax: 0,
-      tbRf: td.TB?.rf || 0, tbLn: td.TB?.ln || 0, tbMin: 0, tbMax: 0,
+      tbRf: td.TB?.rf || 0, tbLn: td.TB?.ln || 0, tbMin: 0, tbMax: 0, tbLnMin: 0, tbLnMax: 0,
     },
     _typeDiffsLocked: {
       rc: !!(td.RC?.rf),
@@ -378,7 +378,7 @@ function RoundsStep({
       difficulty: { min: 0, max: 0, average: 0 },
       maps: [],
       _maps: [],
-      _typeDiffs: { rc: 0, rcMin: 0, rcMax: 0, hbRf: 0, hbLn: 0, hbMin: 0, hbMax: 0, ln: 0, lnMin: 0, lnMax: 0, sv: 0, svMin: 0, svMax: 0, tbRf: 0, tbLn: 0, tbMin: 0, tbMax: 0 },
+      _typeDiffs: { rc: 0, rcMin: 0, rcMax: 0, hbRf: 0, hbLn: 0, hbMin: 0, hbMax: 0, ln: 0, lnMin: 0, lnMax: 0, sv: 0, svMin: 0, svMax: 0, tbRf: 0, tbLn: 0, tbMin: 0, tbMax: 0, tbLnMin: 0, tbLnMax: 0 },
       _typeDiffsLocked: { rc: false, hbRf: false, hbLn: false, ln: false, sv: false, tbRf: false, tbLn: false },
       _diffMode: 'summary',
     }

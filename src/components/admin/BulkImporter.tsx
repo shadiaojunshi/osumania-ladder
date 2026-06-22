@@ -342,7 +342,7 @@ export function BulkImporter({ onImport, onClose, existingRoundCount }: Props) {
         difficulty: { min: 0, max: 0, average: 0 },
         maps: maps.map(({ category, ...rest }) => rest),
         _maps: maps,
-        _typeDiffs: { rc: 0, rcMin: 0, rcMax: 0, hbRf: 0, hbLn: 0, hbMin: 0, hbMax: 0, ln: 0, lnMin: 0, lnMax: 0, sv: 0, svMin: 0, svMax: 0, tbRf: 0, tbLn: 0, tbMin: 0, tbMax: 0 },
+        _typeDiffs: { rc: 0, rcMin: 0, rcMax: 0, hbRf: 0, hbLn: 0, hbMin: 0, hbMax: 0, ln: 0, lnMin: 0, lnMax: 0, sv: 0, svMin: 0, svMax: 0, tbRf: 0, tbLn: 0, tbMin: 0, tbMax: 0, tbLnMin: 0, tbLnMax: 0 },
         _typeDiffsLocked: { rc: false, hbRf: false, hbLn: false, ln: false, sv: false, tbRf: false, tbLn: false },
         _diffMode: 'summary',
       })

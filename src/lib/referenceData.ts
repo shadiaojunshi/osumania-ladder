@@ -9,15 +9,21 @@ import type { Tournament } from './types'
 export type RefType = 'RC' | 'HB' | 'LN' | 'SV' | 'TB'
 export type RefField = 'rf' | 'ln'
 
-// 6 档位:左外推 / 左 / 左+1/3 / 加½轮 / 右-1/3 / 右
-// leftMinus / rightMinus 在没有 right 时不可选(因为外推/插值都需要 right)
+// 6 档位,以 anchor 为中心:
+//   anchorMinus = anchor - (anchor - prev) / 3      用 anchor 和 prev
+//   anchor      = anchor 本身
+//   anchorPlus  = anchor + (next - anchor) / 3      用 anchor 和 next
+//   midHalf     = (anchor + next) / 2               用 anchor 和 next
+//   nextMinus   = next - (next - anchor) / 3        用 anchor 和 next
+//   next        = next 本身
+// anchorMinus 需要 prev,其余 5 档需要 next。anchor 单独无依赖。
 export type RefPosition =
-  | 'leftMinus'
-  | 'left'
-  | 'leftPlus'
+  | 'anchorMinus'
+  | 'anchor'
+  | 'anchorPlus'
   | 'midHalf'
-  | 'rightMinus'
-  | 'right'
+  | 'nextMinus'
+  | 'next'
 
 export interface RefRound {
   tournamentId: string
@@ -60,8 +66,7 @@ export function getRefValue(
 }
 
 // 列出"含目标 (type, field) 数据,且非资格赛"的 round。
-// whitelist 非空时只返回 id 在白名单里的比赛;白名单空数组按"全部"处理(回退方案,
-// 防止白名单还没配置时 picker 完全无可选)。
+// whitelist 非空时只返回 id 在白名单里的比赛;白名单空数组按"全部"处理。
 // 顺序:tournament 按 year desc 排,round 按 order asc。
 export function listEligibleRounds(
   tournaments: Tournament[],
@@ -92,70 +97,102 @@ export function listEligibleRounds(
   return out
 }
 
-// 基于 left 自动找右锚点:
-//   1) 同比赛中 order 严格大于 left.order、非资格、有数据、值更高的最近一轮
-//   2) 找不到再退而求其次:同比赛中 order 大于 left、非资格、有数据(允许同值)
-//   3) 还没有就返回 null,表示没有合适的右锚点
-// JSON 里 order 偶尔不连续(比如缺 RO16 直接 SF),按 order 升序遍历,自然处理。
-export function findAutoRightAnchor(
-  tournament: Tournament,
-  leftRoundId: string,
-  type: RefType,
-  field: RefField
-): { roundId: string; roundAbbr: string; value: number } | null {
-  const rounds = [...tournament.rounds].sort((a, b) => (a.order || 0) - (b.order || 0))
-  const leftIdx = rounds.findIndex((r) => r.id === leftRoundId)
-  if (leftIdx < 0) return null
-  const leftRound = rounds[leftIdx]
-  const leftVal = getRefValue(tournament, leftRound.id, type, field)
-  if (leftVal === null) return null
-
-  // 第一遍:严格更高
-  for (let i = leftIdx + 1; i < rounds.length; i++) {
-    const r = rounds[i]
-    if (r.isQualifier) continue
-    const v = getRefValue(tournament, r.id, type, field)
-    if (v === null) continue
-    if (v > leftVal) {
-      return { roundId: r.id, roundAbbr: r.abbreviation || r.name || r.id, value: v }
-    }
-  }
-  // 第二遍:允许同值,只要后面就行
-  for (let i = leftIdx + 1; i < rounds.length; i++) {
-    const r = rounds[i]
-    if (r.isQualifier) continue
-    const v = getRefValue(tournament, r.id, type, field)
-    if (v === null) continue
-    return { roundId: r.id, roundAbbr: r.abbreviation || r.name || r.id, value: v }
-  }
-  return null
+// 锚点上下文:对一个 (tournament, anchor) 找到 prev/next 邻接轮。
+// prev = order 严格小于 anchor 的最近一个非资格赛、有该 (type,field) 数据的轮
+// next = order 严格大于 anchor 的最近一个非资格赛、有该 (type,field) 数据的轮
+// 找不到对应字段就返回 null。
+export interface AnchorContext {
+  anchor: { roundId: string; roundAbbr: string; value: number }
+  prev: { roundId: string; roundAbbr: string; value: number } | null
+  next: { roundId: string; roundAbbr: string; value: number } | null
 }
 
-// 6 档位插值。所有非端点档保留一位小数,跟 input step=0.5 协调。
-export function interpolateAt(
-  left: number,
-  right: number,
-  position: RefPosition
-): number {
-  const span = right - left
-  let v: number
-  switch (position) {
-    case 'leftMinus':
-      v = left - span / 3
-      break
-    case 'left':
-      return left
-    case 'leftPlus':
-      v = left + span / 3
-      break
-    case 'midHalf':
-      v = (left + right) / 2
-      break
-    case 'rightMinus':
-      v = right - span / 3
-      break
-    case 'right':
-      return right
+export function findAnchorContext(
+  tournament: Tournament,
+  anchorRoundId: string,
+  type: RefType,
+  field: RefField
+): AnchorContext | null {
+  const rounds = [...tournament.rounds].sort((a, b) => (a.order || 0) - (b.order || 0))
+  const anchorIdx = rounds.findIndex((r) => r.id === anchorRoundId)
+  if (anchorIdx < 0) return null
+  const anchorRound = rounds[anchorIdx]
+  const anchorVal = getRefValue(tournament, anchorRound.id, type, field)
+  if (anchorVal === null) return null
+
+  const findAdjacent = (
+    range: Iterable<typeof rounds[number]>
+  ): AnchorContext['prev'] => {
+    for (const r of range) {
+      if (r.isQualifier) continue
+      const v = getRefValue(tournament, r.id, type, field)
+      if (v === null) continue
+      return { roundId: r.id, roundAbbr: r.abbreviation || r.name || r.id, value: v }
+    }
+    return null
   }
-  return +v.toFixed(1)
+
+  // prev: 倒着扫 anchorIdx-1 ... 0
+  const prev = findAdjacent(
+    (function* () {
+      for (let i = anchorIdx - 1; i >= 0; i--) yield rounds[i]
+    })()
+  )
+  // next: 正着扫 anchorIdx+1 ... end
+  const next = findAdjacent(
+    (function* () {
+      for (let i = anchorIdx + 1; i < rounds.length; i++) yield rounds[i]
+    })()
+  )
+
+  return {
+    anchor: {
+      roundId: anchorRound.id,
+      roundAbbr: anchorRound.abbreviation || anchorRound.name || anchorRound.id,
+      value: anchorVal,
+    },
+    prev,
+    next,
+  }
+}
+
+// 6 档插值。各档需要的依赖:
+//   anchorMinus → prev (用 anchor 和 prev 算)
+//   anchor      → 无 (直接 anchor.value)
+//   anchorPlus  → next (用 anchor 和 next 算)
+//   midHalf     → next (用 anchor 和 next 算)
+//   nextMinus   → next (用 anchor 和 next 算)
+//   next        → next (直接 next.value)
+// 依赖缺失时返回 null,UI 据此 disable 对应档位。
+export function interpolateAnchored(
+  ctx: AnchorContext,
+  position: RefPosition
+): number | null {
+  const a = ctx.anchor.value
+  switch (position) {
+    case 'anchorMinus': {
+      if (!ctx.prev) return null
+      const v = a - (a - ctx.prev.value) / 3
+      return +v.toFixed(1)
+    }
+    case 'anchor':
+      return a
+    case 'anchorPlus': {
+      if (!ctx.next) return null
+      const v = a + (ctx.next.value - a) / 3
+      return +v.toFixed(1)
+    }
+    case 'midHalf': {
+      if (!ctx.next) return null
+      const v = (a + ctx.next.value) / 2
+      return +v.toFixed(1)
+    }
+    case 'nextMinus': {
+      if (!ctx.next) return null
+      const v = ctx.next.value - (ctx.next.value - a) / 3
+      return +v.toFixed(1)
+    }
+    case 'next':
+      return ctx.next ? ctx.next.value : null
+  }
 }

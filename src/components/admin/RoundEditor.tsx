@@ -31,7 +31,7 @@ interface RoundWithMeta extends Round {
     hbRf: number; hbLn: number; hbMin: number; hbMax: number
     ln: number; lnMin: number; lnMax: number
     sv: number; svMin: number; svMax: number
-    tbRf: number; tbLn: number; tbMin: number; tbMax: number
+    tbRf: number; tbLn: number; tbMin: number; tbMax: number; tbLnMin: number; tbLnMax: number
   }
   _typeDiffsLocked: { rc: boolean; hbRf: boolean; hbLn: boolean; ln: boolean; sv: boolean; tbRf: boolean; tbLn: boolean }
   _diffMode: 'perMap' | 'summary'
@@ -309,8 +309,8 @@ export function RoundEditor({ round, index, onChange, onRemove }: Props) {
                 </div>
                 <div className="grid grid-cols-4 gap-2 items-center">
                   <span className="text-xs text-rose-600 dark:text-rose-300 font-medium">TB (ln)</span>
-                  <div className="text-xs text-gray-300 dark:text-neutral-600 text-center">—</div>
-                  <div className="text-xs text-gray-300 dark:text-neutral-600 text-center">—</div>
+                  <input type="number" step="0.5" value={round._typeDiffs.tbLnMin || ''} onChange={(e) => updateTypeDiff('tbLnMin', Number(e.target.value))} className="w-full px-1.5 py-1 border border-gray-200 dark:border-neutral-700 rounded text-xs text-center bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 focus:outline-none focus:border-rose-400" />
+                  <input type="number" step="0.5" value={round._typeDiffs.tbLnMax || ''} onChange={(e) => updateTypeDiff('tbLnMax', Number(e.target.value))} className="w-full px-1.5 py-1 border border-gray-200 dark:border-neutral-700 rounded text-xs text-center bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 focus:outline-none focus:border-rose-400" />
                   <div className="flex items-center gap-1">
                     <input type="number" step="0.5" value={round._typeDiffs.tbLn || ''} onChange={(e) => updateTypeDiff('tbLn', Number(e.target.value))} className="flex-1 min-w-0 px-1.5 py-1 border border-gray-200 dark:border-neutral-700 rounded text-xs text-center bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 focus:outline-none focus:border-rose-400" />
                     <DifficultyRefPicker value={round._typeDiffs.tbLn || 0} onChange={(n) => updateTypeDiff('tbLn', n)} type="TB" field="ln" />

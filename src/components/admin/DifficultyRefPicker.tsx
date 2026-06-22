@@ -1,13 +1,13 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useT } from '@/lib/i18n'
+import { useT, type MessageKey } from '@/lib/i18n'
 import { tournaments } from '@/generated/tournaments'
 import {
-  findAutoRightAnchor,
-  getRefValue,
-  interpolateAt,
+  findAnchorContext,
+  interpolateAnchored,
   listEligibleRounds,
+  type AnchorContext,
   type RefField,
   type RefPosition,
   type RefType,
@@ -33,33 +33,33 @@ export function invalidateRefWhitelist() {
 }
 
 interface Props {
-  // 当前数值,展开时用于显示对比;不必回填到 picker 状态
+  // 当前数值,展开时用于显示对比
   value: number
   // Apply 时调用,把算好的数字写回
   onChange: (n: number) => void
-  // 目标 type:控制候选过滤;不在 popover 里再让用户切了
+  // 目标 type:控制候选过滤
   type: RefType
   // 'rf' 或 'ln':HB / TB 双值 slot 时给两个 picker 各传一个
   field: RefField
-  // 如果传了,把这个 (tournamentId, roundId, type) 从列表里去掉,防自引用
+  // 防自引用
   excludeRef?: { tournamentId: string; roundId: string; type: RefType }
 }
 
-const POSITIONS_WITH_RIGHT: RefPosition[] = [
-  'leftMinus',
-  'left',
-  'leftPlus',
+const POSITIONS: RefPosition[] = [
+  'anchorMinus',
+  'anchor',
+  'anchorPlus',
   'midHalf',
-  'rightMinus',
-  'right',
+  'nextMinus',
+  'next',
 ]
 
 export function DifficultyRefPicker({ value, onChange, type, field, excludeRef }: Props) {
   const t = useT()
   const [open, setOpen] = useState(false)
   const [tournamentId, setTournamentId] = useState<string>('')
-  const [leftRoundId, setLeftRoundId] = useState<string>('')
-  const [position, setPosition] = useState<RefPosition>('left')
+  const [anchorRoundId, setAnchorRoundId] = useState<string>('')
+  const [position, setPosition] = useState<RefPosition>('anchor')
   const buttonRef = useRef<HTMLButtonElement>(null)
   const popoverRef = useRef<HTMLDivElement>(null)
   const [popoverPos, setPopoverPos] = useState<{
@@ -69,7 +69,6 @@ export function DifficultyRefPicker({ value, onChange, type, field, excludeRef }
   } | null>(null)
   const [whitelist, setWhitelist] = useState<Set<string> | null>(null)
 
-  // 第一次 mount 拉白名单(模块级缓存,只 fetch 一次)
   useEffect(() => {
     let alive = true
     fetchWhitelist().then((s) => {
@@ -80,8 +79,6 @@ export function DifficultyRefPicker({ value, onChange, type, field, excludeRef }
     }
   }, [])
 
-  // popover 用 fixed 定位防外层 overflow-hidden 截断,在 open 时算 button 位置;
-  // 下方空间不够就翻到上方;高度按可用空间限制 + overflow scroll。
   useEffect(() => {
     if (!open) {
       setPopoverPos(null)
@@ -90,17 +87,15 @@ export function DifficultyRefPicker({ value, onChange, type, field, excludeRef }
     const btn = buttonRef.current
     if (!btn) return
     const rect = btn.getBoundingClientRect()
-    const popoverWidth = 320 // w-80
+    const popoverWidth = 320
     const margin = 8
     const minHeight = 200
 
-    // 水平位置:右对齐 button,clamp 到 viewport
     let left = rect.right - popoverWidth
     if (left < margin) left = margin
     if (left + popoverWidth > window.innerWidth - margin)
       left = window.innerWidth - popoverWidth - margin
 
-    // 垂直位置:优先放下方,空间不够才翻上方
     const spaceBelow = window.innerHeight - rect.bottom - margin
     const spaceAbove = rect.top - margin
     let top: number
@@ -109,14 +104,12 @@ export function DifficultyRefPicker({ value, onChange, type, field, excludeRef }
       top = rect.bottom + 4
       maxHeight = window.innerHeight - top - margin
     } else {
-      // 翻到上方
       maxHeight = spaceAbove
       top = margin
     }
     setPopoverPos({ top, left, maxHeight })
   }, [open])
 
-  // 候选列表
   const eligible = useMemo(() => {
     const list = listEligibleRounds(tournaments, type, field, whitelist)
     if (!excludeRef) return list
@@ -151,7 +144,7 @@ export function DifficultyRefPicker({ value, onChange, type, field, excludeRef }
     if (!open) return
     if (tournamentOptions.length === 0) {
       setTournamentId('')
-      setLeftRoundId('')
+      setAnchorRoundId('')
       return
     }
     if (!tournamentOptions.find((tn) => tn.id === tournamentId)) {
@@ -163,14 +156,13 @@ export function DifficultyRefPicker({ value, onChange, type, field, excludeRef }
     if (!open || !tournamentId) return
     const rounds = eligible.filter((r) => r.tournamentId === tournamentId)
     if (rounds.length === 0) {
-      setLeftRoundId('')
+      setAnchorRoundId('')
       return
     }
-    const stillValid = rounds.find((r) => r.roundId === leftRoundId)
-    if (!stillValid) setLeftRoundId(rounds[0].roundId)
-  }, [open, tournamentId, eligible, leftRoundId])
+    const stillValid = rounds.find((r) => r.roundId === anchorRoundId)
+    if (!stillValid) setAnchorRoundId(rounds[0].roundId)
+  }, [open, tournamentId, eligible, anchorRoundId])
 
-  // Esc 关
   useEffect(() => {
     if (!open) return
     const onKey = (e: KeyboardEvent) => {
@@ -184,26 +176,20 @@ export function DifficultyRefPicker({ value, onChange, type, field, excludeRef }
     () => tournaments.find((tt) => tt.id === tournamentId),
     [tournamentId]
   )
-  const leftVal = tn ? getRefValue(tn, leftRoundId, type, field) : null
-  const auto = tn ? findAutoRightAnchor(tn, leftRoundId, type, field) : null
-  const hasRight = auto !== null
-  const rightVal = auto?.value ?? null
+  const ctx: AnchorContext | null = useMemo(() => {
+    if (!tn || !anchorRoundId) return null
+    return findAnchorContext(tn, anchorRoundId, type, field)
+  }, [tn, anchorRoundId, type, field])
 
-  const leftAbbr =
-    tournamentRounds.find((r) => r.roundId === leftRoundId)?.roundAbbr || ''
-  const rightAbbr = auto?.roundAbbr || ''
-
-  // 没有右锚点时只能选 'left',其他全 disable
+  // 当前 position 在 ctx 下不可用就回退到 anchor
   useEffect(() => {
-    if (!hasRight && position !== 'left') setPosition('left')
-  }, [hasRight, position])
+    if (!ctx) return
+    if (interpolateAnchored(ctx, position) === null) {
+      setPosition('anchor')
+    }
+  }, [ctx, position])
 
-  const previewVal =
-    leftVal !== null && rightVal !== null
-      ? interpolateAt(leftVal, rightVal, position)
-      : leftVal !== null && position === 'left'
-        ? leftVal
-        : null
+  const previewVal = ctx ? interpolateAnchored(ctx, position) : null
 
   const apply = () => {
     if (previewVal === null) return
@@ -212,11 +198,9 @@ export function DifficultyRefPicker({ value, onChange, type, field, excludeRef }
   }
 
   const positionLabel = (pos: RefPosition): string => {
-    if (!hasRight && pos !== 'left') {
-      // disabled 的档位还是要展示,提示用户没有右锚点
-      return t(positionKey(pos), { left: leftAbbr, right: '?' })
-    }
-    return t(positionKey(pos), { left: leftAbbr, right: rightAbbr })
+    const anchor = ctx?.anchor.roundAbbr || '?'
+    const next = ctx?.next?.roundAbbr || '?'
+    return t(positionKey(pos), { anchor, next })
   }
 
   return (
@@ -297,8 +281,8 @@ export function DifficultyRefPicker({ value, onChange, type, field, excludeRef }
                       {t('refPicker.anchorRound')}
                     </label>
                     <select
-                      value={leftRoundId}
-                      onChange={(e) => setLeftRoundId(e.target.value)}
+                      value={anchorRoundId}
+                      onChange={(e) => setAnchorRoundId(e.target.value)}
                       disabled={tournamentRounds.length === 0}
                       className="w-full px-1.5 py-1 border border-gray-200 dark:border-neutral-700 rounded bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 disabled:opacity-50"
                     >
@@ -308,11 +292,15 @@ export function DifficultyRefPicker({ value, onChange, type, field, excludeRef }
                         </option>
                       ))}
                     </select>
-                    <p className="text-[10px] text-gray-400 dark:text-neutral-500 mt-1">
-                      {hasRight
-                        ? t('refPicker.autoRight', { right: rightAbbr })
-                        : t('refPicker.autoRightNone')}
-                    </p>
+                    {ctx && (
+                      <p className="text-[10px] text-gray-400 dark:text-neutral-500 mt-1">
+                        {t('refPicker.adjacency', {
+                          prev: ctx.prev?.roundAbbr || '—',
+                          anchor: ctx.anchor.roundAbbr,
+                          next: ctx.next?.roundAbbr || '—',
+                        })}
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -320,14 +308,9 @@ export function DifficultyRefPicker({ value, onChange, type, field, excludeRef }
                       {t('refPicker.position')}
                     </label>
                     <div className="space-y-0.5">
-                      {POSITIONS_WITH_RIGHT.map((pos) => {
-                        const disabled = !hasRight && pos !== 'left'
-                        const previewAt =
-                          leftVal !== null && rightVal !== null
-                            ? interpolateAt(leftVal, rightVal, pos)
-                            : pos === 'left' && leftVal !== null
-                              ? leftVal
-                              : null
+                      {POSITIONS.map((pos) => {
+                        const previewAt = ctx ? interpolateAnchored(ctx, pos) : null
+                        const disabled = previewAt === null
                         return (
                           <label
                             key={pos}
@@ -390,18 +373,6 @@ export function DifficultyRefPicker({ value, onChange, type, field, excludeRef }
   )
 }
 
-function positionKey(pos: RefPosition):
-  | 'refPicker.position.leftMinus'
-  | 'refPicker.position.left'
-  | 'refPicker.position.leftPlus'
-  | 'refPicker.position.midHalf'
-  | 'refPicker.position.rightMinus'
-  | 'refPicker.position.right' {
-  return `refPicker.position.${pos}` as
-    | 'refPicker.position.leftMinus'
-    | 'refPicker.position.left'
-    | 'refPicker.position.leftPlus'
-    | 'refPicker.position.midHalf'
-    | 'refPicker.position.rightMinus'
-    | 'refPicker.position.right'
+function positionKey(pos: RefPosition): MessageKey {
+  return `refPicker.position.${pos}` as MessageKey
 }

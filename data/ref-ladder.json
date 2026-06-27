@@ -1,3 +1,40 @@
 {
-  "entries": []
+  "entries": [
+    {
+      "tournamentId": "touhou-project-mania-cup-4th",
+      "roundId": "round-2"
+    },
+    {
+      "tournamentId": "touhou-project-mania-cup-4th",
+      "roundId": "round-3"
+    },
+    {
+      "tournamentId": "osumania-4k-world-cup-2025",
+      "roundId": "round-2"
+    },
+    {
+      "tournamentId": "osumania-4k-world-cup-2025",
+      "roundId": "round-3"
+    },
+    {
+      "tournamentId": "osumania-4k-world-cup-2025",
+      "roundId": "round-4"
+    },
+    {
+      "tournamentId": "osumania-4k-world-cup-2025",
+      "roundId": "round-5"
+    },
+    {
+      "tournamentId": "osumania-4k-world-cup-2025",
+      "roundId": "round-6"
+    },
+    {
+      "tournamentId": "osumania-4k-world-cup-2025",
+      "roundId": "round-7"
+    },
+    {
+      "tournamentId": "osumania-4k-chinese-national-cup-2025",
+      "roundId": "round-8"
+    }
+  ]
 }

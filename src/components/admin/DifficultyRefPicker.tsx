@@ -6,30 +6,28 @@ import { tournaments } from '@/generated/tournaments'
 import {
   findAnchorContext,
   interpolateAnchored,
-  listEligibleRounds,
+  resolveLadder,
   type AnchorContext,
+  type LadderEntry,
   type RefField,
   type RefPosition,
   type RefType,
 } from '@/lib/referenceData'
 
-// 模块级缓存:整个 admin 会话只 fetch 一次白名单。
-let whitelistPromise: Promise<Set<string>> | null = null
-function fetchWhitelist(): Promise<Set<string>> {
-  if (!whitelistPromise) {
-    whitelistPromise = fetch('/api/ref-tournaments')
-      .then((r) => (r.ok ? r.json() : { data: { tournamentIds: [] } }))
-      .then(
-        (d: { data?: { tournamentIds?: string[] } }) =>
-          new Set<string>(d.data?.tournamentIds || [])
-      )
-      .catch(() => new Set<string>())
+// 模块级缓存:整个 admin 会话只 fetch 一次标尺。
+let ladderPromise: Promise<LadderEntry[]> | null = null
+function fetchLadder(): Promise<LadderEntry[]> {
+  if (!ladderPromise) {
+    ladderPromise = fetch('/api/ref-ladder')
+      .then((r) => (r.ok ? r.json() : { data: { entries: [] } }))
+      .then((d: { data?: { entries?: LadderEntry[] } }) => d.data?.entries || [])
+      .catch(() => [])
   }
-  return whitelistPromise
+  return ladderPromise
 }
-// 让 RefTournamentsEditor 保存后清缓存,下个 picker 打开时重拉。
-export function invalidateRefWhitelist() {
-  whitelistPromise = null
+// 让 RefLadderEditor 保存后清缓存,下个 picker 打开时重拉。
+export function invalidateRefLadder() {
+  ladderPromise = null
 }
 
 interface Props {
@@ -57,8 +55,8 @@ const POSITIONS: RefPosition[] = [
 export function DifficultyRefPicker({ value, onChange, type, field, excludeRef }: Props) {
   const t = useT()
   const [open, setOpen] = useState(false)
-  const [tournamentId, setTournamentId] = useState<string>('')
-  const [anchorRoundId, setAnchorRoundId] = useState<string>('')
+  // 锚点 = 标尺解析后列表里的下标(字符串形式存,select 用)
+  const [anchorKey, setAnchorKey] = useState<string>('')
   const [position, setPosition] = useState<RefPosition>('anchor')
   const buttonRef = useRef<HTMLButtonElement>(null)
   const popoverRef = useRef<HTMLDivElement>(null)
@@ -67,12 +65,12 @@ export function DifficultyRefPicker({ value, onChange, type, field, excludeRef }
     left: number
     maxHeight: number
   } | null>(null)
-  const [whitelist, setWhitelist] = useState<Set<string> | null>(null)
+  const [entries, setEntries] = useState<LadderEntry[] | null>(null)
 
   useEffect(() => {
     let alive = true
-    fetchWhitelist().then((s) => {
-      if (alive) setWhitelist(s)
+    fetchLadder().then((e) => {
+      if (alive) setEntries(e)
     })
     return () => {
       alive = false
@@ -110,58 +108,33 @@ export function DifficultyRefPicker({ value, onChange, type, field, excludeRef }
     setPopoverPos({ top, left, maxHeight })
   }, [open])
 
-  const eligible = useMemo(() => {
-    const list = listEligibleRounds(tournaments, type, field, whitelist)
-    if (!excludeRef) return list
-    return list.filter(
-      (r) =>
-        !(
-          r.tournamentId === excludeRef.tournamentId &&
-          r.roundId === excludeRef.roundId &&
-          type === excludeRef.type
-        )
-    )
-  }, [type, field, excludeRef, whitelist])
+  // 解析标尺到当前 (type,field)。保留 value=null 的项(占位),
+  // 锚点候选则只取有数据的(下面 anchorOptions 过滤)。
+  const ladder = useMemo(() => {
+    if (!entries) return []
+    return resolveLadder(tournaments, entries, type, field, excludeRef)
+  }, [entries, type, field, excludeRef])
 
-  const tournamentOptions = useMemo(() => {
-    const seen = new Set<string>()
-    const out: { id: string; abbr: string; year: number }[] = []
-    for (const r of eligible) {
-      if (seen.has(r.tournamentId)) continue
-      seen.add(r.tournamentId)
-      out.push({ id: r.tournamentId, abbr: r.tournamentAbbr, year: r.year })
-    }
-    return out
-  }, [eligible])
-
-  const tournamentRounds = useMemo(
-    () => eligible.filter((r) => r.tournamentId === tournamentId),
-    [eligible, tournamentId]
+  // 锚点候选:value 非 null 的项,带它在 ladder 里的真实下标。
+  const anchorOptions = useMemo(
+    () =>
+      ladder
+        .map((r, idx) => ({ idx, r }))
+        .filter((x) => x.r.value !== null),
+    [ladder]
   )
 
-  // 打开时初始化默认选中:第一个比赛 + 第一个轮
+  // 打开时初始化默认锚点:第一个有数据的项
   useEffect(() => {
     if (!open) return
-    if (tournamentOptions.length === 0) {
-      setTournamentId('')
-      setAnchorRoundId('')
+    if (anchorOptions.length === 0) {
+      setAnchorKey('')
       return
     }
-    if (!tournamentOptions.find((tn) => tn.id === tournamentId)) {
-      setTournamentId(tournamentOptions[0].id)
+    if (!anchorOptions.find((o) => String(o.idx) === anchorKey)) {
+      setAnchorKey(String(anchorOptions[0].idx))
     }
-  }, [open, tournamentOptions, tournamentId])
-
-  useEffect(() => {
-    if (!open || !tournamentId) return
-    const rounds = eligible.filter((r) => r.tournamentId === tournamentId)
-    if (rounds.length === 0) {
-      setAnchorRoundId('')
-      return
-    }
-    const stillValid = rounds.find((r) => r.roundId === anchorRoundId)
-    if (!stillValid) setAnchorRoundId(rounds[0].roundId)
-  }, [open, tournamentId, eligible, anchorRoundId])
+  }, [open, anchorOptions, anchorKey])
 
   useEffect(() => {
     if (!open) return
@@ -172,14 +145,12 @@ export function DifficultyRefPicker({ value, onChange, type, field, excludeRef }
     return () => window.removeEventListener('keydown', onKey)
   }, [open])
 
-  const tn = useMemo(
-    () => tournaments.find((tt) => tt.id === tournamentId),
-    [tournamentId]
-  )
   const ctx: AnchorContext | null = useMemo(() => {
-    if (!tn || !anchorRoundId) return null
-    return findAnchorContext(tn, anchorRoundId, type, field)
-  }, [tn, anchorRoundId, type, field])
+    if (anchorKey === '') return null
+    const idx = Number(anchorKey)
+    if (!Number.isInteger(idx)) return null
+    return findAnchorContext(ladder, idx)
+  }, [ladder, anchorKey])
 
   // 当前 position 在 ctx 下不可用就回退到 anchor
   useEffect(() => {
@@ -247,48 +218,30 @@ export function DifficultyRefPicker({ value, onChange, type, field, excludeRef }
                 )}
               </div>
 
-              {whitelist === null ? (
+              {entries === null ? (
                 <p className="text-gray-400 dark:text-neutral-500 py-4 text-center">
                   {t('admin.loading')}
                 </p>
-              ) : tournamentOptions.length === 0 ? (
+              ) : anchorOptions.length === 0 ? (
                 <p className="text-gray-400 dark:text-neutral-500 py-4 text-center">
-                  {whitelist.size === 0
-                    ? t('refPicker.whitelistEmpty')
+                  {entries.length === 0
+                    ? t('refPicker.ladderEmpty')
                     : t('refPicker.noRounds', { type })}
                 </p>
               ) : (
                 <>
                   <div>
                     <label className="block text-gray-500 dark:text-neutral-400 mb-1">
-                      {t('refPicker.tournament')}
-                    </label>
-                    <select
-                      value={tournamentId}
-                      onChange={(e) => setTournamentId(e.target.value)}
-                      className="w-full px-1.5 py-1 border border-gray-200 dark:border-neutral-700 rounded bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100"
-                    >
-                      {tournamentOptions.map((opt) => (
-                        <option key={opt.id} value={opt.id}>
-                          {opt.abbr} ({opt.year})
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-gray-500 dark:text-neutral-400 mb-1">
                       {t('refPicker.anchorRound')}
                     </label>
                     <select
-                      value={anchorRoundId}
-                      onChange={(e) => setAnchorRoundId(e.target.value)}
-                      disabled={tournamentRounds.length === 0}
-                      className="w-full px-1.5 py-1 border border-gray-200 dark:border-neutral-700 rounded bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 disabled:opacity-50"
+                      value={anchorKey}
+                      onChange={(e) => setAnchorKey(e.target.value)}
+                      className="w-full px-1.5 py-1 border border-gray-200 dark:border-neutral-700 rounded bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100"
                     >
-                      {tournamentRounds.map((r) => (
-                        <option key={r.roundId} value={r.roundId}>
-                          {r.roundAbbr}
+                      {anchorOptions.map((o) => (
+                        <option key={o.idx} value={String(o.idx)}>
+                          {o.r.label} · {o.r.value!.toFixed(1)}
                         </option>
                       ))}
                     </select>

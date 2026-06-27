@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { TournamentForm } from '@/components/admin/TournamentForm'
 import { JsonPreview } from '@/components/admin/JsonPreview'
 import { ReferencesEditor } from '@/components/admin/ReferencesEditor'
-import { RefTournamentsEditor } from '@/components/admin/RefTournamentsEditor'
+import { RefLadderEditor } from '@/components/admin/RefLadderEditor'
 import { MapUploader } from '@/components/admin/MapUploader'
 import { PackLinksEditor } from '@/components/admin/PackLinksEditor'
 import { AdminsManager } from '@/components/admin/AdminsManager'
@@ -35,7 +35,7 @@ interface TournamentListItem {
   sha: string
 }
 
-type Tab = 'create' | 'manage' | 'references' | 'refTournaments' | 'upload' | 'packs' | 'admins' | 'trash' | 'audit'
+type Tab = 'create' | 'manage' | 'references' | 'refLadder' | 'upload' | 'packs' | 'admins' | 'trash' | 'audit'
 
 export default function AdminPage() {
   const t = useT()
@@ -284,7 +284,7 @@ export default function AdminPage() {
           {tabBtn('create', editingId ? t('admin.tab.editing') : t('admin.tab.create'))}
           {tabBtn('manage', t('admin.tab.manage', { n: existingList.length }))}
           {tabBtn('references', t('admin.tab.references'))}
-          {tabBtn('refTournaments', t('admin.tab.refTournaments'))}
+          {tabBtn('refLadder', t('admin.tab.refLadder'))}
           {tabBtn('upload', t('admin.tab.upload'))}
           {tabBtn('packs', t('admin.tab.packs'))}
           {isAdmin && tabBtn('trash', t('admin.tab.trash'))}
@@ -355,7 +355,7 @@ export default function AdminPage() {
 
         {tab === 'references' && <ReferencesEditor />}
 
-        {tab === 'refTournaments' && <RefTournamentsEditor />}
+        {tab === 'refLadder' && <RefLadderEditor />}
 
         {tab === 'upload' && <MapUploader />}
 

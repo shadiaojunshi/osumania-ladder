@@ -3,6 +3,10 @@
 //
 // 设计上是 resolve-at-save: picker 算完直接落数字进 input,不在 slot 里存引用关系。
 // 所以这里只导出纯函数,不做任何 React 状态管理。
+//
+// v4: prev/next 不再在单个比赛内找相邻轮,而是从一条全局有序「难度标尺」(ref-ladder)
+// 上取。标尺是管理员手排的 (tournamentId, roundId) 链,易 → 难,可跨比赛。
+// 锚点候选 = 标尺上有该 (type,field) 数据的项;prev/next = 标尺上前后最近的有数据项。
 
 import type { Tournament } from './types'
 
@@ -25,14 +29,22 @@ export type RefPosition =
   | 'nextMinus'
   | 'next'
 
-export interface RefRound {
+// 标尺一项:指向某比赛某轮。顺序由数组下标决定(易 → 难)。
+export interface LadderEntry {
+  tournamentId: string
+  roundId: string
+}
+
+// 标尺一项解析后的完整信息。value 为该 (type,field) 下的均值,拿不到则 null。
+export interface RefLadderRound {
   tournamentId: string
   tournamentAbbr: string
   year: number
   roundId: string
   roundAbbr: string
-  roundOrder: number
-  isQualifier: boolean
+  // 跨比赛展示用的组合标签,例如 "MWC2025 · GF"
+  label: string
+  value: number | null
 }
 
 // 找单个 round 在该 (type, field) 下的均值。
@@ -65,92 +77,75 @@ export function getRefValue(
   return +(diffs.reduce((s, d) => s + d, 0) / diffs.length).toFixed(1)
 }
 
-// 列出"含目标 (type, field) 数据,且非资格赛"的 round。
-// whitelist 非空时只返回 id 在白名单里的比赛;白名单空数组按"全部"处理。
-// 顺序:tournament 按 year desc 排,round 按 order asc。
-export function listEligibleRounds(
+// 把标尺链按当前 (type,field) 解析成有序的 RefLadderRound 列表。
+// 保留 value=null 的项(它们仍占位,只是不能当锚点),
+// 这样 prev/next 扫描能正确跳过它们落到下一个有数据的项。
+// excludeRoundId/excludeTournamentId 命中的项 value 强制置 null(防自引用)。
+export function resolveLadder(
   tournaments: Tournament[],
+  entries: LadderEntry[],
   type: RefType,
   field: RefField,
-  whitelist: Set<string> | null
-): RefRound[] {
-  const out: RefRound[] = []
-  const useWhitelist = whitelist && whitelist.size > 0
-  const sorted = [...tournaments].sort((a, b) => (b.year || 0) - (a.year || 0))
-  for (const tn of sorted) {
-    if (useWhitelist && !whitelist!.has(tn.id)) continue
-    const rounds = [...tn.rounds].sort((a, b) => (a.order || 0) - (b.order || 0))
-    for (const r of rounds) {
-      if (r.isQualifier) continue
-      if (getRefValue(tn, r.id, type, field) === null) continue
-      out.push({
-        tournamentId: tn.id,
-        tournamentAbbr: tn.abbreviation || tn.id,
-        year: tn.year || 0,
-        roundId: r.id,
-        roundAbbr: r.abbreviation || r.name || r.id,
-        roundOrder: r.order || 0,
-        isQualifier: false,
-      })
-    }
+  exclude?: { tournamentId: string; roundId: string }
+): RefLadderRound[] {
+  const out: RefLadderRound[] = []
+  for (const e of entries) {
+    const tn = tournaments.find((t) => t.id === e.tournamentId)
+    if (!tn) continue
+    const round = tn.rounds.find((r) => r.id === e.roundId)
+    if (!round) continue
+    const isExcluded =
+      !!exclude && exclude.tournamentId === e.tournamentId && exclude.roundId === e.roundId
+    const value = isExcluded ? null : getRefValue(tn, e.roundId, type, field)
+    const tournamentAbbr = tn.abbreviation || tn.id
+    const roundAbbr = round.abbreviation || round.name || round.id
+    out.push({
+      tournamentId: e.tournamentId,
+      tournamentAbbr,
+      year: tn.year || 0,
+      roundId: e.roundId,
+      roundAbbr,
+      label: `${tournamentAbbr} · ${roundAbbr}`,
+      value,
+    })
   }
   return out
 }
 
-// 锚点上下文:对一个 (tournament, anchor) 找到 prev/next 邻接轮。
-// prev = order 严格小于 anchor 的最近一个非资格赛、有该 (type,field) 数据的轮
-// next = order 严格大于 anchor 的最近一个非资格赛、有该 (type,field) 数据的轮
-// 找不到对应字段就返回 null。
+// 锚点上下文:在解析后的标尺上,对某个下标 anchorIndex 找 prev/next。
+// prev = 下标更小一侧最近的、value 非 null 的项
+// next = 下标更大一侧最近的、value 非 null 的项
+// anchorIndex 自身必须 value 非 null,否则返回 null。
 export interface AnchorContext {
-  anchor: { roundId: string; roundAbbr: string; value: number }
-  prev: { roundId: string; roundAbbr: string; value: number } | null
-  next: { roundId: string; roundAbbr: string; value: number } | null
+  anchor: { label: string; roundAbbr: string; value: number }
+  prev: { label: string; roundAbbr: string; value: number } | null
+  next: { label: string; roundAbbr: string; value: number } | null
 }
 
 export function findAnchorContext(
-  tournament: Tournament,
-  anchorRoundId: string,
-  type: RefType,
-  field: RefField
+  ladder: RefLadderRound[],
+  anchorIndex: number
 ): AnchorContext | null {
-  const rounds = [...tournament.rounds].sort((a, b) => (a.order || 0) - (b.order || 0))
-  const anchorIdx = rounds.findIndex((r) => r.id === anchorRoundId)
-  if (anchorIdx < 0) return null
-  const anchorRound = rounds[anchorIdx]
-  const anchorVal = getRefValue(tournament, anchorRound.id, type, field)
-  if (anchorVal === null) return null
+  const a = ladder[anchorIndex]
+  if (!a || a.value === null) return null
 
-  const findAdjacent = (
-    range: Iterable<typeof rounds[number]>
-  ): AnchorContext['prev'] => {
-    for (const r of range) {
-      if (r.isQualifier) continue
-      const v = getRefValue(tournament, r.id, type, field)
-      if (v === null) continue
-      return { roundId: r.id, roundAbbr: r.abbreviation || r.name || r.id, value: v }
+  let prev: AnchorContext['prev'] = null
+  for (let i = anchorIndex - 1; i >= 0; i--) {
+    if (ladder[i].value !== null) {
+      prev = { label: ladder[i].label, roundAbbr: ladder[i].roundAbbr, value: ladder[i].value! }
+      break
     }
-    return null
+  }
+  let next: AnchorContext['next'] = null
+  for (let i = anchorIndex + 1; i < ladder.length; i++) {
+    if (ladder[i].value !== null) {
+      next = { label: ladder[i].label, roundAbbr: ladder[i].roundAbbr, value: ladder[i].value! }
+      break
+    }
   }
 
-  // prev: 倒着扫 anchorIdx-1 ... 0
-  const prev = findAdjacent(
-    (function* () {
-      for (let i = anchorIdx - 1; i >= 0; i--) yield rounds[i]
-    })()
-  )
-  // next: 正着扫 anchorIdx+1 ... end
-  const next = findAdjacent(
-    (function* () {
-      for (let i = anchorIdx + 1; i < rounds.length; i++) yield rounds[i]
-    })()
-  )
-
   return {
-    anchor: {
-      roundId: anchorRound.id,
-      roundAbbr: anchorRound.abbreviation || anchorRound.name || anchorRound.id,
-      value: anchorVal,
-    },
+    anchor: { label: a.label, roundAbbr: a.roundAbbr, value: a.value },
     prev,
     next,
   }

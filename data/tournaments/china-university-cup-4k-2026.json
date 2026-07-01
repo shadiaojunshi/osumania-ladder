@@ -14,7 +14,7 @@
       "difficulty": {
         "min": 6,
         "max": 8,
-        "average": 6.9
+        "average": 7
       },
       "maps": [
         {
@@ -91,7 +91,8 @@
         },
         "SV": {
           "rf": 8
-        }
+        },
+        "TB": {}
       }
     },
     {
@@ -102,7 +103,7 @@
       "difficulty": {
         "min": 3.5,
         "max": 5.5,
-        "average": 4
+        "average": 4.3
       },
       "maps": [
         {
@@ -214,7 +215,8 @@
         },
         "SV": {
           "rf": 5.5
-        }
+        },
+        "TB": {}
       }
     },
     {
@@ -225,7 +227,7 @@
       "difficulty": {
         "min": 8.5,
         "max": 10,
-        "average": 9
+        "average": 9.2
       },
       "maps": [
         {
@@ -318,7 +320,7 @@
         {
           "slot": "LN3",
           "type": "LN",
-          "realType": "JW",
+          "realType": "CO",
           "name": "LN3",
           "difficulty": 9.2
         },
@@ -358,6 +360,7 @@
           "rf": 8.5
         },
         "HB": {
+          "rf": 9,
           "ln": 9
         },
         "LN": {
@@ -365,6 +368,10 @@
         },
         "SV": {
           "rf": 10
+        },
+        "TB": {
+          "rf": 9,
+          "ln": 11
         }
       }
     },
@@ -376,7 +383,7 @@
       "difficulty": {
         "min": 5.3,
         "max": 8,
-        "average": 6
+        "average": 6.4
       },
       "maps": [
         {
@@ -502,7 +509,8 @@
         },
         "SV": {
           "rf": 8
-        }
+        },
+        "TB": {}
       }
     },
     {
@@ -513,7 +521,7 @@
       "difficulty": {
         "min": 6.6,
         "max": 9,
-        "average": 7.4
+        "average": 7.7
       },
       "maps": [
         {
@@ -639,7 +647,8 @@
         },
         "SV": {
           "rf": 9
-        }
+        },
+        "TB": {}
       }
     },
     {
@@ -650,7 +659,7 @@
       "difficulty": {
         "min": 9.2,
         "max": 11.5,
-        "average": 9.6
+        "average": 9.9
       },
       "maps": [
         {
@@ -790,7 +799,8 @@
         },
         "SV": {
           "rf": 11.5
-        }
+        },
+        "TB": {}
       }
     }
   ],

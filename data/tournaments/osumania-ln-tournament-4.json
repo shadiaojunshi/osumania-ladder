@@ -985,7 +985,7 @@
       "difficulty": {
         "min": 14.5,
         "max": 14.5,
-        "average": 14.5
+        "average": 14.2
       },
       "maps": [
         {
@@ -1136,14 +1136,14 @@
           "realType": "TB",
           "name": "",
           "difficulty": 0,
-          "difficultyLn": 16
+          "difficultyLn": 15
         }
       ],
       "typeDifficulties": {
         "RC": {},
         "HB": {},
         "LN": {
-          "ln": 14.5
+          "ln": 14.2
         },
         "SV": {},
         "TB": {

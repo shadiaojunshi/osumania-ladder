@@ -14,7 +14,7 @@
       "difficulty": {
         "min": 6.5,
         "max": 11.3,
-        "average": 9.2
+        "average": 8.4
       },
       "maps": [
         {
@@ -91,7 +91,8 @@
         },
         "SV": {
           "rf": 6.5
-        }
+        },
+        "TB": {}
       }
     },
     {
@@ -102,7 +103,7 @@
       "difficulty": {
         "min": 6,
         "max": 9,
-        "average": 7.1
+        "average": 6.8
       },
       "maps": [
         {
@@ -207,7 +208,8 @@
         },
         "SV": {
           "rf": 6
-        }
+        },
+        "TB": {}
       }
     },
     {
@@ -218,7 +220,7 @@
       "difficulty": {
         "min": 7.1,
         "max": 9.5,
-        "average": 8
+        "average": 7.8
       },
       "maps": [
         {
@@ -323,7 +325,8 @@
         },
         "SV": {
           "rf": 7.5
-        }
+        },
+        "TB": {}
       }
     },
     {
@@ -334,7 +337,7 @@
       "difficulty": {
         "min": 8,
         "max": 10,
-        "average": 8.9
+        "average": 8.8
       },
       "maps": [
         {
@@ -454,7 +457,8 @@
         },
         "SV": {
           "rf": 8.7
-        }
+        },
+        "TB": {}
       }
     },
     {
@@ -465,7 +469,7 @@
       "difficulty": {
         "min": 9,
         "max": 10.7,
-        "average": 9.9
+        "average": 10
       },
       "maps": [
         {
@@ -585,7 +589,8 @@
         },
         "SV": {
           "rf": 10
-        }
+        },
+        "TB": {}
       }
     },
     {
@@ -596,7 +601,7 @@
       "difficulty": {
         "min": 10.1,
         "max": 11.2,
-        "average": 10.6
+        "average": 10.7
       },
       "maps": [
         {
@@ -730,7 +735,8 @@
         },
         "SV": {
           "rf": 10.7
-        }
+        },
+        "TB": {}
       }
     },
     {
@@ -841,7 +847,7 @@
         {
           "slot": "LN4",
           "type": "LN",
-          "realType": "SW",
+          "realType": "LNTC",
           "name": "LN4",
           "difficulty": 11.8
         },
@@ -875,6 +881,10 @@
         },
         "SV": {
           "rf": 11.2
+        },
+        "TB": {
+          "rf": 11.9,
+          "ln": 12.9
         }
       }
     }

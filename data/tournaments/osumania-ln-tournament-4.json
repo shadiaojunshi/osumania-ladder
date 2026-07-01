@@ -1135,7 +1135,8 @@
           "type": "TB",
           "realType": "TB",
           "name": "",
-          "difficulty": 0
+          "difficulty": 0,
+          "difficultyLn": 16
         }
       ],
       "typeDifficulties": {
@@ -1145,7 +1146,9 @@
           "ln": 14.5
         },
         "SV": {},
-        "TB": {}
+        "TB": {
+          "ln": 16
+        }
       }
     }
   ],

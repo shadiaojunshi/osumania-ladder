@@ -293,7 +293,7 @@ function BasicInfoStep({
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-1">{t('form.label.keyCount')}</label>
           <div className="w-full px-3 py-2 border border-gray-200 dark:border-neutral-700 rounded-md text-sm bg-gray-50 dark:bg-neutral-800 text-gray-600 dark:text-neutral-400">
@@ -309,29 +309,30 @@ function BasicInfoStep({
             className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-700 rounded-md text-sm bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 placeholder:text-gray-400 dark:placeholder:text-neutral-500 focus:outline-none focus:border-purple-400"
           />
         </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-1">{t('form.label.priority')}</label>
-          <input
-            type="number"
-            step="0.1"
-            min="1"
-            max="5"
-            value={tournament.priority ?? ''}
-            onChange={(e) => {
-              const val = e.target.value === '' ? undefined : Number(e.target.value)
-              updateField('priority', val)
-            }}
-            placeholder="1-5"
-            className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-700 rounded-md text-sm bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 placeholder:text-gray-400 dark:placeholder:text-neutral-500 focus:outline-none focus:border-purple-400"
-          />
-          <p className="text-xs text-gray-500 dark:text-neutral-400 mt-1">
-            5: MWC 系列赛事<br/>
-            4: 世界热门锦标赛 (THMC4, 4DM, GBC春)<br/>
-            3: 世界大众赛事 & 国家杯锦标赛 (MCNC, TTI, JHC)<br/>
-            2: 世界小型 / 国家范围赛事 (CUC, RDC, PFC)<br/>
-            1: 小型社区比赛 (SYC, WBDC, GFRL)
-          </p>
-        </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-1">{t('form.label.priority')}</label>
+        <input
+          type="number"
+          step="0.1"
+          min="1"
+          max="5"
+          value={tournament.priority ?? ''}
+          onChange={(e) => {
+            const val = e.target.value === '' ? undefined : Number(e.target.value)
+            updateField('priority', val)
+          }}
+          placeholder="1-5 (可选)"
+          className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-700 rounded-md text-sm bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 placeholder:text-gray-400 dark:placeholder:text-neutral-500 focus:outline-none focus:border-purple-400"
+        />
+        <p className="text-xs text-gray-500 dark:text-neutral-400 mt-1.5 leading-relaxed">
+          <strong>5</strong>: MWC 系列赛事<br/>
+          <strong>4</strong>: 世界热门锦标赛 (THMC4, 4DM, GBC春)<br/>
+          <strong>3</strong>: 世界大众赛事 & 国家杯锦标赛 (MCNC, TTI, JHC)<br/>
+          <strong>2</strong>: 世界小型 / 国家范围赛事 (CUC, RDC, PFC)<br/>
+          <strong>1</strong>: 小型社区比赛 (SYC, WBDC, GFRL)
+        </p>
       </div>
 
       <div className="grid grid-cols-2 gap-4">

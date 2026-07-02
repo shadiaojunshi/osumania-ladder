@@ -1216,5 +1216,6 @@
   "customTypes": [],
   "forumUrl": "https://osu.ppy.sh/community/forums/topics/2015815",
   "wikiUrl": "https://tourneymethod.com/tournaments/4258",
-  "sheetUrl": "https://docs.google.com/spreadsheets/d/11iFCHTWJLZhRDrtsDUjMx8hwKGWUYu0VR_x3SDgTOS0/edit?usp=sharing"
+  "sheetUrl": "https://docs.google.com/spreadsheets/d/11iFCHTWJLZhRDrtsDUjMx8hwKGWUYu0VR_x3SDgTOS0/edit?usp=sharing",
+  "priority": 4
 }

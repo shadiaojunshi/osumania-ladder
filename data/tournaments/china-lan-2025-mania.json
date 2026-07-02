@@ -498,5 +498,6 @@
   ],
   "customTypes": [],
   "forumUrl": "https://osu.ppy.sh/community/forums/topics/2080306?n=1",
-  "sheetUrl": "https://mcnc.crzteam.cn/competition/lan"
+  "sheetUrl": "https://mcnc.crzteam.cn/competition/lan",
+  "priority": 3
 }

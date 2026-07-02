@@ -795,5 +795,6 @@
   "customTypes": [],
   "forumUrl": "https://osu.ppy.sh/community/forums/topics/2017688",
   "sheetUrl": "https://docs.google.com/spreadsheets/d/1QlTF0xKUtSI_uNXRbwJWeX__emZID08UHPzWYCzmRmU/edit?usp=sharing",
-  "wikiUrl": "https://tourneymethod.com/tournaments/4274"
+  "wikiUrl": "https://tourneymethod.com/tournaments/4274",
+  "priority": 2
 }

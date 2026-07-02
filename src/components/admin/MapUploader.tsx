@@ -788,8 +788,13 @@ async function buildTrimmedOsz(sourceZip: JSZip, diff: OsuDiffInfo, slot: string
 
 function extractVersionFromName(name: string | undefined): string | null {
   if (!name) return null
-  const match = name.match(/\[([^\]]+)\]\s*$/)
-  return match ? match[1] : null
+  // 从末尾开始找最后一对完整的方括号（支持嵌套括号）
+  const lastOpenIdx = name.lastIndexOf('[')
+  const lastCloseIdx = name.lastIndexOf(']')
+  if (lastOpenIdx === -1 || lastCloseIdx === -1 || lastOpenIdx >= lastCloseIdx) return null
+  // 检查右括号后只有空白（允许末尾有空格）
+  if (name.slice(lastCloseIdx + 1).trim() !== '') return null
+  return name.slice(lastOpenIdx + 1, lastCloseIdx)
 }
 
 async function autoDownloadAndTrim(

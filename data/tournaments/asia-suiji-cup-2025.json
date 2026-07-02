@@ -745,5 +745,6 @@
     }
   ],
   "customTypes": [],
-  "wikiUrl": "https://asia-suiji-cup.vercel.app/tournament/2/info/main/"
+  "wikiUrl": "https://asia-suiji-cup.vercel.app/tournament/2/info/main/",
+  "priority": 4
 }

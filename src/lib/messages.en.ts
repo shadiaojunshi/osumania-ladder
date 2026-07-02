@@ -262,6 +262,7 @@ export const messagesEn: Record<keyof typeof messagesZh, string> = {
   'form.label.keyCount': 'Key count',
   'form.keyCount.note': '4K (other key counts not yet supported)',
   'form.label.year': 'Year',
+  'form.label.priority': 'Priority (optional)',
   'form.label.forumUrl': 'Forum URL (optional)',
   'form.label.wikiUrl': 'Wiki URL (optional)',
   'form.label.sheetUrl': 'Main sheet URL (optional)',

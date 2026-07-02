@@ -261,6 +261,7 @@ export const messagesZh = {
   'form.label.keyCount': '键数',
   'form.keyCount.note': '4K（暂不支持其他键数）',
   'form.label.year': '年份',
+  'form.label.priority': '优先级 (可选)',
   'form.label.forumUrl': '论坛链接 (可选)',
   'form.label.wikiUrl': 'Wiki 链接 (可选)',
   'form.label.sheetUrl': '主表格链接 (可选)',

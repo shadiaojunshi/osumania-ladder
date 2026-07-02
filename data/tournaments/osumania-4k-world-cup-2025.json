@@ -1080,5 +1080,6 @@
   "customTypes": [],
   "wikiUrl": "Tourney Method - osu!mania 4K World Cup 2025 - Tourney Method",
   "sheetUrl": "https://docs.google.com/spreadsheets/d/1sqm1WCIIYBDSHYoSc99wjf8KHZJxpscccKFk-_RM_C0?rm=minimal",
-  "forumUrl": "https://osu.ppy.sh/wiki/en/Tournaments/MWC/2025_4K"
+  "forumUrl": "https://osu.ppy.sh/wiki/en/Tournaments/MWC/2025_4K",
+  "priority": 5
 }

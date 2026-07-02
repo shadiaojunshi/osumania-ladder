@@ -42,6 +42,7 @@ export interface Tournament {
   sheetUrl?: string
   keyCount: number
   year: number
+  priority?: number
   tags?: string[]
   rounds: Round[]
   customTypes?: MapTypeDefinition[]

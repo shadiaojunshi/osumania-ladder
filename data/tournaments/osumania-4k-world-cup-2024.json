@@ -1124,5 +1124,6 @@
     }
   ],
   "customTypes": [],
-  "wikiUrl": "https://osu.ppy.sh/wiki/en/Tournaments/MWC/2024_4K"
+  "wikiUrl": "https://osu.ppy.sh/wiki/en/Tournaments/MWC/2024_4K",
+  "priority": 5
 }

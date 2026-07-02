@@ -1092,5 +1092,6 @@
   "customTypes": [],
   "forumUrl": "https://osu.ppy.sh/community/forums/topics/2102292",
   "sheetUrl": "https://docs.google.com/spreadsheets/d/138GSJotkIY_5nM_NyX9esoHzLlP7v5kpQJ0FByMb60w/edit?rm=minimal",
-  "wikiUrl": "https://tourneymethod.com/tournaments/5047"
+  "wikiUrl": "https://tourneymethod.com/tournaments/5047",
+  "priority": 3
 }

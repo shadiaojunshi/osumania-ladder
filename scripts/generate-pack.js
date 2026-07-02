@@ -306,7 +306,11 @@ async function generatePack(targetType) {
     JSON.parse(fs.readFileSync(path.join(tournamentsDir, file), 'utf-8'))
   )
   tournamentsList.sort((a, b) => {
-    const yearDiff = (a.year || 0) - (b.year || 0)
+    // 优先级降序(5→1, 无 priority 当 0 最后),相同 priority 内年份降序(新→旧)
+    const priA = a.priority || 0
+    const priB = b.priority || 0
+    if (priA !== priB) return priB - priA
+    const yearDiff = (b.year || 0) - (a.year || 0)
     if (yearDiff !== 0) return yearDiff
     return a.id.localeCompare(b.id)
   })

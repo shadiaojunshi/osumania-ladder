@@ -14,8 +14,8 @@
       "isQualifier": true,
       "difficulty": {
         "min": 6,
-        "max": 10,
-        "average": 8.1
+        "max": 9.5,
+        "average": 7.9
       },
       "maps": [
         {
@@ -238,7 +238,7 @@
       "abbreviation": "RO32",
       "order": 3,
       "difficulty": {
-        "min": 6.5,
+        "min": 6.8,
         "max": 7.7,
         "average": 7.1
       },
@@ -382,9 +382,9 @@
       "abbreviation": "RO16",
       "order": 4,
       "difficulty": {
-        "min": 7,
+        "min": 7.5,
         "max": 8.7,
-        "average": 8.3
+        "average": 8.4
       },
       "maps": [
         {
@@ -528,9 +528,9 @@
       "abbreviation": "QF",
       "order": 5,
       "difficulty": {
-        "min": 8.6,
+        "min": 8.9,
         "max": 9.7,
-        "average": 9.2
+        "average": 9.3
       },
       "maps": [
         {
@@ -691,9 +691,9 @@
       "abbreviation": "SF",
       "order": 6,
       "difficulty": {
-        "min": 9.7,
+        "min": 9.9,
         "max": 10.5,
-        "average": 10.3
+        "average": 10.4
       },
       "maps": [
         {
@@ -856,9 +856,9 @@
       "abbreviation": "F",
       "order": 7,
       "difficulty": {
-        "min": 11.2,
+        "min": 11.4,
         "max": 12.2,
-        "average": 11.8
+        "average": 11.9
       },
       "maps": [
         {
@@ -1037,7 +1037,7 @@
       "abbreviation": "GF",
       "order": 8,
       "difficulty": {
-        "min": 12.3,
+        "min": 12.6,
         "max": 12.9,
         "average": 12.7
       },

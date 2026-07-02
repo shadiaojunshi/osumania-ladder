@@ -128,8 +128,13 @@ function buildDifficultyLabel(round: Round, activeFilter: string | null, hovered
   }
   if (type === 'HB') {
     const typeMaps = round.maps.filter((m) => m.type === 'HB')
-    const avg = typeMaps.length > 0 ? typeMaps.reduce((s, m) => s + m.difficulty, 0) / typeMaps.length : round.difficulty.average
-    return `~${getRfDanName(avg)} / ${getLnDanName(avg)}`
+    const rfs = typeMaps.map((m) => m.difficulty).filter((d) => d > 0)
+    const lns = typeMaps.map((m) => m.difficultyLn ?? 0).filter((d) => d > 0)
+    const parts: string[] = []
+    if (rfs.length > 0) parts.push(getRfDanName(rfs.reduce((s, d) => s + d, 0) / rfs.length))
+    if (lns.length > 0) parts.push(getLnDanName(lns.reduce((s, d) => s + d, 0) / lns.length))
+    if (parts.length > 0) return `~${parts.join(' / ')}`
+    return `~${getRfDanName(round.difficulty.average)}`
   }
   if (type === 'TB') {
     const typeMaps = round.maps.filter((m) => m.type === 'TB')
@@ -140,8 +145,34 @@ function buildDifficultyLabel(round: Round, activeFilter: string | null, hovered
     }
   }
 
-  const avg = round.difficulty.average
-  return `~${getRfDanName(avg)} / ${getLnDanName(avg)}`
+  // 无 hoveredType / activeFilter 时的默认 fallback:
+  //   按 type 分成 rf 桶(RC/SV + HB.difficulty) 和 ln 桶(LN.difficulty + HB.difficultyLn)。
+  //   TB 完全排除。桶为空就不显示对应段位;两边都空就什么都不显示。
+  //   避免 o!mln4 那种只有 LN+TB 的比赛显示 rf 段位。
+  const rfBucket: number[] = []
+  const lnBucket: number[] = []
+  for (const m of round.maps) {
+    if (m.type === 'TB') continue
+    if (m.type === 'LN') {
+      if (m.difficulty > 0) lnBucket.push(m.difficulty)
+    } else if (m.type === 'HB') {
+      if (m.difficulty > 0) rfBucket.push(m.difficulty)
+      if (m.difficultyLn && m.difficultyLn > 0) lnBucket.push(m.difficultyLn)
+    } else {
+      // RC / SV / SPECIAL — 存 rf 值
+      if (m.difficulty > 0) rfBucket.push(m.difficulty)
+    }
+  }
+  const parts: string[] = []
+  if (rfBucket.length > 0) {
+    const avg = rfBucket.reduce((s, d) => s + d, 0) / rfBucket.length
+    parts.push(getRfDanName(avg))
+  }
+  if (lnBucket.length > 0) {
+    const avg = lnBucket.reduce((s, d) => s + d, 0) / lnBucket.length
+    parts.push(getLnDanName(avg))
+  }
+  return parts.length > 0 ? `~${parts.join(' / ')}` : ''
 }
 
 function getRfDanName(diff: number): string {

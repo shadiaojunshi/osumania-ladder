@@ -213,7 +213,7 @@
       "difficulty": {
         "min": 8.8,
         "max": 10,
-        "average": 9.1
+        "average": 9
       },
       "maps": [
         {
@@ -725,7 +725,7 @@
       "difficulty": {
         "min": 13.5,
         "max": 13.6,
-        "average": 13.5
+        "average": 13.6
       },
       "maps": [
         {

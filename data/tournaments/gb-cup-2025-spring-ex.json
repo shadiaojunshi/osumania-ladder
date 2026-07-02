@@ -12,9 +12,9 @@
       "abbreviation": "QF",
       "order": 1,
       "difficulty": {
-        "min": 8,
-        "max": 10,
-        "average": 9.7
+        "min": 9.4,
+        "max": 9.8,
+        "average": 9.6
       },
       "maps": [
         {
@@ -130,9 +130,9 @@
       "abbreviation": "SF",
       "order": 2,
       "difficulty": {
-        "min": 8.5,
-        "max": 11.6,
-        "average": 11.1
+        "min": 10.8,
+        "max": 11.4,
+        "average": 11
       },
       "maps": [
         {
@@ -248,9 +248,9 @@
       "abbreviation": "F",
       "order": 3,
       "difficulty": {
-        "min": 10,
-        "max": 13,
-        "average": 12.3
+        "min": 11.8,
+        "max": 12.8,
+        "average": 12.2
       },
       "maps": [
         {
@@ -380,9 +380,9 @@
       "abbreviation": "GF",
       "order": 4,
       "difficulty": {
-        "min": 12,
-        "max": 14,
-        "average": 13.1
+        "min": 12.7,
+        "max": 13.7,
+        "average": 13
       },
       "maps": [
         {

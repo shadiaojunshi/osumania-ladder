@@ -13,9 +13,9 @@
       "order": 1,
       "isQualifier": true,
       "difficulty": {
-        "min": 7.7,
+        "min": 7.9,
         "max": 10.8,
-        "average": 9.4
+        "average": 9.5
       },
       "maps": [
         {
@@ -113,9 +113,9 @@
       "abbreviation": "RO32",
       "order": 2,
       "difficulty": {
-        "min": 7.8,
+        "min": 7.9,
         "max": 8.5,
-        "average": 8.1
+        "average": 8.2
       },
       "maps": [
         {
@@ -259,7 +259,7 @@
       "difficulty": {
         "min": 8.5,
         "max": 9.2,
-        "average": 8.8
+        "average": 8.9
       },
       "maps": [
         {
@@ -420,9 +420,9 @@
       "abbreviation": "QF",
       "order": 4,
       "difficulty": {
-        "min": 9.5,
+        "min": 9.7,
         "max": 10.5,
-        "average": 10
+        "average": 10.1
       },
       "maps": [
         {
@@ -585,7 +585,7 @@
       "abbreviation": "SF",
       "order": 5,
       "difficulty": {
-        "min": 10.2,
+        "min": 10.3,
         "max": 11.2,
         "average": 10.8
       },
@@ -766,7 +766,7 @@
       "abbreviation": "F",
       "order": 6,
       "difficulty": {
-        "min": 11.8,
+        "min": 11.9,
         "max": 12.5,
         "average": 12.3
       },

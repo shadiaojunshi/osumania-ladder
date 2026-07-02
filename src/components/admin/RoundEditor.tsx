@@ -28,7 +28,7 @@ interface RoundWithMeta extends Round {
   _maps: ExtendedMap[]
   _typeDiffs: {
     rc: number; rcMin: number; rcMax: number
-    hbRf: number; hbLn: number; hbMin: number; hbMax: number
+    hbRf: number; hbLn: number; hbMin: number; hbMax: number; hbLnMin: number; hbLnMax: number
     ln: number; lnMin: number; lnMax: number
     sv: number; svMin: number; svMax: number
     tbRf: number; tbLn: number; tbMin: number; tbMax: number; tbLnMin: number; tbLnMax: number
@@ -272,9 +272,18 @@ export function RoundEditor({ round, index, onChange, onRemove }: Props) {
                   </div>
                 </div>
                 <div className="grid grid-cols-4 gap-2 items-center">
-                  <span className="text-xs text-purple-600 dark:text-purple-300 font-medium">HB (ln)</span>
+                  <span className="text-xs text-purple-600 dark:text-purple-300 font-medium">HB (rf)</span>
                   <input type="number" step="0.5" value={round._typeDiffs.hbMin || ''} onChange={(e) => updateTypeDiff('hbMin', Number(e.target.value))} className="w-full px-1.5 py-1 border border-gray-200 dark:border-neutral-700 rounded text-xs text-center bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 focus:outline-none focus:border-purple-400" />
                   <input type="number" step="0.5" value={round._typeDiffs.hbMax || ''} onChange={(e) => updateTypeDiff('hbMax', Number(e.target.value))} className="w-full px-1.5 py-1 border border-gray-200 dark:border-neutral-700 rounded text-xs text-center bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 focus:outline-none focus:border-purple-400" />
+                  <div className="flex items-center gap-1">
+                    <input type="number" step="0.5" value={round._typeDiffs.hbRf || ''} onChange={(e) => updateTypeDiff('hbRf', Number(e.target.value))} className="flex-1 min-w-0 px-1.5 py-1 border border-gray-200 dark:border-neutral-700 rounded text-xs text-center bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 focus:outline-none focus:border-purple-400" />
+                    <DifficultyRefPicker value={round._typeDiffs.hbRf || 0} onChange={(n) => updateTypeDiff('hbRf', n)} type="HB" field="rf" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-4 gap-2 items-center">
+                  <span className="text-xs text-purple-600 dark:text-purple-300 font-medium">HB (ln)</span>
+                  <input type="number" step="0.5" value={round._typeDiffs.hbLnMin || ''} onChange={(e) => updateTypeDiff('hbLnMin', Number(e.target.value))} className="w-full px-1.5 py-1 border border-gray-200 dark:border-neutral-700 rounded text-xs text-center bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 focus:outline-none focus:border-purple-400" />
+                  <input type="number" step="0.5" value={round._typeDiffs.hbLnMax || ''} onChange={(e) => updateTypeDiff('hbLnMax', Number(e.target.value))} className="w-full px-1.5 py-1 border border-gray-200 dark:border-neutral-700 rounded text-xs text-center bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 focus:outline-none focus:border-purple-400" />
                   <div className="flex items-center gap-1">
                     <input type="number" step="0.5" value={round._typeDiffs.hbLn || ''} onChange={(e) => updateTypeDiff('hbLn', Number(e.target.value))} className="flex-1 min-w-0 px-1.5 py-1 border border-gray-200 dark:border-neutral-700 rounded text-xs text-center bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 focus:outline-none focus:border-purple-400" />
                     <DifficultyRefPicker value={round._typeDiffs.hbLn || 0} onChange={(n) => updateTypeDiff('hbLn', n)} type="HB" field="ln" />
@@ -418,13 +427,29 @@ function mapsToOutput(maps: ExtendedMap[]): BeatmapMeta[] {
   return maps.map(({ category, ...rest }) => rest)
 }
 
+// round.difficulty 的收数规则:
+//   TB (含 slot='TB1', type 都是 'TB'):不参与本轮统计
+//   HB:同一张图有 rf/ln 两个刻度,两侧都填就取平均 (rf+ln)/2 作为一个数据点,
+//        单侧有就用那侧,两侧都是 0 就跳过。rf/ln 尺度不严格对应,但作
+//        round-level 的 fallback 数字足够。
+//   其它 (RC/LN/SV/SPECIAL):存储字段 difficulty > 0 就收 difficulty。
 function recalcDifficulty(maps: ExtendedMap[]): Round['difficulty'] {
   if (maps.length === 0) return { min: 0, max: 0, average: 0 }
-  const diffs = maps.map((m) => m.difficulty).filter((d) => d > 0)
-  if (diffs.length === 0) return { min: 0, max: 0, average: 0 }
-  const min = Math.min(...diffs)
-  const max = Math.max(...diffs)
-  const average = +(diffs.reduce((s, d) => s + d, 0) / diffs.length).toFixed(1)
+  const points: number[] = []
+  for (const m of maps) {
+    if (m.type === 'TB') continue
+    if (m.type === 'HB') {
+      const vals = [m.difficulty, m.difficultyLn ?? 0].filter((v) => v > 0)
+      if (vals.length === 0) continue
+      points.push(vals.reduce((s, v) => s + v, 0) / vals.length)
+    } else {
+      if (m.difficulty > 0) points.push(m.difficulty)
+    }
+  }
+  if (points.length === 0) return { min: 0, max: 0, average: 0 }
+  const min = +Math.min(...points).toFixed(1)
+  const max = +Math.max(...points).toFixed(1)
+  const average = +(points.reduce((s, d) => s + d, 0) / points.length).toFixed(1)
   return { min, max, average }
 }
 

@@ -409,14 +409,12 @@ function TournamentColumn({
           {tournament.abbreviation}
         </div>
         {visibleRounds.map((round, idx) => {
-          // TB 谱面双轴贡献:RF 用 difficulty,LN 用 difficultyLn - rfLnOffset(若有);
-          // 这样混风格的 TB 在 round 框范围里 RF 和 LN 两侧都体现。
+          // TB 不参与 round 框的高度/颜色/段位统计(仅红条另外画)。
+          // LN 系(含 HB)取 ln 值再减 rfLnOffset,统一投影到 rf 轴上。
           const adjustedDiffs: number[] = []
           for (const m of round.maps) {
-            if (m.type === 'TB') {
-              if (m.difficulty > 0) adjustedDiffs.push(m.difficulty)
-              if (m.difficultyLn && m.difficultyLn > 0) adjustedDiffs.push(m.difficultyLn - rfLnOffset)
-            } else if (isLnBased(m)) {
+            if (m.type === 'TB') continue
+            if (isLnBased(m)) {
               const d = getLnDiff(m) - rfLnOffset
               if (d > 0) adjustedDiffs.push(d)
             } else if (m.difficulty > 0) {
@@ -431,8 +429,11 @@ function TournamentColumn({
           const storedMin = round.difficulty.min > 0 ? round.difficulty.min - offsetForStored : Infinity
           const storedMax = round.difficulty.max > 0 ? round.difficulty.max - offsetForStored : -Infinity
           const storedAvg = round.difficulty.average > 0 ? round.difficulty.average - offsetForStored : null
-          let minDiff = Math.min(computedMin, storedMin)
-          let maxDiff = Math.max(computedMax, storedMax)
+          // computed 有值就完全信任(逐图难度是权威),stored 只作 fallback。
+          // 避免 stored 存量脏数据(如把 round.difficulty.min 手工写成 8.5 后没重算)
+          // 反过来污染前端显示。
+          let minDiff = isFinite(computedMin) ? computedMin : storedMin
+          let maxDiff = isFinite(computedMax) ? computedMax : storedMax
           // 用户只填平均、没填 min/max,也没逐图填难度时,用 average 撑出一个单点小框
           if ((!isFinite(minDiff) || !isFinite(maxDiff)) && storedAvg !== null) {
             minDiff = storedAvg

@@ -13,9 +13,9 @@
       "order": 1,
       "isQualifier": true,
       "difficulty": {
-        "min": 8,
+        "min": 8.3,
         "max": 11,
-        "average": 9.7
+        "average": 9.8
       },
       "maps": [
         {
@@ -104,7 +104,7 @@
       "abbreviation": "RO32",
       "order": 2,
       "difficulty": {
-        "min": 7,
+        "min": 7.5,
         "max": 8.5,
         "average": 7.9
       },
@@ -250,7 +250,7 @@
       "order": 3,
       "difficulty": {
         "min": 8.5,
-        "max": 9.5,
+        "max": 9.3,
         "average": 8.8
       },
       "maps": [
@@ -397,7 +397,7 @@
       "order": 4,
       "difficulty": {
         "min": 9.5,
-        "max": 11.3,
+        "max": 10.7,
         "average": 10.1
       },
       "maps": [
@@ -722,8 +722,8 @@
       "abbreviation": "F",
       "order": 6,
       "difficulty": {
-        "min": 11.8,
-        "max": 13.1,
+        "min": 12,
+        "max": 13,
         "average": 12.4
       },
       "maps": [
@@ -900,9 +900,9 @@
       "abbreviation": "GF",
       "order": 7,
       "difficulty": {
-        "min": 12.5,
+        "min": 12.9,
         "max": 13.9,
-        "average": 13.4
+        "average": 13.5
       },
       "maps": [
         {

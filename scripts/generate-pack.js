@@ -183,6 +183,28 @@ async function mapWithConcurrency(items, limit, fn) {
   return results
 }
 
+// 去重后同一物理文件可能被多个比赛槽位引用。把这些来源渲染成一段紧凑的
+// 标签写进 osu 的 Version 字段:
+//   ≤3 个: "MWC 4K 2025 F HB3 & VNMC 4K 2025 F HB3"       -- 空格 + &
+//   ≥4 个: "MWC2025F HB3/VNMC2025F HB3/..."                -- 紧凑,去 "4K"、去内空格
+// 注意:sanitizeFileName 会把 '/' 从文件名里剔掉,所以合包里的 .osu/.mp3/.jpg
+// 文件名遇到 4+ 源时会变成连着的一串(游戏内 [Version] 字段照常渲染 '/')。
+function formatSources(sources, isNsv) {
+  const nsvSuffix = isNsv ? ' NSV' : ''
+  const displaySlot = (slot) => (slot === 'TB1' ? 'TB' : slot)
+  if (sources.length <= 3) {
+    return sources
+      .map((s) => `${s.tournamentAbbr} ${s.roundAbbr} ${displaySlot(s.slot)}${nsvSuffix}`)
+      .join(' & ')
+  }
+  return sources
+    .map((s) => {
+      const compactAbbr = (s.tournamentAbbr || '').replace(/\s*4K\s*/g, '').replace(/\s+/g, '')
+      return `${compactAbbr}${s.roundAbbr} ${displaySlot(s.slot)}${nsvSuffix}`
+    })
+    .join('/')
+}
+
 async function prefetchMap(map, packName) {
   try {
     const oszBuffer = await downloadFromR2(map.r2Key)
@@ -196,8 +218,10 @@ async function prefetchMap(map, packName) {
     const osuContent = await zip.files[osuFileName].async('string')
     const meta = parseOsu(osuContent)
 
-    const displaySlot = map.slot === 'TB1' ? 'TB' : map.slot
-    const newVersion = `(${map.tournamentAbbr} ${map.roundAbbr} ${displaySlot}${map.isNsv ? ' NSV' : ''}) ${meta.artist || 'Unknown'} - ${meta.title || 'Unknown'} [${meta.creator || 'Unknown'}] (${meta.version || 'Normal'})`
+    // sources 里第一条永远是"第一次出现"(mapsToProcess 已按年份+id 排过序,
+    // 去重时先来先占),所以合并后的排序继承第一次出现的 difficulty 不会跳。
+    const sourcesLabel = formatSources(map.sources, map.isNsv)
+    const newVersion = `(${sourcesLabel}) ${meta.artist || 'Unknown'} - ${meta.title || 'Unknown'} [${meta.creator || 'Unknown'}] (${meta.version || 'Normal'})`
     const safeVersion = sanitizeFileName(newVersion)
 
     const audioExt = getAudioExtension(meta.audioFilename || 'audio.mp3')
@@ -298,6 +322,7 @@ async function generatePack(targetType) {
             roundAbbr: round.abbreviation,
             slot: map.slot,
             difficulty: map.difficulty || 0,
+            beatmapId: map.beatmapId || null,
             r2Key: `maps/${tournament.id}/${round.id}/${map.slot}.osz`,
           })
         }
@@ -307,20 +332,48 @@ async function generatePack(targetType) {
 
   console.log(`[${targetType}] Found ${mapsToProcess.length} maps total`)
 
+  // 按 beatmapId 数唯一槽位数(缺 beatmapId 的老数据用 r2Key 兜底):
+  // 用作 manifest.totalMaps,下载页的分母(不再重复计数被多个比赛复用的图)。
+  const uniqueSlotKeys = new Set(
+    mapsToProcess.map(m => (m.beatmapId ? `bid:${m.beatmapId}` : `raw:${m.r2Key}`))
+  )
+  const uniqueSlotTotal = uniqueSlotKeys.size
+
   const r2Objects = await listR2Objects('maps/')
   const r2Keys = new Set(r2Objects.map(o => o.Key))
 
-  const available = []
+  // 收集所有实际存在的物理条目(SV + NSV);同一 (beatmapId, isNsv) 会被多次
+  // push,后面 dedup 时按 sources 数组合并。
+  const rawEntries = []
   for (const m of mapsToProcess) {
     if (!r2Keys.has(m.r2Key)) continue
-    available.push({ ...m, isNsv: false })
+    rawEntries.push({ ...m, isNsv: false })
     const nsvKey = m.r2Key.replace(/\.osz$/, '.nsv.osz')
     if (r2Keys.has(nsvKey)) {
-      available.push({ ...m, r2Key: nsvKey, isNsv: true })
+      rawEntries.push({ ...m, r2Key: nsvKey, isNsv: true })
     }
   }
+
+  // 去重:同一 beatmapId 的同一 SV/NSV 变体只留一份物理文件,把所有引用它
+  // 的比赛槽位塞进 sources[]。第一次出现优先(tournamentsList 已排序),
+  // 后续的 append 到末尾。SV 和 NSV 是不同物理文件,拆成两个 key。
+  const bySignature = new Map()
+  for (const m of rawEntries) {
+    const key = m.beatmapId ? `${m.beatmapId}|${m.isNsv ? 1 : 0}` : `raw:${m.r2Key}`
+    const existing = bySignature.get(key)
+    const src = { tournamentAbbr: m.tournamentAbbr, roundAbbr: m.roundAbbr, slot: m.slot }
+    if (existing) {
+      existing.sources.push(src)
+    } else {
+      bySignature.set(key, { ...m, sources: [src] })
+    }
+  }
+  const available = [...bySignature.values()]
+  const dupCollapsed = rawEntries.length - available.length
   const nsvCount = available.filter(m => m.isNsv).length
-  console.log(`[${targetType}] ${available.length} maps have files in R2 (incl. ${nsvCount} NSV variants)`)
+  console.log(
+    `[${targetType}] ${available.length} unique files in R2 (incl. ${nsvCount} NSV; collapsed ${dupCollapsed} duplicate slot ref(s))`
+  )
 
   if (available.length === 0) {
     console.log(`[${targetType}] No files available, skipping`)
@@ -380,7 +433,9 @@ async function generatePack(targetType) {
       name: packName,
       part: partNum,
       mapCount: processedSlots,
-      totalMaps: mapsToProcess.length,
+      // 用去重后的唯一槽位数(而非 mapsToProcess.length),避免下载页进度条
+      // 因为多个比赛复用同一张图导致 mapCount 永远追不上 totalMaps。
+      totalMaps: uniqueSlotTotal,
       sizeMB: Math.round(stats.size / 1024 / 1024),
       outputPath,
     })

@@ -13,8 +13,8 @@
       "order": 1,
       "difficulty": {
         "min": 11,
-        "max": 13.2,
-        "average": 11.9
+        "max": 12.6,
+        "average": 12.1
       },
       "maps": [
         {
@@ -97,8 +97,8 @@
       "abbreviation": "RO16",
       "order": 2,
       "difficulty": {
-        "min": 9,
-        "max": 10,
+        "min": 9.6,
+        "max": 9.8,
         "average": 9.7
       },
       "maps": [
@@ -218,9 +218,9 @@
       "abbreviation": "QF",
       "order": 3,
       "difficulty": {
-        "min": 10,
+        "min": 11,
         "max": 11.5,
-        "average": 11.3
+        "average": 11.2
       },
       "maps": [
         {
@@ -353,9 +353,9 @@
       "abbreviation": "SF/F",
       "order": 4,
       "difficulty": {
-        "min": 13,
-        "max": 14.1,
-        "average": 13.6
+        "min": 13.3,
+        "max": 13.6,
+        "average": 13.5
       },
       "maps": [
         {

@@ -301,7 +301,7 @@ export default function AdminPage() {
               </div>
             )}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <TournamentForm onUpdate={setTournament} initialData={editInitialData} />
+              <TournamentForm onUpdate={setTournament} initialData={editInitialData} submitSuccess={submitStatus?.type === 'success'} />
               <JsonPreview
                 tournament={tournament}
                 onSubmit={handleSubmit}

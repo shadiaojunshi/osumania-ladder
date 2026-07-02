@@ -10,6 +10,7 @@ import { useT, type MessageKey } from '@/lib/i18n'
 interface Props {
   onUpdate: (tournament: Tournament | null) => void
   initialData?: Tournament | null
+  submitSuccess?: boolean
 }
 
 const EMPTY_TOURNAMENT: Tournament = {
@@ -23,22 +24,32 @@ const EMPTY_TOURNAMENT: Tournament = {
   customTypes: [],
 }
 
-export function TournamentForm({ onUpdate, initialData }: Props) {
+export function TournamentForm({ onUpdate, initialData, submitSuccess }: Props) {
   const [step, setStep] = useState(0)
   const [tournament, setTournament] = useState<Tournament>(EMPTY_TOURNAMENT)
   const [rounds, setRounds] = useState<RoundWithMeta[]>([])
+  const [isDirty, setIsDirty] = useState(false)
 
   useEffect(() => {
     if (initialData) {
       setTournament(initialData)
       setRounds(initialData.rounds.map(roundToMeta))
       setStep(1)
+      setIsDirty(false)
     } else {
       setTournament(EMPTY_TOURNAMENT)
       setRounds([])
       setStep(0)
+      setIsDirty(false)
     }
   }, [initialData])
+
+  // 提交成功后清除 dirty 标志
+  useEffect(() => {
+    if (submitSuccess) {
+      setIsDirty(false)
+    }
+  }, [submitSuccess])
 
   useEffect(() => {
     const outputRounds = rounds.map(roundWithMetaToOutput)
@@ -50,8 +61,26 @@ export function TournamentForm({ onUpdate, initialData }: Props) {
     }
   }, [tournament, rounds, onUpdate])
 
+  // 关闭/刷新前提示未保存的修改
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault()
+        e.returnValue = '您做出的改动可能未保存'
+      }
+    }
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+  }, [isDirty])
+
   const updateField = useCallback(<K extends keyof Tournament>(key: K, value: Tournament[K]) => {
     setTournament((prev) => ({ ...prev, [key]: value }))
+    setIsDirty(true)
+  }, [])
+
+  const updateRoundsWithDirty = useCallback((newRounds: RoundWithMeta[]) => {
+    setRounds(newRounds)
+    setIsDirty(true)
   }, [])
 
   return (
@@ -72,7 +101,7 @@ export function TournamentForm({ onUpdate, initialData }: Props) {
         {step === 1 && (
           <RoundsStep
             rounds={rounds}
-            onUpdate={setRounds}
+            onUpdate={updateRoundsWithDirty}
             onBack={() => setStep(0)}
           />
         )}

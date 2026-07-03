@@ -241,6 +241,10 @@ function RoundUploadSection({
           errors.push({ slot: m.slot, msg: t('mapUpload.bulk.multiDiff') })
         } else {
           await onUploadOsz(round.id, m.slot, result.file, false)
+          // 如果检测到 NSV 文件，自动上传
+          if (result.nsvFile) {
+            await onUploadOsz(round.id, m.slot, result.nsvFile, true)
+          }
         }
       } catch (err) {
         errors.push({ slot: m.slot, msg: err instanceof Error ? err.message : String(err) })
@@ -483,6 +487,10 @@ function PasteBidPanel({
           next[i] = { ...next[i], state: 'uploading' }
           setRows([...next])
           await onUploadOsz(roundId, targetSlot, result.file, false)
+          // 如果检测到 NSV 文件，自动上传
+          if (result.nsvFile) {
+            await onUploadOsz(roundId, targetSlot, result.nsvFile, true)
+          }
           next[i] = { ...next[i], state: 'ok', msg: wasUploaded ? t('mapUpload.paste.overrideMsg') : undefined }
         }
       } catch (err) {
@@ -818,7 +826,10 @@ async function autoDownloadAndTrim(
   slot: string,
   isNsv: boolean,
   t: ReturnType<typeof useT>,
-): Promise<{ file: File; needsManualSelect: false } | { zip: JSZip; diffs: OsuDiffInfo[]; needsManualSelect: true }> {
+): Promise<
+  | { file: File; nsvFile?: File; needsManualSelect: false }
+  | { zip: JSZip; diffs: OsuDiffInfo[]; needsManualSelect: true }
+> {
   const res = await fetch(`/api/osu/download?setId=${setId}`)
   if (!res.ok) {
     const body = await res.json().catch(() => ({}))
@@ -840,11 +851,17 @@ async function autoDownloadAndTrim(
     diffs.push(meta)
   }
 
+  // 检测 NSV 难度：只有恰好一个难度名包含 "nsv"（不区分大小写）时才自动处理
+  const nsvDiffs = diffs.filter(d => /nsv/i.test(d.version))
+  const hasUniqueNsv = !isNsv && nsvDiffs.length === 1
+
   if (expectedVersion) {
     const matched = diffs.find(d => d.version === expectedVersion)
     if (matched) {
       const file = await buildTrimmedOsz(zip, matched, slot, isNsv)
-      return { file, needsManualSelect: false }
+      // 如果是 SV 版本且检测到唯一 NSV，自动生成 NSV 文件
+      const nsvFile = hasUniqueNsv ? await buildTrimmedOsz(zip, nsvDiffs[0], slot, true) : undefined
+      return { file, nsvFile, needsManualSelect: false }
     }
   }
 
@@ -1057,7 +1074,11 @@ function MapUploadCell({
         setAvailableDiffs(result.diffs)
         setSelectedDiff(0)
       } else {
-        onUploadOsz(roundId, slot, result.file, isNsv)
+        await onUploadOsz(roundId, slot, result.file, isNsv)
+        // 如果检测到 NSV 文件，自动上传
+        if (result.nsvFile && !isNsv) {
+          await onUploadOsz(roundId, slot, result.nsvFile, true)
+        }
       }
     } catch (err) {
       setAutoError(err instanceof Error ? err.message : String(err))

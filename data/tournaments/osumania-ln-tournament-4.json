@@ -983,9 +983,9 @@
       "abbreviation": "GF",
       "order": 8,
       "difficulty": {
-        "min": 14.5,
+        "min": 14.2,
         "max": 14.5,
-        "average": 14.5
+        "average": 14.2
       },
       "maps": [
         {
@@ -993,7 +993,7 @@
           "type": "LN",
           "realType": "RE",
           "name": "Monster Siren Records - See you soon [See you next time]",
-          "difficulty": 14.5,
+          "difficulty": 14.2,
           "beatmapId": 5366705,
           "beatmapsetId": 2455632
         },
@@ -1002,7 +1002,7 @@
           "type": "LN",
           "realType": "TE",
           "name": "Ariabl'eyeS - Meikai no Shisha [Messenger]",
-          "difficulty": 14.5,
+          "difficulty": 14.2,
           "beatmapId": 5366693,
           "beatmapsetId": 2455624
         },
@@ -1011,7 +1011,7 @@
           "type": "LN",
           "realType": "TE",
           "name": "takehirotei - TIMING HELL ~The Perpetual Chaotically Unsynced Pendulum~ [Convergence]",
-          "difficulty": 14.5,
+          "difficulty": 14.2,
           "beatmapId": 5366777,
           "beatmapsetId": 2455661
         },
@@ -1020,7 +1020,7 @@
           "type": "LN",
           "realType": "LNTC",
           "name": "Kairiki Bear feat. flower - Lemming Ming (kemu Remix) [I want to be compensated [1.15x Rate]]",
-          "difficulty": 14.5,
+          "difficulty": 14.2,
           "beatmapId": 4257678,
           "beatmapsetId": 2040875
         },
@@ -1038,7 +1038,7 @@
           "type": "LN",
           "realType": "LNTC",
           "name": "Hylen - Minerva [Ravenheart]",
-          "difficulty": 14.5,
+          "difficulty": 14.2,
           "beatmapId": 4266970,
           "beatmapsetId": 2044392
         },
@@ -1047,14 +1047,14 @@
           "type": "LN",
           "realType": "LNTC",
           "name": "",
-          "difficulty": 14.5
+          "difficulty": 14.2
         },
         {
           "slot": "WC1",
           "type": "LN",
           "realType": "LNMX",
           "name": "Camellia - Hello (BPM) 2023 [RELEASE THIS ALREADY IT'S BEEN 2 YEARS]",
-          "difficulty": 14.5,
+          "difficulty": 14.2,
           "beatmapId": 5366645,
           "beatmapsetId": 2455598
         },
@@ -1063,7 +1063,7 @@
           "type": "LN",
           "realType": "LNMX",
           "name": "ALI - TEENAGE CITY RIOT (feat. R-Shitei) [SHOW TIME 1.1x (218bpm)]",
-          "difficulty": 14.5,
+          "difficulty": 14.2,
           "beatmapId": 5363657,
           "beatmapsetId": 2454563
         },
@@ -1081,7 +1081,7 @@
           "type": "LN",
           "realType": "LNMX",
           "name": "Camellia - Speedrun [Mission Success (OMLN4 Edit)]",
-          "difficulty": 14.5,
+          "difficulty": 14.2,
           "beatmapId": 5366658,
           "beatmapsetId": 2455607
         },
@@ -1090,7 +1090,7 @@
           "type": "LN",
           "realType": "DE",
           "name": "katagiri - Code Name: Sierra (Cut Ver.) [Prototype: 4'05'']",
-          "difficulty": 14.5,
+          "difficulty": 14.2,
           "beatmapId": 5366692,
           "beatmapsetId": 2455623
         },
@@ -1099,7 +1099,7 @@
           "type": "LN",
           "realType": "DE",
           "name": "Wolpis Carter - Oxalis (Cut Ver.) [Clematis 1.05x (265bpm)]",
-          "difficulty": 14.5,
+          "difficulty": 14.2,
           "beatmapId": 5366703,
           "beatmapsetId": 2455631
         },
@@ -1108,7 +1108,7 @@
           "type": "LN",
           "realType": "DE",
           "name": "Lime - Cynosure [Stella illa quae Polaris dicitur 1.05x]",
-          "difficulty": 14.5,
+          "difficulty": 14.2,
           "beatmapId": 5267522,
           "beatmapsetId": 2421360
         },
@@ -1117,7 +1117,7 @@
           "type": "LN",
           "realType": "DE",
           "name": "seatrus - Abendstern [LN Abendstern 1.05x (259bpm)]",
-          "difficulty": 14.5,
+          "difficulty": 14.2,
           "beatmapId": 5366679,
           "beatmapsetId": 2455617
         },
@@ -1126,7 +1126,7 @@
           "type": "LN",
           "realType": "DE",
           "name": "Gram vs Camellia - Ragnarok [The Final Devastation (intro cut/edit)]",
-          "difficulty": 14.5,
+          "difficulty": 14.2,
           "beatmapId": 5366832,
           "beatmapsetId": 2081662
         },

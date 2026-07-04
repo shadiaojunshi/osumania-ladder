@@ -445,6 +445,11 @@ export const messagesZh = {
   'mapUpload.paste.stateOkDefault': '完成',
   'mapUpload.paste.again': '再补一批',
   'mapUpload.paste.finish': '完成',
+  'mapUpload.paste.metaCommitting': '正在保存元数据...',
+  'mapUpload.paste.metaUpdated': '已更新 {n} 张图的元数据',
+  'mapUpload.paste.metaCommitFailed': '元数据保存失败：{msg}',
+  'mapUpload.paste.metaFailConfirm': '有 {n} 张图元数据获取失败（{slots}），旧 BID 可能是错的。要清空这些 slot 的 name/beatmapId/beatmapsetId 吗？\n\n点 "确定" 清空；点 "取消" 保留旧数据（推荐，稍后手动核实）。',
+  'mapUpload.paste.closeConfirm': '有 {n} 张图的元数据还没保存到 tournament，关闭后会丢失。确定关闭？',
 
   // ---------- PackLinksEditor ----------
   'packs.title': '合包下载链接管理',

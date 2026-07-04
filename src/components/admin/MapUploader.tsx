@@ -8,6 +8,7 @@ interface MapInfo {
   slot: string
   type: string
   name?: string
+  beatmapId?: number
   beatmapsetId?: number
 }
 
@@ -115,6 +116,70 @@ export function MapUploader() {
     await uploadFile(roundId, slot, oszFile, isNsv)
   }, [uploadFile])
 
+  // 贴 BID 补传拿到新元数据后,把 name/beatmapId/beatmapsetId 一次性写回 tournament JSON。
+  // patches: key = "roundId/slot", value = { name?, beatmapId?, beatmapsetId? }
+  // 字段为 null 表示删除该字段(用于 osu API 失败清空场景);缺席表示不动。
+  // 成功后返回同步刷新的 tournamentData;失败抛错。
+  const patchTournamentMaps = useCallback(async (
+    patches: Map<string, { name?: string | null; beatmapId?: number | null; beatmapsetId?: number | null }>
+  ): Promise<void> => {
+    if (patches.size === 0) return
+    if (!selectedTournament) throw new Error('no tournament selected')
+
+    const getRes = await fetch(`/api/tournaments/${selectedTournament}`)
+    if (!getRes.ok) throw new Error(`GET failed: ${getRes.status}`)
+    const { tournament, sha } = await getRes.json() as { tournament: { rounds: { id: string; maps: Record<string, unknown>[] }[]; [k: string]: unknown }; sha: string }
+
+    let applied = 0
+    for (const round of tournament.rounds) {
+      for (const map of round.maps) {
+        const key = `${round.id}/${map.slot as string}`
+        const p = patches.get(key)
+        if (!p) continue
+        applied++
+        if ('name' in p) {
+          if (p.name == null) delete map.name
+          else map.name = p.name
+        }
+        if ('beatmapId' in p) {
+          if (p.beatmapId == null) delete map.beatmapId
+          else map.beatmapId = p.beatmapId
+        }
+        if ('beatmapsetId' in p) {
+          if (p.beatmapsetId == null) delete map.beatmapsetId
+          else map.beatmapsetId = p.beatmapsetId
+        }
+      }
+    }
+    if (applied === 0) return
+
+    const putRes = await fetch(`/api/tournaments/${selectedTournament}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tournament, sha }),
+    })
+    if (!putRes.ok) {
+      const body = await putRes.json().catch(() => ({})) as { error?: string }
+      throw new Error(body.error || `PUT failed: ${putRes.status}`)
+    }
+
+    // 刷新前端 state,让每张图 row 立即看到新的 name / beatmapsetId
+    setTournamentData({
+      id: tournament.id as string,
+      rounds: tournament.rounds.map((r) => ({
+        id: r.id,
+        abbreviation: (r as unknown as { abbreviation: string }).abbreviation,
+        maps: r.maps.map((m) => ({
+          slot: m.slot as string,
+          type: m.type as string,
+          name: m.name as string | undefined,
+          beatmapId: m.beatmapId as number | undefined,
+          beatmapsetId: m.beatmapsetId as number | undefined,
+        })),
+      })),
+    })
+  }, [selectedTournament])
+
   const deleteFile = useCallback(async (roundId: string, slot: string, isNsv: boolean) => {
     const setKey = `${roundId}/${slot}`
     const cKey = cellKey(roundId, slot, isNsv)
@@ -178,6 +243,7 @@ export function MapUploader() {
                 onUploadOsz={uploadFile}
                 onUploadThree={uploadThreeFiles}
                 onDelete={deleteFile}
+                onPatchTournamentMaps={patchTournamentMaps}
               />
             ))}
           </div>
@@ -196,6 +262,7 @@ function RoundUploadSection({
   onUploadOsz,
   onUploadThree,
   onDelete,
+  onPatchTournamentMaps,
 }: {
   round: { id: string; abbreviation: string; maps: MapInfo[] }
   uploadedSlots: Set<string>
@@ -205,6 +272,7 @@ function RoundUploadSection({
   onUploadOsz: (roundId: string, slot: string, file: File, isNsv: boolean) => Promise<void> | void
   onUploadThree: (roundId: string, slot: string, osu: File, audio: File, bg: File, isNsv: boolean) => void
   onDelete: (roundId: string, slot: string, isNsv: boolean) => void
+  onPatchTournamentMaps: (patches: Map<string, { name?: string | null; beatmapId?: number | null; beatmapsetId?: number | null }>) => Promise<void>
 }) {
   const t = useT()
   const [expanded, setExpanded] = useState(false)
@@ -303,6 +371,7 @@ function RoundUploadSection({
           uploadedSlots={uploadedSlots}
           onClose={() => setPasteOpen(false)}
           onUploadOsz={onUploadOsz}
+          onPatchTournamentMaps={onPatchTournamentMaps}
         />
       )}
 
@@ -345,12 +414,14 @@ function PasteBidPanel({
   uploadedSlots,
   onClose,
   onUploadOsz,
+  onPatchTournamentMaps,
 }: {
   roundId: string
   roundMaps: MapInfo[]
   uploadedSlots: Set<string>
   onClose: () => void
   onUploadOsz: (roundId: string, slot: string, file: File, isNsv: boolean) => Promise<void> | void
+  onPatchTournamentMaps: (patches: Map<string, { name?: string | null; beatmapId?: number | null; beatmapsetId?: number | null }>) => Promise<void>
 }) {
   type RowState = 'pending' | 'fetching' | 'downloading' | 'uploading' | 'ok' | 'error' | 'skip'
   interface Row {
@@ -359,6 +430,11 @@ function PasteBidPanel({
     assignedSlot: string // '' = 跳过
     state: RowState
     msg?: string
+    // osu API 拿到的新 meta。只要 osu 拿到就记录,无论后续下载/上传是否成功。
+    // 用户点"完成"时统一 PUT 回 tournament JSON,覆盖旧的 name/beatmapId/beatmapsetId。
+    newMeta?: { name: string; beatmapId: number; beatmapsetId: number }
+    // osu API 失败标记:用于"完成"时弹 confirm 询问是否清空这些 slot 的旧 BID。
+    metaFailed?: boolean
   }
   type Phase = 'input' | 'review' | 'run'
 
@@ -368,6 +444,8 @@ function PasteBidPanel({
   const [rows, setRows] = useState<Row[]>([])
   const [includeUploaded, setIncludeUploaded] = useState(false)
   const [running, setRunning] = useState(false)
+  const [committing, setCommitting] = useState(false)
+  const [commitMsg, setCommitMsg] = useState<{ kind: 'ok' | 'err'; text: string } | null>(null)
 
   // 本轮全部 slot 的 normalize 映射:贴进来的 slot 用 normTbSlot 之后跟它比对,
   // 找到原始 slot(可能是 TB1)。
@@ -475,10 +553,22 @@ function PasteBidPanel({
         const metaRes = await fetch(`/api/osu/beatmap?id=${r.rawMapId}`)
         if (!metaRes.ok) {
           const body = await metaRes.json().catch(() => ({}))
+          // 标记 osu API 失败:完成阶段会用它决定是否弹"清空旧 BID"确认。
+          next[i] = { ...next[i], metaFailed: true }
           throw new Error((body as { error?: string }).error || `HTTP ${metaRes.status}`)
         }
-        const meta = (await metaRes.json()) as { beatmapsetId: string; version: string }
-        next[i] = { ...next[i], state: 'downloading' }
+        const meta = (await metaRes.json()) as { beatmapId: string; beatmapsetId: string; version: string; artist: string; title: string }
+        // 只要 osu 拿到 meta 就先落到 row 上——即便后面下载/上传失败,
+        // 完成阶段也会用它更新 tournament JSON,覆盖掉旧的错 BID。
+        next[i] = {
+          ...next[i],
+          newMeta: {
+            name: `${meta.artist} - ${meta.title} [${meta.version}]`,
+            beatmapId: Number(meta.beatmapId),
+            beatmapsetId: Number(meta.beatmapsetId),
+          },
+          state: 'downloading',
+        }
         setRows([...next])
         const result = await autoDownloadAndTrim(Number(meta.beatmapsetId), meta.version, targetSlot, false, t)
         if (result.needsManualSelect) {
@@ -507,10 +597,77 @@ function PasteBidPanel({
   const skipCount = rows.filter((r) => r.state === 'skip').length
   const assignableCount = rows.filter((r) => r.assignedSlot && r.state !== 'error').length
 
+  // 有未落盘 meta 的行数(用于关闭确认 / 完成按钮启用判断)
+  const pendingMetaCount = rows.filter((r) => r.newMeta && r.assignedSlot).length
+
   const reset = () => {
     setRows([])
     setText('')
     setPhase('input')
+    setCommitMsg(null)
+  }
+
+  // "完成":把所有已拿到 meta 的行(包括下载/上传失败的)一次性写回 tournament JSON。
+  // 对于 osu API 就失败的行,弹 confirm 问是否清空旧 BID。
+  const commitAndFinish = async () => {
+    if (committing) return
+
+    const patches = new Map<string, { name?: string | null; beatmapId?: number | null; beatmapsetId?: number | null }>()
+
+    // 1. 有新 meta 的行 → 用新 meta 覆盖
+    for (const r of rows) {
+      if (r.assignedSlot && r.newMeta) {
+        patches.set(`${roundId}/${r.assignedSlot}`, {
+          name: r.newMeta.name,
+          beatmapId: r.newMeta.beatmapId,
+          beatmapsetId: r.newMeta.beatmapsetId,
+        })
+      }
+    }
+
+    // 2. osu API 失败的行 → 问用户是否清空旧 BID
+    const failedRows = rows.filter((r) => r.assignedSlot && r.metaFailed && !r.newMeta)
+    if (failedRows.length > 0) {
+      const slots = failedRows.map((r) => r.assignedSlot).join(', ')
+      if (confirm(t('mapUpload.paste.metaFailConfirm', { n: failedRows.length, slots }))) {
+        for (const r of failedRows) {
+          patches.set(`${roundId}/${r.assignedSlot}`, {
+            name: null,
+            beatmapId: null,
+            beatmapsetId: null,
+          })
+        }
+      }
+    }
+
+    if (patches.size === 0) {
+      onClose()
+      return
+    }
+
+    setCommitting(true)
+    setCommitMsg(null)
+    try {
+      await onPatchTournamentMaps(patches)
+      // 清掉这些行的 newMeta,防止重复提交
+      setRows((prev) => prev.map((r) => (r.newMeta ? { ...r, newMeta: undefined } : r)))
+      setCommitMsg({ kind: 'ok', text: t('mapUpload.paste.metaUpdated', { n: patches.size }) })
+      // 短暂展示成功后自动关闭
+      setTimeout(() => onClose(), 800)
+    } catch (err) {
+      setCommitMsg({ kind: 'err', text: t('mapUpload.paste.metaCommitFailed', { msg: err instanceof Error ? err.message : String(err) }) })
+    } finally {
+      setCommitting(false)
+    }
+  }
+
+  // 顶部 × 关闭:如果还有未提交的 meta,先弹确认避免误关。
+  const handleClose = () => {
+    if (running || committing) return
+    if (pendingMetaCount > 0) {
+      if (!confirm(t('mapUpload.paste.closeConfirm', { n: pendingMetaCount }))) return
+    }
+    onClose()
   }
 
   return (
@@ -522,7 +679,7 @@ function PasteBidPanel({
           {phase === 'review' && t('mapUpload.paste.step2')}
           {phase === 'run' && t('mapUpload.paste.step3')}
         </span>
-        <button onClick={onClose} className="text-xs text-gray-400 dark:text-neutral-500 hover:text-gray-600 dark:hover:text-neutral-300" disabled={running}>
+        <button onClick={handleClose} className="text-xs text-gray-400 dark:text-neutral-500 hover:text-gray-600 dark:hover:text-neutral-300 disabled:opacity-40" disabled={running || committing}>
           {t('mapUpload.paste.close')}
         </button>
       </div>
@@ -675,20 +832,38 @@ function PasteBidPanel({
             ))}
           </div>
           {!running && (
-            <div className="flex justify-end gap-2">
-              <button
-                onClick={reset}
-                className="px-3 py-1 text-xs text-gray-600 dark:text-neutral-300 border border-gray-300 dark:border-neutral-700 rounded hover:bg-gray-50 dark:hover:bg-neutral-800/40"
-              >
-                {t('mapUpload.paste.again')}
-              </button>
-              <button
-                onClick={onClose}
-                className="px-3 py-1 text-xs bg-amber-600 text-white rounded hover:bg-amber-700"
-              >
-                {t('mapUpload.paste.finish')}
-              </button>
-            </div>
+            <>
+              {commitMsg && (
+                <div className={`text-[11px] px-2 py-1 rounded ${
+                  commitMsg.kind === 'ok'
+                    ? 'text-green-700 dark:text-green-300 bg-green-50 dark:bg-green-900/30'
+                    : 'text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-900/30'
+                }`}>
+                  {commitMsg.text}
+                </div>
+              )}
+              <div className="flex justify-end gap-2 items-center">
+                {committing && (
+                  <span className="text-[11px] text-gray-500 dark:text-neutral-400">
+                    {t('mapUpload.paste.metaCommitting')}
+                  </span>
+                )}
+                <button
+                  onClick={reset}
+                  disabled={committing}
+                  className="px-3 py-1 text-xs text-gray-600 dark:text-neutral-300 border border-gray-300 dark:border-neutral-700 rounded hover:bg-gray-50 dark:hover:bg-neutral-800/40 disabled:opacity-40"
+                >
+                  {t('mapUpload.paste.again')}
+                </button>
+                <button
+                  onClick={commitAndFinish}
+                  disabled={committing}
+                  className="px-3 py-1 text-xs bg-amber-600 text-white rounded hover:bg-amber-700 disabled:opacity-40"
+                >
+                  {t('mapUpload.paste.finish')}
+                </button>
+              </div>
+            </>
           )}
         </>
       )}

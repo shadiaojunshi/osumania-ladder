@@ -446,6 +446,11 @@ export const messagesEn: Record<keyof typeof messagesZh, string> = {
   'mapUpload.paste.stateOkDefault': 'Done',
   'mapUpload.paste.again': 'One more batch',
   'mapUpload.paste.finish': 'Finish',
+  'mapUpload.paste.metaCommitting': 'Saving map metadata...',
+  'mapUpload.paste.metaUpdated': 'Updated metadata for {n} map(s)',
+  'mapUpload.paste.metaCommitFailed': 'Failed to save metadata: {msg}',
+  'mapUpload.paste.metaFailConfirm': '{n} map(s) failed to fetch metadata ({slots}). The old BID may be wrong too. Clear name/beatmapId/beatmapsetId for those slots?\n\nOK = clear; Cancel = keep old data (recommended, verify later manually).',
+  'mapUpload.paste.closeConfirm': '{n} map(s) have unsaved metadata that will be discarded on close. Really close?',
 
   // ---------- PackLinksEditor ----------
   'packs.title': 'Pack download links',

@@ -35,7 +35,10 @@ export function useMapHistory(tournaments: Tournament[]) {
     const index = new Map<number, MapUsage[]>()
 
     for (const tournament of tournaments) {
+      // 防御：清单式响应（{id, sha}[]）没有 rounds，直接跳过而不是崩掉整个树
+      if (!tournament?.rounds) continue
       for (const round of tournament.rounds) {
+        if (!round?.maps) continue
         for (const map of round.maps) {
           // 只索引有 beatmapsetId 的谱面
           if (!map.beatmapsetId) continue

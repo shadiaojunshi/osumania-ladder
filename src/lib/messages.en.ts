@@ -194,6 +194,12 @@ export const messagesEn: Record<keyof typeof messagesZh, string> = {
   'mapSlot.special.title': 'Type label shown in the ladder',
   'mapSlot.realType.custom': 'Custom type',
   'mapSlot.remove': 'Remove',
+  'mapSlot.history.title': 'Usage history of this map in other tournaments',
+  'mapSlot.history.used': 'Used in {n} slot(s)',
+  'mapSlot.history.conflict': 'Current type {current} differs from commonly used {suggested}',
+  'mapSlot.history.previous': 'Previous usage',
+  'mapSlot.history.more': 'and {n} more...',
+  'mapSlot.history.summary': 'Type summary',
 
   // ---------- ReferencesEditor ----------
   'refs.loading': 'Loading...',

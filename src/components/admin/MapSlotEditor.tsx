@@ -1,9 +1,11 @@
 'use client'
 
+import { useState } from 'react'
 import type { BeatmapMeta } from '@/lib/types'
 import { useT, type MessageKey } from '@/lib/i18n'
 import { DifficultyRefPicker } from './DifficultyRefPicker'
 import type { RefType } from '@/lib/referenceData'
+import type { MapHistorySummary } from '@/hooks/useMapHistory'
 
 export type MapCategory = 'RC' | 'LN' | 'HB' | 'SV' | 'TB' | 'SPECIAL'
 
@@ -86,6 +88,7 @@ interface Props {
   map: ExtendedMap
   onChange: (map: ExtendedMap) => void
   onRemove: () => void
+  getMapHistory?: (beatmapsetId: number | undefined) => MapHistorySummary | null
 }
 
 function needsDualDifficulty(category: MapCategory): boolean {
@@ -112,14 +115,24 @@ function toRefType(category: MapCategory): RefType {
   }
 }
 
-export function MapSlotEditor({ map, onChange, onRemove }: Props) {
+export function MapSlotEditor({ map, onChange, onRemove, getMapHistory }: Props) {
   const t = useT()
+  const [showHistory, setShowHistory] = useState(false)
   const dual = needsDualDifficulty(map.category)
   const realTypeOptions = map.category === 'SPECIAL'
     ? Object.entries(REAL_TYPES).flatMap(([cat, types]) =>
         cat === 'SPECIAL' ? [] : types.map((t) => ({ ...t, group: cat }))
       )
     : (REAL_TYPES[map.category] || [])
+
+  // 获取历史记录
+  const history = getMapHistory ? getMapHistory(map.beatmapsetId) : null
+
+  // 检测类型冲突
+  const hasTypeConflict = history &&
+    history.totalUses > 0 &&
+    map.type !== history.mostCommonType &&
+    history.types.has(map.type) === false  // 当前type从未被使用过
 
   const updateField = <K extends keyof ExtendedMap>(key: K, value: ExtendedMap[K]) => {
     onChange({ ...map, [key]: value })
@@ -138,13 +151,92 @@ export function MapSlotEditor({ map, onChange, onRemove }: Props) {
   }
 
   return (
-    <div className="flex items-start gap-2 p-2 bg-gray-50 dark:bg-neutral-900/50 rounded border border-gray-100 dark:border-neutral-800">
+    <div className={`flex items-start gap-2 p-2 rounded border ${
+      hasTypeConflict
+        ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-400 dark:border-yellow-700'
+        : 'bg-gray-50 dark:bg-neutral-900/50 border-gray-100 dark:border-neutral-800'
+    }`}>
       <div
         className="category-swatch w-1.5 self-stretch rounded-full shrink-0"
         style={{ background: CATEGORY_COLORS[map.category] || '#9ca3af' }}
       />
 
       <div className="flex flex-col gap-1.5 flex-1 min-w-0">
+        {/* 历史提示横幅 */}
+        {history && history.totalUses > 0 && (
+          <div className="flex items-center gap-2 text-xs">
+            <button
+              onClick={() => setShowHistory(!showHistory)}
+              className={`flex items-center gap-1 px-2 py-0.5 rounded ${
+                hasTypeConflict
+                  ? 'bg-yellow-100 dark:bg-yellow-900/40 text-yellow-800 dark:text-yellow-200 border border-yellow-300 dark:border-yellow-700'
+                  : 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-200 border border-blue-200 dark:border-blue-800'
+              }`}
+              title={t('mapSlot.history.title')}
+            >
+              {hasTypeConflict ? '⚠️' : '📋'}
+              <span>
+                {t('mapSlot.history.used', { n: history.totalUses })}
+              </span>
+              <span className="text-[10px]">
+                ({history.mostCommonType})
+              </span>
+              <span>{showHistory ? '▼' : '▶'}</span>
+            </button>
+
+            {hasTypeConflict && (
+              <span className="text-yellow-700 dark:text-yellow-300 text-xs">
+                {t('mapSlot.history.conflict', {
+                  current: map.type,
+                  suggested: history.mostCommonType
+                })}
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* 展开的历史记录 */}
+        {showHistory && history && (
+          <div className="border border-blue-200 dark:border-blue-800 rounded bg-white dark:bg-neutral-900 p-2 text-xs">
+            <div className="font-medium text-blue-700 dark:text-blue-300 mb-1">
+              {t('mapSlot.history.previous')}:
+            </div>
+            <div className="space-y-1 max-h-32 overflow-y-auto">
+              {history.usages.slice(0, 10).map((usage, i) => (
+                <div key={i} className="flex items-center gap-2 text-gray-600 dark:text-neutral-400">
+                  <span className="font-mono text-[10px]">
+                    {usage.tournamentAbbr} {usage.roundAbbr}
+                  </span>
+                  <span className="font-mono text-[10px]">{usage.slot}</span>
+                  <span className={`px-1 py-0.5 rounded text-[10px] ${
+                    usage.type === map.type
+                      ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
+                      : 'bg-gray-100 dark:bg-neutral-800 text-gray-600 dark:text-neutral-400'
+                  }`}>
+                    {usage.type} ({usage.realType})
+                  </span>
+                </div>
+              ))}
+              {history.usages.length > 10 && (
+                <div className="text-gray-400 dark:text-neutral-500 text-[10px] italic">
+                  {t('mapSlot.history.more', { n: history.usages.length - 10 })}
+                </div>
+              )}
+            </div>
+
+            <div className="mt-2 pt-2 border-t border-blue-100 dark:border-blue-900">
+              <div className="text-gray-500 dark:text-neutral-400 text-[10px]">
+                {t('mapSlot.history.summary')}:
+                {Array.from(history.types.entries()).map(([type, count]) => (
+                  <span key={type} className="ml-2">
+                    {type}×{count}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="flex items-center gap-1.5">
           <input
             type="text"

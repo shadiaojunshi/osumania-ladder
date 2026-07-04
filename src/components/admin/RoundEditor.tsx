@@ -6,6 +6,7 @@ import { MapSlotEditor, type ExtendedMap, type MapCategory, REAL_TYPES } from '.
 import { getTemplatesByBestOf, type PoolTemplate } from '@/lib/poolTemplates'
 import { useT } from '@/lib/i18n'
 import { DifficultyRefPicker } from './DifficultyRefPicker'
+import type { MapHistorySummary } from '@/hooks/useMapHistory'
 
 const ROUND_PRESETS: {
   name: string
@@ -42,9 +43,10 @@ interface Props {
   index: number
   onChange: (round: RoundWithMeta) => void
   onRemove: () => void
+  getMapHistory?: (beatmapsetId: number | undefined) => MapHistorySummary | null
 }
 
-export function RoundEditor({ round, index, onChange, onRemove }: Props) {
+export function RoundEditor({ round, index, onChange, onRemove, getMapHistory }: Props) {
   const t = useT()
   const [expanded, setExpanded] = useState(true)
   const [customSlotName, setCustomSlotName] = useState('')
@@ -403,6 +405,7 @@ export function RoundEditor({ round, index, onChange, onRemove }: Props) {
                   map={map}
                   onChange={(m) => updateMap(i, m)}
                   onRemove={() => removeMap(i)}
+                  getMapHistory={getMapHistory}
                 />
               ))}
             </div>

@@ -6,6 +6,7 @@ import { RoundEditor, type RoundWithMeta } from './RoundEditor'
 import type { MapCategory, ExtendedMap } from './MapSlotEditor'
 import { BulkImporter } from './BulkImporter'
 import { useT, type MessageKey } from '@/lib/i18n'
+import { useMapHistory } from '@/hooks/useMapHistory'
 
 interface Props {
   onUpdate: (tournament: Tournament | null) => void
@@ -29,6 +30,26 @@ export function TournamentForm({ onUpdate, initialData, submitSuccess }: Props) 
   const [tournament, setTournament] = useState<Tournament>(EMPTY_TOURNAMENT)
   const [rounds, setRounds] = useState<RoundWithMeta[]>([])
   const [isDirty, setIsDirty] = useState(false)
+
+  // 用于存储所有比赛数据（用于构建历史索引）
+  const [allTournaments, setAllTournaments] = useState<Tournament[]>([])
+
+  // 构建谱面历史索引
+  const { getMapHistory } = useMapHistory(allTournaments)
+
+  // 加载所有比赛数据用于历史查询
+  useEffect(() => {
+    fetch('/api/tournaments')
+      .then(r => r.json())
+      .then(data => {
+        // data 应该是 Tournament[] 格式
+        // 如果返回的是 { tournaments: Tournament[] }，则用 data.tournaments
+        setAllTournaments(Array.isArray(data) ? data : data.tournaments || [])
+      })
+      .catch(err => {
+        console.error('Failed to load tournaments for history:', err)
+      })
+  }, [])
 
   useEffect(() => {
     if (initialData) {
@@ -103,6 +124,7 @@ export function TournamentForm({ onUpdate, initialData, submitSuccess }: Props) 
             rounds={rounds}
             onUpdate={updateRoundsWithDirty}
             onBack={() => setStep(0)}
+            getMapHistory={getMapHistory}
           />
         )}
       </div>
@@ -426,10 +448,12 @@ function RoundsStep({
   rounds,
   onUpdate,
   onBack,
+  getMapHistory,
 }: {
   rounds: RoundWithMeta[]
   onUpdate: (rounds: RoundWithMeta[]) => void
   onBack: () => void
+  getMapHistory?: (beatmapsetId: number | undefined) => import('@/hooks/useMapHistory').MapHistorySummary | null
 }) {
   const t = useT()
   const [importerOpen, setImporterOpen] = useState(false)
@@ -501,6 +525,7 @@ function RoundsStep({
           index={i}
           onChange={(r) => updateRound(i, r)}
           onRemove={() => removeRound(i)}
+          getMapHistory={getMapHistory}
         />
       ))}
 

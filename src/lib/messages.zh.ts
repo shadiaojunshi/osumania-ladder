@@ -193,6 +193,12 @@ export const messagesZh = {
   'mapSlot.special.title': '在天梯榜中显示的类型名',
   'mapSlot.realType.custom': '自定义类型',
   'mapSlot.remove': '删除',
+  'mapSlot.history.title': '此谱面在其他比赛中的使用记录',
+  'mapSlot.history.used': '已在 {n} 个槽位使用',
+  'mapSlot.history.conflict': '当前类型 {current} 与历史常用类型 {suggested} 不一致',
+  'mapSlot.history.previous': '历史使用记录',
+  'mapSlot.history.more': '还有 {n} 条记录...',
+  'mapSlot.history.summary': '类型统计',
 
   // ---------- ReferencesEditor ----------
   'refs.loading': '加载中...',

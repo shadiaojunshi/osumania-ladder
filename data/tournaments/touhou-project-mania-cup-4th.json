@@ -1046,155 +1046,151 @@
           "slot": "RC1",
           "type": "RC",
           "realType": "SS",
-          "name": "EastNewSound feat. Chata - Sound of Carnation [Echo (THMC4 Edit)]",
+          "name": "BUTAOTOME - Imanarabe [Satort 1.05x (184bpm) OD8]",
           "difficulty": 12.7,
-          "beatmapId": 5027483,
-          "beatmapsetId": 2340245
+          "beatmapId": 5050754,
+          "beatmapsetId": 2347645
         },
         {
           "slot": "RC2",
           "type": "RC",
           "realType": "JS",
-          "name": "Halozy - Don't let you down [drive up! (cut)]",
+          "name": "UNDEAD CORPORATION - Flowering Night Fever [PSYCHOBREAK]",
           "difficulty": 12.7,
-          "beatmapId": 5028421,
-          "beatmapsetId": 2340499
+          "beatmapId": 5050622,
+          "beatmapsetId": 2347963
         },
         {
           "slot": "RC3",
           "type": "RC",
           "realType": "SA",
-          "name": "DJKurara - Crazy Aliens [Chimera (Edit)]",
+          "name": "Xenoglossy - Suigetsu Kyouka Koubou Issen [Mirage 1.2x (276bpm)]",
           "difficulty": 12.7,
-          "beatmapId": 5027469,
-          "beatmapsetId": 2340241
+          "beatmapId": 5049719,
+          "beatmapsetId": 2347694
         },
         {
           "slot": "RC4",
           "type": "RC",
           "realType": "CJ",
-          "name": "MONO - Fantasmagoria [Phangasm 1.05x (163bpm)]",
+          "name": "pocotan - ClownTanz (Cut Ver.) [ClownJacks 1.05x (168bpm)]",
           "difficulty": 12.7,
-          "beatmapId": 5027429,
-          "beatmapsetId": 2340227
+          "beatmapId": 5049743,
+          "beatmapsetId": 2347700
         },
         {
           "slot": "RC5",
           "type": "RC",
           "realType": "MX",
-          "name": "NJK Record - Search for the butterfly [edit 1.15x (184bpm) OD8]",
+          "name": "UNDEAD CORPORATION - Bloodthirsty Nightmare Lullaby [Phantom Of The Opera]",
           "difficulty": 12.7,
-          "beatmapId": 5028154,
-          "beatmapsetId": 2340381
+          "beatmapId": 5049753,
+          "beatmapsetId": 2347709
         },
         {
           "slot": "RC6",
           "type": "RC",
           "realType": "WTC",
-          "name": "miso-nicomi records - Heavenly Net Breaking World [0.95x]",
-          "difficulty": 12.7,
-          "beatmapId": 5029862,
-          "beatmapsetId": 2340507
+          "difficulty": 12.7
         },
         {
           "slot": "RC7",
           "type": "RC",
           "realType": "DP",
-          "name": "chocofan - Flandol [Rising Flan!]",
+          "name": "IOSYS - RE:Usatei [Usa / 1.05]",
           "difficulty": 12.7,
-          "beatmapId": 5028483,
-          "beatmapsetId": 2340523
+          "beatmapId": 5049704,
+          "beatmapsetId": 2347687
         },
         {
           "slot": "RCX",
           "type": "RC",
           "realType": "MX",
-          "name": "Litchee - Fleur De Neige [Nacreous Iridescence 1.05x]",
+          "name": "Unlucky Morpheus - Danzai wa Amaneku Ningen no Moto ni [1.1]",
           "difficulty": 12.7,
-          "beatmapId": 5027235,
-          "beatmapsetId": 2340193
+          "beatmapId": 5050235,
+          "beatmapsetId": 2347862
         },
         {
           "slot": "HB1",
           "type": "HB",
           "realType": "HB1",
-          "name": "",
+          "name": "Diao Ye Zong feat. Meramipop - Unprivileged Access (Cut Ver.) [Withering...]",
           "difficulty": 12.3,
-          "difficultyLn": 12.8
+          "difficultyLn": 12.8,
+          "beatmapId": 5049791,
+          "beatmapsetId": 2347719
         },
         {
           "slot": "HB2",
           "type": "HB",
           "realType": "HB2",
-          "name": "ZUN - Voyage 1969 [Oneiric Odyssey (edit)]",
           "difficulty": 12.3,
-          "beatmapId": 5028572,
-          "beatmapsetId": 2340562,
           "difficultyLn": 12.8
         },
         {
           "slot": "HB3",
           "type": "HB",
           "realType": "HB3",
-          "name": "NormalM - Karakasa Scramble [Tsukumogami]",
+          "name": "Rolling Contact - Falling Fireworks [.BURST]",
           "difficulty": 12.3,
-          "beatmapId": 5027474,
-          "beatmapsetId": 2340242,
+          "beatmapId": 5049829,
+          "beatmapsetId": 2347730,
           "difficultyLn": 12.8
         },
         {
           "slot": "LN1",
           "type": "LN",
           "realType": "CO",
-          "name": "TAMAONSEN - Tairin no Soul [Timing no Soul]",
+          "name": "Meramipop feat. Studio \"Syrup Comfiture\" - Zillion Lights [Stellar (150bpm)]",
           "difficulty": 12.9,
-          "beatmapId": 5027190,
-          "beatmapsetId": 2340183
+          "beatmapId": 5049702,
+          "beatmapsetId": 2347686
         },
         {
           "slot": "LN2",
           "type": "LN",
           "realType": "DE",
-          "name": "P*Light feat. mow*2 - Homeneko Sensation (Long Ver.) [Super Nyeeco(216bpm)]",
+          "name": "katagiri - Buta Musou [THMC Musou / 1.1]",
           "difficulty": 12.9,
-          "beatmapId": 5028532,
-          "beatmapsetId": 2340544
+          "beatmapId": 5049706,
+          "beatmapsetId": 2347688
         },
         {
           "slot": "LN3",
           "type": "LN",
           "realType": "JW",
-          "name": "Demetori - Native Faith ~ Memory of a Free Festival [Phantasm (cut)]",
+          "name": "Kommisar - Native Faith (Chiptune ver.) [LN YOUNGER]",
           "difficulty": 12.9,
-          "beatmapId": 5028373,
-          "beatmapsetId": 2340470
+          "beatmapId": 5049677,
+          "beatmapsetId": 2347671
         },
         {
           "slot": "LN4",
           "type": "LN",
           "realType": "SW",
-          "name": "Takamachi Walk - A Desire to Disappear [Forget Me Not (cut)]",
+          "name": "FELT - Lies in Reality (Cut Ver.) [Look straight at everything you see.]",
           "difficulty": 12.9,
-          "beatmapId": 5027260,
-          "beatmapsetId": 2340196
+          "beatmapId": 5049714,
+          "beatmapsetId": 2347692
         },
         {
           "slot": "LNX",
           "type": "LN",
           "realType": "LNMX",
-          "name": "Demetori - Last Remote ~ Type A Personality [Requiem of Koishi od7]",
+          "name": "Laur - Absolute Queen [Absolute Maker (Extended Ver.)]",
           "difficulty": 12.9,
-          "beatmapId": 4276650,
-          "beatmapsetId": 2048331
+          "beatmapId": 5050088,
+          "beatmapsetId": 2347811
         },
         {
           "slot": "TB",
           "type": "TB",
           "realType": "TB",
-          "name": "Kurokotei - Scattered Faith [#2025 Most Unbelievable TB#]",
+          "name": "sugosugiii & THE BEAT WIZARD - Between Collapse and Rebuild: A Scarlet Tale of Chaos and Hope [Interweaving Phantasm]",
           "difficulty": 12.3,
-          "beatmapId": 5028420,
-          "beatmapsetId": 2340498,
+          "beatmapId": 5049881,
+          "beatmapsetId": 2347752,
           "difficultyLn": 12.8
         }
       ],

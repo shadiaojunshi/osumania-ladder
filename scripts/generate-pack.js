@@ -3,6 +3,7 @@ const JSZip = require('jszip')
 const { ZipArchive } = require('archiver')
 const fs = require('fs')
 const path = require('path')
+const crypto = require('crypto')
 
 const R2_ACCOUNT_ID = process.env.R2_ACCOUNT_ID
 const R2_ACCESS_KEY = process.env.R2_ACCESS_KEY
@@ -183,6 +184,27 @@ async function mapWithConcurrency(items, limit, fn) {
   return results
 }
 
+// 为 .osu 文件生成指纹 (Artist + Title + Creator + Version)
+// 用于没有 beatmapId 的谱面去重
+async function generateMapFingerprint(oszBuffer) {
+  try {
+    const zip = await JSZip.loadAsync(oszBuffer)
+    const osuFileName = Object.keys(zip.files).find(f => f.endsWith('.osu'))
+    if (!osuFileName) return null
+
+    const osuContent = await zip.files[osuFileName].async('string')
+    const meta = parseOsu(osuContent)
+
+    // 使用 Artist + Title + Creator + Version 组合作为指纹
+    // 这些字段组合在一起足以唯一标识一张谱面
+    const fingerprint = `${meta.artist || ''}|${meta.title || ''}|${meta.creator || ''}|${meta.version || ''}`
+    return fingerprint.toLowerCase().trim()
+  } catch (err) {
+    console.warn(`  Error generating fingerprint: ${err.message}`)
+    return null
+  }
+}
+
 // 去重后同一物理文件可能被多个比赛槽位引用。把这些来源渲染成一段紧凑的
 // 标签写进 osu 的 Version 字段:
 //   ≤3 个: "MWC 4K 2025 F HB3 & VNMC 4K 2025 F HB3"       -- 空格 + &
@@ -346,33 +368,131 @@ async function generatePack(targetType) {
   const r2Objects = await listR2Objects('maps/')
   const r2Keys = new Set(r2Objects.map(o => o.Key))
 
-  // 收集所有实际存在的物理条目(SV + NSV);同一 (beatmapId, isNsv) 会被多次
-  // push,后面 dedup 时按 sources 数组合并。
+  // 收集所有实际存在的物理条目(SV + NSV);同时为没有 bid 的谱面生成指纹
   const rawEntries = []
+  const needFingerprint = []
   for (const m of mapsToProcess) {
     if (!r2Keys.has(m.r2Key)) continue
-    rawEntries.push({ ...m, isNsv: false })
+    rawEntries.push({ ...m, isNsv: false, fingerprint: null })
+    if (!m.beatmapId) {
+      needFingerprint.push({ ...m, isNsv: false })
+    }
     const nsvKey = m.r2Key.replace(/\.osz$/, '.nsv.osz')
     if (r2Keys.has(nsvKey)) {
-      rawEntries.push({ ...m, r2Key: nsvKey, isNsv: true })
+      rawEntries.push({ ...m, r2Key: nsvKey, isNsv: true, fingerprint: null })
+      if (!m.beatmapId) {
+        needFingerprint.push({ ...m, r2Key: nsvKey, isNsv: true })
+      }
     }
   }
 
-  // 去重:同一 beatmapId 的同一 SV/NSV 变体只留一份物理文件,把所有引用它
-  // 的比赛槽位塞进 sources[]。第一次出现优先(tournamentsList 已排序),
-  // 后续的 append 到末尾。SV 和 NSV 是不同物理文件,拆成两个 key。
+  // 批量并发生成指纹 (4个并发)
+  if (needFingerprint.length > 0) {
+    console.log(`[${targetType}] Generating fingerprints for ${needFingerprint.length} maps without beatmapId...`)
+
+    const fingerprints = await mapWithConcurrency(needFingerprint, 4, async (m) => {
+      try {
+        const oszBuffer = await downloadFromR2(m.r2Key)
+        const fp = await generateMapFingerprint(oszBuffer)
+        return { r2Key: m.r2Key, fingerprint: fp }
+      } catch (err) {
+        console.warn(`  Failed to fingerprint ${m.r2Key}: ${err.message}`)
+        return { r2Key: m.r2Key, fingerprint: null }
+      }
+    })
+
+    // 将指纹写回 rawEntries
+    const fpMap = new Map(fingerprints.map(f => [f.r2Key, f.fingerprint]))
+    for (const entry of rawEntries) {
+      if (!entry.beatmapId && fpMap.has(entry.r2Key)) {
+        entry.fingerprint = fpMap.get(entry.r2Key)
+      }
+    }
+
+    console.log(`[${targetType}] Fingerprint generation complete`)
+  }
+
+  // 改进的去重逻辑: 支持指纹匹配 + 多路径选择
   const bySignature = new Map()
   for (const m of rawEntries) {
-    const key = m.beatmapId ? `${m.beatmapId}|${m.isNsv ? 1 : 0}` : `raw:${m.r2Key}`
+    // 优先使用 beatmapId，其次使用指纹，最后才用 r2Key
+    let key
+    if (m.beatmapId) {
+      key = `bid:${m.beatmapId}|${m.isNsv ? 1 : 0}`
+    } else if (m.fingerprint) {
+      key = `fp:${m.fingerprint}|${m.isNsv ? 1 : 0}`
+    } else {
+      key = `raw:${m.r2Key}`
+    }
+
+    const src = {
+      tournamentAbbr: m.tournamentAbbr,
+      roundAbbr: m.roundAbbr,
+      slot: m.slot
+    }
+
     const existing = bySignature.get(key)
-    const src = { tournamentAbbr: m.tournamentAbbr, roundAbbr: m.roundAbbr, slot: m.slot }
     if (existing) {
       existing.sources.push(src)
+      // 记录所有可能的文件路径，后续会选择最优的
+      if (!existing.alternatePaths) {
+        existing.alternatePaths = [existing.r2Key]
+      }
+      existing.alternatePaths.push(m.r2Key)
     } else {
-      bySignature.set(key, { ...m, sources: [src] })
+      bySignature.set(key, {
+        ...m,
+        sources: [src],
+        alternatePaths: [m.r2Key]  // 记录所有引用此谱面的路径
+      })
     }
   }
-  const available = [...bySignature.values()]
+
+  // 为每个合并后的条目选择最佳的文件路径
+  // 策略: 选择文件确实存在且最新的路径
+  const available = []
+  for (const entry of bySignature.values()) {
+    if (entry.alternatePaths && entry.alternatePaths.length > 1) {
+      // 有多个路径，选择最优的
+      let bestPath = entry.r2Key
+      let pathExists = r2Keys.has(bestPath)
+
+      // 如果当前路径不存在，尝试其他路径
+      if (!pathExists) {
+        for (const altPath of entry.alternatePaths) {
+          if (r2Keys.has(altPath)) {
+            bestPath = altPath
+            pathExists = true
+            break
+          }
+        }
+      }
+
+      if (!pathExists) {
+        console.warn(`  Warning: No valid file path found for merged entry with ${entry.sources.length} sources:`)
+        console.warn(`    Sources: ${entry.sources.map(s => `${s.tournamentAbbr}${s.roundAbbr} ${s.slot}`).join(', ')}`)
+        console.warn(`    Tried paths: ${entry.alternatePaths.join(', ')}`)
+        continue  // 跳过这个条目
+      }
+
+      // 使用找到的最佳路径
+      entry.r2Key = bestPath
+
+      if (entry.sources.length > 1) {
+        console.log(`  Merged ${entry.sources.length} references to same map, using path: ${bestPath}`)
+        console.log(`    Sources: ${entry.sources.map(s => `${s.tournamentAbbr}${s.roundAbbr} ${s.slot}`).join(', ')}`)
+      }
+    } else {
+      // 单一路径，检查是否存在
+      if (!r2Keys.has(entry.r2Key)) {
+        console.warn(`  Skip non-existent file: ${entry.r2Key}`)
+        continue
+      }
+    }
+
+    available.push(entry)
+  }
+
   const dupCollapsed = rawEntries.length - available.length
   const nsvCount = available.filter(m => m.isNsv).length
   console.log(

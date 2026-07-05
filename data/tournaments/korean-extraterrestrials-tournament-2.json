@@ -632,9 +632,9 @@
       "abbreviation": "GF",
       "order": 6,
       "difficulty": {
-        "min": 0,
-        "max": 0,
-        "average": 0
+        "min": 14,
+        "max": 15.5,
+        "average": 14.8
       },
       "maps": [
         {
@@ -642,7 +642,7 @@
           "type": "RC",
           "realType": "SS",
           "name": "Sakamiya - Valkyrie Revolutia [Hard]",
-          "difficulty": 0,
+          "difficulty": 14.7,
           "beatmapId": 4571439,
           "beatmapsetId": 2043181
         },
@@ -651,14 +651,14 @@
           "type": "RC",
           "realType": "JS",
           "name": "",
-          "difficulty": 0
+          "difficulty": 14.7
         },
         {
           "slot": "RC3",
           "type": "RC",
           "realType": "SA",
           "name": "celtix - CosmographY [Celestial Cosmic 1.15x (305bpm)]",
-          "difficulty": 0,
+          "difficulty": 14.7,
           "beatmapId": 4985132,
           "beatmapsetId": 2325652
         },
@@ -667,21 +667,21 @@
           "type": "RC",
           "realType": "SJ",
           "name": "",
-          "difficulty": 0
+          "difficulty": 14.7
         },
         {
           "slot": "RC5",
           "type": "RC",
           "realType": "CJ",
           "name": "",
-          "difficulty": 0
+          "difficulty": 14.7
         },
         {
           "slot": "RC6",
           "type": "RC",
           "realType": "WTC",
           "name": "katagiri - silly-willy-nilly (\"folly\" vip) [Eradication (KET2 Edit)]",
-          "difficulty": 0,
+          "difficulty": 14.7,
           "beatmapId": 4867304,
           "beatmapsetId": 2282597
         },
@@ -690,14 +690,14 @@
           "type": "RC",
           "realType": "DP",
           "name": "",
-          "difficulty": 0
+          "difficulty": 14.7
         },
         {
           "slot": "RC8",
           "type": "RC",
           "realType": "JTC",
           "name": "Kou! - Sanzui [Hard (edit) 1.08x (216bpm)]",
-          "difficulty": 0,
+          "difficulty": 15.1,
           "beatmapId": 4985224,
           "beatmapsetId": 2325693
         },
@@ -706,39 +706,43 @@
           "type": "HB",
           "realType": "HB1",
           "name": "",
-          "difficulty": 0
+          "difficulty": 14,
+          "difficultyLn": 14.9
         },
         {
           "slot": "HB2",
           "type": "HB",
           "realType": "HB2",
           "name": "kuro - BEYOND THE GRAVITY [UNIVERSE 1.15x (207bpm)]",
-          "difficulty": 0,
+          "difficulty": 14,
           "beatmapId": 4732615,
-          "beatmapsetId": 2230198
+          "beatmapsetId": 2230198,
+          "difficultyLn": 14.9
         },
         {
           "slot": "HB3",
           "type": "HB",
           "realType": "MNTB",
           "name": "",
-          "difficulty": 0
+          "difficulty": 14,
+          "difficultyLn": 14.9
         },
         {
           "slot": "HB4",
           "type": "HB",
           "realType": "HB3",
           "name": "ProjectG - Fake Life [Simulation x1.05]",
-          "difficulty": 0,
+          "difficulty": 14.4,
           "beatmapId": 4040905,
-          "beatmapsetId": 1951477
+          "beatmapsetId": 1951477,
+          "difficultyLn": 15.5
         },
         {
           "slot": "LN1",
           "type": "LN",
           "realType": "TE",
           "name": "TOGENASHI TOGEARI - Zattou, Bokura no Machi [Sekai]",
-          "difficulty": 0,
+          "difficulty": 14.9,
           "beatmapId": 4732670,
           "beatmapsetId": 2230227
         },
@@ -747,7 +751,7 @@
           "type": "LN",
           "realType": "DE",
           "name": "polysha - All we need is HAPPY (WORLD'S) END. [at the end (edit) 1.15x]",
-          "difficulty": 0,
+          "difficulty": 14.9,
           "beatmapId": 4257993,
           "beatmapsetId": 2041023
         },
@@ -756,7 +760,7 @@
           "type": "LN",
           "realType": "DE",
           "name": "Essbee - Desperado [Chaotic Neutral]",
-          "difficulty": 0,
+          "difficulty": 14.9,
           "beatmapId": 4985262,
           "beatmapsetId": 2325711
         },
@@ -765,7 +769,7 @@
           "type": "LN",
           "realType": "LNMX",
           "name": "LOVEBITES - Judgement Day [Incandescence [1.05x Rate] (Cut)]",
-          "difficulty": 0,
+          "difficulty": 14.9,
           "beatmapId": 4985259,
           "beatmapsetId": 2325710
         },
@@ -781,13 +785,20 @@
         }
       ],
       "typeDifficulties": {
-        "RC": {},
-        "HB": {},
-        "LN": {},
+        "RC": {
+          "rf": 14.7
+        },
+        "HB": {
+          "rf": 14,
+          "ln": 14.9
+        },
+        "LN": {
+          "ln": 14.9
+        },
         "SV": {},
         "TB": {
           "rf": 15.2,
-          "ln": 16
+          "ln": 16.3
         }
       }
     }

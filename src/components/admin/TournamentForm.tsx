@@ -131,12 +131,12 @@ function distributeDiffsForType<F extends 'difficulty' | 'difficultyLn'>(
 
   if (allEligible && eligible.length >= 2 && min > 0 && max > 0) {
     eligible.forEach((m, i) => {
-      ;(m as Record<F, number>)[field] = +(min + (max - min) * (i / (eligible.length - 1))).toFixed(1)
+      ;(m as Record<F, number>)[field] = +(min + (max - min) * (i / (eligible.length - 1))).toFixed(2)
     })
   } else if (avg > 0) {
     eligible.forEach((m) => { (m as Record<F, number>)[field] = avg })
   } else if (min > 0 && max > 0) {
-    const mid = +((min + max) / 2).toFixed(1)
+    const mid = +((min + max) / 2).toFixed(2)
     eligible.forEach((m) => { (m as Record<F, number>)[field] = mid })
   }
 }
@@ -172,11 +172,11 @@ function roundWithMetaToOutput(r: RoundWithMeta): Round {
     const userAvgs = [_typeDiffs.rc, _typeDiffs.hbLn, _typeDiffs.ln, _typeDiffs.sv].filter((v) => v > 0)
     min = userMins.length > 0 ? Math.min(...userMins) : (nonTbDiffs.length > 0 ? Math.min(...nonTbDiffs) : 0)
     max = userMaxes.length > 0 ? Math.max(...userMaxes) : (nonTbDiffs.length > 0 ? Math.max(...nonTbDiffs) : 0)
-    average = userAvgs.length > 0 ? +(userAvgs.reduce((s, v) => s + v, 0) / userAvgs.length).toFixed(1) : 0
+    average = userAvgs.length > 0 ? +(userAvgs.reduce((s, v) => s + v, 0) / userAvgs.length).toFixed(2) : 0
   } else {
     min = nonTbDiffs.length > 0 ? Math.min(...nonTbDiffs) : 0
     max = nonTbDiffs.length > 0 ? Math.max(...nonTbDiffs) : 0
-    average = nonTbDiffs.length > 0 ? +(nonTbDiffs.reduce((s, d) => s + d, 0) / nonTbDiffs.length).toFixed(1) : 0
+    average = nonTbDiffs.length > 0 ? +(nonTbDiffs.reduce((s, d) => s + d, 0) / nonTbDiffs.length).toFixed(2) : 0
   }
 
   return {

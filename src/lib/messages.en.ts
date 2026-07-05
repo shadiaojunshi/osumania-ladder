@@ -194,6 +194,8 @@ export const messagesEn: Record<keyof typeof messagesZh, string> = {
   'mapSlot.special.title': 'Type label shown in the ladder',
   'mapSlot.realType.custom': 'Custom type',
   'mapSlot.remove': 'Remove',
+  'mapSlot.clearDiff': 'Clear this map difficulty (HB/TB clears both rf+ln); falls back to the average',
+  'mapSlot.clearDiff.short': 'Clear',
   'mapSlot.history.title': 'Usage history of this map in other tournaments',
   'mapSlot.history.used': 'Used in {n} slot(s)',
   'mapSlot.history.conflict': 'Current type {current} differs from commonly used {suggested}',
@@ -237,6 +239,16 @@ export const messagesEn: Record<keyof typeof messagesZh, string> = {
   'refPicker.cancel': 'Cancel',
   'refPicker.noRounds': 'No {type} data',
   'refPicker.ladderEmpty': 'No difficulty ladder configured yet. Arrange some rounds in the "Difficulty ladder" admin tab',
+
+  // ---------- Round-level reference (RoundRefPicker) ----------
+  'roundRef.button': 'Round ref',
+  'roundRef.title': 'Round difficulty reference (mwc±N)',
+  'roundRef.hint': 'Anchor on an MWC round; N is steps (1 step = one adjacent ladder entry), positive = harder. Fills every non-SV difficulty of this round at once.',
+  'roundRef.base': 'Base',
+  'roundRef.autoMatched': 'Auto-matched MWC {round}',
+  'roundRef.noAutoMatch': 'Round "{round}" is non-standard; pick which MWC round it maps to',
+  'roundRef.noBase': 'No MWC rounds in the ladder',
+  'roundRef.apply': 'Apply to round',
 
   // ---------- RefLadderEditor ----------
   'refLadder.title': 'Difficulty reference ladder',

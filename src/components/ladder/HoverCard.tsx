@@ -104,7 +104,9 @@ function buildDifficultyLabel(round: Round, activeFilter: string | null, hovered
       const val = entry.ln ?? entry.rf
       return val ? `~${getLnDanName(val)}` : `~${getLnDanName(round.difficulty.average)}`
     }
-    if (type === 'HB') {
+    // HB / TB 都是 rf + ln 双段:两侧各出一个分档标签(如 ~ε+/ζ- / LN16-/16)。
+    // 之前 TB 掉到末尾通用分支只取 rf,把 ln 丢了(ket2 GF TB 只显示 ε+ 的根因)。
+    if (type === 'HB' || type === 'TB') {
       const rfVal = entry.rf
       const lnVal = entry.ln
       const parts: string[] = []
@@ -175,22 +177,54 @@ function buildDifficultyLabel(round: Round, activeFilter: string | null, hovered
   return parts.length > 0 ? `~${parts.join(' / ')}` : ''
 }
 
-function getRfDanName(diff: number): string {
-  let closest = rfLevels[0]
-  let minDist = Math.abs(diff - closest.numericValue)
-  for (const level of rfLevels) {
-    const dist = Math.abs(diff - level.numericValue)
-    if (dist < minDist) { closest = level; minDist = dist }
+// 主档 = numericValue 落在整数上(α=11、β=12、rf10=10...)。副档 = ±0.3 偏移档(α+/α-)。
+function isMajorLevel(v: number): boolean {
+  return Math.abs(v - Math.round(v)) < 0.05
+}
+
+// 分档:给一个数值返回它落在哪个"纯档"或"双档"。levels 按 numericValue 降序。
+//   每档纯档半宽:主档朝任意邻档 ±0.10;副档朝 0.4 间隔邻档 ±0.10、朝 0.3 间隔主档 ±0.05。
+//   落在某档纯档内 → primary=该档,secondary=null;
+//   落在两纯档之间 → primary=低档、secondary=高档(显示"低/高")。
+// 该规则精确复现手排的分档表(10.9-11.1=α、10.75-10.89=α-/α、11.25-11.4=α+ ...)。
+function danBand(
+  diff: number,
+  levels: DanLevel[]
+): { primary: DanLevel; secondary: DanLevel | null } {
+  if (diff >= levels[0].numericValue) return { primary: levels[0], secondary: null }
+  const last = levels[levels.length - 1]
+  if (diff <= last.numericValue) return { primary: last, secondary: null }
+  let hi = levels[0]
+  let lo = last
+  for (let i = 0; i < levels.length - 1; i++) {
+    if (levels[i].numericValue >= diff && levels[i + 1].numericValue <= diff) {
+      hi = levels[i]
+      lo = levels[i + 1]
+      break
+    }
   }
-  return closest.name
+  const gap = hi.numericValue - lo.numericValue
+  const half = (lvl: DanLevel) =>
+    gap >= 0.35 ? 0.1 : isMajorLevel(lvl.numericValue) ? 0.1 : 0.05
+  let hLo = half(lo)
+  let hHi = half(hi)
+  // 极小 gap(intro 区)兜底:纯档不重叠,退化到三等分。
+  if (hLo + hHi >= gap) {
+    hLo = gap / 3
+    hHi = gap / 3
+  }
+  if (diff <= lo.numericValue + hLo) return { primary: lo, secondary: null }
+  if (diff >= hi.numericValue - hHi) return { primary: hi, secondary: null }
+  return { primary: lo, secondary: hi }
+}
+
+function getRfDanName(diff: number): string {
+  const { primary, secondary } = danBand(diff, rfLevels)
+  return secondary ? `${primary.name}/${secondary.name}` : primary.name
 }
 
 function getLnDanName(diff: number): string {
-  let closest = lnLevels[0]
-  let minDist = Math.abs(diff - closest.numericValue)
-  for (const level of lnLevels) {
-    const dist = Math.abs(diff - level.numericValue)
-    if (dist < minDist) { closest = level; minDist = dist }
-  }
-  return `LN${closest.name}`
+  const { primary, secondary } = danBand(diff, lnLevels)
+  const label = secondary ? `${primary.name}/${secondary.name}` : primary.name
+  return `LN${label}`
 }

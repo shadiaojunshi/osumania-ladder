@@ -193,6 +193,8 @@ export const messagesZh = {
   'mapSlot.special.title': '在天梯榜中显示的类型名',
   'mapSlot.realType.custom': '自定义类型',
   'mapSlot.remove': '删除',
+  'mapSlot.clearDiff': '清空本图难度框(HB/TB 同时清 rf+ln),清空后回落到平均',
+  'mapSlot.clearDiff.short': '清空',
   'mapSlot.history.title': '此谱面在其他比赛中的使用记录',
   'mapSlot.history.used': '已在 {n} 个槽位使用',
   'mapSlot.history.conflict': '当前类型 {current} 与历史常用类型 {suggested} 不一致',
@@ -236,6 +238,16 @@ export const messagesZh = {
   'refPicker.cancel': '取消',
   'refPicker.noRounds': '暂无 {type} 数据',
   'refPicker.ladderEmpty': '尚未配置难度标尺。去 admin 的"难度标尺"页排几个轮',
+
+  // ---------- 整轮参考 (RoundRefPicker) ----------
+  'roundRef.button': '整轮参考',
+  'roundRef.title': '整轮难度参考 (mwc±N)',
+  'roundRef.hint': '以 MWC 某轮为基准,N 为格数(1格=标尺相邻一项),正=更难。一次填满本轮所有非 SV 难度。',
+  'roundRef.base': '基准',
+  'roundRef.autoMatched': '已自动匹配 MWC {round}',
+  'roundRef.noAutoMatch': '本轮"{round}"非标准轮,请手选相当于 MWC 哪一轮',
+  'roundRef.noBase': '标尺里没有 MWC 轮次',
+  'roundRef.apply': '应用到整轮',
 
   // ---------- RefLadderEditor ----------
   'refLadder.title': '难度参考标尺',

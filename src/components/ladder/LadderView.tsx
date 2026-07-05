@@ -7,7 +7,7 @@ import { tournaments } from '@/generated/tournaments'
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { HoverCard } from './HoverCard'
 
-const DIFFICULTY_RANGE = { min: 0.5, max: 17.5 }
+const DIFFICULTY_RANGE = { min: 0.5, max: 16.5 }
 const BOX_HEIGHT_TYPE = 28
 
 const LN_REAL_TYPES = new Set(['RE', 'CO', 'TE', 'DE', 'SW', 'JW', 'IN', 'LNMX', 'LNTC', 'OLN'])
@@ -440,6 +440,13 @@ function TournamentColumn({
             maxDiff = storedAvg
           }
           if (!isFinite(minDiff) || !isFinite(maxDiff)) return null
+          // 只填平均 / 方差很小时框太窄不好看:跨度 <0.7 就以中心撑到 ±0.35。
+          // center 优先用 stored 平均,否则退到 (min+max)/2。纯视觉,不改数据。
+          if (maxDiff - minDiff < 0.7) {
+            const center = storedAvg !== null ? storedAvg : (minDiff + maxDiff) / 2
+            minDiff = Math.min(minDiff, center - 0.35)
+            maxDiff = Math.max(maxDiff, center + 0.35)
+          }
           const top = difficultyToY(maxDiff, containerHeight, DIFFICULTY_RANGE)
           const bottom = difficultyToY(minDiff, containerHeight, DIFFICULTY_RANGE)
           const boxH = Math.max(bottom - top, 24)
@@ -491,7 +498,37 @@ function TournamentColumn({
         }
         let adjustedAvg: number | null = null
         if (rfAvg !== null && lnAvg !== null) {
-          adjustedAvg = (rfAvg + (lnAvg - rfLnOffset)) / 2
+          // 双值:偏 ln 2/3。rf + (ln - rf)*2/3,比简单平均更贴近实际手感。
+          const lnAdj = lnAvg - rfLnOffset
+          adjustedAvg = rfAvg + (lnAdj - rfAvg) * (2 / 3)
+        } else if (rfAvg !== null) {
+          adjustedAvg = rfAvg
+        } else if (lnAvg !== null) {
+          adjustedAvg = lnAvg - rfLnOffset
+        }
+        if (adjustedAvg === null) continue
+        allTypeBoxes.push({ round, type, adjustedAvg })
+        continue
+      }
+
+      // HB 特判:与 TB 同样 rf(difficulty) / ln(difficultyLn) 两侧,偏 ln 2/3。
+      // 缺 ln 就退化到纯 rf。fallback 到 typeDifficulties.HB。
+      if (type === 'HB') {
+        const rfVals = typeMaps.map((m) => m.difficulty).filter((d) => d > 0)
+        const lnVals = typeMaps.map((m) => m.difficultyLn ?? 0).filter((d) => d > 0)
+        let rfAvg: number | null = null
+        let lnAvg: number | null = null
+        if (rfVals.length > 0) rfAvg = rfVals.reduce((s, d) => s + d, 0) / rfVals.length
+        if (lnVals.length > 0) lnAvg = lnVals.reduce((s, d) => s + d, 0) / lnVals.length
+        if (rfAvg === null && lnAvg === null) {
+          const td = round.typeDifficulties?.[type]
+          if (td?.rf && td.rf > 0) rfAvg = td.rf
+          if (td?.ln && td.ln > 0) lnAvg = td.ln
+        }
+        let adjustedAvg: number | null = null
+        if (rfAvg !== null && lnAvg !== null) {
+          const lnAdj = lnAvg - rfLnOffset
+          adjustedAvg = rfAvg + (lnAdj - rfAvg) * (2 / 3)
         } else if (rfAvg !== null) {
           adjustedAvg = rfAvg
         } else if (lnAvg !== null) {

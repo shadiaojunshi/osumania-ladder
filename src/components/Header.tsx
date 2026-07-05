@@ -33,7 +33,7 @@ export function Header() {
   const t = useT()
 
   return (
-    <header className="border-b border-gray-200 dark:border-neutral-800 flex items-center px-2 sm:px-4 gap-2 sm:gap-4 shrink-0 flex-wrap md:flex-nowrap min-h-14 py-1 md:py-0 md:h-14 bg-white dark:bg-neutral-950">
+    <header className="border-b border-gray-200 dark:border-neutral-800 flex items-center px-2 sm:px-4 gap-2 sm:gap-4 shrink-0 flex-wrap xl:flex-nowrap min-h-14 py-1 xl:py-0 xl:h-14 bg-white dark:bg-neutral-950">
       <h1 className="text-base sm:text-lg font-bold whitespace-nowrap">
         <span className="text-purple-700 dark:text-purple-300">{t('header.brand')}</span><span className="hidden sm:inline">{t('header.titleFull')}</span><span className="sm:hidden">{t('header.titleCompact')}</span>
       </h1>
@@ -82,7 +82,7 @@ export function Header() {
         ))}
       </div>
 
-      <div className="md:ml-auto flex items-center gap-1 sm:gap-2 flex-wrap">
+      <div className="xl:ml-auto flex items-center gap-1 sm:gap-2 flex-wrap">
         <input
           type="text"
           placeholder={t('header.search.placeholder')}

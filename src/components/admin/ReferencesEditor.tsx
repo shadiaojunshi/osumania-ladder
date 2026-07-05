@@ -14,7 +14,7 @@ interface ReferencesData {
   points: RefPoint[]
 }
 
-const DIFFICULTY_RANGE = { min: 0.5, max: 17.5 }
+const DIFFICULTY_RANGE = { min: 0.5, max: 16.5 }
 const PREVIEW_HEIGHT = 500
 
 export function ReferencesEditor() {
@@ -103,7 +103,7 @@ export function ReferencesEditor() {
           />
           <input
             type="number"
-            step="0.5"
+            step="any"
             value={newDiff}
             onChange={(e) => setNewDiff(e.target.value)}
             placeholder={t('refs.placeholder.diff')}

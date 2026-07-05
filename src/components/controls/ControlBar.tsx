@@ -43,7 +43,7 @@ export function ControlBar() {
   const availableRounds = COMMON_ROUNDS.filter((r) => presentRoundAbbrs.has(r))
 
   return (
-    <footer className="border-t border-gray-200 dark:border-neutral-800 flex items-center px-2 sm:px-4 gap-2 sm:gap-4 shrink-0 bg-gray-50 dark:bg-neutral-900 flex-wrap md:flex-nowrap min-h-14 py-1 md:py-0 md:h-14">
+    <footer className="border-t border-gray-200 dark:border-neutral-800 flex items-center px-2 sm:px-4 gap-2 sm:gap-4 shrink-0 bg-gray-50 dark:bg-neutral-900 flex-wrap xl:flex-nowrap min-h-14 py-1 xl:py-0 xl:h-14">
       <div className="flex items-center gap-1.5">
         <span className="text-xs text-gray-500 dark:text-neutral-400">{t('control.zoom')}</span>
         <button
@@ -183,7 +183,7 @@ export function ControlBar() {
         </select>
       </div>
 
-      <div className="md:ml-auto flex items-center gap-2">
+      <div className="xl:ml-auto flex items-center gap-2">
         <button
           onClick={() => setLang(lang === 'zh' ? 'en' : 'zh')}
           className="px-2 py-1 rounded text-xs font-medium bg-gray-200 text-gray-600 hover:bg-gray-300 dark:bg-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-600 transition-colors"

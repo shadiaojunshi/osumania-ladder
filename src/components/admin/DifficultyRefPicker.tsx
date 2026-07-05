@@ -16,7 +16,7 @@ import {
 
 // 模块级缓存:整个 admin 会话只 fetch 一次标尺。
 let ladderPromise: Promise<LadderEntry[]> | null = null
-function fetchLadder(): Promise<LadderEntry[]> {
+export function fetchLadder(): Promise<LadderEntry[]> {
   if (!ladderPromise) {
     ladderPromise = fetch('/api/ref-ladder')
       .then((r) => (r.ok ? r.json() : { data: { entries: [] } }))

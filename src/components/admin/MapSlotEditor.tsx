@@ -138,6 +138,13 @@ export function MapSlotEditor({ map, onChange, onRemove, getMapHistory }: Props)
     onChange({ ...map, [key]: value })
   }
 
+  // 清空本图难度框(HB/TB/SPECIAL 同时清 rf+ln 两框)。清空后该 type 若未 lock
+  // 会自动回落到平均难度,方便"直接用平均"。
+  const clearDifficulty = () => {
+    onChange({ ...map, difficulty: 0, difficultyLn: dual ? undefined : map.difficultyLn })
+  }
+  const hasDiff = (map.difficulty || 0) > 0 || (dual && (map.difficultyLn || 0) > 0)
+
   const handleCategoryChange = (category: MapCategory) => {
     const newRealTypes = REAL_TYPES[category] || []
     const firstRealType = newRealTypes.length > 0 ? newRealTypes[0].id : map.realType
@@ -294,7 +301,7 @@ export function MapSlotEditor({ map, onChange, onRemove, getMapHistory }: Props)
           <div className="flex items-center gap-1">
             <input
               type="number"
-              step="0.5"
+              step="any"
               min="0"
               max="20"
               value={map.difficulty || ''}
@@ -315,7 +322,7 @@ export function MapSlotEditor({ map, onChange, onRemove, getMapHistory }: Props)
             <div className="flex items-center gap-1">
               <input
                 type="number"
-                step="0.5"
+                step="any"
                 min="0"
                 max="20"
                 value={map.difficultyLn || ''}
@@ -331,6 +338,17 @@ export function MapSlotEditor({ map, onChange, onRemove, getMapHistory }: Props)
                 field="ln"
               />
             </div>
+          )}
+
+          {hasDiff && (
+            <button
+              type="button"
+              onClick={clearDifficulty}
+              title={t('mapSlot.clearDiff')}
+              className="px-1.5 py-1 text-[10px] border border-gray-200 dark:border-neutral-700 rounded text-gray-400 dark:text-neutral-500 hover:text-red-500 hover:border-red-300 dark:hover:border-red-800"
+            >
+              {t('mapSlot.clearDiff.short')}
+            </button>
           )}
         </div>
       </div>

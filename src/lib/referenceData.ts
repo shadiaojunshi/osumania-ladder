@@ -151,6 +151,62 @@ export function findAnchorContext(
   }
 }
 
+// ── 整轮快捷偏移(mwc±N)支持 ──────────────────────────────────
+// 全局标尺基准比赛(MWC 4K)。整轮「参考」的 mwc±N 以此比赛的某轮为锚,
+// N 为"格数",1 格 = 标尺相邻一项;符号即方向,正 = 更难(往 GF/标尺末尾走)。
+export const MWC_LADDER_TOURNAMENT_ID = 'osumania-4k-world-cup-2025'
+
+// 标尺上属于基准比赛(MWC)的各轮,带它们在 entries 中的真实下标。
+// 用于「基准: MWC QF」的自动匹配 / 手选下拉。
+export function baseLadderRounds(
+  tournaments: Tournament[],
+  entries: LadderEntry[],
+  baseTournamentId: string = MWC_LADDER_TOURNAMENT_ID
+): { roundId: string; roundAbbr: string; roundName: string; ladderIndex: number }[] {
+  const out: { roundId: string; roundAbbr: string; roundName: string; ladderIndex: number }[] = []
+  entries.forEach((e, idx) => {
+    if (e.tournamentId !== baseTournamentId) return
+    const tn = tournaments.find((t) => t.id === e.tournamentId)
+    const round = tn?.rounds.find((r) => r.id === e.roundId)
+    if (!round) return
+    out.push({
+      roundId: e.roundId,
+      roundAbbr: round.abbreviation || round.name || round.id,
+      roundName: round.name || round.abbreviation || round.id,
+      ladderIndex: idx,
+    })
+  })
+  return out
+}
+
+// 分段线性插值:在解析后的 ladder(可能含 null)上,以 baseIndex 为原点、
+// offset 为格数,取该 (type,field) 的插值。只在 value 非 null 的点之间按
+// "标尺下标"线性插;target 落在数据两端之外则 clamp(不外推)。
+// 整数 offset 落在有数据的项上 → 直接返回该项值。
+export function sampleLadderAtOffset(
+  ladder: RefLadderRound[],
+  baseIndex: number,
+  offset: number
+): number | null {
+  const points: { i: number; v: number }[] = []
+  ladder.forEach((r, i) => {
+    if (r.value !== null) points.push({ i, v: r.value })
+  })
+  if (points.length === 0) return null
+  const target = baseIndex + offset
+  if (target <= points[0].i) return points[0].v
+  if (target >= points[points.length - 1].i) return points[points.length - 1].v
+  for (let k = 0; k < points.length - 1; k++) {
+    const a = points[k]
+    const b = points[k + 1]
+    if (target >= a.i && target <= b.i) {
+      const t = (target - a.i) / (b.i - a.i)
+      return +(a.v + (b.v - a.v) * t).toFixed(2)
+    }
+  }
+  return points[points.length - 1].v
+}
+
 // 6 档插值。各档需要的依赖:
 //   anchorMinus → prev (用 anchor 和 prev 算)
 //   anchor      → 无 (直接 anchor.value)

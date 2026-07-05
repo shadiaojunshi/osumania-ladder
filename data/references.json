@@ -15,6 +15,10 @@
       "type": "ln"
     },
     {
+      "label": "AC RC",
+      "difficulty": 14.2
+    },
+    {
       "label": "MWC 2025 GF RC",
       "difficulty": 13.3
     },
@@ -76,6 +80,51 @@
     {
       "label": "THMC 4 Ro32 RC",
       "difficulty": 6.3
+    },
+    {
+      "label": "CUC 2026 QF LN",
+      "difficulty": 5.7,
+      "type": "ln"
+    },
+    {
+      "label": "CUC 2026 QF RC",
+      "difficulty": 5.3
+    },
+    {
+      "label": "CUC 2026 Ro16 LN",
+      "difficulty": 4.5,
+      "type": "ln"
+    },
+    {
+      "label": "CUC 2026 Ro16 RC",
+      "difficulty": 3.8
+    },
+    {
+      "label": "NMWC 2025 QF LN",
+      "difficulty": 3.4,
+      "type": "ln"
+    },
+    {
+      "label": "NMWC 2025 QF RC",
+      "difficulty": 2.8
+    },
+    {
+      "label": "NMWC 2025 Ro16 LN",
+      "difficulty": 2.2,
+      "type": "ln"
+    },
+    {
+      "label": "NMWC 2025 Ro16 RC",
+      "difficulty": 1.6
+    },
+    {
+      "label": "NMWC 2025 Ro32 LN",
+      "difficulty": 1,
+      "type": "ln"
+    },
+    {
+      "label": "NMWC 2025 Ro32 RC",
+      "difficulty": 0.8
     }
   ]
 }

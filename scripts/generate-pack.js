@@ -167,6 +167,38 @@ function getBgExtension(filename) {
   return ['.jpg', '.jpeg', '.png'].includes(ext) ? ext : '.jpg'
 }
 
+// 在 zip 里按名字找文件,大小写不敏感 + basename 兜底。
+// 镜像站(catboy/nerinyan)重打包时经常把文件名大小写改掉(.osu 写
+// "song.mp3" 但压缩包里是 "Song.mp3"),或把音频放进子目录。精确匹配
+// zip.files[name] 会失败,导致合包时音乐/曲绘静默丢失。这里逐级放宽:
+// 精确 → 全路径小写相等 → 仅 basename 小写相等。
+function findZipEntry(zip, wanted) {
+  if (!wanted) return null
+  if (zip.files[wanted] && !zip.files[wanted].dir) return zip.files[wanted]
+  const wl = wanted.toLowerCase()
+  const wbase = wl.split('/').pop()
+  let baseMatch = null
+  for (const name of Object.keys(zip.files)) {
+    const f = zip.files[name]
+    if (f.dir) continue
+    const nl = name.toLowerCase()
+    if (nl === wl) return f
+    if (!baseMatch && nl.split('/').pop() === wbase) baseMatch = f
+  }
+  return baseMatch
+}
+
+// 兜底:.osu 声明的 AudioFilename 完全对不上时(改名/丢字段),
+// 直接取压缩包里第一个音频文件。返回 { entry, name } 或 null。
+function findAnyAudioEntry(zip) {
+  for (const name of Object.keys(zip.files)) {
+    const f = zip.files[name]
+    if (f.dir) continue
+    if (/\.(mp3|ogg|wav)$/i.test(name)) return { entry: f, name }
+  }
+  return null
+}
+
 // 并发执行 fn(item) 但限制同时只跑 limit 个,结果按 items 原顺序返回。
 // 用来把"R2 下载 + JSZip 解压 + parseOsu"这段从串行改成并发,
 // 4 核 runner 上比纯串行快 ~3x。limit 设 4 是为了控住内存峰值。
@@ -246,9 +278,29 @@ async function prefetchMap(map, packName) {
     const newVersion = `(${sourcesLabel}) ${meta.artist || 'Unknown'} - ${meta.title || 'Unknown'} [${meta.creator || 'Unknown'}] (${meta.version || 'Normal'})`
     const safeVersion = sanitizeFileName(newVersion)
 
-    const audioExt = getAudioExtension(meta.audioFilename || 'audio.mp3')
+    // 先定位真实文件(大小写不敏感),再用真实文件名的扩展名命名。
+    // 音频找不到时兜底取包里第一个音频文件——否则合包里这张图没声音。
+    let audioEntry = findZipEntry(zip, meta.audioFilename)
+    let audioSourceName = meta.audioFilename
+    if (!audioEntry) {
+      const any = findAnyAudioEntry(zip)
+      if (any) {
+        audioEntry = any.entry
+        audioSourceName = any.name
+        console.warn(`  ${map.r2Key}: AudioFilename "${meta.audioFilename}" not found, falling back to "${any.name}"`)
+      } else {
+        console.warn(`  ${map.r2Key}: no audio file found in archive`)
+      }
+    }
+    const bgEntry = findZipEntry(zip, meta.backgroundFile)
+    if (meta.backgroundFile && !bgEntry) {
+      console.warn(`  ${map.r2Key}: backgroundFile "${meta.backgroundFile}" not found in archive`)
+    }
+
+    const audioExt = getAudioExtension(audioSourceName || 'audio.mp3')
     const newAudioName = safeVersion + audioExt
-    const bgExt = getBgExtension(meta.backgroundFile || 'bg.jpg')
+    // 曲绘扩展名也按实际找到的文件取(bgEntry.name),声明 .jpg 但实际 .png 时不会错配。
+    const bgExt = getBgExtension((bgEntry && bgEntry.name) || meta.backgroundFile || 'bg.jpg')
     const newBgName = safeVersion + bgExt
 
     const rewritten = rewriteOsu(osuContent, {
@@ -261,12 +313,12 @@ async function prefetchMap(map, packName) {
     })
 
     let audioBuf = null
-    if (meta.audioFilename && zip.files[meta.audioFilename]) {
-      audioBuf = await zip.files[meta.audioFilename].async('nodebuffer')
+    if (audioEntry) {
+      audioBuf = await audioEntry.async('nodebuffer')
     }
     let bgBuf = null
-    if (meta.backgroundFile && zip.files[meta.backgroundFile]) {
-      bgBuf = await zip.files[meta.backgroundFile].async('nodebuffer')
+    if (bgEntry) {
+      bgBuf = await bgEntry.async('nodebuffer')
     }
 
     return {

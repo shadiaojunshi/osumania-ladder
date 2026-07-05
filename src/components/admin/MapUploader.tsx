@@ -34,6 +34,7 @@ export function MapUploader() {
   const [loading, setLoading] = useState(false)
   const [uploading, setUploading] = useState<Record<string, boolean>>({})
   const [status, setStatus] = useState<Record<string, 'success' | 'error'>>({})
+  const [errorMsg, setErrorMsg] = useState<Record<string, string>>({})
 
   useEffect(() => {
     fetch('/api/tournaments').then(r => r.json()).then(setTournaments).catch(() => {})
@@ -70,36 +71,62 @@ export function MapUploader() {
     const key = cellKey(roundId, slot, isNsv)
     setUploading(prev => ({ ...prev, [key]: true }))
     setStatus(prev => { const n = { ...prev }; delete n[key]; return n })
+    setErrorMsg(prev => { const n = { ...prev }; delete n[key]; return n })
 
     try {
       if (!file.name.endsWith('.osz')) return
 
       if (file.size > MAX_SIZE) {
         setStatus(prev => ({ ...prev, [key]: 'error' }))
+        setErrorMsg(prev => ({ ...prev, [key]: t('mapUpload.alert.fileTooBig', { n: MAX_SIZE / 1024 / 1024 }) }))
         alert(t('mapUpload.alert.fileTooBig', { n: MAX_SIZE / 1024 / 1024 }))
         return
       }
 
-      const formData = new FormData()
-      formData.append('tournamentId', selectedTournament)
-      formData.append('roundId', roundId)
-      formData.append('slot', slot)
-      formData.append('file', file)
-      if (isNsv) formData.append('nsv', '1')
+      // 上传瞬时失败(网络抖动 / R2 5xx)重试 3 次,指数退避。
+      // 4xx(权限/参数)不重试,直接抛出服务器返回的真实错误信息。
+      let lastErr = ''
+      let ok = false
+      for (let attempt = 0; attempt < 3; attempt++) {
+        // FormData/File stream 只能消费一次,每次重试都重建。
+        const formData = new FormData()
+        formData.append('tournamentId', selectedTournament)
+        formData.append('roundId', roundId)
+        formData.append('slot', slot)
+        formData.append('file', file)
+        if (isNsv) formData.append('nsv', '1')
 
-      const res = await fetch('/api/maps/upload', { method: 'POST', body: formData })
-      if (!res.ok) throw new Error()
+        let res: Response
+        try {
+          res = await fetch('/api/maps/upload', { method: 'POST', body: formData })
+        } catch (netErr) {
+          lastErr = netErr instanceof Error ? netErr.message : String(netErr)
+          await new Promise(r => setTimeout(r, 500 * (attempt + 1)))
+          continue
+        }
+
+        if (res.ok) { ok = true; break }
+
+        const body = await res.json().catch(() => ({})) as { error?: string }
+        lastErr = body.error || `HTTP ${res.status}`
+        // 4xx 是确定性失败(权限/字段/过大),重试没用。
+        if (res.status >= 400 && res.status < 500) break
+        await new Promise(r => setTimeout(r, 500 * (attempt + 1)))
+      }
+
+      if (!ok) throw new Error(lastErr || 'upload failed')
 
       setStatus(prev => ({ ...prev, [key]: 'success' }))
       const setKey = `${roundId}/${slot}`
       if (isNsv) setUploadedNsvSlots(prev => new Set([...prev, setKey]))
       else setUploadedSlots(prev => new Set([...prev, setKey]))
-    } catch {
+    } catch (err) {
       setStatus(prev => ({ ...prev, [key]: 'error' }))
+      setErrorMsg(prev => ({ ...prev, [key]: err instanceof Error ? err.message : String(err) }))
     } finally {
       setUploading(prev => ({ ...prev, [key]: false }))
     }
-  }, [selectedTournament])
+  }, [selectedTournament, t])
 
   const uploadThreeFiles = useCallback(async (roundId: string, slot: string, osuFile: File, audioFile: File, bgFile: File, isNsv: boolean) => {
     const totalSize = osuFile.size + audioFile.size + bgFile.size
@@ -240,6 +267,7 @@ export function MapUploader() {
                 uploadedNsvSlots={uploadedNsvSlots}
                 uploading={uploading}
                 status={status}
+                errorMsg={errorMsg}
                 onUploadOsz={uploadFile}
                 onUploadThree={uploadThreeFiles}
                 onDelete={deleteFile}
@@ -259,6 +287,7 @@ function RoundUploadSection({
   uploadedNsvSlots,
   uploading,
   status,
+  errorMsg,
   onUploadOsz,
   onUploadThree,
   onDelete,
@@ -269,6 +298,7 @@ function RoundUploadSection({
   uploadedNsvSlots: Set<string>
   uploading: Record<string, boolean>
   status: Record<string, 'success' | 'error'>
+  errorMsg: Record<string, string>
   onUploadOsz: (roundId: string, slot: string, file: File, isNsv: boolean) => Promise<void> | void
   onUploadThree: (roundId: string, slot: string, osu: File, audio: File, bg: File, isNsv: boolean) => void
   onDelete: (roundId: string, slot: string, isNsv: boolean) => void
@@ -389,6 +419,7 @@ function RoundUploadSection({
               isNsvUploaded={uploadedNsvSlots.has(`${round.id}/${map.slot}`)}
               uploading={uploading}
               status={status}
+              errorMsg={errorMsg}
               onUploadOsz={onUploadOsz}
               onUploadThree={onUploadThree}
               onDelete={onDelete}
@@ -1058,6 +1089,7 @@ function MapUploadRow({
   isNsvUploaded,
   uploading,
   status,
+  errorMsg,
   onUploadOsz,
   onUploadThree,
   onDelete,
@@ -1071,6 +1103,7 @@ function MapUploadRow({
   isNsvUploaded: boolean
   uploading: Record<string, boolean>
   status: Record<string, 'success' | 'error'>
+  errorMsg: Record<string, string>
   onUploadOsz: (roundId: string, slot: string, file: File, isNsv: boolean) => void
   onUploadThree: (roundId: string, slot: string, osu: File, audio: File, bg: File, isNsv: boolean) => void
   onDelete: (roundId: string, slot: string, isNsv: boolean) => void
@@ -1093,6 +1126,7 @@ function MapUploadRow({
           isUploaded={isUploaded}
           isUploading={uploading[`${roundId}/${slot}`] || false}
           uploadStatus={status[`${roundId}/${slot}`]}
+          uploadError={errorMsg[`${roundId}/${slot}`]}
           beatmapsetId={beatmapsetId}
           expectedVersion={expectedVersion}
           mapName={name}
@@ -1108,6 +1142,7 @@ function MapUploadRow({
             isUploaded={isNsvUploaded}
             isUploading={uploading[`${roundId}/${slot}#nsv`] || false}
             uploadStatus={status[`${roundId}/${slot}#nsv`]}
+            uploadError={errorMsg[`${roundId}/${slot}#nsv`]}
             beatmapsetId={beatmapsetId}
             expectedVersion={expectedVersion}
             mapName={name}
@@ -1128,6 +1163,7 @@ function MapUploadCell({
   isUploaded,
   isUploading,
   uploadStatus,
+  uploadError,
   beatmapsetId,
   expectedVersion,
   mapName,
@@ -1141,6 +1177,7 @@ function MapUploadCell({
   isUploaded: boolean
   isUploading: boolean
   uploadStatus?: 'success' | 'error'
+  uploadError?: string
   beatmapsetId?: number
   expectedVersion: string | null
   mapName?: string
@@ -1333,7 +1370,9 @@ function MapUploadCell({
       )}
 
       {uploadStatus === 'error' && (
-        <span className="text-xs text-red-600 dark:text-red-300">{t('mapUpload.row.uploadFailed')}</span>
+        <span className="text-xs text-red-600 dark:text-red-300" title={uploadError}>
+          {t('mapUpload.row.uploadFailed')}{uploadError ? `: ${uploadError}` : ''}
+        </span>
       )}
 
       {!isUploading && (!isUploaded || reuploading) && (

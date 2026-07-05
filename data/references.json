@@ -2,12 +2,7 @@
   "points": [
     {
       "label": "KET2 GF LN",
-      "difficulty": 15.3,
-      "type": "ln"
-    },
-    {
-      "label": "o!mLN4 GF LN",
-      "difficulty": 14.7,
+      "difficulty": 14.9,
       "type": "ln"
     },
     {
@@ -15,63 +10,68 @@
       "difficulty": 14.7
     },
     {
-      "label": "MWC 2025 GF LN",
-      "difficulty": 14.1,
+      "label": "o!mLN4 GF LN",
+      "difficulty": 14.2,
       "type": "ln"
     },
     {
       "label": "MWC 2025 GF RC",
-      "difficulty": 13.8
+      "difficulty": 13.3
     },
     {
-      "label": "MWC 2025 F LN",
-      "difficulty": 12.8,
+      "label": "MWC 2025 GF LN",
+      "difficulty": 13.2,
       "type": "ln"
     },
     {
       "label": "MWC 2025 F RC",
-      "difficulty": 12.7
+      "difficulty": 12.3
     },
     {
-      "label": "MWC 2025 SF LN",
-      "difficulty": 12,
+      "label": "MWC 2025 F LN",
+      "difficulty": 12.2,
       "type": "ln"
     },
     {
       "label": "MWC 2025 SF RC",
-      "difficulty": 11.6
+      "difficulty": 11.4
     },
     {
-      "label": "MWC 2025 QF LN",
-      "difficulty": 11.1,
+      "label": "MWC 2025 SF LN",
+      "difficulty": 11,
       "type": "ln"
     },
     {
-      "label": "MWC 2025 QF RC",
-      "difficulty": 10.4
-    },
-    {
-      "label": "MWC 2025 Ro16 LN",
+      "label": "MWC 2025 QF LN",
       "difficulty": 10.2,
       "type": "ln"
     },
     {
-      "label": "MWC 2025 Ro16 RC",
-      "difficulty": 9.5
+      "label": "MWC 2025 QF RC",
+      "difficulty": 10.2
     },
     {
-      "label": "MWC 2025 Ro32 LN",
-      "difficulty": 9.2,
+      "label": "MWC 2025 Ro16 LN",
+      "difficulty": 9.3,
       "type": "ln"
     },
     {
-      "label": "THMC 4 Ro32 LN",
-      "difficulty": 8.3,
+      "label": "MWC 2025 Ro16 RC",
+      "difficulty": 9
+    },
+    {
+      "label": "MWC 2025 Ro32 LN",
+      "difficulty": 8,
       "type": "ln"
     },
     {
       "label": "MWC 2025 Ro32 RC",
-      "difficulty": 7.9
+      "difficulty": 7.7
+    },
+    {
+      "label": "THMC 4 Ro32 LN",
+      "difficulty": 6.8,
+      "type": "ln"
     },
     {
       "label": "THMC 4 Ro32 RC",

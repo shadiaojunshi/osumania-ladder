@@ -79,7 +79,7 @@
           "type": "RC",
           "realType": "DP",
           "name": "Creepy Nuts - Otonoke [Stage 7: Supernatural]",
-          "difficulty": 10,
+          "difficulty": 9.5,
           "beatmapId": 5256642,
           "beatmapsetId": 2417729
         }
@@ -89,7 +89,7 @@
           "rf": 9.5
         },
         "HB": {
-          "rf": 9.5,
+          "rf": 8,
           "ln": 10.5
         },
         "LN": {
@@ -243,8 +243,8 @@
         },
         "SV": {},
         "TB": {
-          "rf": 9,
-          "ln": 10
+          "rf": 8.5,
+          "ln": 9.5
         }
       }
     },
@@ -394,8 +394,8 @@
         },
         "SV": {},
         "TB": {
-          "rf": 10,
-          "ln": 11
+          "rf": 9.8,
+          "ln": 10.8
         }
       }
     },
@@ -902,8 +902,8 @@
           "rf": 12.3
         },
         "HB": {
-          "rf": 11.5,
-          "ln": 12.2
+          "rf": 11.4,
+          "ln": 12
         },
         "LN": {
           "ln": 12.2
@@ -923,7 +923,7 @@
       "difficulty": {
         "min": 12,
         "max": 13.7,
-        "average": 13.3
+        "average": 13.2
       },
       "maps": [
         {
@@ -1085,14 +1085,14 @@
       ],
       "typeDifficulties": {
         "RC": {
-          "rf": 13.4
+          "rf": 13.3
         },
         "HB": {
           "rf": 12.6,
           "ln": 13.2
         },
         "LN": {
-          "ln": 13.3
+          "ln": 13.2
         },
         "SV": {},
         "TB": {

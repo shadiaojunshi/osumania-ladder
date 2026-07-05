@@ -14,8 +14,8 @@
       "isQualifier": true,
       "difficulty": {
         "min": 6,
-        "max": 9.5,
-        "average": 7.9
+        "max": 10,
+        "average": 8.4
       },
       "maps": [
         {
@@ -85,7 +85,8 @@
         "LN": {
           "ln": 7.5
         },
-        "SV": {}
+        "SV": {},
+        "TB": {}
       },
       "bestOf": 6
     },
@@ -96,8 +97,8 @@
       "order": 2,
       "difficulty": {
         "min": 5,
-        "max": 10,
-        "average": 6.7
+        "max": 9,
+        "average": 6.8
       },
       "maps": [
         {
@@ -177,7 +178,7 @@
           "type": "RC",
           "realType": "STC",
           "name": "EastNewSound - Hana wa gensou no Hate ni [Phantasmagoria x1.15]",
-          "difficulty": 10,
+          "difficulty": 8.5,
           "beatmapId": 4164636,
           "beatmapsetId": 2002645
         },
@@ -186,7 +187,7 @@
           "type": "RC",
           "realType": "MX",
           "name": "Hachimitsu Lemon - far away [Nocturne]",
-          "difficulty": 10,
+          "difficulty": 8.5,
           "beatmapId": 4954291,
           "beatmapsetId": 1661860
         },
@@ -212,7 +213,7 @@
           "type": "TB",
           "realType": "TB",
           "name": "Spacelectro feat. momogami - Colorless [Colorful]",
-          "difficulty": 8,
+          "difficulty": 7.5,
           "beatmapId": 4954286,
           "beatmapsetId": 2314977,
           "difficultyLn": 8
@@ -229,7 +230,11 @@
         "LN": {
           "ln": 6.7
         },
-        "SV": {}
+        "SV": {},
+        "TB": {
+          "rf": 7.5,
+          "ln": 8
+        }
       }
     },
     {
@@ -238,9 +243,9 @@
       "abbreviation": "RO32",
       "order": 3,
       "difficulty": {
-        "min": 6.8,
-        "max": 7.7,
-        "average": 7.1
+        "min": 4.5,
+        "max": 8,
+        "average": 6.6
       },
       "maps": [
         {
@@ -248,7 +253,7 @@
           "type": "RC",
           "realType": "SS",
           "name": "senya - Yozakura ni Kimi wo Kakushite [1.05 cut edited by YuEast 2018]",
-          "difficulty": 6.8,
+          "difficulty": 6.4,
           "beatmapId": 4983634,
           "beatmapsetId": 1844571
         },
@@ -257,7 +262,7 @@
           "type": "RC",
           "realType": "JS",
           "name": "IOSYS - Chanteikku Sanyousei no Itazura Daisensou [Ya! / 1.10]",
-          "difficulty": 6.8,
+          "difficulty": 6.4,
           "beatmapId": 4986112,
           "beatmapsetId": 2326028
         },
@@ -266,7 +271,7 @@
           "type": "RC",
           "realType": "CJ",
           "name": "Chiyoko - Alice's Mad Tea Party [Trickster's Spell 1.25x]",
-          "difficulty": 6.8,
+          "difficulty": 6.4,
           "beatmapId": 4985569,
           "beatmapsetId": 2325599
         },
@@ -275,7 +280,7 @@
           "type": "RC",
           "realType": "DP",
           "name": "ShinRa-Bansho - Vodka niwa Tonic (Cut Ver.) [Alcoholism (w/ Reimu)]",
-          "difficulty": 6.8,
+          "difficulty": 6.4,
           "beatmapId": 4984994,
           "beatmapsetId": 2325598
         },
@@ -284,7 +289,7 @@
           "type": "RC",
           "realType": "ADP",
           "name": "Down - Ekoro [YuEast's [RO32 RC WC +Classic]]",
-          "difficulty": 6.8,
+          "difficulty": 6.4,
           "beatmapId": 4984986,
           "beatmapsetId": 2023038
         },
@@ -293,7 +298,7 @@
           "type": "RC",
           "realType": "MX",
           "name": "A-One feat. Shihori - Magic Girl !! [yup]",
-          "difficulty": 6.8,
+          "difficulty": 8,
           "beatmapId": 4985002,
           "beatmapsetId": 2325600
         },
@@ -302,25 +307,25 @@
           "type": "HB",
           "realType": "HB1",
           "name": "BUTAOTOME - Towa no Maigo [Gastronomic Alchemy]",
-          "difficulty": 6.5,
+          "difficulty": 4.5,
           "beatmapId": 4985013,
           "beatmapsetId": 2325603,
-          "difficultyLn": 7.5
+          "difficultyLn": 6.5
         },
         {
           "slot": "HB2",
           "type": "HB",
           "realType": "HB2",
           "name": "",
-          "difficulty": 6.5,
-          "difficultyLn": 7.5
+          "difficulty": 5,
+          "difficultyLn": 6.5
         },
         {
           "slot": "LN1",
           "type": "LN",
           "realType": "CO",
           "name": "An - artcore JINJA [coordination JINJA]",
-          "difficulty": 7.7,
+          "difficulty": 5.5,
           "beatmapId": 4985049,
           "beatmapsetId": 2325618
         },
@@ -329,7 +334,7 @@
           "type": "LN",
           "realType": "DE",
           "name": "Halozy - Paranoid Lost (Cut Ver.) [I'm lost in the starry autumn sky.]",
-          "difficulty": 7.7,
+          "difficulty": 6.8,
           "beatmapId": 4986115,
           "beatmapsetId": 2326029
         },
@@ -338,7 +343,7 @@
           "type": "LN",
           "realType": "LNMX",
           "name": "Akatsuki Records - Adieu, to this Lively Graveyard [Zombie]",
-          "difficulty": 7.7,
+          "difficulty": 6.8,
           "beatmapId": 4985039,
           "beatmapsetId": 2325613
         },
@@ -347,7 +352,7 @@
           "type": "LN",
           "realType": "LNMX",
           "name": "Akatsuki Records - Necromantic (Cut Ver.) [WakuwakuDokidoki]",
-          "difficulty": 7.7,
+          "difficulty": 7,
           "beatmapId": 4985037,
           "beatmapsetId": 2135171
         },
@@ -356,24 +361,28 @@
           "type": "TB",
           "realType": "TB",
           "name": "JAKAZiD & nora2r - Heian no Alien (Night Striker Mix) [Speed Up X]",
-          "difficulty": 8,
+          "difficulty": 6.5,
           "beatmapId": 4985046,
           "beatmapsetId": 2325616,
-          "difficultyLn": 8
+          "difficultyLn": 7.8
         }
       ],
       "typeDifficulties": {
         "RC": {
-          "rf": 6.8
+          "rf": 6.4
         },
         "HB": {
-          "rf": 6.5,
-          "ln": 7.5
+          "rf": 5,
+          "ln": 6.5
         },
         "LN": {
-          "ln": 7.7
+          "ln": 6.8
         },
-        "SV": {}
+        "SV": {},
+        "TB": {
+          "rf": 7,
+          "ln": 7.8
+        }
       }
     },
     {
@@ -382,7 +391,7 @@
       "abbreviation": "RO16",
       "order": 4,
       "difficulty": {
-        "min": 7.5,
+        "min": 7,
         "max": 8.7,
         "average": 8.4
       },
@@ -519,7 +528,8 @@
         "LN": {
           "ln": 8.7
         },
-        "SV": {}
+        "SV": {},
+        "TB": {}
       }
     },
     {
@@ -528,9 +538,9 @@
       "abbreviation": "QF",
       "order": 5,
       "difficulty": {
-        "min": 8.9,
+        "min": 8.6,
         "max": 9.7,
-        "average": 9.3
+        "average": 9.4
       },
       "maps": [
         {
@@ -682,7 +692,8 @@
         "LN": {
           "ln": 9.7
         },
-        "SV": {}
+        "SV": {},
+        "TB": {}
       }
     },
     {
@@ -691,7 +702,7 @@
       "abbreviation": "SF",
       "order": 6,
       "difficulty": {
-        "min": 9.9,
+        "min": 9.7,
         "max": 10.5,
         "average": 10.4
       },
@@ -847,7 +858,8 @@
         "LN": {
           "ln": 10.5
         },
-        "SV": {}
+        "SV": {},
+        "TB": {}
       }
     },
     {
@@ -856,7 +868,7 @@
       "abbreviation": "F",
       "order": 7,
       "difficulty": {
-        "min": 11.4,
+        "min": 11.2,
         "max": 12.2,
         "average": 11.9
       },
@@ -1028,7 +1040,8 @@
         "LN": {
           "ln": 12.2
         },
-        "SV": {}
+        "SV": {},
+        "TB": {}
       }
     },
     {
@@ -1037,9 +1050,9 @@
       "abbreviation": "GF",
       "order": 8,
       "difficulty": {
-        "min": 12.6,
+        "min": 12.3,
         "max": 12.9,
-        "average": 12.7
+        "average": 12.8
       },
       "maps": [
         {
@@ -1205,7 +1218,8 @@
         "LN": {
           "ln": 12.9
         },
-        "SV": {}
+        "SV": {},
+        "TB": {}
       }
     }
   ],

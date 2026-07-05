@@ -1,8 +1,20 @@
 {
   "entries": [
     {
-      "tournamentId": "touhou-project-mania-cup-4th",
+      "tournamentId": "newcomers-mania-world-cup-2025",
+      "roundId": "round-4"
+    },
+    {
+      "tournamentId": "newcomers-mania-world-cup-2025",
+      "roundId": "round-5"
+    },
+    {
+      "tournamentId": "china-university-cup-4k-2026",
       "roundId": "round-2"
+    },
+    {
+      "tournamentId": "china-university-cup-4k-2026",
+      "roundId": "round-4"
     },
     {
       "tournamentId": "touhou-project-mania-cup-4th",
@@ -35,6 +47,14 @@
     {
       "tournamentId": "osumania-4k-chinese-national-cup-2025",
       "roundId": "round-8"
+    },
+    {
+      "tournamentId": "abstraction-cup",
+      "roundId": "round-8"
+    },
+    {
+      "tournamentId": "korean-extraterrestrials-tournament-2",
+      "roundId": "round-6"
     }
   ]
 }

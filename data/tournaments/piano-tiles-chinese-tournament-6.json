@@ -84,7 +84,8 @@
         "RC": {},
         "HB": {},
         "LN": {},
-        "SV": {}
+        "SV": {},
+        "TB": {}
       }
     },
     {
@@ -93,9 +94,9 @@
       "abbreviation": "RO32",
       "order": 2,
       "difficulty": {
-        "min": 0,
-        "max": 0,
-        "average": 0
+        "min": 4,
+        "max": 5,
+        "average": 4.3
       },
       "maps": [
         {
@@ -103,7 +104,7 @@
           "type": "RC",
           "realType": "CJ",
           "name": "2TD x Milkoi - Lemon (Cut Ver.) [RC1 : Sparkling Sour]",
-          "difficulty": 0,
+          "difficulty": 4,
           "beatmapId": 5212039,
           "beatmapsetId": 2403167
         },
@@ -112,7 +113,7 @@
           "type": "RC",
           "realType": "JS",
           "name": "DECO*27 - Dilemma feat. Hatsune Miku [Deadlock]",
-          "difficulty": 0,
+          "difficulty": 5,
           "beatmapId": 5211870,
           "beatmapsetId": 2403094
         },
@@ -121,7 +122,7 @@
           "type": "RC",
           "realType": "SS",
           "name": "xi - Ascension to Heaven (Cut Ver.) [Renaissance 1.05x]",
-          "difficulty": 0,
+          "difficulty": 4.5,
           "beatmapId": 5211862,
           "beatmapsetId": 2403091
         },
@@ -130,14 +131,14 @@
           "type": "RC",
           "realType": "MTC",
           "name": "",
-          "difficulty": 0
+          "difficulty": 4.5
         },
         {
           "slot": "RC5",
           "type": "RC",
           "realType": "DP",
           "name": "inabakumori - Ipace [Seijin no Hi]",
-          "difficulty": 0,
+          "difficulty": 4.5,
           "beatmapId": 5068228,
           "beatmapsetId": 2354223
         },
@@ -146,7 +147,7 @@
           "type": "LN",
           "realType": "RE",
           "name": "Ozato Fumika (CV: Akabane Kyouko) - wish (Game Ver.) [Koibito [Insane]]",
-          "difficulty": 0,
+          "difficulty": 4,
           "beatmapId": 4986835,
           "beatmapsetId": 2324636
         },
@@ -155,7 +156,7 @@
           "type": "LN",
           "realType": "DE",
           "name": "yak_won - Sewing Machine [For LN Density]",
-          "difficulty": 0,
+          "difficulty": 4,
           "beatmapId": 5211859,
           "beatmapsetId": 2403089
         },
@@ -164,7 +165,7 @@
           "type": "LN",
           "realType": "LNMX",
           "name": "Kairiki Bear feat. Hatsune Miku - Bug [Verzephobia]",
-          "difficulty": 0,
+          "difficulty": 4,
           "beatmapId": 3980554,
           "beatmapsetId": 1927554
         },
@@ -200,7 +201,7 @@
           "type": "RC",
           "realType": "MX",
           "name": "Kou! - Sanzui [NSV]",
-          "difficulty": 0,
+          "difficulty": 4.5,
           "beatmapId": 4711831,
           "beatmapsetId": 2187661
         },
@@ -209,7 +210,7 @@
           "type": "LN",
           "realType": "LNMX",
           "name": "BEMANI Sound Team \"ZAQUVA\" - Tickled Pink [Ecastatic OD7]",
-          "difficulty": 0,
+          "difficulty": 4,
           "beatmapId": 5180854,
           "beatmapsetId": 2006411
         },
@@ -225,16 +226,25 @@
           "type": "TB",
           "realType": "TB",
           "name": "Kuba Oms - My Love (takehirotei remix) [Marathon (to be your man)]",
-          "difficulty": 0,
+          "difficulty": 5.5,
           "beatmapId": 5211861,
-          "beatmapsetId": 2403090
+          "beatmapsetId": 2403090,
+          "difficultyLn": 6.2
         }
       ],
       "typeDifficulties": {
-        "RC": {},
+        "RC": {
+          "rf": 4.5
+        },
         "HB": {},
-        "LN": {},
-        "SV": {}
+        "LN": {
+          "ln": 4
+        },
+        "SV": {},
+        "TB": {
+          "rf": 5.5,
+          "ln": 6.2
+        }
       }
     },
     {
@@ -384,7 +394,8 @@
         "RC": {},
         "HB": {},
         "LN": {},
-        "SV": {}
+        "SV": {},
+        "TB": {}
       }
     },
     {
@@ -552,7 +563,8 @@
         "RC": {},
         "HB": {},
         "LN": {},
-        "SV": {}
+        "SV": {},
+        "TB": {}
       }
     },
     {
@@ -725,7 +737,8 @@
         "RC": {},
         "HB": {},
         "LN": {},
-        "SV": {}
+        "SV": {},
+        "TB": {}
       }
     },
     {
@@ -915,7 +928,8 @@
         "RC": {},
         "HB": {},
         "LN": {},
-        "SV": {}
+        "SV": {},
+        "TB": {}
       }
     },
     {
@@ -1103,7 +1117,8 @@
         "RC": {},
         "HB": {},
         "LN": {},
-        "SV": {}
+        "SV": {},
+        "TB": {}
       }
     }
   ],

@@ -990,9 +990,9 @@
       "abbreviation": "GF",
       "order": 8,
       "difficulty": {
-        "min": 14,
+        "min": 13.5,
         "max": 15,
-        "average": 15
+        "average": 14.4
       },
       "maps": [
         {
@@ -1000,7 +1000,7 @@
           "type": "RC",
           "realType": "SS",
           "name": "In Flames - Crawl Through Knives [Skwid's Insane [1.05x]]",
-          "difficulty": 0,
+          "difficulty": 14.3,
           "beatmapId": 5743195,
           "beatmapsetId": 2577822
         },
@@ -1009,7 +1009,7 @@
           "type": "RC",
           "realType": "JS",
           "name": "Camellia - Chimera Dragons (Cut Ver.) [Magnificent 1.05x (315bpm)]",
-          "difficulty": 0,
+          "difficulty": 14.3,
           "beatmapId": 5743234,
           "beatmapsetId": 2577831
         },
@@ -1018,7 +1018,7 @@
           "type": "RC",
           "realType": "SA",
           "name": "Warmen - Return Of Salieri [He's returning with bags of Wabaloobunga...]",
-          "difficulty": 0,
+          "difficulty": 14.2,
           "beatmapId": 4580605,
           "beatmapsetId": 2170463
         },
@@ -1027,7 +1027,7 @@
           "type": "RC",
           "realType": "CJ",
           "name": "seatrus - Hakusen wo Watatte [Beyond The Skyline [1.1x]]",
-          "difficulty": 0,
+          "difficulty": 13.7,
           "beatmapId": 5308140,
           "beatmapsetId": 2266062
         },
@@ -1036,7 +1036,7 @@
           "type": "RC",
           "realType": "WTC",
           "name": "Terminal 11 - Mishnu [Post-traumatic nostalgic disorder]",
-          "difficulty": 0,
+          "difficulty": 13.7,
           "beatmapId": 5743083,
           "beatmapsetId": 2577792
         },
@@ -1045,7 +1045,7 @@
           "type": "RC",
           "realType": "MX",
           "name": "Azuma Lim - Jinrui Mina Senpai! (Mtell & Ange;art Hardcore Bootleg) [SenpaiDump x1.1]",
-          "difficulty": 0,
+          "difficulty": 14.1,
           "beatmapId": 3385337,
           "beatmapsetId": 1658476
         },
@@ -1054,7 +1054,7 @@
           "type": "RC",
           "realType": "WTC",
           "name": "Rahatt - Infectious Crying [1.1x (264bpm)]",
-          "difficulty": 0,
+          "difficulty": 14.1,
           "beatmapId": 5066727,
           "beatmapsetId": 2353671
         },
@@ -1063,7 +1063,7 @@
           "type": "RC",
           "realType": "TC",
           "name": "Asunojokei - Chimera [Blessia/Sunyata's Antinomy [1.1x]]",
-          "difficulty": 0,
+          "difficulty": 14.1,
           "beatmapId": 5743216,
           "beatmapsetId": 2577827
         },
@@ -1082,27 +1082,27 @@
           "type": "HB",
           "realType": "HB2",
           "name": "Mono. - Everlasting Game [Checkmate]",
-          "difficulty": 14,
+          "difficulty": 13.5,
           "beatmapId": 4034178,
           "beatmapsetId": 1948932,
-          "difficultyLn": 15
+          "difficultyLn": 14.5
         },
         {
           "slot": "HB3",
           "type": "HB",
           "realType": "HB3",
           "name": "Ludicin - Bismuth [Ethereal (cut)]",
-          "difficulty": 14,
+          "difficulty": 13.5,
           "beatmapId": 4266965,
           "beatmapsetId": 2044387,
-          "difficultyLn": 15
+          "difficultyLn": 14.5
         },
         {
           "slot": "LN1",
           "type": "LN",
           "realType": "TE",
           "name": "Ashrount - AureoLe ~for Triumph~ [Akatsumi x Danny's Triumph and Regret]",
-          "difficulty": 0,
+          "difficulty": 14.2,
           "beatmapId": 3848980,
           "beatmapsetId": 1861302
         },
@@ -1111,7 +1111,7 @@
           "type": "LN",
           "realType": "DE",
           "name": "Laur - Gears of Fate [Vanitas [1.1x Rate]]",
-          "difficulty": 0,
+          "difficulty": 14.2,
           "beatmapId": 5147805,
           "beatmapsetId": 2381210
         },
@@ -1120,7 +1120,7 @@
           "type": "LN",
           "realType": "SW",
           "name": "Twenty One Pilots - Heathens (Magnetude Bootleg) (Cut Ver.) [Ainer's Desperation 1.1x]",
-          "difficulty": 0,
+          "difficulty": 14.2,
           "beatmapId": 5743206,
           "beatmapsetId": 2577825
         },
@@ -1129,7 +1129,7 @@
           "type": "LN",
           "realType": "JW",
           "name": "Helix - Overkill [Y (cut) 1.05x]",
-          "difficulty": 0,
+          "difficulty": 14.2,
           "beatmapId": 4020964,
           "beatmapsetId": 1943729
         },
@@ -1138,7 +1138,7 @@
           "type": "LN",
           "realType": "LNMX",
           "name": "Supire - KUKRI [breathe.]",
-          "difficulty": 0,
+          "difficulty": 14.2,
           "beatmapId": 5743123,
           "beatmapsetId": 2577812
         },
@@ -1154,12 +1154,16 @@
         }
       ],
       "typeDifficulties": {
-        "RC": {},
+        "RC": {
+          "rf": 14.1
+        },
         "HB": {
           "rf": 14,
           "ln": 15
         },
-        "LN": {},
+        "LN": {
+          "ln": 14.2
+        },
         "SV": {},
         "TB": {
           "rf": 14.7,

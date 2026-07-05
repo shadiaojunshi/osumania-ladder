@@ -95,7 +95,8 @@
         "RC": {},
         "HB": {},
         "LN": {},
-        "SV": {}
+        "SV": {},
+        "TB": {}
       }
     },
     {
@@ -169,7 +170,8 @@
         "RC": {},
         "HB": {},
         "LN": {},
-        "SV": {}
+        "SV": {},
+        "TB": {}
       }
     },
     {
@@ -178,9 +180,9 @@
       "abbreviation": "RO32",
       "order": 3,
       "difficulty": {
-        "min": 0,
-        "max": 0,
-        "average": 0
+        "min": 0.6,
+        "max": 1,
+        "average": 0.9
       },
       "maps": [
         {
@@ -188,7 +190,7 @@
           "type": "RC",
           "realType": "JS",
           "name": "aran - be on your mind (cut ver.) [Recollection 1.05x (134bpm)]",
-          "difficulty": 0,
+          "difficulty": 0.8,
           "beatmapId": 5387933,
           "beatmapsetId": 2462513
         },
@@ -197,7 +199,7 @@
           "type": "RC",
           "realType": "SS",
           "name": "LUCY - Jogging [Never Stop Running 1.1x (152bpm)]",
-          "difficulty": 0,
+          "difficulty": 0.8,
           "beatmapId": 5381511,
           "beatmapsetId": 2460336
         },
@@ -206,7 +208,7 @@
           "type": "RC",
           "realType": "TC",
           "name": "Silentroom - NULCTRL [NU\\CTR\\]",
-          "difficulty": 0,
+          "difficulty": 0.8,
           "beatmapId": 5387938,
           "beatmapsetId": 2462515
         },
@@ -215,7 +217,7 @@
           "type": "RC",
           "realType": "MX",
           "name": "Rin - Daishibyo set 14 ~ Sado no Futatsuiwa [Realm of Endless Dreams]",
-          "difficulty": 0,
+          "difficulty": 0.8,
           "beatmapId": 5387939,
           "beatmapsetId": 2462516
         },
@@ -224,7 +226,7 @@
           "type": "LN",
           "realType": "RE",
           "name": "Nasu Asako - flora (Short Ver.) [4k LN]",
-          "difficulty": 0,
+          "difficulty": 1,
           "beatmapId": 5378780,
           "beatmapsetId": 2459329
         },
@@ -233,7 +235,7 @@
           "type": "LN",
           "realType": "DE",
           "name": "t+pazolite - Garakuta Doll Play [Voodoo]",
-          "difficulty": 0,
+          "difficulty": 1,
           "beatmapId": 5387943,
           "beatmapsetId": 2462520
         },
@@ -242,27 +244,30 @@
           "type": "HB",
           "realType": "HB1",
           "name": "Marvelous Sunday (CV: Marie Miyake) - Marvelous Sunday Time (Cut Version) [A Sad Monday // Hard]",
-          "difficulty": 0,
+          "difficulty": 0.6,
           "beatmapId": 5387617,
-          "beatmapsetId": 2462442
+          "beatmapsetId": 2462442,
+          "difficultyLn": 1
         },
         {
           "slot": "HB2",
           "type": "HB",
           "realType": "LNmainHB",
           "name": "Silence Wang feat. BY2 - You Dian Tian [Haru's Love Is Blooming (NMWC Ver.)]",
-          "difficulty": 0,
+          "difficulty": 0.6,
           "beatmapId": 5387953,
-          "beatmapsetId": 2462521
+          "beatmapsetId": 2462521,
+          "difficultyLn": 1
         },
         {
           "slot": "HB3",
           "type": "HB",
           "realType": "HB3",
           "name": "Ardolf - (execute.) [event MissionStart: run(\"N\")]",
-          "difficulty": 0,
+          "difficulty": 0.6,
           "beatmapId": 5387734,
-          "beatmapsetId": 2057633
+          "beatmapsetId": 2057633,
+          "difficultyLn": 1
         },
         {
           "slot": "SV",
@@ -287,14 +292,22 @@
           "type": "RC",
           "realType": "CJ",
           "name": "RC5",
-          "difficulty": 0
+          "difficulty": 0.8
         }
       ],
       "typeDifficulties": {
-        "RC": {},
-        "HB": {},
-        "LN": {},
-        "SV": {}
+        "RC": {
+          "rf": 0.8
+        },
+        "HB": {
+          "rf": 0.6,
+          "ln": 1
+        },
+        "LN": {
+          "ln": 1
+        },
+        "SV": {},
+        "TB": {}
       }
     },
     {
@@ -303,9 +316,9 @@
       "abbreviation": "RO16",
       "order": 4,
       "difficulty": {
-        "min": 0,
-        "max": 0,
-        "average": 0
+        "min": 1,
+        "max": 2.2,
+        "average": 1.9
       },
       "maps": [
         {
@@ -313,7 +326,7 @@
           "type": "RC",
           "realType": "JS",
           "name": "PIKASONIC - Today is not tomorrow [Today is the day [1.2x Rate](edit)]",
-          "difficulty": 0,
+          "difficulty": 1.6,
           "beatmapId": 5390396,
           "beatmapsetId": 2463266
         },
@@ -322,7 +335,7 @@
           "type": "RC",
           "realType": "SS",
           "name": "Falcom Sound Team jdk - Over Drive [Origin]",
-          "difficulty": 0,
+          "difficulty": 1.6,
           "beatmapId": 5398013,
           "beatmapsetId": 2465778
         },
@@ -331,7 +344,7 @@
           "type": "RC",
           "realType": "TC",
           "name": "RoughSketch - Ghost Family Living In Graveyard [Ghost troper]",
-          "difficulty": 0,
+          "difficulty": 1.6,
           "beatmapId": 5398014,
           "beatmapsetId": 2465779
         },
@@ -340,7 +353,7 @@
           "type": "RC",
           "realType": "CJ",
           "name": "ePiaeon - FLOP ERA [Neru in 2025!]",
-          "difficulty": 0,
+          "difficulty": 1.6,
           "beatmapId": 5398016,
           "beatmapsetId": 2465781
         },
@@ -349,7 +362,7 @@
           "type": "RC",
           "realType": "MX",
           "name": "Ice - iL (Ardolf Remix) (Cut Ver.) [-|-]",
-          "difficulty": 0,
+          "difficulty": 1.6,
           "beatmapId": 5397949,
           "beatmapsetId": 2465756
         },
@@ -358,7 +371,7 @@
           "type": "LN",
           "realType": "CO",
           "name": "G.E.M. - Full Stop(cut ver) [Apart, Depart]",
-          "difficulty": 0,
+          "difficulty": 2.2,
           "beatmapId": 5397986,
           "beatmapsetId": 2465763
         },
@@ -367,7 +380,7 @@
           "type": "LN",
           "realType": "DE",
           "name": "IOSYS - Endless Tewi-ma Park [Bnuuy 1.1x]",
-          "difficulty": 0,
+          "difficulty": 2.2,
           "beatmapId": 5398006,
           "beatmapsetId": 2465776
         },
@@ -376,27 +389,30 @@
           "type": "HB",
           "realType": "HB1",
           "name": "Cafune - Demise [Entranced in sorrow]",
-          "difficulty": 0,
+          "difficulty": 1,
           "beatmapId": 5398005,
-          "beatmapsetId": 2465775
+          "beatmapsetId": 2465775,
+          "difficultyLn": 2
         },
         {
           "slot": "HB2",
           "type": "HB",
           "realType": "LNmainHB",
           "name": "Nanatsukaze - Hazy Moon Night [Haru's Hyper (NMWC Ver.)]",
-          "difficulty": 0,
+          "difficulty": 1,
           "beatmapId": 5397954,
-          "beatmapsetId": 2465759
+          "beatmapsetId": 2465759,
+          "difficultyLn": 2
         },
         {
           "slot": "HB3",
           "type": "HB",
           "realType": "HB3",
           "name": "Chroma - [@__@] [[nm__wc]]",
-          "difficulty": 0,
+          "difficulty": 1,
           "beatmapId": 5398001,
-          "beatmapsetId": 2465773
+          "beatmapsetId": 2465773,
+          "difficultyLn": 2
         },
         {
           "slot": "SV",
@@ -412,16 +428,28 @@
           "type": "TB",
           "realType": "TB",
           "name": "Roselia - PASSIONATE ANTHEM [Under the Piercing Sunset]",
-          "difficulty": 0,
+          "difficulty": 2.2,
           "beatmapId": 5398015,
-          "beatmapsetId": 2465780
+          "beatmapsetId": 2465780,
+          "difficultyLn": 3
         }
       ],
       "typeDifficulties": {
-        "RC": {},
-        "HB": {},
-        "LN": {},
-        "SV": {}
+        "RC": {
+          "rf": 1.6
+        },
+        "HB": {
+          "rf": 1,
+          "ln": 2
+        },
+        "LN": {
+          "ln": 2.2
+        },
+        "SV": {},
+        "TB": {
+          "rf": 2.2,
+          "ln": 3
+        }
       }
     },
     {
@@ -430,9 +458,9 @@
       "abbreviation": "QF",
       "order": 5,
       "difficulty": {
-        "min": 0,
-        "max": 0,
-        "average": 0
+        "min": 2.6,
+        "max": 3.5,
+        "average": 3.2
       },
       "maps": [
         {
@@ -440,7 +468,7 @@
           "type": "RC",
           "realType": "JS",
           "name": "Starving Trancer feat. Mayumi Morinaga - The Night Away [Wish you a good night]",
-          "difficulty": 0,
+          "difficulty": 2.8,
           "beatmapId": 5406895,
           "beatmapsetId": 2469021
         },
@@ -449,7 +477,7 @@
           "type": "RC",
           "realType": "SS",
           "name": "Nekomata Master feat. Misawa Aki - chrono diver -fragment- (Game Ver.) [Tranquil Aspiration]",
-          "difficulty": 0,
+          "difficulty": 2.8,
           "beatmapId": 5406958,
           "beatmapsetId": 2469039
         },
@@ -458,7 +486,7 @@
           "type": "RC",
           "realType": "TC",
           "name": "Mr. Bill - Pastel (voljum Remix) (Cut Ver.) [elexire's Hard]",
-          "difficulty": 0,
+          "difficulty": 2.8,
           "beatmapId": 4841231,
           "beatmapsetId": 2230124
         },
@@ -467,7 +495,7 @@
           "type": "RC",
           "realType": "CJ",
           "name": "Okabe Keiichi feat. Takamitsu Youko - Angel Dream [HD (1.05x)]",
-          "difficulty": 0,
+          "difficulty": 2.8,
           "beatmapId": 5404586,
           "beatmapsetId": 2468212
         },
@@ -476,7 +504,7 @@
           "type": "RC",
           "realType": "DP",
           "name": "Seren Azuma - To. X [Regret]",
-          "difficulty": 0,
+          "difficulty": 2.8,
           "beatmapId": 5406602,
           "beatmapsetId": 2468940
         },
@@ -485,7 +513,7 @@
           "type": "RC",
           "realType": "MX",
           "name": "Ardolf - DEATHDOOR (Instrumental Version) (Cut Ver.) [Day of Reckoning (w/ Dzar)]",
-          "difficulty": 0,
+          "difficulty": 2.8,
           "beatmapId": 5406809,
           "beatmapsetId": 2468993
         },
@@ -494,7 +522,7 @@
           "type": "LN",
           "realType": "RE",
           "name": "Ichi - 4nim0sity [99.999999999%] (Cut Ver.) [4crim0ny (for the 0.000000001% of yearning still inside me)]",
-          "difficulty": 0,
+          "difficulty": 3.4,
           "beatmapId": 5406894,
           "beatmapsetId": 2469020
         },
@@ -503,7 +531,7 @@
           "type": "LN",
           "realType": "DE",
           "name": "lapix - Debug Dance [System Reform]",
-          "difficulty": 0,
+          "difficulty": 3.4,
           "beatmapId": 5406926,
           "beatmapsetId": 2469034
         },
@@ -512,36 +540,40 @@
           "type": "HB",
           "realType": "HB1",
           "name": "Yooh - Elemental Ethnic [Machinegun Ethnic]",
-          "difficulty": 0,
+          "difficulty": 2.6,
           "beatmapId": 5406818,
-          "beatmapsetId": 2468996
+          "beatmapsetId": 2468996,
+          "difficultyLn": 3.5
         },
         {
           "slot": "HB2",
           "type": "HB",
           "realType": "LNmainHB",
           "name": "Rice Shower (CV: Iwami Manaka) - Uma Sugi! Gourmet Parade [Gourmet Paradise]",
-          "difficulty": 0,
+          "difficulty": 2.6,
           "beatmapId": 5406570,
-          "beatmapsetId": 2468923
+          "beatmapsetId": 2468923,
+          "difficultyLn": 3.5
         },
         {
           "slot": "HB3",
           "type": "HB",
           "realType": "HB3",
           "name": "Aoi - excez [Limit Breaker]",
-          "difficulty": 0,
+          "difficulty": 2.6,
           "beatmapId": 5406945,
-          "beatmapsetId": 2469037
+          "beatmapsetId": 2469037,
+          "difficultyLn": 3.5
         },
         {
           "slot": "HB4",
           "type": "HB",
           "realType": "MNTB",
           "name": "BilliumMoto - life flashes before weeb eyes [scotty's hard]",
-          "difficulty": 0,
+          "difficulty": 2.6,
           "beatmapId": 2165199,
-          "beatmapsetId": 985172
+          "beatmapsetId": 985172,
+          "difficultyLn": 3.5
         },
         {
           "slot": "SV",
@@ -557,16 +589,28 @@
           "type": "TB",
           "realType": "TB",
           "name": "Cuzime & Nstryder - Windswept [You and Me, Travelling Under the Starry Sky]",
-          "difficulty": 0,
+          "difficulty": 3.2,
           "beatmapId": 5406518,
-          "beatmapsetId": 2468897
+          "beatmapsetId": 2468897,
+          "difficultyLn": 4.2
         }
       ],
       "typeDifficulties": {
-        "RC": {},
-        "HB": {},
-        "LN": {},
-        "SV": {}
+        "RC": {
+          "rf": 2.8
+        },
+        "HB": {
+          "rf": 2.6,
+          "ln": 3.5
+        },
+        "LN": {
+          "ln": 3.4
+        },
+        "SV": {},
+        "TB": {
+          "rf": 3.2,
+          "ln": 4.2
+        }
       }
     },
     {
@@ -709,7 +753,8 @@
         "RC": {},
         "HB": {},
         "LN": {},
-        "SV": {}
+        "SV": {},
+        "TB": {}
       }
     },
     {
@@ -879,7 +924,8 @@
         "RC": {},
         "HB": {},
         "LN": {},
-        "SV": {}
+        "SV": {},
+        "TB": {}
       }
     },
     {
@@ -1051,7 +1097,8 @@
         "RC": {},
         "HB": {},
         "LN": {},
-        "SV": {}
+        "SV": {},
+        "TB": {}
       }
     }
   ],

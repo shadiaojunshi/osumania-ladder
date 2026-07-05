@@ -992,7 +992,7 @@
       "difficulty": {
         "min": 13.5,
         "max": 15,
-        "average": 14.4
+        "average": 14.5
       },
       "maps": [
         {
@@ -1155,7 +1155,7 @@
       ],
       "typeDifficulties": {
         "RC": {
-          "rf": 14.1
+          "rf": 14.2
         },
         "HB": {
           "rf": 14,

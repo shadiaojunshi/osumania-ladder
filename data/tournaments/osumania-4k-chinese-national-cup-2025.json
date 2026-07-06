@@ -607,7 +607,7 @@
       "order": 6,
       "difficulty": {
         "min": 11.4,
-        "max": 13.8,
+        "max": 13.4,
         "average": 12.2
       },
       "maps": [
@@ -658,7 +658,7 @@
           "type": "RC",
           "realType": "WTC",
           "name": "RC7",
-          "difficulty": 13.8
+          "difficulty": 13.4
         },
         {
           "slot": "HB1",
@@ -726,7 +726,7 @@
           "rf": 12.4
         },
         "HB": {
-          "rf": 11.4,
+          "rf": 11.8,
           "ln": 12
         },
         "LN": {
@@ -746,7 +746,7 @@
       "order": 7,
       "difficulty": {
         "min": 12.6,
-        "max": 13.3,
+        "max": 13.9,
         "average": 13.23
       },
       "maps": [
@@ -804,7 +804,7 @@
           "type": "RC",
           "realType": "TC",
           "name": "RC8",
-          "difficulty": 13.3
+          "difficulty": 13.9
         },
         {
           "slot": "HB1",

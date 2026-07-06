@@ -322,13 +322,21 @@ export function BulkImporter({ onImport, onClose, existingRoundCount }: Props) {
         const realType = matchedRealTypes?.[ri] || fallbackRealType
         const type = category === 'SPECIAL' ? r.slot.replace(/\d+$/, '') : category
         const slot = tbCount === 1 && /^TB1?$/i.test(r.slot) ? 'TB' : r.slot
+        // 识别成功:写 name + beatmapId + beatmapsetId。
+        // 识别失败但贴了 BID(r.mapId 是 beatmap id):仍保留 beatmapId,
+        // 只是没有 beatmapsetId → 上传流程(要 set id)自然跳过它,但 BID 不丢。
+        const fallbackBid = !m && /^\d+$/.test(r.mapId) ? Number(r.mapId) : undefined
         return {
           slot,
           type,
           realType,
           name: m ? `${m.artist} - ${m.title} [${m.version}]` : '',
           difficulty: 0,
-          ...(m && { beatmapId: Number(m.beatmapId), beatmapsetId: Number(m.beatmapsetId) }),
+          ...(m
+            ? { beatmapId: Number(m.beatmapId), beatmapsetId: Number(m.beatmapsetId) }
+            : fallbackBid !== undefined
+              ? { beatmapId: fallbackBid }
+              : {}),
           category,
         }
       })

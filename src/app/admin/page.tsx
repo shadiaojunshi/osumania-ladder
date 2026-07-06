@@ -51,6 +51,8 @@ export default function AdminPage() {
   const [submitStatus, setSubmitStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
   const [tab, setTab] = useState<Tab>('create')
   const [loadingList, setLoadingList] = useState(false)
+  // 编辑/新建表单是否有未保存修改(由 TournamentForm 冒泡上来),用于切栏拦截
+  const [formDirty, setFormDirty] = useState(false)
 
   // 角色判断
   const has = useCallback(
@@ -250,6 +252,12 @@ export default function AdminPage() {
   const tabBtn = (key: Tab, label: string) => (
     <button
       onClick={() => {
+        if (key === tab) return
+        // 正在 create 栏且有未保存修改时,离开前确认
+        if (tab === 'create' && formDirty && key !== 'create') {
+          if (!window.confirm(t('admin.leaveUnsaved'))) return
+          setFormDirty(false)
+        }
         if (key === 'create') handleNewTournament()
         if (key === 'manage') fetchList()
         setTab(key)
@@ -301,7 +309,7 @@ export default function AdminPage() {
               </div>
             )}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <TournamentForm onUpdate={setTournament} initialData={editInitialData} submitSuccess={submitStatus?.type === 'success'} />
+              <TournamentForm onUpdate={setTournament} initialData={editInitialData} submitSuccess={submitStatus?.type === 'success'} onDirtyChange={setFormDirty} />
               <JsonPreview
                 tournament={tournament}
                 onSubmit={handleSubmit}

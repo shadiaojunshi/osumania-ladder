@@ -13,6 +13,8 @@ interface Props {
   onUpdate: (tournament: Tournament | null) => void
   initialData?: Tournament | null
   submitSuccess?: boolean
+  // 向上冒泡"有未保存修改",供 admin 页在切换其他栏时拦截提示
+  onDirtyChange?: (dirty: boolean) => void
 }
 
 const EMPTY_TOURNAMENT: Tournament = {
@@ -26,11 +28,16 @@ const EMPTY_TOURNAMENT: Tournament = {
   customTypes: [],
 }
 
-export function TournamentForm({ onUpdate, initialData, submitSuccess }: Props) {
+export function TournamentForm({ onUpdate, initialData, submitSuccess, onDirtyChange }: Props) {
   const [step, setStep] = useState(0)
   const [tournament, setTournament] = useState<Tournament>(EMPTY_TOURNAMENT)
   const [rounds, setRounds] = useState<RoundWithMeta[]>([])
   const [isDirty, setIsDirty] = useState(false)
+
+  // dirty 变化时向上通知(用于跨栏切换拦截)
+  useEffect(() => {
+    onDirtyChange?.(isDirty)
+  }, [isDirty, onDirtyChange])
 
   // 构建谱面历史索引：直接用编译期打进 bundle 的全量 tournaments
   // （/api/tournaments 只返回 {id, sha}[] 清单，没有 rounds，不能用来建索引）
@@ -438,7 +445,7 @@ function RoundsStep({
   rounds: RoundWithMeta[]
   onUpdate: (rounds: RoundWithMeta[]) => void
   onBack: () => void
-  getMapHistory?: (beatmapsetId: number | undefined) => import('@/hooks/useMapHistory').MapHistorySummary | null
+  getMapHistory?: (beatmapId: number | undefined) => import('@/hooks/useMapHistory').MapHistorySummary | null
 }) {
   const t = useT()
   const [importerOpen, setImporterOpen] = useState(false)
@@ -511,6 +518,7 @@ function RoundsStep({
           onChange={(r) => updateRound(i, r)}
           onRemove={() => removeRound(i)}
           getMapHistory={getMapHistory}
+          siblingAbbrs={rounds.map((r) => r.abbreviation)}
         />
       ))}
 

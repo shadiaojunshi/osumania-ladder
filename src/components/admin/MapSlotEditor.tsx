@@ -88,7 +88,7 @@ interface Props {
   map: ExtendedMap
   onChange: (map: ExtendedMap) => void
   onRemove: () => void
-  getMapHistory?: (beatmapsetId: number | undefined) => MapHistorySummary | null
+  getMapHistory?: (beatmapId: number | undefined) => MapHistorySummary | null
 }
 
 function needsDualDifficulty(category: MapCategory): boolean {
@@ -125,14 +125,22 @@ export function MapSlotEditor({ map, onChange, onRemove, getMapHistory }: Props)
       )
     : (REAL_TYPES[map.category] || [])
 
-  // 获取历史记录
-  const history = getMapHistory ? getMapHistory(map.beatmapsetId) : null
+  // 获取历史记录(按 beatmapId 匹配:同 set 不同难度不算同一张图)
+  const history = getMapHistory ? getMapHistory(map.beatmapId) : null
 
-  // 检测类型冲突
-  const hasTypeConflict = history &&
+  // 检测类型冲突:大键型(type)或真实类型(realType)只要和历史不一致就提示。
+  // 之前只在大键型不同才弹,导致同为 RC 但 realType 不同(如 Stream vs Jack)不提示。
+  const typeConflict = history &&
     history.totalUses > 0 &&
     map.type !== history.mostCommonType &&
-    history.types.has(map.type) === false  // 当前type从未被使用过
+    history.types.has(map.type) === false  // 当前 type 从未被用过
+  const realTypeConflict = history &&
+    history.totalUses > 0 &&
+    !!map.realType &&
+    !!history.mostCommonRealType &&
+    map.realType !== history.mostCommonRealType &&
+    history.realTypes.has(map.realType) === false  // 当前 realType 从未被用过
+  const hasTypeConflict = typeConflict || realTypeConflict
 
   const updateField = <K extends keyof ExtendedMap>(key: K, value: ExtendedMap[K]) => {
     onChange({ ...map, [key]: value })
@@ -193,10 +201,15 @@ export function MapSlotEditor({ map, onChange, onRemove, getMapHistory }: Props)
 
             {hasTypeConflict && (
               <span className="text-yellow-700 dark:text-yellow-300 text-xs">
-                {t('mapSlot.history.conflict', {
-                  current: map.type,
-                  suggested: history.mostCommonType
-                })}
+                {typeConflict
+                  ? t('mapSlot.history.conflict', {
+                      current: map.type,
+                      suggested: history.mostCommonType,
+                    })
+                  : t('mapSlot.history.conflictRealType', {
+                      current: map.realType,
+                      suggested: history.mostCommonRealType,
+                    })}
               </span>
             )}
           </div>

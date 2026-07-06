@@ -26,10 +26,33 @@ export interface RoundRefValues {
 interface Props {
   // 当前轮缩写,用于自动匹配基准(MWC)同名轮
   roundAbbr: string
+  // 本比赛所有轮缩写(易→难顺序),用于非标准轮靠邻居标准轮反推档位
+  siblingAbbrs?: string[]
+  // 当前轮在 siblingAbbrs 中的下标
+  roundIndex?: number
   // Apply 时把 6 个值写回
   onApply: (values: RoundRefValues) => void
   // 防自引用
   excludeRef?: { tournamentId: string; roundId: string }
+}
+
+// 标准淘汰轮的难度序(easy→hard)。用于当前轮不是 MWC 直接同名轮时,
+// 锚到最近的 MWC 标准轮 + 偏移(1 格 = 标尺相邻一项)。
+// 例:本轮 RO64,MWC 没有 RO64,但有 RO32 → 锚 MWC RO32,偏移 -1(RO64 比 RO32 低一档)。
+// 不含 RO256:MWC 是世界杯性质,不设也不显示这么低的轮;显示一律用 "MWC RO32-N" 形式。
+const STANDARD_ROUND_RANK: Record<string, number> = {
+  RO128: 1,
+  RO64: 2,
+  RO32: 3,
+  RO16: 4,
+  QF: 5,
+  SF: 6,
+  F: 7,
+  GF: 8,
+}
+
+function standardRank(abbr: string): number | undefined {
+  return STANDARD_ROUND_RANK[abbr.trim().toUpperCase()]
 }
 
 // 每个目标字段 → (type, field)。SV 排除。
@@ -42,7 +65,7 @@ const FIELDS: { key: keyof RoundRefValues; type: RefType; field: RefField; label
   { key: 'tbLn', type: 'TB', field: 'ln', label: 'TB(ln)' },
 ]
 
-export function RoundRefPicker({ roundAbbr, onApply, excludeRef }: Props) {
+export function RoundRefPicker({ roundAbbr, siblingAbbrs, roundIndex, onApply, excludeRef }: Props) {
   const t = useT()
   const [open, setOpen] = useState(false)
   const [entries, setEntries] = useState<LadderEntry[] | null>(null)
@@ -63,17 +86,56 @@ export function RoundRefPicker({ roundAbbr, onApply, excludeRef }: Props) {
     [entries]
   )
 
-  // 当前轮缩写自动匹配基准同名轮
-  const autoMatch = useMemo(
-    () => baseRounds.find((r) => r.roundAbbr.toLowerCase() === roundAbbr.trim().toLowerCase()),
-    [baseRounds, roundAbbr]
-  )
+  // 当前轮缩写自动匹配:
+  // 1. 优先 MWC 同名轮(偏移 0)。
+  // 2. 否则若本轮是标准轮(RO256..GF),锚到 rank 最接近的 MWC 标准轮,
+  //    偏移 = 本轮 rank - 该 MWC 轮 rank(可正可负)。
+  //    例:本轮 RO64(rank2),MWC 最低是 RO32(rank3)→ 锚 RO32,偏移 -1。
+  // 3. 都不行(非标准轮 / MWC 无标准轮)→ 无自动匹配,用户手选。
+  const autoMatch = useMemo<{ roundId: string; roundAbbr: string; offset: number; exact: boolean } | null>(() => {
+    if (baseRounds.length === 0) return null
+    const exact = baseRounds.find(
+      (r) => r.roundAbbr.toLowerCase() === roundAbbr.trim().toLowerCase()
+    )
+    if (exact) return { roundId: exact.roundId, roundAbbr: exact.roundAbbr, offset: 0, exact: true }
+
+    // 本轮 rank:先看自身是否标准轮;不是就顺着后面的兄弟轮找第一个标准轮,
+    // 用它的 rank 减去间隔步数反推(淘汰赛里非标准轮的下一/下下轮通常就是标准轮)。
+    let myRank = standardRank(roundAbbr)
+    if (myRank === undefined && siblingAbbrs && roundIndex !== undefined) {
+      for (let j = roundIndex + 1; j < siblingAbbrs.length; j++) {
+        const rk = standardRank(siblingAbbrs[j])
+        if (rk !== undefined) { myRank = rk - (j - roundIndex); break }
+      }
+      // 后面没有标准轮,再往前找(用前一个标准轮 + 间隔)
+      if (myRank === undefined) {
+        for (let j = roundIndex - 1; j >= 0; j--) {
+          const rk = standardRank(siblingAbbrs[j])
+          if (rk !== undefined) { myRank = rk + (roundIndex - j); break }
+        }
+      }
+    }
+    if (myRank === undefined) return null
+    // MWC 里带标准 rank 的轮,取 rank 与本轮最接近的一个
+    let best: { roundId: string; roundAbbr: string; rank: number } | null = null
+    for (const r of baseRounds) {
+      const rk = standardRank(r.roundAbbr)
+      if (rk === undefined) continue
+      if (!best || Math.abs(rk - myRank) < Math.abs(best.rank - myRank)) {
+        best = { roundId: r.roundId, roundAbbr: r.roundAbbr, rank: rk }
+      }
+    }
+    if (!best) return null
+    return { roundId: best.roundId, roundAbbr: best.roundAbbr, offset: myRank - best.rank, exact: false }
+  }, [baseRounds, roundAbbr, siblingAbbrs, roundIndex])
 
   useEffect(() => {
     if (!open) return
     if (baseRounds.length === 0) { setBaseRoundId(''); return }
     if (!baseRounds.find((r) => r.roundId === baseRoundId)) {
       setBaseRoundId(autoMatch?.roundId || baseRounds[0].roundId)
+      // 非精确匹配时把推断出的偏移预填进去(如 RO64 → RO32 -1)
+      if (autoMatch && !autoMatch.exact) setOffset(String(autoMatch.offset))
     }
   }, [open, baseRounds, autoMatch, baseRoundId])
 
@@ -143,8 +205,9 @@ export function RoundRefPicker({ roundAbbr, onApply, excludeRef }: Props) {
         type="button"
         onClick={() => setOpen((o) => !o)}
         title={t('roundRef.title')}
-        className="px-2 py-0.5 text-xs border border-purple-200 dark:border-purple-800 rounded bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-200 hover:bg-purple-100 dark:hover:bg-purple-900/50"
+        className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded border border-purple-400 dark:border-purple-500 bg-purple-600 text-white shadow-sm hover:bg-purple-700 dark:bg-purple-600 dark:hover:bg-purple-500"
       >
+        <span aria-hidden>🎯</span>
         {t('roundRef.button')}
       </button>
 
@@ -188,9 +251,17 @@ export function RoundRefPicker({ roundAbbr, onApply, excludeRef }: Props) {
                       className="w-14 px-1.5 py-1 border border-gray-200 dark:border-neutral-700 rounded text-center bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100"
                     />
                   </div>
-                  {autoMatch ? (
+                  {autoMatch && autoMatch.exact ? (
                     <p className="text-[10px] text-green-600 dark:text-green-400">
                       {t('roundRef.autoMatched', { round: autoMatch.roundAbbr })}
+                    </p>
+                  ) : autoMatch ? (
+                    <p className="text-[10px] text-green-600 dark:text-green-400">
+                      {t('roundRef.resolvedMatch', {
+                        round: roundAbbr || '?',
+                        base: autoMatch.roundAbbr,
+                        offset: autoMatch.offset > 0 ? `+${autoMatch.offset}` : String(autoMatch.offset),
+                      })}
                     </p>
                   ) : (
                     <p className="text-[10px] text-amber-600 dark:text-amber-400">

@@ -42,13 +42,17 @@ function interpolateColor(color1: string, color2: string, t: number): string {
 }
 
 export function getGradientForRange(minDiff: number, maxDiff: number): string {
-  if (maxDiff - minDiff < 1) {
+  const span = maxDiff - minDiff
+  // 跨度极小(几乎单点)才退化成纯色。撑到 ±0.35 的窄框(跨度 0.7)也要有渐变,
+  // 否则最小高度的框看起来是死板的一块纯色。
+  if (span < 0.15) {
     const midColor = getDifficultyColor((minDiff + maxDiff) / 2)
     return midColor
   }
 
   const stops: string[] = []
-  const steps = Math.min(Math.ceil(maxDiff - minDiff), 8)
+  // 小跨度至少 3 段(顶/中/底两色过渡),大跨度按每格约一段、封顶 8 段。
+  const steps = Math.max(3, Math.min(Math.ceil(span), 8))
   for (let i = 0; i <= steps; i++) {
     const diff = maxDiff - (i / steps) * (maxDiff - minDiff)
     const color = getDifficultyColor(diff)

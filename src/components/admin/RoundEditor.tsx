@@ -44,10 +44,12 @@ interface Props {
   index: number
   onChange: (round: RoundWithMeta) => void
   onRemove: () => void
-  getMapHistory?: (beatmapsetId: number | undefined) => MapHistorySummary | null
+  getMapHistory?: (beatmapId: number | undefined) => MapHistorySummary | null
+  // 本比赛所有轮缩写(易→难),供整轮参考按非标准轮邻居反推档位
+  siblingAbbrs?: string[]
 }
 
-export function RoundEditor({ round, index, onChange, onRemove, getMapHistory }: Props) {
+export function RoundEditor({ round, index, onChange, onRemove, getMapHistory, siblingAbbrs }: Props) {
   const t = useT()
   const [expanded, setExpanded] = useState(true)
   const [customSlotName, setCustomSlotName] = useState('')
@@ -279,7 +281,12 @@ export function RoundEditor({ round, index, onChange, onRemove, getMapHistory }:
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
                 <label className="text-xs font-medium text-gray-700 dark:text-neutral-200">{t('round.diff.input')}</label>
-                <RoundRefPicker roundAbbr={round.abbreviation} onApply={applyRoundRef} />
+                <RoundRefPicker
+                  roundAbbr={round.abbreviation}
+                  siblingAbbrs={siblingAbbrs}
+                  roundIndex={index}
+                  onApply={applyRoundRef}
+                />
               </div>
               <div className="flex items-center gap-1">
                 <button

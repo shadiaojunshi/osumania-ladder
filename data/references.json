@@ -19,6 +19,15 @@
       "difficulty": 14.2
     },
     {
+      "label": "MCNC 2025 GF RC",
+      "difficulty": 13.8
+    },
+    {
+      "label": "MCNC 2025 GF LN",
+      "difficulty": 13.7,
+      "type": "ln"
+    },
+    {
       "label": "MWC 2025 GF RC",
       "difficulty": 13.3
     },

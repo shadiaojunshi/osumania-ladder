@@ -102,6 +102,7 @@ export const messagesEn: Record<keyof typeof messagesZh, string> = {
   'admin.tab.refLadder': 'Difficulty ladder',
   'admin.tab.upload': 'Upload maps',
   'admin.tab.packs': 'Pack manager',
+  'admin.tab.rtConflict': 'Keytype conflicts',
   'admin.tab.trash': 'Trash',
   'admin.tab.admins': 'Admins',
   'admin.tab.audit': 'Audit log',
@@ -153,6 +154,19 @@ export const messagesEn: Record<keyof typeof messagesZh, string> = {
   'trash.restoreConfirm': 'Restore {label}?',
   'trash.restored': 'Restored {label}',
   'trash.restoreFailed': 'Restore failed',
+
+  // ---------- RealTypeConflictChecker ----------
+  'rtConflict.title': 'Real Keytype Conflict Check',
+  'rtConflict.subtitle': 'Same map (same beatmapId) tagged with different real keytypes across tournaments. Pick a target per row, then Save & Rebuild (one build).',
+  'rtConflict.none': 'No real keytype conflicts found ✓',
+  'rtConflict.conflictTypes': 'Conflicting: {types}',
+  'rtConflict.unifyTo': 'Unify to',
+  'rtConflict.majority': 'majority',
+  'rtConflict.saveAndRebuild': 'Save & Rebuild ({n})',
+  'rtConflict.saving': 'Saving…',
+  'rtConflict.saved': 'Saved {n} tournament(s); rebuild triggered',
+  'rtConflict.saveFailed': 'Save failed',
+  'rtConflict.nothingToSave': 'Nothing to change',
 
   // ---------- AdminsManager ----------
   'admins.title': 'Admin manager',

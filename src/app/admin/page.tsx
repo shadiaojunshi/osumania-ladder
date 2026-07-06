@@ -8,6 +8,7 @@ import { ReferencesEditor } from '@/components/admin/ReferencesEditor'
 import { RefLadderEditor } from '@/components/admin/RefLadderEditor'
 import { MapUploader } from '@/components/admin/MapUploader'
 import { PackLinksEditor } from '@/components/admin/PackLinksEditor'
+import { RealTypeConflictChecker } from '@/components/admin/RealTypeConflictChecker'
 import { AdminsManager } from '@/components/admin/AdminsManager'
 import { TrashManager } from '@/components/admin/TrashManager'
 import { AuditLog } from '@/components/admin/AuditLog'
@@ -35,7 +36,7 @@ interface TournamentListItem {
   sha: string
 }
 
-type Tab = 'create' | 'manage' | 'references' | 'refLadder' | 'upload' | 'packs' | 'admins' | 'trash' | 'audit'
+type Tab = 'create' | 'manage' | 'references' | 'refLadder' | 'upload' | 'packs' | 'rtConflict' | 'admins' | 'trash' | 'audit'
 
 export default function AdminPage() {
   const t = useT()
@@ -295,6 +296,7 @@ export default function AdminPage() {
           {tabBtn('refLadder', t('admin.tab.refLadder'))}
           {tabBtn('upload', t('admin.tab.upload'))}
           {tabBtn('packs', t('admin.tab.packs'))}
+          {tabBtn('rtConflict', t('admin.tab.rtConflict'))}
           {isAdmin && tabBtn('trash', t('admin.tab.trash'))}
           {isAdmin && tabBtn('admins', t('admin.tab.admins'))}
           {isAdmin && tabBtn('audit', t('admin.tab.audit'))}
@@ -368,6 +370,8 @@ export default function AdminPage() {
         {tab === 'upload' && <MapUploader />}
 
         {tab === 'packs' && <PackLinksEditor />}
+
+        {tab === 'rtConflict' && <RealTypeConflictChecker canSave={isAdmin} />}
 
         {tab === 'trash' && isAdmin && <TrashManager />}
         {tab === 'admins' && isAdmin && <AdminsManager />}

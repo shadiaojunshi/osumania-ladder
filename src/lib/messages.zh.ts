@@ -101,6 +101,7 @@ export const messagesZh = {
   'admin.tab.refLadder': '难度标尺',
   'admin.tab.upload': '上传谱面',
   'admin.tab.packs': '合包管理',
+  'admin.tab.rtConflict': '键型冲突检查',
   'admin.tab.trash': '回收站',
   'admin.tab.admins': '管理员管理',
   'admin.tab.audit': '操作日志',
@@ -152,6 +153,19 @@ export const messagesZh = {
   'trash.restoreConfirm': '恢复 {label}？',
   'trash.restored': '已恢复 {label}',
   'trash.restoreFailed': '恢复失败',
+
+  // ---------- RealTypeConflictChecker ----------
+  'rtConflict.title': '真实键型冲突检查',
+  'rtConflict.subtitle': '同一张图(相同 beatmapId)在不同比赛里被标了不一样的真实键型。逐条选定统一目标后,保存并重建(只触发一次构建)。',
+  'rtConflict.none': '未发现真实键型冲突 ✓',
+  'rtConflict.conflictTypes': '冲突类型: {types}',
+  'rtConflict.unifyTo': '统一为',
+  'rtConflict.majority': '多数',
+  'rtConflict.saveAndRebuild': '保存并重建 ({n})',
+  'rtConflict.saving': '保存中…',
+  'rtConflict.saved': '已保存 {n} 个比赛,已触发重建',
+  'rtConflict.saveFailed': '保存失败',
+  'rtConflict.nothingToSave': '没有需要修改的项',
 
   // ---------- AdminsManager ----------
   'admins.title': '管理员管理',

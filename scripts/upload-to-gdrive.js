@@ -16,6 +16,32 @@ const OUTPUT_DIR = path.join(__dirname, '..', 'output')
 const MANIFEST_PATH = path.join(__dirname, '..', 'data', 'packs-manifest.json')
 const PREV_MANIFEST_PATH = path.join(__dirname, '..', 'data', 'packs-manifest.previous.json')
 
+// auth 类错误(401 / invalid_grant)不重试,直接抛给上层 fail-fast;其余(网络抖动 /
+// 5xx / 超时)带指数退避重试。每次重试内部会重新 createReadStream,不会复用坏流。
+function isFatalAuthError(err) {
+  const code = err && err.code
+  const msg = (err && err.message) || ''
+  return code === 401 || (typeof msg === 'string' && msg.includes('invalid_grant'))
+}
+
+async function withRetry(fn, { attempts = 3, baseDelayMs = 1500, label = 'op' } = {}) {
+  let lastErr
+  for (let i = 1; i <= attempts; i++) {
+    try {
+      return await fn()
+    } catch (err) {
+      if (isFatalAuthError(err)) throw err // 认证失效重试也没用
+      lastErr = err
+      if (i < attempts) {
+        const delay = baseDelayMs * Math.pow(2, i - 1)
+        console.warn(`  ${label} 第 ${i}/${attempts} 次失败: ${err.message} —— ${delay}ms 后重试`)
+        await new Promise((r) => setTimeout(r, delay))
+      }
+    }
+  }
+  throw lastErr
+}
+
 function getAuth() {
   const oauth2 = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET)
   oauth2.setCredentials({ refresh_token: REFRESH_TOKEN })
@@ -127,7 +153,10 @@ async function main() {
     const knownFileId = entry.gdriveFileId || null
 
     try {
-      const fileId = await uploadOrUpdate(drive, filePath, fileName, knownFileId)
+      const fileId = await withRetry(
+        () => uploadOrUpdate(drive, filePath, fileName, knownFileId),
+        { label: `上传 ${fileName}` },
+      )
       entry.gdriveFileId = fileId
       entry.links = entry.links || {}
       entry.links.googleDrive = `https://drive.google.com/uc?id=${fileId}&export=download`

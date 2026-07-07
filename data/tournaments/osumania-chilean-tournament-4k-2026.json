@@ -253,7 +253,7 @@
         {
           "slot": "RC5",
           "type": "RC",
-          "realType": "TC",
+          "realType": "ADP",
           "name": "Billain - Specialist [Theory 1.1x (190bpm)]",
           "difficulty": 0,
           "beatmapId": 3439516,
@@ -325,7 +325,7 @@
         {
           "slot": "LN3",
           "type": "LN",
-          "realType": "JW",
+          "realType": "LNMX",
           "name": "Akatsuki Records - Necromantic (Cut Ver.) [WakuwakuDokidoki x1.05]",
           "difficulty": 0,
           "beatmapId": 5448292,

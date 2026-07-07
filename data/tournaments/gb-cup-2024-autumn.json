@@ -414,7 +414,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "SJ",
           "name": "Fractal Dreamers - Ex Nihilo [Genesis 1.0x]",
           "difficulty": 0,
           "beatmapId": 4881411,

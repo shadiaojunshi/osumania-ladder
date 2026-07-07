@@ -777,7 +777,7 @@
         {
           "slot": "RC2",
           "type": "RC",
-          "realType": "SA",
+          "realType": "JS",
           "name": "Ouro Kronii & Nanashi Mumei - Donut Hole [Banger 1.1x]",
           "difficulty": 0,
           "beatmapId": 5269935,
@@ -838,7 +838,7 @@
         {
           "slot": "HB2",
           "type": "HB",
-          "realType": "HB2",
+          "realType": "HB3",
           "name": "Juggernaut. - Retaliation (VIP) [Destruction [1.1x Rate]]",
           "difficulty": 0,
           "beatmapId": 5207185,

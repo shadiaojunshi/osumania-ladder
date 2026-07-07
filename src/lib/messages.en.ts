@@ -157,8 +157,9 @@ export const messagesEn: Record<keyof typeof messagesZh, string> = {
 
   // ---------- RealTypeConflictChecker ----------
   'rtConflict.title': 'Real Keytype Conflict Check',
-  'rtConflict.subtitle': 'Same map (same beatmapId) tagged with different real keytypes across tournaments. Pick a target per row, then Save & Rebuild (one build).',
+  'rtConflict.subtitle': 'Same map (same beatmapId), or rate variants within one beatmapset, tagged with different real keytypes. Pick a target per row, then Save & Rebuild (one build). Note: rate variants can legitimately differ (density scales with rate) — rows badged "Rate" need manual review.',
   'rtConflict.none': 'No real keytype conflicts found ✓',
+  'rtConflict.rateBadge': 'Rate',
   'rtConflict.conflictTypes': 'Conflicting: {types}',
   'rtConflict.unifyTo': 'Unify to',
   'rtConflict.majority': 'majority',
@@ -262,7 +263,7 @@ export const messagesEn: Record<keyof typeof messagesZh, string> = {
   'roundRef.hint': 'Anchor on an MWC round; N is steps (1 step = one adjacent ladder entry), positive = harder. Fills every non-SV difficulty of this round at once.',
   'roundRef.base': 'Base',
   'roundRef.autoMatched': 'Auto-matched MWC {round}',
-  'roundRef.resolvedMatch': 'MWC has no {round}; anchored to MWC {base}{offset} (adjustable)',
+  'roundRef.resolvedMatch': 'MWC has no {round}; anchored to MWC {base} offset {offset} (adjustable)',
   'roundRef.noAutoMatch': 'Round "{round}" is non-standard; pick which MWC round it maps to',
   'roundRef.noBase': 'No MWC rounds in the ladder',
   'roundRef.apply': 'Apply to round',

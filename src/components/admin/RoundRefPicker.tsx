@@ -205,9 +205,8 @@ export function RoundRefPicker({ roundAbbr, siblingAbbrs, roundIndex, onApply, e
         type="button"
         onClick={() => setOpen((o) => !o)}
         title={t('roundRef.title')}
-        className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded border border-purple-400 dark:border-purple-500 bg-purple-600 text-white shadow-sm hover:bg-purple-700 dark:bg-purple-600 dark:hover:bg-purple-500"
+        className="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded border border-purple-400 dark:border-purple-500 bg-purple-600 text-white shadow-sm hover:bg-purple-700 dark:bg-purple-600 dark:hover:bg-purple-500"
       >
-        <span aria-hidden>🎯</span>
         {t('roundRef.button')}
       </button>
 
@@ -251,7 +250,7 @@ export function RoundRefPicker({ roundAbbr, siblingAbbrs, roundIndex, onApply, e
                       className="w-14 px-1.5 py-1 border border-gray-200 dark:border-neutral-700 rounded text-center bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100"
                     />
                   </div>
-                  {autoMatch && autoMatch.exact ? (
+                  {autoMatch && (autoMatch.exact || autoMatch.offset === 0) ? (
                     <p className="text-[10px] text-green-600 dark:text-green-400">
                       {t('roundRef.autoMatched', { round: autoMatch.roundAbbr })}
                     </p>

@@ -156,8 +156,9 @@ export const messagesZh = {
 
   // ---------- RealTypeConflictChecker ----------
   'rtConflict.title': '真实键型冲突检查',
-  'rtConflict.subtitle': '同一张图(相同 beatmapId)在不同比赛里被标了不一样的真实键型。逐条选定统一目标后,保存并重建(只触发一次构建)。',
+  'rtConflict.subtitle': '同一张图(相同 beatmapId),或同一 beatmapset 内的倍速变体,被标了不一样的真实键型。逐条选定统一目标后,保存并重建(只触发一次构建)。注:倍速变体的键型有时本就该不同(密度随倍速变化),标"倍速"的组需人工确认。',
   'rtConflict.none': '未发现真实键型冲突 ✓',
+  'rtConflict.rateBadge': '倍速',
   'rtConflict.conflictTypes': '冲突类型: {types}',
   'rtConflict.unifyTo': '统一为',
   'rtConflict.majority': '多数',
@@ -261,7 +262,7 @@ export const messagesZh = {
   'roundRef.hint': '以 MWC 某轮为基准,N 为格数(1格=标尺相邻一项),正=更难。一次填满本轮所有非 SV 难度。',
   'roundRef.base': '基准',
   'roundRef.autoMatched': '已自动匹配 MWC {round}',
-  'roundRef.resolvedMatch': 'MWC 无 {round},已锚定 MWC {base}{offset} 格(可再调)',
+  'roundRef.resolvedMatch': 'MWC 无 {round},已锚定 MWC {base} 偏移 {offset} 格(可再调)',
   'roundRef.noAutoMatch': '本轮"{round}"非标准轮,请手选相当于 MWC 哪一轮',
   'roundRef.noBase': '标尺里没有 MWC 轮次',
   'roundRef.apply': '应用到整轮',

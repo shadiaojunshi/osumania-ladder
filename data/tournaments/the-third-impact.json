@@ -557,7 +557,7 @@
         {
           "slot": "LN1",
           "type": "LN",
-          "realType": "CO",
+          "realType": "TE",
           "name": "sasakure.UK feat. Hatsune Miku - Replica [Finale w/ MyZterioN-]",
           "difficulty": 0,
           "beatmapId": 4916166,
@@ -621,7 +621,7 @@
         {
           "slot": "RC2",
           "type": "RC",
-          "realType": "SA",
+          "realType": "JS",
           "name": "youman feat. GUMI - R.I.P. [Regret]",
           "difficulty": 0,
           "beatmapId": 5352907,

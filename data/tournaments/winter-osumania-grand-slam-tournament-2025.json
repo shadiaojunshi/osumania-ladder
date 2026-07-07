@@ -30,7 +30,7 @@
         {
           "slot": "RC2",
           "type": "RC",
-          "realType": "TC",
+          "realType": "DP",
           "name": "Sharks - Shiver [brr]",
           "difficulty": 0,
           "beatmapId": 4932069,

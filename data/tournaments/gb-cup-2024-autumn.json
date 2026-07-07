@@ -313,7 +313,7 @@
         {
           "slot": "LN1",
           "type": "LN",
-          "realType": "CO",
+          "realType": "RE",
           "name": "Boa - Duvet [Wired]",
           "difficulty": 0,
           "beatmapId": 4863943,

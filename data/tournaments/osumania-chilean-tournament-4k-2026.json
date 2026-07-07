@@ -459,7 +459,7 @@
         {
           "slot": "LN1",
           "type": "LN",
-          "realType": "CO",
+          "realType": "TE",
           "name": "sasakure.UK feat. Hatsune Miku - Replica [Finale w/ MyZterioN-]",
           "difficulty": 0,
           "beatmapId": 4916166,
@@ -661,7 +661,7 @@
         {
           "slot": "LN5",
           "type": "LN",
-          "realType": "TE",
+          "realType": "LNTC",
           "name": "Sou - Tada, Kimi no Mama de [Your Eternal Self]",
           "difficulty": 12,
           "beatmapId": 5347389,

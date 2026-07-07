@@ -371,7 +371,7 @@
         {
           "slot": "HB",
           "type": "HB",
-          "realType": "HB1",
+          "realType": "CO",
           "name": "lapix - Our Love [Stage 5: Affection]",
           "difficulty": 0,
           "beatmapId": 2994150,
@@ -1041,7 +1041,7 @@
         {
           "slot": "HB",
           "type": "HB",
-          "realType": "HB3",
+          "realType": "HB1",
           "name": "Katagiri - Scattered Pancakes [2024 Remake 1.05x (252bpm)]",
           "difficulty": 0,
           "beatmapId": 4507172,

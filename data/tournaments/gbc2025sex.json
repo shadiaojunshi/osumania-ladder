@@ -38,7 +38,7 @@
         {
           "slot": "RC3",
           "type": "RC",
-          "realType": "TC",
+          "realType": "DP",
           "name": "Harada Natsuki feat. Suzuki Mariko - Snow Parade [Holiday Cheer Under the Bright Lights]",
           "difficulty": 0,
           "beatmapId": 4426327,
@@ -300,7 +300,7 @@
         {
           "slot": "HB2",
           "type": "HB",
-          "realType": "HB3",
+          "realType": "HB1",
           "name": "KERO - Color Printer [CMYK]",
           "difficulty": 0,
           "beatmapId": 5101249,

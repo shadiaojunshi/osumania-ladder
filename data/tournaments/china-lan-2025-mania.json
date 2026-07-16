@@ -255,107 +255,137 @@
           "slot": "RC1",
           "type": "RC",
           "realType": "SS",
-          "name": "RC1",
-          "difficulty": 11.2
+          "name": "Hanatan - Friction [Colorless]",
+          "difficulty": 11.2,
+          "beatmapId": 5207541,
+          "beatmapsetId": 2401431
         },
         {
           "slot": "RC2",
           "type": "RC",
           "realType": "SA",
-          "name": "RC2",
-          "difficulty": 11.2
+          "name": "Ariabl'eyeS - Houkai no Bigaku [Sora no Kanata]",
+          "difficulty": 11.2,
+          "beatmapId": 5207534,
+          "beatmapsetId": 2401428
         },
         {
           "slot": "RC3",
           "type": "RC",
           "realType": "CJ",
-          "name": "RC3",
-          "difficulty": 11.2
+          "name": "yak_won - Wind Tales [Escapade]",
+          "difficulty": 11.2,
+          "beatmapId": 5207558,
+          "beatmapsetId": 2401440
         },
         {
           "slot": "RC4",
           "type": "RC",
           "realType": "JTC",
-          "name": "RC4",
-          "difficulty": 11.2
+          "name": "Frums - 24eeev0-$ [mint 1.2x]",
+          "difficulty": 11.2,
+          "beatmapId": 5207575,
+          "beatmapsetId": 2401452
         },
         {
           "slot": "RC5",
           "type": "RC",
           "realType": "MX",
-          "name": "RC5",
-          "difficulty": 11.2
+          "name": "qfeileadh feat. Risa Kodaka - Tendou Musou no Homura [Homura]",
+          "difficulty": 11.2,
+          "beatmapId": 5205657,
+          "beatmapsetId": 2400770
         },
         {
           "slot": "RC6",
           "type": "RC",
           "realType": "DP",
-          "name": "RC6",
-          "difficulty": 11.2
+          "name": "RD-Sounds feat. Meramipop - On Seeking U [O! S! U!]",
+          "difficulty": 11.2,
+          "beatmapId": 5205954,
+          "beatmapsetId": 2400881
         },
         {
           "slot": "HB1",
           "type": "HB",
           "realType": "HB1",
-          "name": "HB1",
-          "difficulty": 11.4
+          "name": "Neighbour's Blueish Garden (NIWASHI+Aoi) - Deklowaz, the Allchemist [Phenomenon of everything]",
+          "difficulty": 11.4,
+          "beatmapId": 5207570,
+          "beatmapsetId": 2401448
         },
         {
           "slot": "HB2",
           "type": "HB",
           "realType": "HB2",
-          "name": "HB2",
-          "difficulty": 11.4
+          "name": "Sephid et al. - MONONATI [Welcome home, my Queen.]",
+          "difficulty": 11.4,
+          "beatmapId": 5207635,
+          "beatmapsetId": 2401466
         },
         {
           "slot": "HB3",
           "type": "HB",
           "realType": "HB1",
-          "name": "HB3",
-          "difficulty": 11.4
+          "name": "katagiri - Youki Sanmyaku [Demon Lurk [w/ Blue_Potion]]",
+          "difficulty": 11.4,
+          "beatmapId": 5206862,
+          "beatmapsetId": 2401210
         },
         {
           "slot": "LN1",
           "type": "LN",
           "realType": "CO",
-          "name": "LN1",
-          "difficulty": 11
+          "name": "Yurry Canon - Yueni [There...fore... I am the Ideal Vassal? [1.2x Rate]]",
+          "difficulty": 11,
+          "beatmapId": 4590115,
+          "beatmapsetId": 2003254
         },
         {
           "slot": "LN2",
           "type": "LN",
           "realType": "DE",
-          "name": "LN2",
-          "difficulty": 11
+          "name": "xi - Longinus [LN Prodigy (short)]",
+          "difficulty": 11,
+          "beatmapId": 3665997,
+          "beatmapsetId": 1714267
         },
         {
           "slot": "LN3",
           "type": "LN",
           "realType": "LNMX",
-          "name": "LN3",
-          "difficulty": 11
+          "name": "Link\"0 - rezehv [Acquiesce]",
+          "difficulty": 11,
+          "beatmapId": 5204533,
+          "beatmapsetId": 2400460
         },
         {
           "slot": "SV1",
           "type": "SV",
           "realType": "SV2",
-          "name": "SV1",
-          "difficulty": 11.5
+          "name": "baeddelite - thrinos;pygmalion [Solace;Vivify]",
+          "difficulty": 11.5,
+          "beatmapId": 5207373,
+          "beatmapsetId": 2401391
         },
         {
           "slot": "SV2",
           "type": "SV",
           "realType": "SV1",
-          "name": "SV2",
-          "difficulty": 11.5
+          "name": "sakuraburst - anticrystal [liquid fractures]",
+          "difficulty": 11.5,
+          "beatmapId": 5206863,
+          "beatmapsetId": 2401211
         },
         {
           "slot": "TB1",
           "type": "TB",
           "realType": "TB",
-          "name": "TB1",
+          "name": "katagiri - VIVID ABYSS [Believe in FcEazy]",
           "difficulty": 12,
-          "difficultyLn": 12.5
+          "difficultyLn": 12.5,
+          "beatmapId": 5207546,
+          "beatmapsetId": 2401434
         }
       ],
       "bestOf": 11,

@@ -108,93 +108,119 @@
           "slot": "RC1",
           "type": "RC",
           "realType": "SS",
-          "name": "RC1",
-          "difficulty": 9.6
+          "name": "w_tre - FIONA [Carefree 1.05x (157bpm)]",
+          "difficulty": 9.6,
+          "beatmapId": 3760958,
+          "beatmapsetId": 1832244
         },
         {
           "slot": "RC2",
           "type": "RC",
           "realType": "SA",
-          "name": "RC2",
-          "difficulty": 9.6
+          "name": "DJ SHARPNEL - THE POWER OF UNDERGROUND [thrive 1.2x (234bpm)]",
+          "difficulty": 9.6,
+          "beatmapId": 4191809,
+          "beatmapsetId": 2014292
         },
         {
           "slot": "RC3",
           "type": "RC",
           "realType": "CJ",
-          "name": "RC3",
-          "difficulty": 9.6
+          "name": "Mitsukiyo - Theme 182 OST [Rampage (Feat. The boss xz1z1z) x1.05]",
+          "difficulty": 9.6,
+          "beatmapId": 5167778,
+          "beatmapsetId": 2388051
         },
         {
           "slot": "RC4",
           "type": "RC",
           "realType": "MX",
-          "name": "RC4",
-          "difficulty": 9.6
+          "name": "Chipzel - Swing Me Another 6 [haruhi suzumiya]",
+          "difficulty": 9.6,
+          "beatmapId": 5131053,
+          "beatmapsetId": 2375505
         },
         {
           "slot": "RC5",
           "type": "RC",
           "realType": "WTC",
-          "name": "RC5",
-          "difficulty": 9.6
+          "name": "Reizoko Cj - /a/ [ch/a/llenge]",
+          "difficulty": 9.6,
+          "beatmapId": 4755965,
+          "beatmapsetId": 2238283
         },
         {
           "slot": "HB1",
           "type": "HB",
           "realType": "HB1",
-          "name": "HB1",
-          "difficulty": 9.8
+          "name": "MisoilePunch ~Takenoko Soe~ - Fin.ArcDeaR [ArcanA]",
+          "difficulty": 9.8,
+          "beatmapId": 4757037,
+          "beatmapsetId": 2238670
         },
         {
           "slot": "HB2",
           "type": "HB",
           "realType": "HB2",
-          "name": "HB2",
-          "difficulty": 9.8
+          "name": "PSYQUI - Be There [Flip-Side]",
+          "difficulty": 9.8,
+          "beatmapId": 2727014,
+          "beatmapsetId": 1315993
         },
         {
           "slot": "LN1",
           "type": "LN",
           "realType": "CO",
-          "name": "LN1",
-          "difficulty": 9.6
+          "name": "Hachiya Nanashi - Secret Sleuth [Shamus]",
+          "difficulty": 9.6,
+          "beatmapId": 3772572,
+          "beatmapsetId": 1837336
         },
         {
           "slot": "LN2",
           "type": "LN",
           "realType": "DE",
-          "name": "LN2",
-          "difficulty": 9.6
+          "name": "DJ SHARPNEL - KLASSIKER EINHEIT (Cut Ver.) [Yasashii / 1.05]",
+          "difficulty": 9.6,
+          "beatmapId": 4766575,
+          "beatmapsetId": 2242540
         },
         {
           "slot": "LN3",
           "type": "LN",
           "realType": "LNTC",
-          "name": "LN3",
-          "difficulty": 9.6
+          "name": "niki feat. Reol - WAVE [Stage 5: Sin]",
+          "difficulty": 9.6,
+          "beatmapId": 4442663,
+          "beatmapsetId": 2115589
         },
         {
           "slot": "SV1",
           "type": "SV",
           "realType": "SI",
-          "name": "SV1",
-          "difficulty": 9.8
+          "name": "Zexnum - Fifth Avenue [City Walk]",
+          "difficulty": 9.8,
+          "beatmapId": 5167758,
+          "beatmapsetId": 2388039
         },
         {
           "slot": "SV2",
           "type": "SV",
           "realType": "SV2",
-          "name": "SV2",
-          "difficulty": 9.8
+          "name": "Yunosuke - GLAZ [MAINSTREAM]",
+          "difficulty": 9.8,
+          "beatmapId": 5167762,
+          "beatmapsetId": 2388041
         },
         {
           "slot": "TB1",
           "type": "TB",
           "realType": "TB",
-          "name": "TB1",
+          "name": "ELFENSJoN - ARIADNE [The most holy you]",
           "difficulty": 10.5,
-          "difficultyLn": 11.2
+          "difficultyLn": 11.2,
+          "beatmapId": 5167819,
+          "beatmapsetId": 2388064
         }
       ],
       "bestOf": 9,

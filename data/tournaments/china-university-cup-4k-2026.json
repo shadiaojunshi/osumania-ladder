@@ -21,59 +21,75 @@
           "slot": "ST1",
           "type": "SV",
           "realType": "SV1",
-          "name": "SV1",
-          "difficulty": 8
+          "name": "Au5 - Spyre (Cut Ver.) [Stage 1: Ascension]",
+          "difficulty": 8,
+          "beatmapId": 5521681,
+          "beatmapsetId": 2507234
         },
         {
           "slot": "ST2",
           "type": "RC",
           "realType": "MX",
-          "name": "RC1",
-          "difficulty": 6
+          "name": "Terminal 11 - Sparkle Downer [Stage 2: Killjoy]",
+          "difficulty": 6,
+          "beatmapId": 5521805,
+          "beatmapsetId": 2507276
         },
         {
           "slot": "ST5",
           "type": "RC",
           "realType": "SA",
-          "name": "RC2",
-          "difficulty": 6
+          "name": "Kenshi Yonezu - KICK BACK [Stage 5: Shogayaki]",
+          "difficulty": 6,
+          "beatmapId": 5521831,
+          "beatmapsetId": 2507287
         },
         {
           "slot": "ST7",
           "type": "RC",
           "realType": "TC",
-          "name": "RC3",
-          "difficulty": 6
+          "name": "Kyiku/KAFU/SEKAI/Kazehiki - Tada Byoumei ga Hoshika tta [Stage 7: Naming the Unseen]",
+          "difficulty": 6,
+          "beatmapId": 5521640,
+          "beatmapsetId": 2507220
         },
         {
           "slot": "ST4",
           "type": "LN",
           "realType": "RE",
-          "name": "LN1",
-          "difficulty": 6.5
+          "name": "inabakumori - Yoyuyoku (Vo. nagib & Kazehikib) [Stage 4: Composure]",
+          "difficulty": 6.5,
+          "beatmapId": 5521988,
+          "beatmapsetId": 2507347
         },
         {
           "slot": "ST6",
           "type": "LN",
           "realType": "DE",
-          "name": "LN2",
-          "difficulty": 6.5
+          "name": "seatrus - Full Density [Stage 6: Fulfill]",
+          "difficulty": 6.5,
+          "beatmapId": 5521925,
+          "beatmapsetId": 2507317
         },
         {
           "slot": "ST3",
           "type": "HB",
           "realType": "HB2",
-          "name": "HB1",
+          "name": "Sephid - The Next Arcady [Stage 3: Horizon]",
           "difficulty": 7.5,
-          "difficultyLn": 7.5
+          "difficultyLn": 7.5,
+          "beatmapId": 5521986,
+          "beatmapsetId": 2507346
         },
         {
           "slot": "ST8",
           "type": "HB",
           "realType": "HB1",
-          "name": "HB2",
+          "name": "D-D-Dice vs. Tanchiky - SPOOKY BADBALL [Stage 8: BOO!]",
           "difficulty": 7.5,
-          "difficultyLn": 7.5
+          "difficultyLn": 7.5,
+          "beatmapId": 5521830,
+          "beatmapsetId": 2507286
         }
       ],
       "isQualifier": true,

@@ -126,44 +126,56 @@
           "slot": "RC1",
           "type": "RC",
           "realType": "SS",
-          "name": "RC1",
-          "difficulty": 3.5
+          "name": "xi - Ascension to Heaven (cut) [derive (FREQ+1)]",
+          "difficulty": 3.5,
+          "beatmapId": 3671834,
+          "beatmapsetId": 1791760
         },
         {
           "slot": "RC2",
           "type": "RC",
           "realType": "JS",
-          "name": "RC2",
-          "difficulty": 3.5
+          "name": "DJ NECOJITA [feat. blaxervant] - Asteroid [Ceres (edit ver)]",
+          "difficulty": 3.5,
+          "beatmapId": 5548033,
+          "beatmapsetId": 2515784
         },
         {
           "slot": "RC3",
           "type": "RC",
           "realType": "MX",
-          "name": "RC3",
-          "difficulty": 3.5
+          "name": "The Flashbulb - Black Lawn Finale [Restoration]",
+          "difficulty": 3.5,
+          "beatmapId": 3348893,
+          "beatmapsetId": 1573293
         },
         {
           "slot": "RC4",
           "type": "RC",
           "realType": "DP",
-          "name": "RC4",
-          "difficulty": 3.5
+          "name": "Giga - CH4NGE feat. KAFU [INS4NE]",
+          "difficulty": 3.5,
+          "beatmapId": 4671027,
+          "beatmapsetId": 1854144
         },
         {
           "slot": "RC5",
           "type": "RC",
           "realType": "JTC",
-          "name": "RC5",
-          "difficulty": 3.5
+          "name": "Moe Shop - Lovesick (w/ maisou) [paraxia goes (insane) over you]",
+          "difficulty": 3.5,
+          "beatmapId": 4791401,
+          "beatmapsetId": 2250850
         },
         {
           "slot": "HB1",
           "type": "HB",
           "realType": "HB1",
-          "name": "HB1",
+          "name": "Hino Isuka vs. s-don - Glooorious!! [Hard]",
           "difficulty": 4,
-          "difficultyLn": 4
+          "difficultyLn": 4,
+          "beatmapId": 4386877,
+          "beatmapsetId": 1998672
         },
         {
           "slot": "HB2",
@@ -177,45 +189,57 @@
           "slot": "HB3",
           "type": "HB",
           "realType": "HB3",
-          "name": "HB3",
+          "name": "LucaProject - Pleiades [Nicknem's Insane]",
           "difficulty": 4,
-          "difficultyLn": 4
+          "difficultyLn": 4,
+          "beatmapId": 5428438,
+          "beatmapsetId": 2474422
         },
         {
           "slot": "LN1",
           "type": "LN",
           "realType": "RE",
-          "name": "LN1",
-          "difficulty": 4
+          "name": "HOYO-MiX feat. Robin (VO: Chevy) - If I Can Stop One Heart From Breaking [this cage won't shackle my wings]",
+          "difficulty": 4,
+          "beatmapId": 4653729,
+          "beatmapsetId": 2199031
         },
         {
           "slot": "LN2",
           "type": "LN",
           "realType": "RE",
-          "name": "LN2",
-          "difficulty": 4
+          "name": "yak_won - Sewing Machine [For LN Density]",
+          "difficulty": 4,
+          "beatmapId": 5211859,
+          "beatmapsetId": 2403089
         },
         {
           "slot": "SV1",
           "type": "SV",
           "realType": "SI",
-          "name": "SV1",
-          "difficulty": 5.5
+          "name": "Nor - Aoharu [Miracles]",
+          "difficulty": 5.5,
+          "beatmapId": 4452191,
+          "beatmapsetId": 2119447
         },
         {
           "slot": "SV2",
           "type": "SV",
           "realType": "SV1",
-          "name": "SV2",
-          "difficulty": 5.5
+          "name": "Scott Lloyd Shelly - Underground [Boulder]",
+          "difficulty": 5.5,
+          "beatmapId": 5548067,
+          "beatmapsetId": 2515805
         },
         {
           "slot": "TB1",
           "type": "TB",
           "realType": "TB",
-          "name": "TB1",
+          "name": "Imy feat. Natsume Itsuki - Lies playing Truth [Truth in hundreds lies]",
           "difficulty": 4.4,
-          "difficultyLn": 5
+          "difficultyLn": 5,
+          "beatmapId": 5548144,
+          "beatmapsetId": 2515840
         }
       ],
       "bestOf": 9,

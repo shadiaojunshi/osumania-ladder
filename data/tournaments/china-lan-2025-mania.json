@@ -420,121 +420,155 @@
           "slot": "RC1",
           "type": "RC",
           "realType": "SS",
-          "name": "RC1",
-          "difficulty": 13.3
+          "name": "OISHII - TOAST RUN [Tasty Toast]",
+          "difficulty": 13.3,
+          "beatmapId": 5207439,
+          "beatmapsetId": 2401400
         },
         {
           "slot": "RC2",
           "type": "RC",
           "realType": "JS",
-          "name": "RC2",
-          "difficulty": 13.3
+          "name": "Armelyrics - miserable fate [Re:Fate w/ Miaurichesu]",
+          "difficulty": 13.3,
+          "beatmapId": 5205947,
+          "beatmapsetId": 2400878
         },
         {
           "slot": "RC3",
           "type": "RC",
           "realType": "SA",
-          "name": "RC3",
-          "difficulty": 13.3
+          "name": "Takahiro Unisuga (arr: YourVinished) - GENS D'ARMES [Shifting Surpass (Cut) (280bpm)]",
+          "difficulty": 13.3,
+          "beatmapId": 5207668,
+          "beatmapsetId": 2401482
         },
         {
           "slot": "RC4",
           "type": "RC",
           "realType": "CJ",
-          "name": "RC4",
-          "difficulty": 13.3
+          "name": "Mitsukiyo - Gregorius | Symphony [Tempestuous]",
+          "difficulty": 13.3,
+          "beatmapId": 5207553,
+          "beatmapsetId": 2401439
         },
         {
           "slot": "RC5",
           "type": "RC",
           "realType": "WTC",
-          "name": "RC5",
-          "difficulty": 13.3
+          "name": "Da Xiao ann - Balala the Fairies [Balala Energy (Edit.) [1.3x Rate]]",
+          "difficulty": 13.3,
+          "beatmapId": 5205667,
+          "beatmapsetId": 2278965
         },
         {
           "slot": "RC6",
           "type": "RC",
           "realType": "ADP",
-          "name": "RC6",
-          "difficulty": 13.3
+          "name": "hkmori - we were perfect [no u [1.1x Rate]]",
+          "difficulty": 13.3,
+          "beatmapId": 5205650,
+          "beatmapsetId": 2400766
         },
         {
           "slot": "RC7",
           "type": "RC",
           "realType": "MX",
-          "name": "RC7",
-          "difficulty": 13.3
+          "name": "Kurokotei as Lidelle + eili - Sfir'elle ~ la novella ~ [Sithellare]",
+          "difficulty": 13.3,
+          "beatmapId": 5207736,
+          "beatmapsetId": 2401507
         },
         {
           "slot": "HB1",
           "type": "HB",
           "realType": "HB1",
-          "name": "HB1",
-          "difficulty": 13.6
+          "name": "BEMANI SOUND TEAM \"TAG\" - Reboot [Voltenizer 1.1x]",
+          "difficulty": 13.6,
+          "beatmapId": 4104226,
+          "beatmapsetId": 1977077
         },
         {
           "slot": "HB2",
           "type": "HB",
           "realType": "HB2",
-          "name": "HB2",
-          "difficulty": 13.6
+          "name": "Umeboshi Chazuke - Ao to Shiro no Hanataba wo [Journey]",
+          "difficulty": 13.6,
+          "beatmapId": 5207577,
+          "beatmapsetId": 2401454
         },
         {
           "slot": "HB3",
           "type": "HB",
           "realType": "HB3",
-          "name": "HB3",
-          "difficulty": 13.6
+          "name": "Juggernaut. - Retaliation (VIP) [Destruction [1.05x Rate]]",
+          "difficulty": 13.6,
+          "beatmapId": 5207184,
+          "beatmapsetId": 2401316
         },
         {
           "slot": "LN1",
           "type": "LN",
           "realType": "TE",
-          "name": "LN1",
-          "difficulty": 13.6
+          "name": "C-ta (CV:Terashima Takuma) - Kanzen Hanzai Love Letter [Series 1 [1.05x Rate]]",
+          "difficulty": 13.6,
+          "beatmapId": 3840817,
+          "beatmapsetId": 1867135
         },
         {
           "slot": "LN2",
           "type": "LN",
           "realType": "DE",
-          "name": "LN2",
-          "difficulty": 13.6
+          "name": "DJ Raisei vs Setca. feat. nayuta - Utakata no Sekai de [Fragments. / 1.10]",
+          "difficulty": 13.6,
+          "beatmapId": 4909048,
+          "beatmapsetId": 2298023
         },
         {
           "slot": "LN3",
           "type": "LN",
           "realType": "JW",
-          "name": "LN3",
-          "difficulty": 13.6
+          "name": "ginkiha - Silver Eclipse [Eclipse]",
+          "difficulty": 13.6,
+          "beatmapId": 5207438,
+          "beatmapsetId": 2401399
         },
         {
           "slot": "LN4",
           "type": "LN",
           "realType": "LNMX",
-          "name": "LN4",
-          "difficulty": 13.6
+          "name": "Billain & Kursa - NEWGROOVEORDER [Exorbitant]",
+          "difficulty": 13.6,
+          "beatmapId": 5207494,
+          "beatmapsetId": 2401411
         },
         {
           "slot": "SV1",
           "type": "SV",
           "realType": "SV1",
-          "name": "SV1",
-          "difficulty": 13.5
+          "name": "Camellia - Diastrophism [Annihilation]",
+          "difficulty": 13.5,
+          "beatmapId": 5207745,
+          "beatmapsetId": 2401513
         },
         {
           "slot": "SV2",
           "type": "SV",
           "realType": "SV2",
-          "name": "SV2",
-          "difficulty": 13.5
+          "name": "Fellsius - Language [sv]",
+          "difficulty": 13.5,
+          "beatmapId": 5207761,
+          "beatmapsetId": 2401520
         },
         {
           "slot": "TB",
           "type": "TB",
           "realType": "TB",
-          "name": "TB1",
+          "name": "Halv - Akashic Hex [Radiant Eternity]",
           "difficulty": 13.9,
-          "difficultyLn": 14.2
+          "difficultyLn": 14.2,
+          "beatmapId": 5207679,
+          "beatmapsetId": 2401488
         }
       ],
       "bestOf": 13,

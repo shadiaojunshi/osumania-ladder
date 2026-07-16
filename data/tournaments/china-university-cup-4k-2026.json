@@ -278,43 +278,55 @@
           "slot": "RC1",
           "type": "RC",
           "realType": "SS",
-          "name": "RC1",
-          "difficulty": 7.5
+          "name": "Haniwa - shukyo ni okasareteiru node hanai ka (Cur Ver.) [1.05x]",
+          "difficulty": 7.5,
+          "beatmapId": 5582171,
+          "beatmapsetId": 2526772
         },
         {
           "slot": "RC2",
           "type": "RC",
           "realType": "JS",
-          "name": "RC2",
-          "difficulty": 7.5
+          "name": "Plum - Dustwind [sharkful's GO across the desert [225bpm]]",
+          "difficulty": 7.5,
+          "beatmapId": 5582222,
+          "beatmapsetId": 2526783
         },
         {
           "slot": "RC3",
           "type": "RC",
           "realType": "SA",
-          "name": "RC3",
-          "difficulty": 8.5
+          "name": "goreshit - still all scared of ouija boards (edit ver.) [choco cornet]",
+          "difficulty": 8.5,
+          "beatmapId": 5277930,
+          "beatmapsetId": 2424752
         },
         {
           "slot": "RC4",
           "type": "RC",
           "realType": "CJ",
-          "name": "RC4",
-          "difficulty": 7.5
+          "name": "cygnus - Bloody Mary [Vodka+Lime juice+Tomato+Black pepper+Hot sauce]",
+          "difficulty": 7.5,
+          "beatmapId": 5581897,
+          "beatmapsetId": 2526715
         },
         {
           "slot": "RC5",
           "type": "RC",
           "realType": "MX",
-          "name": "RC5",
-          "difficulty": 7.5
+          "name": "Terminal11 - My Fist In Your Carcass [ha PPY]",
+          "difficulty": 7.5,
+          "beatmapId": 5581382,
+          "beatmapsetId": 2526576
         },
         {
           "slot": "RC6",
           "type": "RC",
           "realType": "DP",
-          "name": "RC6",
-          "difficulty": 7.5
+          "name": "Good Kid - From The Start [Don't you feel it too?]",
+          "difficulty": 7.5,
+          "beatmapId": 4764183,
+          "beatmapsetId": 2241561
         },
         {
           "slot": "RC7",
@@ -327,75 +339,95 @@
           "slot": "HB1",
           "type": "HB",
           "realType": "HB1",
-          "name": "HB1",
+          "name": "Hino Isuka - ULTRA MEGA HAPPY PARTY!!! [Wonderful Paradise]",
           "difficulty": 8,
-          "difficultyLn": 8
+          "difficultyLn": 8,
+          "beatmapId": 5007691,
+          "beatmapsetId": 2333499
         },
         {
           "slot": "HB2",
           "type": "HB",
           "realType": "HB2",
-          "name": "HB2",
+          "name": "Camellia - Routing [Stage 3: Shinkansen]",
           "difficulty": 8,
-          "difficultyLn": 8
+          "difficultyLn": 8,
+          "beatmapId": 4732525,
+          "beatmapsetId": 2230148
         },
         {
           "slot": "HB3",
           "type": "HB",
           "realType": "HB3",
-          "name": "HB3",
+          "name": "FWLR - Hot [Heat Wave]",
           "difficulty": 8,
-          "difficultyLn": 8
+          "difficultyLn": 8,
+          "beatmapId": 4880416,
+          "beatmapsetId": 2287379
         },
         {
           "slot": "LN1",
           "type": "LN",
           "realType": "CO",
-          "name": "LN1",
-          "difficulty": 7.5
+          "name": "rie - Additional Memory [XXXX/08/15]",
+          "difficulty": 7.5,
+          "beatmapId": 5582274,
+          "beatmapsetId": 2526801
         },
         {
           "slot": "LN2",
           "type": "LN",
           "realType": "DE",
-          "name": "LN2",
-          "difficulty": 8
+          "name": "Nanawo Akari - Meruheru shouwakusei (Cut Ver.) [Meteor]",
+          "difficulty": 8,
+          "beatmapId": 5009074,
+          "beatmapsetId": 2333986
         },
         {
           "slot": "LN3",
           "type": "LN",
           "realType": "CO",
-          "name": "LN3",
-          "difficulty": 7.5
+          "name": "MAISONdes - Tokyo Shandy Rendez-vous [Escapade]",
+          "difficulty": 7.5,
+          "beatmapId": 5318776,
+          "beatmapsetId": 2438690
         },
         {
           "slot": "LN4",
           "type": "LN",
           "realType": "SW",
-          "name": "LN4",
-          "difficulty": 7.5
+          "name": "Zekk - Ashes [NSV (OD7.6 + edit)]",
+          "difficulty": 7.5,
+          "beatmapId": 4874675,
+          "beatmapsetId": 2191543
         },
         {
           "slot": "SV1",
           "type": "SV",
           "realType": "SV2",
-          "name": "SV1",
-          "difficulty": 10
+          "name": "A-39 & Suna P - Galaxy (feat. Hatsune Miku) [Longing for infinite possibilities [SV]]",
+          "difficulty": 10,
+          "beatmapId": 4713211,
+          "beatmapsetId": 2222713
         },
         {
           "slot": "SV2",
           "type": "SV",
           "realType": "SV1",
-          "name": "SV2",
-          "difficulty": 10
+          "name": "Aire - Get Down [[The Pre-Buffed Ver. before everything went downhill]]",
+          "difficulty": 10,
+          "beatmapId": 4041810,
+          "beatmapsetId": 1939427
         },
         {
           "slot": "TB1",
           "type": "TB",
           "realType": "TB",
-          "name": "TB1",
+          "name": "Halv - Akashic Hex [The Untrodden]",
           "difficulty": 8.5,
-          "difficultyLn": 10
+          "difficultyLn": 10,
+          "beatmapId": 5582277,
+          "beatmapsetId": 2526803
         }
       ],
       "bestOf": 13,

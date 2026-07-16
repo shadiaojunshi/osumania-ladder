@@ -480,7 +480,18 @@ export const messagesEn: Record<keyof typeof messagesZh, string> = {
   'mapUpload.paste.metaUpdated': 'Updated metadata for {n} map(s)',
   'mapUpload.paste.metaCommitFailed': 'Failed to save metadata: {msg}',
   'mapUpload.paste.metaFailConfirm': '{n} map(s) failed to fetch metadata ({slots}). The old BID may be wrong too. Clear name/beatmapId/beatmapsetId for those slots?\n\nOK = clear; Cancel = keep old data (recommended, verify later manually).',
-  'mapUpload.paste.closeConfirm': '{n} map(s) have unsaved metadata that will be discarded on close. Really close?',
+  'mapUpload.paste.closeConfirm': '{n} map(s) have unstaged metadata that will be discarded on close. Really close?',
+  'mapUpload.paste.stageHint': 'Files are on R2. Click "Stage this round" to collect the metadata, keep filling other rounds, then save once at the bottom (rebuilds the site only once).',
+  'mapUpload.paste.stageRound': 'Stage this round',
+
+  // ---------- Cross-round staging / batch save (MapUploader stage bar) ----------
+  'mapUpload.stage.pendingCount': '{n} map(s) staged, not yet written back to the site',
+  'mapUpload.stage.saveAll': 'Save all & rebuild ({n})',
+  'mapUpload.stage.saving': 'Saving...',
+  'mapUpload.stage.saved': 'Saved metadata for {n} map(s); the site will rebuild in a few minutes',
+  'mapUpload.stage.saveFailed': 'Save failed: {msg}',
+  'mapUpload.stage.saveNoMatch': 'Staged maps matched no slot in the tournament data; staging cleared',
+  'mapUpload.stage.switchConfirm': 'This tournament has {n} staged, unsaved metadata map(s) that will be lost on switch. Switch anyway?',
 
   // ---------- PackLinksEditor ----------
   'packs.title': 'Pack download links',

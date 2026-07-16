@@ -54,6 +54,8 @@ export default function AdminPage() {
   const [loadingList, setLoadingList] = useState(false)
   // 编辑/新建表单是否有未保存修改(由 TournamentForm 冒泡上来),用于切栏拦截
   const [formDirty, setFormDirty] = useState(false)
+  // 上传页是否有暂存未保存的元数据(由 MapUploader 冒泡上来),用于切栏拦截
+  const [uploadDirty, setUploadDirty] = useState(false)
 
   // 角色判断
   const has = useCallback(
@@ -259,6 +261,11 @@ export default function AdminPage() {
           if (!window.confirm(t('admin.leaveUnsaved'))) return
           setFormDirty(false)
         }
+        // 正在 upload 栏且有暂存未保存的元数据时,离开前确认
+        if (tab === 'upload' && uploadDirty && key !== 'upload') {
+          if (!window.confirm(t('admin.leaveUnsaved'))) return
+          setUploadDirty(false)
+        }
         if (key === 'create') handleNewTournament()
         if (key === 'manage') fetchList()
         setTab(key)
@@ -367,7 +374,7 @@ export default function AdminPage() {
 
         {tab === 'refLadder' && <RefLadderEditor />}
 
-        {tab === 'upload' && <MapUploader />}
+        {tab === 'upload' && <MapUploader onDirtyChange={setUploadDirty} />}
 
         {tab === 'packs' && <PackLinksEditor />}
 

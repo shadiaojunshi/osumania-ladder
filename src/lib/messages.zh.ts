@@ -479,7 +479,18 @@ export const messagesZh = {
   'mapUpload.paste.metaUpdated': '已更新 {n} 张图的元数据',
   'mapUpload.paste.metaCommitFailed': '元数据保存失败：{msg}',
   'mapUpload.paste.metaFailConfirm': '有 {n} 张图元数据获取失败（{slots}），旧 BID 可能是错的。要清空这些 slot 的 name/beatmapId/beatmapsetId 吗？\n\n点 "确定" 清空；点 "取消" 保留旧数据（推荐，稍后手动核实）。',
-  'mapUpload.paste.closeConfirm': '有 {n} 张图的元数据还没保存到 tournament，关闭后会丢失。确定关闭？',
+  'mapUpload.paste.closeConfirm': '有 {n} 张图的元数据还没暂存，关闭后会丢失。确定关闭？',
+  'mapUpload.paste.stageHint': '文件已传到 R2。点"暂存本轮"把元数据攒起来，继续补其他轮，最后在底部统一保存一次（只重建 1 次网站）。',
+  'mapUpload.paste.stageRound': '暂存本轮',
+
+  // ---------- 跨轮暂存 / 统一保存 (MapUploader stage bar) ----------
+  'mapUpload.stage.pendingCount': '{n} 张待保存元数据（逐轮暂存中，未写回网站）',
+  'mapUpload.stage.saveAll': '保存全部并重建 ({n})',
+  'mapUpload.stage.saving': '保存中...',
+  'mapUpload.stage.saved': '已保存 {n} 张图的元数据，网站将在几分钟内重建',
+  'mapUpload.stage.saveFailed': '保存失败：{msg}',
+  'mapUpload.stage.saveNoMatch': '待保存的图在比赛数据里没找到对应 slot，已清空暂存',
+  'mapUpload.stage.switchConfirm': '当前比赛有 {n} 张暂存未保存的元数据，切换比赛会丢失。确定切换？',
 
   // ---------- PackLinksEditor ----------
   'packs.title': '合包下载链接管理',

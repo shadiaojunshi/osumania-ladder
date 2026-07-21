@@ -207,7 +207,7 @@
         {
           "slot": "LN2",
           "type": "LN",
-          "realType": "RE",
+          "realType": "DE",
           "name": "yak_won - Sewing Machine [For LN Density]",
           "difficulty": 4,
           "beatmapId": 5211859,
@@ -646,7 +646,7 @@
         {
           "slot": "RC2",
           "type": "RC",
-          "realType": "JS",
+          "realType": "SA",
           "name": "DJ Sharpnel - G.K.Surviver [Easy 1.1x]",
           "difficulty": 6.6,
           "beatmapId": 5571252,
@@ -739,7 +739,7 @@
         {
           "slot": "LN3",
           "type": "LN",
-          "realType": "SW",
+          "realType": "LNTC",
           "name": "Iyowa feat. Hatsune Miku - The Peachy Key (Cut Ver.) [Weep And Will]",
           "difficulty": 7.5,
           "beatmapId": 5246578,

@@ -1091,7 +1091,7 @@
         {
           "slot": "LN4",
           "type": "LN",
-          "realType": "LNTC",
+          "realType": "LNMX",
           "name": "Static-X - Brainfog [Confused 1.0x]",
           "difficulty": 9.04,
           "beatmapId": 5396587,
@@ -1161,4 +1161,3 @@
   "sheetUrl": "https://docs.google.com/spreadsheets/d/1MMJjwXWJjIU9mNiajMzHB-QxFp-k91Iu-zMI7f_M8sU/edit?usp=sharing",
   "forumUrl": "https://osu.ppy.sh/community/forums/topics/2186230"
 }
-

@@ -15,6 +15,7 @@ interface Env extends AuthEnv {
 interface LadderEntry {
   tournamentId: string
   roundId: string
+  step?: number
 }
 
 const GITHUB_API = 'https://api.github.com'
@@ -66,10 +67,20 @@ export const onRequestPut: PagesFunction<Env> = async ({ request, env, data }) =
       typeof (e as LadderEntry).tournamentId === 'string' &&
       typeof (e as LadderEntry).roundId === 'string'
     ) {
-      entries.push({
-        tournamentId: (e as LadderEntry).tournamentId,
-        roundId: (e as LadderEntry).roundId,
-      })
+      const raw = e as LadderEntry
+      const step = raw.step
+      const entry: LadderEntry = {
+        tournamentId: raw.tournamentId,
+        roundId: raw.roundId,
+      }
+      // step 可选,有则校验:必须有限、正数、合理区间 [0.1, 10]
+      if (step !== undefined) {
+        if (typeof step === 'number' && Number.isFinite(step) && step >= 0.1 && step <= 10) {
+          entry.step = step
+        }
+        // 不合法则丢弃 step(等价于默认 1)
+      }
+      entries.push(entry)
     }
     if (entries.length >= 500) break
   }

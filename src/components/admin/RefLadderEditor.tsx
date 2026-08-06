@@ -89,6 +89,35 @@ export function RefLadderEditor() {
     setAddRound('')
   }
 
+  // 改某项步长(比上一轮难几个"标准轮")。空 → 删除 step(视作默认 1)。
+  const updateStep = (idx: number, raw: string) => {
+    const next = [...entries]
+    const e = { ...next[idx] }
+    if (raw.trim() === '') {
+      delete e.step
+    } else {
+      const n = Number(raw)
+      if (!Number.isFinite(n)) return
+      e.step = n
+    }
+    next[idx] = e
+    setEntries(next)
+  }
+
+  // 累计轮位坐标(第一项=0,后续累加 step;非法/≤0 视作 1)。仅用于显示。
+  const positions = useMemo(() => {
+    const out: number[] = []
+    let pos = 0
+    entries.forEach((e, i) => {
+      if (i > 0) {
+        const s = typeof e.step === 'number' && Number.isFinite(e.step) && e.step > 0 ? e.step : 1
+        pos += s
+      }
+      out.push(pos)
+    })
+    return out
+  }, [entries])
+
   const handleSave = async () => {
     setSubmitting(true)
     setStatus(null)
@@ -186,6 +215,27 @@ export function RefLadderEditor() {
             <div className="flex-1 min-w-0 text-sm text-gray-700 dark:text-neutral-200 truncate">
               {labelOf(e)}
             </div>
+            {idx === 0 ? (
+              <span className="text-[10px] text-gray-400 dark:text-neutral-500 shrink-0 w-24 text-center">
+                {t('refLadder.baseline')}
+              </span>
+            ) : (
+              <div className="flex items-center gap-0.5 shrink-0" title={t('refLadder.stepHint')}>
+                <span className="text-[10px] text-gray-400 dark:text-neutral-500">+</span>
+                <input
+                  type="number"
+                  step="0.5"
+                  min="0"
+                  value={e.step === undefined ? '' : String(e.step)}
+                  placeholder="1"
+                  onChange={(ev) => updateStep(idx, ev.target.value)}
+                  className="w-12 px-1 py-0.5 border border-gray-200 dark:border-neutral-700 rounded text-xs text-center bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100"
+                />
+              </div>
+            )}
+            <span className="text-[10px] text-gray-400 dark:text-neutral-500 shrink-0 w-14 text-right tabular-nums">
+              {t('refLadder.pos')} {positions[idx].toFixed(1)}
+            </span>
             <div className="flex gap-1">
               <button
                 onClick={() => move(idx, -1)}

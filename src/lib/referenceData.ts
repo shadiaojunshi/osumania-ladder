@@ -13,14 +13,15 @@ import type { Tournament } from './types'
 export type RefType = 'RC' | 'HB' | 'LN' | 'SV' | 'TB'
 export type RefField = 'rf' | 'ln'
 
-// 6 档位,以 anchor 为中心:
-//   anchorMinus = anchor - (anchor - prev) / 3      用 anchor 和 prev
-//   anchor      = anchor 本身
-//   anchorPlus  = anchor + (next - anchor) / 3      用 anchor 和 next
-//   midHalf     = (anchor + next) / 2               用 anchor 和 next
-//   nextMinus   = next - (next - anchor) / 3        用 anchor 和 next
-//   next        = next 本身
-// anchorMinus 需要 prev,其余 5 档需要 next。anchor 单独无依赖。
+// 6 档位,以 anchor 为中心,按"真实轮位偏移"取值(DifficultyRefPicker 用):
+//   anchorMinus = anchor - ⅓ 轮
+//   anchor      = anchor 本身 (偏移 0)
+//   anchorPlus  = anchor + ⅓ 轮
+//   midHalf     = anchor + ½ 轮
+//   nextMinus   = anchor + ⅔ 轮
+//   next        = anchor + 1 轮
+// 各档偏移值见 DifficultyRefPicker 的 POSITION_OFFSET;全走 sampleLadderAtPos,
+// 超界线性外推,所以每档都有值(不再依赖 prev/next 是否存在)。
 export type RefPosition =
   | 'anchorMinus'
   | 'anchor'
@@ -30,9 +31,12 @@ export type RefPosition =
   | 'next'
 
 // 标尺一项:指向某比赛某轮。顺序由数组下标决定(易 → 难)。
+// step = 本项比上一项难几个"标准轮"。第一项的 step 无意义(pos=0)。
+// 缺省 1,即"和上一项之间差整整一轮"。
 export interface LadderEntry {
   tournamentId: string
   roundId: string
+  step?: number   // 可选,默认 1
 }
 
 // 标尺一项解析后的完整信息。value 为该 (type,field) 下的均值,拿不到则 null。
@@ -45,6 +49,8 @@ export interface RefLadderRound {
   // 跨比赛展示用的组合标签,例如 "MWC2025 · GF"
   label: string
   value: number | null
+  // 累计轮位坐标(第一项 pos=0,后续累加 step)。与 type/field 无关。
+  pos: number
 }
 
 // 找单个 round 在该 (type, field) 下的均值。
@@ -89,11 +95,19 @@ export function resolveLadder(
   exclude?: { tournamentId: string; roundId: string }
 ): RefLadderRound[] {
   const out: RefLadderRound[] = []
+  let pos = 0
+  let first = true
   for (const e of entries) {
     const tn = tournaments.find((t) => t.id === e.tournamentId)
     if (!tn) continue
     const round = tn.rounds.find((r) => r.id === e.roundId)
     if (!round) continue
+    if (!first) {
+      // step 合法则累加,否则视作 1
+      const s = typeof e.step === 'number' && Number.isFinite(e.step) && e.step > 0 ? e.step : 1
+      pos += s
+    }
+    first = false
     const isExcluded =
       !!exclude && exclude.tournamentId === e.tournamentId && exclude.roundId === e.roundId
     const value = isExcluded ? null : getRefValue(tn, e.roundId, type, field)
@@ -107,48 +121,10 @@ export function resolveLadder(
       roundAbbr,
       label: `${tournamentAbbr} · ${roundAbbr}`,
       value,
+      pos,
     })
   }
   return out
-}
-
-// 锚点上下文:在解析后的标尺上,对某个下标 anchorIndex 找 prev/next。
-// prev = 下标更小一侧最近的、value 非 null 的项
-// next = 下标更大一侧最近的、value 非 null 的项
-// anchorIndex 自身必须 value 非 null,否则返回 null。
-export interface AnchorContext {
-  anchor: { label: string; roundAbbr: string; value: number }
-  prev: { label: string; roundAbbr: string; value: number } | null
-  next: { label: string; roundAbbr: string; value: number } | null
-}
-
-export function findAnchorContext(
-  ladder: RefLadderRound[],
-  anchorIndex: number
-): AnchorContext | null {
-  const a = ladder[anchorIndex]
-  if (!a || a.value === null) return null
-
-  let prev: AnchorContext['prev'] = null
-  for (let i = anchorIndex - 1; i >= 0; i--) {
-    if (ladder[i].value !== null) {
-      prev = { label: ladder[i].label, roundAbbr: ladder[i].roundAbbr, value: ladder[i].value! }
-      break
-    }
-  }
-  let next: AnchorContext['next'] = null
-  for (let i = anchorIndex + 1; i < ladder.length; i++) {
-    if (ladder[i].value !== null) {
-      next = { label: ladder[i].label, roundAbbr: ladder[i].roundAbbr, value: ladder[i].value! }
-      break
-    }
-  }
-
-  return {
-    anchor: { label: a.label, roundAbbr: a.roundAbbr, value: a.value },
-    prev,
-    next,
-  }
 }
 
 // ── 整轮快捷偏移(mwc±N)支持 ──────────────────────────────────
@@ -156,94 +132,96 @@ export function findAnchorContext(
 // N 为"格数",1 格 = 标尺相邻一项;符号即方向,正 = 更难(往 GF/标尺末尾走)。
 export const MWC_LADDER_TOURNAMENT_ID = 'osumania-4k-world-cup-2025'
 
-// 标尺上属于基准比赛(MWC)的各轮,带它们在 entries 中的真实下标。
-// 用于「基准: MWC QF」的自动匹配 / 手选下拉。
+// 标尺上属于基准比赛(MWC)的各轮,带它们在已解析 ladder 中的真实坐标。
+// 注意:ladderIndex 现在已改为 pos(真实轮位坐标),旧字段保留别名防兼容问题。
 export function baseLadderRounds(
   tournaments: Tournament[],
   entries: LadderEntry[],
   baseTournamentId: string = MWC_LADDER_TOURNAMENT_ID
-): { roundId: string; roundAbbr: string; roundName: string; ladderIndex: number }[] {
-  const out: { roundId: string; roundAbbr: string; roundName: string; ladderIndex: number }[] = []
+): { roundId: string; roundAbbr: string; roundName: string; ladderIndex: number; pos: number }[] {
+  // 先把 entries 里的 pos 算出来(只算 pos,不过滤 type/field)
+  const posMap = new Map<string, number>()
+  let curPos = 0
+  let first = true
+  for (const e of entries) {
+    if (!first) {
+      const s = typeof e.step === 'number' && Number.isFinite(e.step) && e.step > 0 ? e.step : 1
+      curPos += s
+    }
+    first = false
+    posMap.set(`${e.tournamentId}::${e.roundId}`, curPos)
+  }
+
+  const out: { roundId: string; roundAbbr: string; roundName: string; ladderIndex: number; pos: number }[] = []
   entries.forEach((e, idx) => {
     if (e.tournamentId !== baseTournamentId) return
     const tn = tournaments.find((t) => t.id === e.tournamentId)
     const round = tn?.rounds.find((r) => r.id === e.roundId)
     if (!round) return
+    const p = posMap.get(`${e.tournamentId}::${e.roundId}`) ?? idx
     out.push({
       roundId: e.roundId,
       roundAbbr: round.abbreviation || round.name || round.id,
       roundName: round.name || round.abbreviation || round.id,
-      ladderIndex: idx,
+      ladderIndex: idx,   // 保留兼容
+      pos: p,
     })
   })
   return out
 }
 
-// 分段线性插值:在解析后的 ladder(可能含 null)上,以 baseIndex 为原点、
-// offset 为格数,取该 (type,field) 的插值。只在 value 非 null 的点之间按
-// "标尺下标"线性插;target 落在数据两端之外则 clamp(不外推)。
-// 整数 offset 落在有数据的项上 → 直接返回该项值。
+// 按真实轮位坐标(pos)取值:以 basePos 为原点、offset 为"标准轮数",
+// 在有数据的点之间按 pos 线性插值。超出两端时用末段斜率线性外推。
+// 注意:旧函数 sampleLadderAtOffset 按下标插值;此函数按 pos 插值,
+//   当所有 step=1 时两者等价。
+// 外推结果 clamp 到 ≥ 0(难度不为负)。
+export function sampleLadderAtPos(
+  ladder: RefLadderRound[],
+  basePos: number,
+  offset: number
+): number | null {
+  const points: { p: number; v: number }[] = []
+  for (const r of ladder) {
+    if (r.value !== null) points.push({ p: r.pos, v: r.value })
+  }
+  if (points.length === 0) return null
+
+  const target = basePos + offset
+
+  // 区间插值
+  for (let k = 0; k < points.length - 1; k++) {
+    const a = points[k]
+    const b = points[k + 1]
+    if (target >= a.p && target <= b.p) {
+      const t = (target - a.p) / (b.p - a.p)
+      return Math.max(0, +(a.v + (b.v - a.v) * t).toFixed(2))
+    }
+  }
+
+  // 低端外推:用最低两点斜率
+  if (target < points[0].p) {
+    if (points.length === 1) return Math.max(0, +points[0].v.toFixed(2))
+    const a = points[0], b = points[1]
+    const slope = b.p !== a.p ? (b.v - a.v) / (b.p - a.p) : 0
+    return Math.max(0, +(a.v + slope * (target - a.p)).toFixed(2))
+  }
+
+  // 高端外推:用最高两点斜率
+  const last = points[points.length - 1]
+  if (points.length === 1) return Math.max(0, +last.v.toFixed(2))
+  const prev = points[points.length - 2]
+  const slope = last.p !== prev.p ? (last.v - prev.v) / (last.p - prev.p) : 0
+  return Math.max(0, +(last.v + slope * (target - last.p)).toFixed(2))
+}
+
+// 向后兼容别名:旧代码按"下标格数"调用时行为不变(step 全 1 时 pos=index)。
+// 新代码应直接用 sampleLadderAtPos。
 export function sampleLadderAtOffset(
   ladder: RefLadderRound[],
   baseIndex: number,
   offset: number
 ): number | null {
-  const points: { i: number; v: number }[] = []
-  ladder.forEach((r, i) => {
-    if (r.value !== null) points.push({ i, v: r.value })
-  })
-  if (points.length === 0) return null
-  const target = baseIndex + offset
-  if (target <= points[0].i) return points[0].v
-  if (target >= points[points.length - 1].i) return points[points.length - 1].v
-  for (let k = 0; k < points.length - 1; k++) {
-    const a = points[k]
-    const b = points[k + 1]
-    if (target >= a.i && target <= b.i) {
-      const t = (target - a.i) / (b.i - a.i)
-      return +(a.v + (b.v - a.v) * t).toFixed(2)
-    }
-  }
-  return points[points.length - 1].v
-}
-
-// 6 档插值。各档需要的依赖:
-//   anchorMinus → prev (用 anchor 和 prev 算)
-//   anchor      → 无 (直接 anchor.value)
-//   anchorPlus  → next (用 anchor 和 next 算)
-//   midHalf     → next (用 anchor 和 next 算)
-//   nextMinus   → next (用 anchor 和 next 算)
-//   next        → next (直接 next.value)
-// 依赖缺失时返回 null,UI 据此 disable 对应档位。
-export function interpolateAnchored(
-  ctx: AnchorContext,
-  position: RefPosition
-): number | null {
-  const a = ctx.anchor.value
-  switch (position) {
-    case 'anchorMinus': {
-      if (!ctx.prev) return null
-      const v = a - (a - ctx.prev.value) / 3
-      return +v.toFixed(1)
-    }
-    case 'anchor':
-      return a
-    case 'anchorPlus': {
-      if (!ctx.next) return null
-      const v = a + (ctx.next.value - a) / 3
-      return +v.toFixed(1)
-    }
-    case 'midHalf': {
-      if (!ctx.next) return null
-      const v = (a + ctx.next.value) / 2
-      return +v.toFixed(1)
-    }
-    case 'nextMinus': {
-      if (!ctx.next) return null
-      const v = ctx.next.value - (ctx.next.value - a) / 3
-      return +v.toFixed(1)
-    }
-    case 'next':
-      return ctx.next ? ctx.next.value : null
-  }
+  // baseIndex 对应 ladder[baseIndex].pos;若该项不存在则 fallback 到 baseIndex 自身
+  const basePos = ladder[baseIndex]?.pos ?? baseIndex
+  return sampleLadderAtPos(ladder, basePos, offset)
 }

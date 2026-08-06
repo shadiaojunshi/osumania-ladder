@@ -7,7 +7,7 @@ import { fetchLadder } from './DifficultyRefPicker'
 import {
   baseLadderRounds,
   resolveLadder,
-  sampleLadderAtOffset,
+  sampleLadderAtPos,
   type LadderEntry,
   type RefField,
   type RefType,
@@ -170,8 +170,9 @@ export function RoundRefPicker({ roundAbbr, siblingAbbrs, roundIndex, onApply, e
     return () => window.removeEventListener('keydown', onKey)
   }, [open])
 
-  const baseIndex = useMemo(
-    () => baseRounds.find((r) => r.roundId === baseRoundId)?.ladderIndex ?? -1,
+  // 基准轮在真实轮位轴上的坐标(pos)。找不到为 null。
+  const basePos = useMemo(
+    () => baseRounds.find((r) => r.roundId === baseRoundId)?.pos ?? null,
     [baseRounds, baseRoundId]
   )
 
@@ -180,17 +181,17 @@ export function RoundRefPicker({ roundAbbr, siblingAbbrs, roundIndex, onApply, e
     return Number.isFinite(n) ? n : 0
   }, [offset])
 
-  // 预览每个字段的插值结果
+  // 预览每个字段的插值结果。offset 现在是"标准轮数",在真实轮位轴上取值。
   const preview = useMemo(() => {
-    if (!entries || baseIndex < 0) return null
+    if (!entries || basePos === null) return null
     const result: RoundRefValues = { rc: 0, hbRf: 0, hbLn: 0, ln: 0, tbRf: 0, tbLn: 0 }
     for (const f of FIELDS) {
       const ladder = resolveLadder(tournaments, entries, f.type, f.field, excludeRef)
-      const v = sampleLadderAtOffset(ladder, baseIndex, offsetNum)
+      const v = sampleLadderAtPos(ladder, basePos, offsetNum)
       result[f.key] = v ?? 0
     }
     return result
-  }, [entries, baseIndex, offsetNum, excludeRef])
+  }, [entries, basePos, offsetNum, excludeRef])
 
   const apply = () => {
     if (!preview) return

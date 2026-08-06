@@ -4,10 +4,8 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useT, type MessageKey } from '@/lib/i18n'
 import { tournaments } from '@/generated/tournaments'
 import {
-  findAnchorContext,
-  interpolateAnchored,
   resolveLadder,
-  type AnchorContext,
+  sampleLadderAtPos,
   type LadderEntry,
   type RefField,
   type RefPosition,
@@ -51,6 +49,17 @@ const POSITIONS: RefPosition[] = [
   'nextMinus',
   'next',
 ]
+
+// 每档 = 相对锚点的"真实轮位偏移"(标准轮数)。走 sampleLadderAtPos 在真实刻度轴上取值,
+// 所以"加½轮"永远是半轮,不受相邻项实际隔多远影响。step 全 1 时与旧邻项插值数学等价。
+const POSITION_OFFSET: Record<RefPosition, number> = {
+  anchorMinus: -1 / 3,
+  anchor: 0,
+  anchorPlus: 1 / 3,
+  midHalf: 0.5,
+  nextMinus: 2 / 3,
+  next: 1,
+}
 
 export function DifficultyRefPicker({ value, onChange, type, field, excludeRef }: Props) {
   const t = useT()
@@ -145,22 +154,21 @@ export function DifficultyRefPicker({ value, onChange, type, field, excludeRef }
     return () => window.removeEventListener('keydown', onKey)
   }, [open])
 
-  const ctx: AnchorContext | null = useMemo(() => {
+  // 锚点信息:选中项的真实轮位坐标(pos)、缩写、当前值。
+  const anchorInfo = useMemo(() => {
     if (anchorKey === '') return null
     const idx = Number(anchorKey)
     if (!Number.isInteger(idx)) return null
-    return findAnchorContext(ladder, idx)
+    const a = ladder[idx]
+    if (!a || a.value === null) return null
+    return { pos: a.pos, roundAbbr: a.roundAbbr, value: a.value }
   }, [ladder, anchorKey])
 
-  // 当前 position 在 ctx 下不可用就回退到 anchor
-  useEffect(() => {
-    if (!ctx) return
-    if (interpolateAnchored(ctx, position) === null) {
-      setPosition('anchor')
-    }
-  }, [ctx, position])
+  // 预览:锚点真实轮位 + 该档偏移,在真实刻度轴上取值(超界线性外推)。
+  const valueAt = (pos: RefPosition): number | null =>
+    anchorInfo ? sampleLadderAtPos(ladder, anchorInfo.pos, POSITION_OFFSET[pos]) : null
 
-  const previewVal = ctx ? interpolateAnchored(ctx, position) : null
+  const previewVal = valueAt(position)
 
   const apply = () => {
     if (previewVal === null) return
@@ -169,9 +177,8 @@ export function DifficultyRefPicker({ value, onChange, type, field, excludeRef }
   }
 
   const positionLabel = (pos: RefPosition): string => {
-    const anchor = ctx?.anchor.roundAbbr || '?'
-    const next = ctx?.next?.roundAbbr || '?'
-    return t(positionKey(pos), { anchor, next })
+    const anchor = anchorInfo?.roundAbbr || '?'
+    return t(positionKey(pos), { anchor })
   }
 
   return (
@@ -245,12 +252,11 @@ export function DifficultyRefPicker({ value, onChange, type, field, excludeRef }
                         </option>
                       ))}
                     </select>
-                    {ctx && (
+                    {anchorInfo && (
                       <p className="text-[10px] text-gray-400 dark:text-neutral-500 mt-1">
-                        {t('refPicker.adjacency', {
-                          prev: ctx.prev?.roundAbbr || '—',
-                          anchor: ctx.anchor.roundAbbr,
-                          next: ctx.next?.roundAbbr || '—',
+                        {t('refPicker.anchorPos', {
+                          anchor: anchorInfo.roundAbbr,
+                          pos: anchorInfo.pos.toFixed(1),
                         })}
                       </p>
                     )}
@@ -262,7 +268,7 @@ export function DifficultyRefPicker({ value, onChange, type, field, excludeRef }
                     </label>
                     <div className="space-y-0.5">
                       {POSITIONS.map((pos) => {
-                        const previewAt = ctx ? interpolateAnchored(ctx, pos) : null
+                        const previewAt = valueAt(pos)
                         const disabled = previewAt === null
                         return (
                           <label

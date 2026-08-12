@@ -738,7 +738,7 @@
         {
           "slot": "RC5",
           "type": "RC",
-          "realType": "DP",
+          "realType": "STC",
           "name": "Yung Lean - Hoover (Sewerslvt Remix) [WHERE YOU GO WHEN THE WORLD HAS HIT ME? | 1.05x]",
           "difficulty": 10.2,
           "beatmapId": 5267455,
@@ -897,7 +897,7 @@
         {
           "slot": "RC5",
           "type": "RC",
-          "realType": "DP",
+          "realType": "STC",
           "name": "Hoshimachi Suisei - BIBBIDIBA [Cinderella Story]",
           "difficulty": 12.3,
           "beatmapId": 5147267,
@@ -1030,7 +1030,7 @@
       "abbreviation": "F",
       "order": 8,
       "difficulty": {
-        "min": 12.6,
+        "min": 11.6,
         "max": 13.7,
         "average": 13.23
       },
@@ -1074,7 +1074,7 @@
         {
           "slot": "RC5",
           "type": "RC",
-          "realType": "DP",
+          "realType": "STC",
           "name": "Sheena Ringo - Identity [1.1]",
           "difficulty": 13.3,
           "beatmapId": 5229485,
@@ -1167,7 +1167,7 @@
           "type": "HB",
           "realType": "HB4",
           "name": "Salty Salt - Hologram of Sakura [Ycloki's 'phony projection' (edit) 1.05x]",
-          "difficulty": 12.6,
+          "difficulty": 11.6,
           "beatmapId": 5289902,
           "beatmapsetId": 2429271,
           "difficultyLn": 13.2
@@ -1207,7 +1207,7 @@
       "abbreviation": "GF",
       "order": 9,
       "difficulty": {
-        "min": 13,
+        "min": 12.5,
         "max": 14.3,
         "average": 13.7
       },
@@ -1251,7 +1251,7 @@
         {
           "slot": "RC5",
           "type": "RC",
-          "realType": "DP",
+          "realType": "STC",
           "name": "Yuyoyuppe feat. Megurine Luka - Misery (Cut Ver.) [i'll only fall into solitude 1.05x]",
           "difficulty": 13.8,
           "beatmapId": 5299958,
@@ -1325,7 +1325,7 @@
           "type": "LN",
           "realType": "LNMX",
           "name": "TWC Sound Team \"Xurv Stasis Rasufim\" - Kaze no Denwa (Cut Ver.) [Mayday from a Parallel Universe]",
-          "difficulty": 13.7,
+          "difficulty": 14.1,
           "beatmapId": 5299908,
           "beatmapsetId": 2432440
         },
@@ -1334,20 +1334,20 @@
           "type": "HB",
           "realType": "MNTB",
           "name": "Sydosys as \"[LS]Ham\" - Apollyon (Cut Ver.) [Depths of Divine Punishment]",
-          "difficulty": 13,
+          "difficulty": 12.5,
           "beatmapId": 5299971,
           "beatmapsetId": 2432474,
-          "difficultyLn": 13.6
+          "difficultyLn": 13.9
         },
         {
           "slot": "HB2",
           "type": "HB",
           "realType": "HB4",
           "name": "tropical interface - Havoc (Supire Remix) [CRaZy. (w/ Nicknem) (cut)]",
-          "difficulty": 13,
+          "difficulty": 13.3,
           "beatmapId": 5299055,
           "beatmapsetId": 2332846,
-          "difficultyLn": 13.6
+          "difficultyLn": 14.1
         },
         {
           "slot": "FS/TB",

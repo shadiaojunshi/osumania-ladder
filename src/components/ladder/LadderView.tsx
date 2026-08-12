@@ -11,7 +11,7 @@ const DIFFICULTY_RANGE = { min: 0.5, max: 16.5 }
 const BOX_HEIGHT_TYPE = 28
 
 const LN_REAL_TYPES = new Set(['RE', 'CO', 'TE', 'DE', 'SW', 'JW', 'IN', 'LNMX', 'LNTC', 'OLN'])
-const HB_REAL_TYPES = new Set(['HB1', 'HB2', 'HB3', 'HB4', 'HB5', 'RCmainHB', 'LNmainHB', 'MNTB', 'OHB'])
+const HB_REAL_TYPES = new Set(['HB1', 'HB2', 'HB3', 'HB4', 'HB5', 'RCmainHB', 'LNmainHB', 'MXHB', 'MNTB', 'OHB'])
 
 function isLnBased(m: { type: string; realType: string }): boolean {
   return m.type === 'LN' || m.type === 'HB' || LN_REAL_TYPES.has(m.realType) || HB_REAL_TYPES.has(m.realType)

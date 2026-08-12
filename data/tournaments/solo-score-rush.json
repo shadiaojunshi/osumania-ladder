@@ -566,7 +566,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "ADP",
+          "realType": "MTC",
           "name": "Gangpol und Mit - Chinese Slavery (Faits Divers) [Kid Named This program cannot be run in DOS mode.]",
           "difficulty": 10.2,
           "beatmapId": 5257502,
@@ -584,7 +584,7 @@
         {
           "slot": "RC6",
           "type": "RC",
-          "realType": "TC",
+          "realType": "SATC",
           "name": "Axolotes Mexicanos - Interestelar [+++]",
           "difficulty": 10.2,
           "beatmapId": 5257846,
@@ -665,6 +665,164 @@
           "beatmapId": 5258006,
           "beatmapsetId": 2418209,
           "difficultyLn": 11.5
+        }
+      ],
+      "typeDifficulties": {
+        "RC": {
+          "rf": 10.2
+        },
+        "HB": {
+          "rf": 9.7,
+          "ln": 10.1
+        },
+        "LN": {
+          "ln": 10.2
+        },
+        "SV": {},
+        "TB": {
+          "rf": 11,
+          "ln": 11.5
+        }
+      }
+    },
+    {
+      "id": "round-6",
+      "name": "Quarter Finals",
+      "abbreviation": "QF",
+      "order": 6,
+      "difficulty": {
+        "min": 9.7,
+        "max": 10.2,
+        "average": 10.17
+      },
+      "maps": [
+        {
+          "slot": "RC1",
+          "type": "RC",
+          "realType": "SS",
+          "name": "Drowning Pool - Bodies [edit]",
+          "difficulty": 10.2,
+          "beatmapId": 5268022,
+          "beatmapsetId": 2354226
+        },
+        {
+          "slot": "RC2",
+          "type": "RC",
+          "realType": "SA",
+          "name": "Yukino Ito - Spinning Library [Zia's Kataomoi (edit)]",
+          "difficulty": 10.2,
+          "beatmapId": 5268387,
+          "beatmapsetId": 2421619
+        },
+        {
+          "slot": "RC3",
+          "type": "RC",
+          "realType": "CJ",
+          "name": "Tatsuya Kitani - ALWAYS BE WITH YOU XD [TRAGICOMIC LOVE EXDEE 1.1x]",
+          "difficulty": 10.2,
+          "beatmapId": 5267470,
+          "beatmapsetId": 2421337
+        },
+        {
+          "slot": "RC4",
+          "type": "RC",
+          "realType": "MTC",
+          "name": "lhk - Tiresome nascence that lasts 50,000,00,00 years [eon 1.1x (122bpm)]",
+          "difficulty": 10.2,
+          "beatmapId": 5267943,
+          "beatmapsetId": 2421514
+        },
+        {
+          "slot": "RC5",
+          "type": "RC",
+          "realType": "DP",
+          "name": "Yung Lean - Hoover (Sewerslvt Remix) [WHERE YOU GO WHEN THE WORLD HAS HIT ME? | 1.05x]",
+          "difficulty": 10.2,
+          "beatmapId": 5267455,
+          "beatmapsetId": 2421330
+        },
+        {
+          "slot": "RC6",
+          "type": "RC",
+          "realType": "MX",
+          "name": "Frums - stop-motion [0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1]",
+          "difficulty": 10.2,
+          "beatmapId": 5309118,
+          "beatmapsetId": 2435629
+        },
+        {
+          "slot": "LN1",
+          "type": "LN",
+          "realType": "CO",
+          "name": "Death Ohagi - Do Cyber Girl Dream of Becoming a Diva? (feat. Kasane Teto) [floating dream 1.05x (cut)]",
+          "difficulty": 10.2,
+          "beatmapId": 5267960,
+          "beatmapsetId": 2238773
+        },
+        {
+          "slot": "LN2",
+          "type": "LN",
+          "realType": "DE",
+          "name": "DJ Ralsei - Sekai kara ____ ga Kieru Toki (Cut Ver.) [now just a distant memory]",
+          "difficulty": 10.2,
+          "beatmapId": 5268391,
+          "beatmapsetId": 2421622
+        },
+        {
+          "slot": "LN3",
+          "type": "LN",
+          "realType": "LNTC",
+          "name": "IU - The Red Shoes (Cut Ver.) [Fleeting; Long, and on I go 1.05x]",
+          "difficulty": 10.2,
+          "beatmapId": 5268381,
+          "beatmapsetId": 2421616
+        },
+        {
+          "slot": "LN4",
+          "type": "LN",
+          "realType": "IN",
+          "name": "goreshit - satori de pon! [Blah! 1.0x]",
+          "difficulty": 10.2,
+          "beatmapId": 5268217,
+          "beatmapsetId": 2421576
+        },
+        {
+          "slot": "LN5",
+          "type": "LN",
+          "realType": "SW",
+          "name": "Silentroom - XHRONOXAPSULE [\\\\ REXOLLEXT || FOREXEE //]",
+          "difficulty": 10.2,
+          "beatmapId": 4185868,
+          "beatmapsetId": 2011541
+        },
+        {
+          "slot": "HB1",
+          "type": "HB",
+          "realType": "MNTB",
+          "name": "Eraser - NAND [CONJUNCTION NEGATION (2025) 1.1x]",
+          "difficulty": 9.7,
+          "beatmapId": 5268242,
+          "beatmapsetId": 2210547,
+          "difficultyLn": 10.1
+        },
+        {
+          "slot": "HB2",
+          "type": "HB",
+          "realType": "HB3",
+          "name": "Vince Staples - Yeah Right feat. Kendrick Lamar [Sonification]",
+          "difficulty": 9.7,
+          "beatmapId": 5268309,
+          "beatmapsetId": 2421604,
+          "difficultyLn": 10.1
+        },
+        {
+          "slot": "FS/TB",
+          "type": "FS/TB",
+          "realType": "TB",
+          "name": "GTS Orchestra Team - Akatsuki - Tokoyami no Yoru ga Aketa Toki - (Cut Ver.) [Formless Stillness]",
+          "difficulty": 0,
+          "beatmapId": 5268648,
+          "beatmapsetId": 2421718
         }
       ],
       "typeDifficulties": {

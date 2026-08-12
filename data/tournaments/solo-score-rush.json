@@ -217,12 +217,13 @@
         },
         {
           "slot": "FS/TB",
-          "type": "FS/TB",
+          "type": "TB",
           "realType": "TB",
           "name": "Cansol - 1,2,3,4! Overclocked Edition (Cut Ver.) [Fundamental Steps]",
-          "difficulty": 0,
+          "difficulty": 7.35,
           "beatmapId": 5224263,
-          "beatmapsetId": 2407156
+          "beatmapsetId": 2407156,
+          "difficultyLn": 8.19
         }
       ],
       "typeDifficulties": {
@@ -358,12 +359,13 @@
         },
         {
           "slot": "FS/TB",
-          "type": "FS/TB",
+          "type": "TB",
           "realType": "TB",
           "name": "BilliumMoto & Dictate - 1KARUGA (Cut Ver.) [Foundational Structures]",
-          "difficulty": 0,
+          "difficulty": 8.5,
           "beatmapId": 5234705,
-          "beatmapsetId": 2410766
+          "beatmapsetId": 2410766,
+          "difficultyLn": 9.5
         }
       ],
       "typeDifficulties": {
@@ -499,12 +501,13 @@
         },
         {
           "slot": "FS/TB",
-          "type": "FS/TB",
+          "type": "TB",
           "realType": "TB",
           "name": "tn-shi - Hitech Intuition [Fusion Synthesis]",
-          "difficulty": 0,
+          "difficulty": 9.8,
           "beatmapId": 5246501,
-          "beatmapsetId": 2414522
+          "beatmapsetId": 2414522,
+          "difficultyLn": 10.8
         }
       ],
       "typeDifficulties": {
@@ -620,7 +623,7 @@
         {
           "slot": "LN4",
           "type": "LN",
-          "realType": "IN",
+          "realType": "LNWL",
           "name": "Fractal Dreamers - Ad Astra [Chasing the Spark Beyond 1.05x]",
           "difficulty": 10.2,
           "beatmapId": 5257869,
@@ -780,7 +783,7 @@
         {
           "slot": "LN4",
           "type": "LN",
-          "realType": "IN",
+          "realType": "LNWL",
           "name": "goreshit - satori de pon! [Blah! 1.0x]",
           "difficulty": 10.2,
           "beatmapId": 5268217,
@@ -817,12 +820,13 @@
         },
         {
           "slot": "FS/TB",
-          "type": "FS/TB",
+          "type": "TB",
           "realType": "TB",
           "name": "GTS Orchestra Team - Akatsuki - Tokoyami no Yoru ga Aketa Toki - (Cut Ver.) [Formless Stillness]",
-          "difficulty": 0,
+          "difficulty": 11,
           "beatmapId": 5268648,
-          "beatmapsetId": 2421718
+          "beatmapsetId": 2421718,
+          "difficultyLn": 11.5
         }
       ],
       "typeDifficulties": {

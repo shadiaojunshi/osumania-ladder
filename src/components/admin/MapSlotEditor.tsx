@@ -49,6 +49,7 @@ export const REAL_TYPES: Record<string, { id: string; name: string }[]> = {
     { id: 'IN', name: 'Inverse (IN)' },
     { id: 'LNMX', name: 'LN Mixed (LNMX)' },
     { id: 'LNTC', name: 'Technical LN (LNTC)' },
+    { id: 'LNWL', name: 'LNwall (LNWL)' },
     { id: 'OLN', name: 'OtherLongnote (OLN)' },
   ],
   SV: [

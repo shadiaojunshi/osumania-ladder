@@ -674,6 +674,42 @@ async function generatePack(targetType) {
       sizeMB: Math.round(stats.size / 1024 / 1024),
       outputPath,
     })
+
+    // 生成完立即上传 R2 packs 桶并删本地副本。关键:删除必须发生在生成阶段,
+    // 不能等所有包都生成完再一起删——否则 output/ 会堆满全部 52 个包
+    // (12.6GB+),在 14GB 磁盘的 runner 上先被撑爆(进程被杀 → "hosted runner
+    // lost communication" + 日志空)。逐包上传让磁盘峰值只占一个包(~几百MB)。
+    // Body 用 Buffer 而非流:SDK 对流式 body 默认走 Transfer-Encoding: chunked,
+    // 而 R2 的 S3 API 不支持 chunked(会 403 签名错误),Buffer + Content-Length
+    // 才是 R2 验证过的上传方式。每包 Buffer(~几百MB)+ 前面 prefetch/archive
+    // 的缓冲仍远在 8GB 内存内,不是瓶颈。
+    if (R2_PACKS_PUBLIC_URL) {
+      const key = outputFileName
+      const entry = results[results.length - 1]
+      const buf = fs.readFileSync(outputPath)
+      try {
+        await withRetry(() => s3.send(new PutObjectCommand({
+          Bucket: R2_PACKS_BUCKET,
+          Key: key,
+          Body: buf,
+          ContentType: 'application/x-osu-archive',
+        })), { label: `上传 ${key}` })
+        entry.links = entry.links || {}
+        entry.links.r2 = `${R2_PACKS_PUBLIC_URL}/${key}`
+        console.log(`  [${targetType} ${partNum}] Uploaded ${key} (${(stats.size / 1024 / 1024).toFixed(1)}MB)`)
+      } catch (err) {
+        console.warn(`  Failed to upload ${key}: ${err.message} (local copy kept)`)
+      }
+      // 只在上传成功后才删本地:失败时保留(单包几百MB可接受),避免这张包
+      // 从 R2 里静默消失、下载页直接断链。
+      if (entry.links && entry.links.r2) {
+        try {
+          fs.unlinkSync(outputPath)
+        } catch (unlinkErr) {
+          console.warn(`  Failed to remove local ${outputPath}: ${unlinkErr.message}`)
+        }
+      }
+    }
   }
 
   return results
@@ -728,68 +764,33 @@ async function main() {
         mapCount: result.mapCount,
         totalMaps: result.totalMaps,
         lastUpdated: new Date().toISOString().split('T')[0],
-        links: previous?.links || {},
+        // links 优先取本趟生成时逐包上传写好的新 r2 链接;上传失败时回退旧 manifest
+        links: result.links && Object.keys(result.links).length ? result.links : (previous?.links || {}),
         gdriveFileId: previous?.gdriveFileId,
         sizeMB: result.sizeMB,
       })
     }
     manifest.lastGenerated = new Date().toISOString()
 
-    // R2 直发:把生成好的 .osz 同步上传到 packs 公开桶,manifest 写 links.r2。
-    // 没配 R2_PACKS_PUBLIC_URL 就跳过(本地手动跑、或还没建 packs 桶时)。
+    // 上传已内联进 generatePack 的每包循环(生成完立即传 R2 packs 桶并删本地,
+    // 磁盘峰值只占一个包,不会再被全量 12.6GB 撑爆)。这里只做孤儿清理:
+    // packs 桶里有但本次没产出的 .osz(分包数缩了 / type 删了)。
+    // 注意用 producedKeys(本次产出的全部包)而非 uploadedKeys:若某包本趟上传
+    // 失败,桶里旧文件仍是最后一版有效副本,不能当孤儿删。
     if (R2_PACKS_PUBLIC_URL) {
-      console.log(`\nUploading ${allResults.length} pack(s) to R2 packs bucket...`)
-      const uploadedKeys = new Set()
-      for (const result of allResults) {
-        const key = `${result.realType}_${result.part}.osz`
-        try {
-          const buf = fs.readFileSync(result.outputPath)
-          await withRetry(() => s3.send(new PutObjectCommand({
-            Bucket: R2_PACKS_BUCKET,
-            Key: key,
-            Body: buf,
-            ContentType: 'application/x-osu-archive',
-          })), { label: `上传 ${key}` })
-          uploadedKeys.add(key)
-          const entry = manifest.packs.find(p => p.realType === result.realType && p.part === result.part)
-          if (entry) {
-            entry.links = entry.links || {}
-            entry.links.r2 = `${R2_PACKS_PUBLIC_URL}/${key}`
-          }
-          console.log(`  Uploaded ${key} (${result.sizeMB}MB)`)
-          // R2 上传成功后立即删本地副本。runner 磁盘只有 14GB,52 个包
-          // (12.6GB+) 全堆在 output/ 会把磁盘撑爆(曾因此 runner 失联)。
-          // R2 是最终保存地,本地 output/ 只是临时缓冲,删掉不影响后续流程。
-          try {
-            fs.unlinkSync(result.outputPath)
-          } catch (unlinkErr) {
-            console.warn(`  Failed to remove local ${result.outputPath}: ${unlinkErr.message}`)
-          }
-        } catch (err) {
-          console.warn(`  Failed to upload ${key}: ${err.message}`)
-        }
-      }
-
-      // 删孤儿:packs 桶里有但本次没产出的 .osz(分包数缩了 / type 删了)
+      const producedKeys = new Set(allResults.map(r => `${r.realType}_${r.part}.osz`))
       try {
         const cmd = new ListObjectsV2Command({ Bucket: R2_PACKS_BUCKET })
         const res = await s3.send(cmd)
         const orphans = (res.Contents || [])
           .map(o => o.Key)
-          .filter(k => k && k.endsWith('.osz') && !uploadedKeys.has(k))
+          .filter(k => k && k.endsWith('.osz') && !producedKeys.has(k))
         for (const k of orphans) {
           try {
             await s3.send(new DeleteObjectCommand({ Bucket: R2_PACKS_BUCKET, Key: k }))
             console.log(`  Deleted orphan ${k}`)
           } catch (err) {
             console.warn(`  Failed to delete orphan ${k}: ${err.message}`)
-          }
-        }
-        // 同时清掉 manifest 里 r2 链接所指向的孤儿引用(其它 entry 的 links.r2 已在上面写好)
-        for (const pack of manifest.packs) {
-          const expected = `${pack.realType}_${pack.part}.osz`
-          if (pack.links && pack.links.r2 && !uploadedKeys.has(expected)) {
-            delete pack.links.r2
           }
         }
       } catch (err) {

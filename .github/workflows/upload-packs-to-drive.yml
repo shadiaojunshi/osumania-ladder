@@ -1,20 +1,19 @@
 name: Upload Packs to Google Drive (Re-run)
 
-# 不重新生成合包,只把已有 run 的 artifact 拉下来跑 Drive 上传。
+# 不重新生成合包,直接从 R2 packs 桶拉流跑 Drive 上传。
 # 用于 Drive 凭据修复后,无需再花 10+ 分钟重跑 Generate Map Packs。
 on:
   workflow_dispatch:
     inputs:
       run_id:
-        description: '已生成 packs artifact 的 Generate Map Packs run ID(URL 末段那串数字)'
-        required: true
+        description: '已生成 packs 的 Generate Map Packs run ID(仅作记录,实际从 R2 读)'
+        required: false
 
 jobs:
   upload:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      actions: read
     steps:
       - uses: actions/checkout@v4
 
@@ -24,14 +23,6 @@ jobs:
 
       - run: npm ci
 
-      - name: Download packs artifact from previous run
-        uses: actions/download-artifact@v4
-        with:
-          name: packs
-          path: output
-          run-id: ${{ github.event.inputs.run_id }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Upload to Google Drive
         run: node scripts/upload-to-gdrive.js
         env:
@@ -39,6 +30,11 @@ jobs:
           GDRIVE_CLIENT_SECRET: ${{ secrets.GDRIVE_CLIENT_SECRET }}
           GDRIVE_REFRESH_TOKEN: ${{ secrets.GDRIVE_REFRESH_TOKEN }}
           GDRIVE_FOLDER_ID: ${{ secrets.GDRIVE_FOLDER_ID }}
+          # Drive 上传从 R2 packs 桶拉流直传(不再依赖本地 output/)
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY: ${{ secrets.R2_ACCESS_KEY }}
+          R2_SECRET_KEY: ${{ secrets.R2_SECRET_KEY }}
+          R2_PACKS_BUCKET: ${{ secrets.R2_PACKS_BUCKET }}
 
       - name: Commit manifest
         run: |

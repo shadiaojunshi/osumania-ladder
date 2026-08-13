@@ -1,6 +1,7 @@
 const fs = require('fs')
 const path = require('path')
 const { google } = require('googleapis')
+const { S3Client, GetObjectCommand } = require('@aws-sdk/client-s3')
 
 const CLIENT_ID = process.env.GDRIVE_CLIENT_ID
 const CLIENT_SECRET = process.env.GDRIVE_CLIENT_SECRET
@@ -11,6 +12,21 @@ if (!CLIENT_ID || !CLIENT_SECRET || !REFRESH_TOKEN || !FOLDER_ID) {
   console.error('Missing GDRIVE_* env vars')
   process.exit(1)
 }
+
+// 合包在 CI 上不再落盘本地(output/ 只是 generate 阶段的临时缓冲,R2 上传后即删)。
+// Drive 上传优先从 R2 packs 桶拉流直传,避免 runner 磁盘再次被全量包撑爆(14GB);
+// 本地手动跑(没配 R2_* 但 output/ 里有包)时回退到读本地文件。
+const R2_ACCOUNT_ID = process.env.R2_ACCOUNT_ID
+const R2_ACCESS_KEY = process.env.R2_ACCESS_KEY
+const R2_SECRET_KEY = process.env.R2_SECRET_KEY
+const R2_PACKS_BUCKET = process.env.R2_PACKS_BUCKET || 'osumania-ladder-packs'
+const hasR2 = !!(R2_ACCOUNT_ID && R2_ACCESS_KEY && R2_SECRET_KEY)
+
+const s3 = hasR2 ? new S3Client({
+  region: 'auto',
+  endpoint: `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+  credentials: { accessKeyId: R2_ACCESS_KEY, secretAccessKey: R2_SECRET_KEY },
+}) : null
 
 const OUTPUT_DIR = path.join(__dirname, '..', 'output')
 const MANIFEST_PATH = path.join(__dirname, '..', 'data', 'packs-manifest.json')
@@ -48,15 +64,6 @@ function getAuth() {
   return oauth2
 }
 
-// 文件名一律 <realType>_<part>.osz —— generate-pack.js 已统一
-function fileNameToEntry(manifest, fileName) {
-  const m = fileName.match(/^(.+)_(\d+)\.osz$/)
-  if (!m) return null
-  const realType = m[1]
-  const part = Number(m[2])
-  return manifest.packs.find(p => p.realType === realType && p.part === part) || null
-}
-
 async function findExistingFileId(drive, name) {
   const q = `name = '${name.replace(/'/g, "\\'")}' and '${FOLDER_ID}' in parents and trashed = false`
   const res = await drive.files.list({
@@ -68,8 +75,8 @@ async function findExistingFileId(drive, name) {
   return res.data.files && res.data.files[0] ? res.data.files[0].id : null
 }
 
-async function uploadOrUpdate(drive, filePath, fileName, knownFileId) {
-  const media = { mimeType: 'application/octet-stream', body: fs.createReadStream(filePath) }
+async function uploadOrUpdate(drive, body, fileName, knownFileId) {
+  const media = { mimeType: 'application/octet-stream', body }
   let fileId = knownFileId
 
   if (fileId) {
@@ -115,21 +122,12 @@ async function uploadOrUpdate(drive, filePath, fileName, knownFileId) {
 }
 
 async function main() {
-  if (!fs.existsSync(OUTPUT_DIR)) {
-    console.log('No output/ directory, skipping')
-    return
-  }
-  const oszFiles = fs.readdirSync(OUTPUT_DIR).filter(f => f.endsWith('.osz'))
-  if (oszFiles.length === 0) {
-    console.log('No .osz files in output/, skipping')
-    return
-  }
-
   if (!fs.existsSync(MANIFEST_PATH)) {
     console.error('packs-manifest.json missing — generate-pack must run first')
     process.exit(1)
   }
   const manifest = JSON.parse(fs.readFileSync(MANIFEST_PATH, 'utf-8'))
+  const packs = manifest.packs || []
 
   // 旧 manifest(generate-pack.js 在重建前转储到这)用来识别孤儿 fileId
   let prevManifest = { packs: [] }
@@ -137,24 +135,35 @@ async function main() {
     prevManifest = JSON.parse(fs.readFileSync(PREV_MANIFEST_PATH, 'utf-8'))
   }
 
+  // 来源:有 R2 凭据 → 从 R2 拉流;否则回退本地 output/(手动跑,generate 未删本地)。
+  // 返回一个"每次调用都重新创建 body 的工厂"——重试时流是一次性的,必须重新获取。
+  const makeBody = (fileName) => {
+    if (hasR2) {
+      const r2Key = fileName
+      return async () => {
+        const getRes = await s3.send(new GetObjectCommand({ Bucket: R2_PACKS_BUCKET, Key: r2Key }))
+        return getRes.Body
+      }
+    }
+    const filePath = path.join(OUTPUT_DIR, fileName)
+    return () => fs.createReadStream(filePath)
+  }
+
   const auth = getAuth()
   const drive = google.drive({ version: 'v3', auth })
 
-  console.log(`Uploading ${oszFiles.length} pack(s) to Google Drive...`)
+  console.log(`Uploading ${packs.length} pack(s) to Google Drive (source: ${hasR2 ? 'R2' : 'local output/'})...`)
 
   const uploadedFileIds = new Set()
-  for (const fileName of oszFiles) {
-    const entry = fileNameToEntry(manifest, fileName)
-    if (!entry) {
-      console.warn(`  Skip ${fileName}: no matching manifest entry`)
-      continue
-    }
-    const filePath = path.join(OUTPUT_DIR, fileName)
+  for (const entry of packs) {
+    // manifest 里每个 pack 的文件名统一是 <realType>_<part>.osz,与 R2 键一致
+    const fileName = `${entry.realType}_${entry.part}.osz`
+    const getBody = makeBody(fileName)
     const knownFileId = entry.gdriveFileId || null
 
     try {
       const fileId = await withRetry(
-        () => uploadOrUpdate(drive, filePath, fileName, knownFileId),
+        async () => uploadOrUpdate(drive, await getBody(), fileName, knownFileId),
         { label: `上传 ${fileName}` },
       )
       entry.gdriveFileId = fileId

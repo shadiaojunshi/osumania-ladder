@@ -757,6 +757,14 @@ async function main() {
             entry.links.r2 = `${R2_PACKS_PUBLIC_URL}/${key}`
           }
           console.log(`  Uploaded ${key} (${result.sizeMB}MB)`)
+          // R2 上传成功后立即删本地副本。runner 磁盘只有 14GB,52 个包
+          // (12.6GB+) 全堆在 output/ 会把磁盘撑爆(曾因此 runner 失联)。
+          // R2 是最终保存地,本地 output/ 只是临时缓冲,删掉不影响后续流程。
+          try {
+            fs.unlinkSync(result.outputPath)
+          } catch (unlinkErr) {
+            console.warn(`  Failed to remove local ${result.outputPath}: ${unlinkErr.message}`)
+          }
         } catch (err) {
           console.warn(`  Failed to upload ${key}: ${err.message}`)
         }

@@ -1,0 +1,645 @@
+{
+  "id": "roasted-duck-cup-2024",
+  "name": "Roasted Duck Cup 2024",
+  "abbreviation": "RDC 2024",
+  "keyCount": 4,
+  "year": 2024,
+  "tags": [
+    "4k，chinese"
+  ],
+  "rounds": [
+    {
+      "id": "round-1",
+      "name": "Qualifiers",
+      "abbreviation": "Qual",
+      "order": 1,
+      "isQualifier": true,
+      "difficulty": {
+        "min": 0,
+        "max": 0,
+        "average": 0
+      },
+      "maps": [
+        {
+          "slot": "A-RC1",
+          "type": "RC",
+          "realType": "JS",
+          "name": "Frailty - exhausted.wav (cut ver.) [Duck A-01: Fatigue]",
+          "difficulty": 0,
+          "beatmapId": 4702281,
+          "beatmapsetId": 2218423
+        },
+        {
+          "slot": "A-LN1",
+          "type": "LN",
+          "realType": "CO",
+          "name": "Creepy Nuts - Inu mo ku wanai [Duck A-02: Crazy Night]",
+          "difficulty": 0,
+          "beatmapId": 4702307,
+          "beatmapsetId": 2218441
+        },
+        {
+          "slot": "A-RC2",
+          "type": "RC",
+          "realType": "MX",
+          "name": "Sydosys - Wandered [Duck A-03: Gravitation]",
+          "difficulty": 0,
+          "beatmapId": 4702287,
+          "beatmapsetId": 2218426
+        },
+        {
+          "slot": "A-LN2",
+          "type": "LN",
+          "realType": "DE",
+          "name": "Laur - Sound Chimera [Duck A-04: Tartarus]",
+          "difficulty": 0,
+          "beatmapId": 4702305,
+          "beatmapsetId": 2218439
+        },
+        {
+          "slot": "A-HB1",
+          "type": "HB",
+          "realType": "MNTB",
+          "name": "Uinyasu, Occhoko Bunny - Aa Kenran no Yume ga Gotoku (Epsilon Remix) [Blossom]",
+          "difficulty": 0,
+          "beatmapId": 4702309,
+          "beatmapsetId": 2218443
+        },
+        {
+          "slot": "B-RC1",
+          "type": "RC",
+          "realType": "JS",
+          "name": "Morimori Atsushi - Funkotsu Saishin Casino [Duck B-01: 777]",
+          "difficulty": 0,
+          "beatmapId": 4702306,
+          "beatmapsetId": 2218440
+        },
+        {
+          "slot": "B-LN1",
+          "type": "LN",
+          "realType": "RE",
+          "name": "Jay Chou - Mojito [Duck B-02: Drunk]",
+          "difficulty": 0,
+          "beatmapId": 4702301,
+          "beatmapsetId": 2218435
+        },
+        {
+          "slot": "B-RC2",
+          "type": "RC",
+          "realType": "DP",
+          "name": "Shirogane Miyuki (CV: Furukawa Makoto) & Fujiwara Chika (CV: Kohara Konomi) - My Nonfiction [Duck B-03: :30-B kcuD]",
+          "difficulty": 0,
+          "beatmapId": 4702303,
+          "beatmapsetId": 2218437
+        },
+        {
+          "slot": "B-LN2",
+          "type": "LN",
+          "realType": "DE",
+          "name": "SHK - Identity Part 4 (Sped Up Ver.) [Duck B-04: Memories]",
+          "difficulty": 0,
+          "beatmapId": 4702325,
+          "beatmapsetId": 2218452
+        },
+        {
+          "slot": "SV",
+          "type": "SV",
+          "realType": "SV2",
+          "name": "katagiri - Angel's Salad [Duck 00: Tenshi Duck]",
+          "difficulty": 0,
+          "beatmapId": 4702352,
+          "beatmapsetId": 2218467
+        },
+        {
+          "slot": "B-HB1",
+          "type": "HB",
+          "realType": "MNTB",
+          "name": "HB1",
+          "difficulty": 0
+        }
+      ],
+      "bestOf": 11,
+      "typeDifficulties": {
+        "RC": {},
+        "HB": {},
+        "LN": {},
+        "SV": {},
+        "TB": {}
+      }
+    },
+    {
+      "id": "round-2",
+      "name": "Quarterfinals/Semifinals",
+      "abbreviation": "QF/SF",
+      "order": 2,
+      "difficulty": {
+        "min": 0,
+        "max": 0,
+        "average": 0
+      },
+      "maps": [
+        {
+          "slot": "A-RC1",
+          "type": "RC",
+          "realType": "SS",
+          "name": "Yunomi - Game Over(feat. TORIENA) [owo(Cut.)]",
+          "difficulty": 0,
+          "beatmapId": 4724624,
+          "beatmapsetId": 2065104
+        },
+        {
+          "slot": "A-RC2",
+          "type": "RC",
+          "realType": "JS",
+          "name": "Uetsu Shi - Firmament Castle \"Velier\" [Enter the \"Firmament Castle\"]",
+          "difficulty": 0,
+          "beatmapId": 4724593,
+          "beatmapsetId": 2227057
+        },
+        {
+          "slot": "A-RC3",
+          "type": "RC",
+          "realType": "DP",
+          "name": "Ling Yuan yousa - Beng Huai Shi Jie De Ge Ji (Chinese Ver) [Broken]",
+          "difficulty": 0,
+          "beatmapId": 4724905,
+          "beatmapsetId": 2227221
+        },
+        {
+          "slot": "A-LN1",
+          "type": "LN",
+          "realType": "RE",
+          "name": "Thaehan - Doki-Doki [Why notes are supposed to be held?]",
+          "difficulty": 0,
+          "beatmapId": 4309364,
+          "beatmapsetId": 2061373
+        },
+        {
+          "slot": "A-HB1",
+          "type": "HB",
+          "realType": "HB2",
+          "name": "Satoru Aratani - Virtual Nature [Real Nature]",
+          "difficulty": 0,
+          "beatmapId": 4274791,
+          "beatmapsetId": 2047562
+        },
+        {
+          "slot": "A-TB",
+          "type": "TB",
+          "realType": "TB",
+          "name": "Camellia - NUCLEAR-STAR [Event Horizon]",
+          "difficulty": 0,
+          "beatmapId": 4724889,
+          "beatmapsetId": 2227208
+        },
+        {
+          "slot": "B-RC1",
+          "type": "RC",
+          "realType": "SS",
+          "name": "Camellia feat. Nanahira - Amor De Verao [Heatness]",
+          "difficulty": 0,
+          "beatmapId": 4724306,
+          "beatmapsetId": 2226964
+        },
+        {
+          "slot": "B-RC2",
+          "type": "RC",
+          "realType": "JS",
+          "name": "Rhapsody - Emerald Sword (edited ver.) [Glory will come [1.1x Rate]]",
+          "difficulty": 0,
+          "beatmapId": 4707328,
+          "beatmapsetId": 2220557
+        },
+        {
+          "slot": "B-RC3",
+          "type": "RC",
+          "realType": "TC",
+          "name": "nitro - qualia -ideaesthesia- [Nullify]",
+          "difficulty": 0,
+          "beatmapId": 4686022,
+          "beatmapsetId": 2211994
+        },
+        {
+          "slot": "B-LN1",
+          "type": "LN",
+          "realType": "RE",
+          "name": "meiyo - Nani Yatte mo Umaku Ikanai [waht]",
+          "difficulty": 0,
+          "beatmapId": 4723561,
+          "beatmapsetId": 2226679
+        },
+        {
+          "slot": "B-HB1",
+          "type": "HB",
+          "realType": "HB1",
+          "name": "DM DOKURO - No Hints Here! (Standalone) [Nerfed]",
+          "difficulty": 0,
+          "beatmapId": 4724622,
+          "beatmapsetId": 2227067
+        },
+        {
+          "slot": "SV1",
+          "type": "SV",
+          "realType": "SI",
+          "name": "cYsmix - Little Knight [HR2 (SV)]",
+          "difficulty": 0,
+          "beatmapId": 4724601,
+          "beatmapsetId": 2227061
+        },
+        {
+          "slot": "SV2",
+          "type": "SV",
+          "realType": "SVMX",
+          "name": "Laur - Cat Paradise [Symphony Op.727 -Nekopamania-]",
+          "difficulty": 0,
+          "beatmapId": 4724887,
+          "beatmapsetId": 2227207
+        }
+      ],
+      "bestOf": 11,
+      "typeDifficulties": {
+        "RC": {},
+        "HB": {},
+        "LN": {},
+        "SV": {},
+        "TB": {}
+      }
+    },
+    {
+      "id": "round-3",
+      "name": "Finals",
+      "abbreviation": "F",
+      "order": 3,
+      "difficulty": {
+        "min": 0,
+        "max": 0,
+        "average": 0
+      },
+      "maps": [
+        {
+          "slot": "A-RC1",
+          "type": "RC",
+          "realType": "SS",
+          "name": "Fusq - Perfume! [Aromatic 1.1x (140bpm)]",
+          "difficulty": 0,
+          "beatmapId": 4735524,
+          "beatmapsetId": 2231198
+        },
+        {
+          "slot": "A-RC2",
+          "type": "RC",
+          "realType": "JS",
+          "name": "USAO & Camellia - Moebius [Moe]",
+          "difficulty": 0,
+          "beatmapId": 4735259,
+          "beatmapsetId": 2231096
+        },
+        {
+          "slot": "A-RC3",
+          "type": "RC",
+          "realType": "CJ",
+          "name": "Reol & nqrse - Ooedo Ranvu [Madness]",
+          "difficulty": 0,
+          "beatmapId": 4735304,
+          "beatmapsetId": 2231111
+        },
+        {
+          "slot": "A-RC4",
+          "type": "RC",
+          "realType": "MX",
+          "name": "xi - Last Resort [Passionate]",
+          "difficulty": 0,
+          "beatmapId": 4735389,
+          "beatmapsetId": 2231154
+        },
+        {
+          "slot": "A-LN1",
+          "type": "LN",
+          "realType": "CO",
+          "name": "Kano - Sukisuki Zecchoushou [Daisuki]",
+          "difficulty": 0,
+          "beatmapId": 5044408,
+          "beatmapsetId": 2229836
+        },
+        {
+          "slot": "A-LN2",
+          "type": "LN",
+          "realType": "DE",
+          "name": "Kuki Akumu - Ki ga Kurutta Noise [Emptiness 1.05x (189bpm) OD7.3]",
+          "difficulty": 0,
+          "beatmapId": 4728414,
+          "beatmapsetId": 2228551
+        },
+        {
+          "slot": "A-HB1",
+          "type": "HB",
+          "realType": "HB2",
+          "name": "Camellia - Kamah (Scythe) [Styltech (Cut ver.)]",
+          "difficulty": 0,
+          "beatmapId": 4733744,
+          "beatmapsetId": 2154383
+        },
+        {
+          "slot": "A-TB",
+          "type": "TB",
+          "realType": "TB",
+          "name": "Down - Kizan [SengoMuramasa]",
+          "difficulty": 0,
+          "beatmapId": 4735451,
+          "beatmapsetId": 2231167
+        },
+        {
+          "slot": "B-RC1",
+          "type": "RC",
+          "realType": "TC",
+          "name": "Yooh - Butterfly Twist [New Start]",
+          "difficulty": 0,
+          "beatmapId": 4733725,
+          "beatmapsetId": 2230544
+        },
+        {
+          "slot": "B-RC2",
+          "type": "RC",
+          "realType": "JS",
+          "name": "OMGkawaiiAngel - Cubism [I Can Fix Her 1.05x (194bpm) OD8]",
+          "difficulty": 0,
+          "beatmapId": 4731657,
+          "beatmapsetId": 2229857
+        },
+        {
+          "slot": "B-RC3",
+          "type": "RC",
+          "realType": "CJ",
+          "name": "SOUND HOLIC feat. Nana Takahashi - 1001 -ESCAPE- [Escape from Endless Ducks]",
+          "difficulty": 0,
+          "beatmapId": 4733667,
+          "beatmapsetId": 2230515
+        },
+        {
+          "slot": "B-RC4",
+          "type": "RC",
+          "realType": "DP",
+          "name": "Yi Zhi Bai Yang - Ci Wo(DJ Xi You Version) [Love (136bpm)]",
+          "difficulty": 0,
+          "beatmapId": 4701974,
+          "beatmapsetId": 2218271
+        },
+        {
+          "slot": "B-LN1",
+          "type": "LN",
+          "realType": "JW",
+          "name": "Toromaru - Sourire [Relax]",
+          "difficulty": 0,
+          "beatmapId": 4664509,
+          "beatmapsetId": 2203654
+        },
+        {
+          "slot": "B-HB1",
+          "type": "HB",
+          "realType": "HB1",
+          "name": "EndCat - [World_Collapse] [Duck World]",
+          "difficulty": 0,
+          "beatmapId": 4731575,
+          "beatmapsetId": 2229812
+        },
+        {
+          "slot": "B-TB",
+          "type": "TB",
+          "realType": "TB",
+          "name": "BilliumMoto & Silentroom - Sense ('Leads to Another' Full Version) [Senseless Aesthetic]",
+          "difficulty": 0,
+          "beatmapId": 4736021,
+          "beatmapsetId": 2231383
+        },
+        {
+          "slot": "SV1",
+          "type": "SV",
+          "realType": "SI",
+          "name": "Ophidian - The Sky On Fire (Cut Ver.) [(24fps SV) Firefly Embers - Luminous Echoes of Unrestrained Will (w/Alleyne)]",
+          "difficulty": 0,
+          "beatmapId": 4736006,
+          "beatmapsetId": 2231374
+        },
+        {
+          "slot": "SV2",
+          "type": "SV",
+          "realType": "SV1",
+          "name": "Ray Volpe - SONG REQUEST [SV REQUEST]",
+          "difficulty": 0,
+          "beatmapId": 4710330,
+          "beatmapsetId": 2221630
+        }
+      ],
+      "bestOf": 13,
+      "typeDifficulties": {
+        "RC": {},
+        "HB": {},
+        "LN": {},
+        "SV": {},
+        "TB": {}
+      }
+    },
+    {
+      "id": "round-4",
+      "name": "Grand Finals",
+      "abbreviation": "GF",
+      "order": 4,
+      "difficulty": {
+        "min": 0,
+        "max": 0,
+        "average": 0
+      },
+      "maps": [
+        {
+          "slot": "A-RC1",
+          "type": "RC",
+          "realType": "SS",
+          "name": "dj TAKA feat. Erika Mochizuki - MOON [Sparkling moonlight]",
+          "difficulty": 0,
+          "beatmapId": 4747525,
+          "beatmapsetId": 2234916
+        },
+        {
+          "slot": "A-RC2",
+          "type": "RC",
+          "realType": "JS",
+          "name": "DECO*27 - Ghost Rule [Mayday (Cut)]",
+          "difficulty": 0,
+          "beatmapId": 4676634,
+          "beatmapsetId": 2208391
+        },
+        {
+          "slot": "A-RC3",
+          "type": "RC",
+          "realType": "CJ",
+          "name": "HaKoniwalily - Natsu, Toumei na Ao ni Hikarete. [Happy Summer 2024! x1.10]",
+          "difficulty": 0,
+          "beatmapId": 4750474,
+          "beatmapsetId": 2236223
+        },
+        {
+          "slot": "A-RC4",
+          "type": "RC",
+          "realType": "MX",
+          "name": "Frums - swallow SMOKE [Wilderness]",
+          "difficulty": 0,
+          "beatmapId": 4747523,
+          "beatmapsetId": 2234914
+        },
+        {
+          "slot": "A-LN1",
+          "type": "LN",
+          "realType": "SW",
+          "name": "Qiu Che - Ke Ai Xue Bo Shi [Doctor]",
+          "difficulty": 0,
+          "beatmapId": 4745240,
+          "beatmapsetId": 2234166
+        },
+        {
+          "slot": "A-LN2",
+          "type": "LN",
+          "realType": "DE",
+          "name": "",
+          "difficulty": 0,
+          "beatmapId": 4750412
+        },
+        {
+          "slot": "A-HB1",
+          "type": "HB",
+          "realType": "HB1",
+          "name": "Toromaru - Enigma II [Rysun's Pegasus]",
+          "difficulty": 0,
+          "beatmapId": 4747521,
+          "beatmapsetId": 2234913
+        },
+        {
+          "slot": "A-HB2",
+          "type": "HB",
+          "realType": "MXHB",
+          "name": "Slax - Love Lie [Density? Lie!!!!]",
+          "difficulty": 0,
+          "beatmapId": 4750477,
+          "beatmapsetId": 2236224
+        },
+        {
+          "slot": "A-TB",
+          "type": "TB",
+          "realType": "TB",
+          "name": "Ludicin - Echoes of Memoria [Legacy of Echoes (w/ V1do & nyasun)]",
+          "difficulty": 0,
+          "beatmapId": 4750399,
+          "beatmapsetId": 2236205
+        },
+        {
+          "slot": "A-INNERTB",
+          "type": "TB",
+          "realType": "TB",
+          "name": "Xeudo Code - TERRAFORGE [Ruthless Devastating Cataclysm]",
+          "difficulty": 0,
+          "beatmapId": 4758638,
+          "beatmapsetId": 2239257
+        },
+        {
+          "slot": "B-RC1",
+          "type": "RC",
+          "realType": "MX",
+          "name": "mybear - Last Slurp [Seiran's Carouse 1.1x (139bpm) OD8]",
+          "difficulty": 0,
+          "beatmapId": 4750231,
+          "beatmapsetId": 2236136
+        },
+        {
+          "slot": "B-RC2",
+          "type": "RC",
+          "realType": "JS",
+          "name": "namigroove feat. Zundamon & Hastune Miku - Unikurage [YABAINANODA 1.05x (199bpm) OD8]",
+          "difficulty": 0,
+          "beatmapId": 4749764,
+          "beatmapsetId": 2235943
+        },
+        {
+          "slot": "B-RC3",
+          "type": "RC",
+          "realType": "CJ",
+          "name": "",
+          "difficulty": 0,
+          "beatmapId": 4750422
+        },
+        {
+          "slot": "B-RC4",
+          "type": "RC",
+          "realType": "MX",
+          "name": "Frums - NEERWUISSALEARNTD [NEDWUCLKAND]",
+          "difficulty": 0,
+          "beatmapId": 4750187,
+          "beatmapsetId": 1977767
+        },
+        {
+          "slot": "B-LN1",
+          "type": "LN",
+          "realType": "RE",
+          "name": "Monster-siren/RANASOL/KOTONOHOUSE - Mystic Light Quest feat. Machico (Cut Ver.) [Mystic Duck Adventure]",
+          "difficulty": 0,
+          "beatmapId": 4750186,
+          "beatmapsetId": 2236126
+        },
+        {
+          "slot": "B-LN2",
+          "type": "LN",
+          "realType": "DE",
+          "name": "M2U - Felis [Tarot 1.05x (163bpm) OD7]",
+          "difficulty": 0,
+          "beatmapId": 4733698,
+          "beatmapsetId": 2230531
+        },
+        {
+          "slot": "B-HB1",
+          "type": "HB",
+          "realType": "HB3",
+          "name": "you - Texture Garden [#1Future10#]",
+          "difficulty": 0,
+          "beatmapId": 4747517,
+          "beatmapsetId": 2234910
+        },
+        {
+          "slot": "B-TB",
+          "type": "TB",
+          "realType": "TB",
+          "name": "Cansol - Train of Thought [V1do's Nerfed]",
+          "difficulty": 0,
+          "beatmapId": 4750182,
+          "beatmapsetId": 2236122
+        },
+        {
+          "slot": "SV1",
+          "type": "SV",
+          "realType": "SI",
+          "name": "Yuyoyuppe - AiAe [Original Luminal experience but sv edited]",
+          "difficulty": 0,
+          "beatmapId": 4749182,
+          "beatmapsetId": 2235674
+        },
+        {
+          "slot": "SV2",
+          "type": "SV",
+          "realType": "SVMX",
+          "name": "GEMN - Fatal (TV Size) [Hoshino Akua]",
+          "difficulty": 0,
+          "beatmapId": 4750019,
+          "beatmapsetId": 2236057
+        }
+      ],
+      "bestOf": 15,
+      "typeDifficulties": {
+        "RC": {},
+        "HB": {},
+        "LN": {},
+        "SV": {},
+        "TB": {}
+      }
+    }
+  ],
+  "customTypes": [],
+  "priority": 2,
+  "sheetUrl": "https://docs.qq.com/sheet/DVHlxdXFPT2pSRUZS?addToGroup=1&group_code=445216394&is_create_doc=1&tdsourcetag=s_pcqq_send_grpfile&ADUIN=3158684193&ADSESSION=1720321388&ADTAG=CLIENT.QQ.6067_.0&ADPUBNO=27422&tab=BB08J2"
+}

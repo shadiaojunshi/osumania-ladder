@@ -2,7 +2,7 @@
   "packs": [
     {
       "realType": "SV1",
-      "name": "4K Contest Pattern SV Pack 1",
+      "name": "4K Tournament Pattern SV Pack 1",
       "part": 1,
       "mapCount": 27,
       "totalMaps": 27,
@@ -16,7 +16,7 @@
     },
     {
       "realType": "TC",
-      "name": "4K Contest Tech Pack 1",
+      "name": "4K Tournament Tech Pack 1",
       "part": 1,
       "mapCount": 80,
       "totalMaps": 124,
@@ -30,7 +30,7 @@
     },
     {
       "realType": "TC",
-      "name": "4K Contest Tech Pack 2",
+      "name": "4K Tournament Tech Pack 2",
       "part": 2,
       "mapCount": 36,
       "totalMaps": 124,
@@ -44,7 +44,7 @@
     },
     {
       "realType": "HB1",
-      "name": "4K Contest Speed/Generic Hybrid Pack 1",
+      "name": "4K Tournament Speed/Generic Hybrid Pack 1",
       "part": 1,
       "mapCount": 80,
       "totalMaps": 162,
@@ -58,7 +58,7 @@
     },
     {
       "realType": "HB1",
-      "name": "4K Contest Speed/Generic Hybrid Pack 2",
+      "name": "4K Tournament Speed/Generic Hybrid Pack 2",
       "part": 2,
       "mapCount": 71,
       "totalMaps": 162,
@@ -72,7 +72,7 @@
     },
     {
       "realType": "RE",
-      "name": "4K Contest Release Pack 1",
+      "name": "4K Tournament Release Pack 1",
       "part": 1,
       "mapCount": 77,
       "totalMaps": 81,
@@ -86,7 +86,7 @@
     },
     {
       "realType": "DE",
-      "name": "4K Contest Density Pack 1",
+      "name": "4K Tournament Density Pack 1",
       "part": 1,
       "mapCount": 80,
       "totalMaps": 217,
@@ -100,7 +100,7 @@
     },
     {
       "realType": "DE",
-      "name": "4K Contest Density Pack 2",
+      "name": "4K Tournament Density Pack 2",
       "part": 2,
       "mapCount": 80,
       "totalMaps": 217,
@@ -114,7 +114,7 @@
     },
     {
       "realType": "DE",
-      "name": "4K Contest Density Pack 3",
+      "name": "4K Tournament Density Pack 3",
       "part": 3,
       "mapCount": 42,
       "totalMaps": 217,
@@ -128,7 +128,7 @@
     },
     {
       "realType": "JS",
-      "name": "4K Contest Jumpstream Pack 1",
+      "name": "4K Tournament Jumpstream Pack 1",
       "part": 1,
       "mapCount": 80,
       "totalMaps": 147,
@@ -142,7 +142,7 @@
     },
     {
       "realType": "JS",
-      "name": "4K Contest Jumpstream Pack 2",
+      "name": "4K Tournament Jumpstream Pack 2",
       "part": 2,
       "mapCount": 53,
       "totalMaps": 147,
@@ -156,7 +156,7 @@
     },
     {
       "realType": "SS",
-      "name": "4K Contest Single/Minijack Stream/Consistency Pack 1",
+      "name": "4K Tournament Single/Minijack Stream/Consistency Pack 1",
       "part": 1,
       "mapCount": 80,
       "totalMaps": 148,
@@ -170,7 +170,7 @@
     },
     {
       "realType": "SS",
-      "name": "4K Contest Single/Minijack Stream/Consistency Pack 2",
+      "name": "4K Tournament Single/Minijack Stream/Consistency Pack 2",
       "part": 2,
       "mapCount": 55,
       "totalMaps": 148,
@@ -184,7 +184,7 @@
     },
     {
       "realType": "DP",
-      "name": "4K Contest Dump Pack 1",
+      "name": "4K Tournament Dump Pack 1",
       "part": 1,
       "mapCount": 80,
       "totalMaps": 103,
@@ -198,7 +198,7 @@
     },
     {
       "realType": "DP",
-      "name": "4K Contest Dump Pack 2",
+      "name": "4K Tournament Dump Pack 2",
       "part": 2,
       "mapCount": 13,
       "totalMaps": 103,
@@ -212,7 +212,7 @@
     },
     {
       "realType": "ADP",
-      "name": "4K Contest Accurate Dump Pack 1",
+      "name": "4K Tournament Accurate Dump Pack 1",
       "part": 1,
       "mapCount": 61,
       "totalMaps": 71,
@@ -226,7 +226,7 @@
     },
     {
       "realType": "LNmainHB",
-      "name": "4K Contest LN-main Hybrid Pack 1",
+      "name": "4K Tournament LN-main Hybrid Pack 1",
       "part": 1,
       "mapCount": 36,
       "totalMaps": 37,
@@ -240,7 +240,7 @@
     },
     {
       "realType": "LNMX",
-      "name": "4K Contest LN Mixed Pack 1",
+      "name": "4K Tournament LN Mixed Pack 1",
       "part": 1,
       "mapCount": 80,
       "totalMaps": 130,
@@ -254,7 +254,7 @@
     },
     {
       "realType": "LNMX",
-      "name": "4K Contest LN Mixed Pack 2",
+      "name": "4K Tournament LN Mixed Pack 2",
       "part": 2,
       "mapCount": 35,
       "totalMaps": 130,
@@ -268,7 +268,7 @@
     },
     {
       "realType": "SI",
-      "name": "4K Contest Sightread SV Pack 1",
+      "name": "4K Tournament Sightread SV Pack 1",
       "part": 1,
       "mapCount": 34,
       "totalMaps": 36,
@@ -282,7 +282,7 @@
     },
     {
       "realType": "ME",
-      "name": "4K Contest Memorization SV Pack 1",
+      "name": "4K Tournament Memorization SV Pack 1",
       "part": 1,
       "mapCount": 13,
       "totalMaps": 13,
@@ -296,7 +296,7 @@
     },
     {
       "realType": "TB",
-      "name": "4K Contest Tiebreaker Pack 1",
+      "name": "4K Tournament Tiebreaker Pack 1",
       "part": 1,
       "mapCount": 80,
       "totalMaps": 200,
@@ -310,7 +310,7 @@
     },
     {
       "realType": "TB",
-      "name": "4K Contest Tiebreaker Pack 2",
+      "name": "4K Tournament Tiebreaker Pack 2",
       "part": 2,
       "mapCount": 79,
       "totalMaps": 200,
@@ -324,7 +324,7 @@
     },
     {
       "realType": "TB",
-      "name": "4K Contest Tiebreaker Pack 3",
+      "name": "4K Tournament Tiebreaker Pack 3",
       "part": 3,
       "mapCount": 32,
       "totalMaps": 200,
@@ -338,7 +338,7 @@
     },
     {
       "realType": "SA",
-      "name": "4K Contest Stamina Pack 1",
+      "name": "4K Tournament Stamina Pack 1",
       "part": 1,
       "mapCount": 80,
       "totalMaps": 129,
@@ -352,7 +352,7 @@
     },
     {
       "realType": "SA",
-      "name": "4K Contest Stamina Pack 2",
+      "name": "4K Tournament Stamina Pack 2",
       "part": 2,
       "mapCount": 40,
       "totalMaps": 129,
@@ -366,7 +366,7 @@
     },
     {
       "realType": "MX",
-      "name": "4K Contest Rcmix Pack 1",
+      "name": "4K Tournament Rcmix Pack 1",
       "part": 1,
       "mapCount": 80,
       "totalMaps": 135,
@@ -380,7 +380,7 @@
     },
     {
       "realType": "MX",
-      "name": "4K Contest Rcmix Pack 2",
+      "name": "4K Tournament Rcmix Pack 2",
       "part": 2,
       "mapCount": 42,
       "totalMaps": 135,
@@ -394,7 +394,7 @@
     },
     {
       "realType": "JTC",
-      "name": "4K Contest Jack-mained tech Pack 1",
+      "name": "4K Tournament Jack-mained tech Pack 1",
       "part": 1,
       "mapCount": 46,
       "totalMaps": 50,
@@ -408,7 +408,7 @@
     },
     {
       "realType": "HB2",
-      "name": "4K Contest Mid-tempo/Jack/Shield Hybrid Pack 1",
+      "name": "4K Tournament Mid-tempo/Jack/Shield Hybrid Pack 1",
       "part": 1,
       "mapCount": 80,
       "totalMaps": 119,
@@ -422,7 +422,7 @@
     },
     {
       "realType": "HB2",
-      "name": "4K Contest Mid-tempo/Jack/Shield Hybrid Pack 2",
+      "name": "4K Tournament Mid-tempo/Jack/Shield Hybrid Pack 2",
       "part": 2,
       "mapCount": 32,
       "totalMaps": 119,
@@ -436,7 +436,7 @@
     },
     {
       "realType": "CO",
-      "name": "4K Contest Coordination Pack 1",
+      "name": "4K Tournament Coordination Pack 1",
       "part": 1,
       "mapCount": 80,
       "totalMaps": 112,
@@ -450,7 +450,7 @@
     },
     {
       "realType": "CO",
-      "name": "4K Contest Coordination Pack 2",
+      "name": "4K Tournament Coordination Pack 2",
       "part": 2,
       "mapCount": 25,
       "totalMaps": 112,
@@ -464,7 +464,7 @@
     },
     {
       "realType": "CJ",
-      "name": "4K Contest Chordjack Pack 1",
+      "name": "4K Tournament Chordjack Pack 1",
       "part": 1,
       "mapCount": 80,
       "totalMaps": 230,
@@ -478,7 +478,7 @@
     },
     {
       "realType": "CJ",
-      "name": "4K Contest Chordjack Pack 2",
+      "name": "4K Tournament Chordjack Pack 2",
       "part": 2,
       "mapCount": 80,
       "totalMaps": 230,
@@ -492,7 +492,7 @@
     },
     {
       "realType": "CJ",
-      "name": "4K Contest Chordjack Pack 3",
+      "name": "4K Tournament Chordjack Pack 3",
       "part": 3,
       "mapCount": 62,
       "totalMaps": 230,
@@ -506,7 +506,7 @@
     },
     {
       "realType": "HB3",
-      "name": "4K Contest Technical Hybrid Pack 1",
+      "name": "4K Tournament Technical Hybrid Pack 1",
       "part": 1,
       "mapCount": 80,
       "totalMaps": 127,
@@ -520,7 +520,7 @@
     },
     {
       "realType": "HB3",
-      "name": "4K Contest Technical Hybrid Pack 2",
+      "name": "4K Tournament Technical Hybrid Pack 2",
       "part": 2,
       "mapCount": 38,
       "totalMaps": 127,
@@ -534,7 +534,7 @@
     },
     {
       "realType": "MTC",
-      "name": "4K Contest Minijacktech Pack 1",
+      "name": "4K Tournament Minijacktech Pack 1",
       "part": 1,
       "mapCount": 29,
       "totalMaps": 30,
@@ -548,7 +548,7 @@
     },
     {
       "realType": "TE",
-      "name": "4K Contest Timinghell Pack 1",
+      "name": "4K Tournament Timinghell Pack 1",
       "part": 1,
       "mapCount": 43,
       "totalMaps": 47,
@@ -562,7 +562,7 @@
     },
     {
       "realType": "JW",
-      "name": "4K Contest Jacky Wildcard LN Pack 1",
+      "name": "4K Tournament Jacky Wildcard LN Pack 1",
       "part": 1,
       "mapCount": 49,
       "totalMaps": 49,
@@ -576,7 +576,7 @@
     },
     {
       "realType": "LNTC",
-      "name": "4K Contest Technical LN Pack 1",
+      "name": "4K Tournament Technical LN Pack 1",
       "part": 1,
       "mapCount": 69,
       "totalMaps": 74,
@@ -590,7 +590,7 @@
     },
     {
       "realType": "STC",
-      "name": "4K Contest Streamtech Pack 1",
+      "name": "4K Tournament Streamtech Pack 1",
       "part": 1,
       "mapCount": 31,
       "totalMaps": 36,
@@ -604,7 +604,7 @@
     },
     {
       "realType": "SV2",
-      "name": "4K Contest Rhythm SV Pack 1",
+      "name": "4K Tournament Rhythm SV Pack 1",
       "part": 1,
       "mapCount": 25,
       "totalMaps": 25,
@@ -618,7 +618,7 @@
     },
     {
       "realType": "MNTB",
-      "name": "4K Contest Mini-Tiebreaker Hybrid Pack 1",
+      "name": "4K Tournament Mini-Tiebreaker Hybrid Pack 1",
       "part": 1,
       "mapCount": 37,
       "totalMaps": 43,
@@ -632,7 +632,7 @@
     },
     {
       "realType": "RCmainHB",
-      "name": "4K Contest RC-main Hybrid Pack 1",
+      "name": "4K Tournament RC-main Hybrid Pack 1",
       "part": 1,
       "mapCount": 19,
       "totalMaps": 19,
@@ -646,7 +646,7 @@
     },
     {
       "realType": "WTC",
-      "name": "4K Contest Wild/Ultra Burst tech Pack 1",
+      "name": "4K Tournament Wild/Ultra Burst tech Pack 1",
       "part": 1,
       "mapCount": 30,
       "totalMaps": 30,
@@ -660,7 +660,7 @@
     },
     {
       "realType": "SW",
-      "name": "4K Contest Speedy Wildcard LN Pack 1",
+      "name": "4K Tournament Speedy Wildcard LN Pack 1",
       "part": 1,
       "mapCount": 19,
       "totalMaps": 20,
@@ -674,7 +674,7 @@
     },
     {
       "realType": "SVMX",
-      "name": "4K Contest Mix SV Pack 1",
+      "name": "4K Tournament Mix SV Pack 1",
       "part": 1,
       "mapCount": 36,
       "totalMaps": 37,
@@ -688,7 +688,7 @@
     },
     {
       "realType": "HB4",
-      "name": "4K Contest Wildcard Hybrid Pack 1",
+      "name": "4K Tournament Wildcard Hybrid Pack 1",
       "part": 1,
       "mapCount": 11,
       "totalMaps": 11,
@@ -702,7 +702,7 @@
     },
     {
       "realType": "SJ",
-      "name": "4K Contest Jackspeed Pack 1",
+      "name": "4K Tournament Jackspeed Pack 1",
       "part": 1,
       "mapCount": 31,
       "totalMaps": 31,
@@ -716,7 +716,7 @@
     },
     {
       "realType": "IN",
-      "name": "4K Contest Inverse Pack 1",
+      "name": "4K Tournament Inverse Pack 1",
       "part": 1,
       "mapCount": 1,
       "totalMaps": 1,
@@ -730,7 +730,7 @@
     },
     {
       "realType": "OHB",
-      "name": "4K Contest OtherHybrid Pack 1",
+      "name": "4K Tournament OtherHybrid Pack 1",
       "part": 1,
       "mapCount": 1,
       "totalMaps": 1,
@@ -744,7 +744,7 @@
     },
     {
       "realType": "OLN",
-      "name": "4K Contest OtherLongnote Pack 1",
+      "name": "4K Tournament OtherLongnote Pack 1",
       "part": 1,
       "mapCount": 1,
       "totalMaps": 1,
@@ -758,7 +758,7 @@
     },
     {
       "realType": "LNWL",
-      "name": "4K Contest LNwall Pack 1",
+      "name": "4K Tournament LNwall Pack 1",
       "part": 1,
       "mapCount": 4,
       "totalMaps": 4,

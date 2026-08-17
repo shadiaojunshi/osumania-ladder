@@ -242,7 +242,7 @@ curl https://osumania-ladder.shadiaojunshi.deno.net/
 
 ### 合包流程（GitHub Actions 触发）
 - 脚本：[scripts/generate-pack.js](scripts/generate-pack.js) + [scripts/upload-to-gdrive.js](scripts/upload-to-gdrive.js)。按 `realType` 聚合所有比赛的图，每包最多 80 张。
-- **命名规则（破坏性升级 `57904da`）**：输出文件名一律 `<realType>_<n>.osz`（如 `SS_1.osz`、`HB1_1.osz`），合包标题一律 `4K Contest XXX Pack <n>`，**单包也带 `_1` 后缀**——用来杜绝"分包数变化时残留孤儿"的问题。改 generate-pack.js 时不要回退到"单包不带后缀"。
+- **命名规则（破坏性升级 `57904da`）**：输出文件名一律 `<realType>_<n>.osz`（如 `SS_1.osz`、`HB1_1.osz`），合包标题一律 `4K Tournament XXX Pack <n>`，**单包也带 `_1` 后缀**——用来杜绝"分包数变化时残留孤儿"的问题。改 generate-pack.js 时不要回退到"单包不带后缀"。
 - **TB / TB1 显示约定**:R2 路径里历史数据有的写 `TB1` 有的写 `TB`,合包脚本拼 `newVersion` 时统一把 `TB1` 显示成 `TB`(单张约定)。新建比赛 + BulkImporter 也按这个规则:单张 TB 直接叫 `TB`,只有出现第二张时才编号 `TB1/TB2`。R2 路径不动,只改显示层。
 - **manifest 全量重建**：每次跑全量(realType 留空)时，generate-pack.js 把旧 `data/packs-manifest.json` 转储到 `data/packs-manifest.previous.json`(.gitignore 排除)，然后只用本次输出的 entry 重建主 manifest，新 entry 按 `(realType, part)` 从旧版找回 `links` 和 `gdriveFileId`。
 - **孤儿清理**：upload-to-gdrive.js 跑完后对比 `.previous.json` 和本次成功上传的 fileId 集合，差集就 `drive.files.delete` 掉——分包数缩了/type 删了，Drive 上对应文件自动消失。最后清掉 `.previous.json` 避免被误 commit。

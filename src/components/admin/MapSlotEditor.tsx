@@ -58,6 +58,7 @@ export const REAL_TYPES: Record<string, { id: string; name: string }[]> = {
     { id: 'SI', name: 'Sightread (SI)' },
     { id: 'ME', name: 'Memorization (ME)' },
     { id: 'SVMX', name: 'SVMix (SVMX)' },
+    { id: 'GM', name: 'Gimmick (GM)' },
   ],
   TB: [
     { id: 'TB', name: 'Tiebreaker' },

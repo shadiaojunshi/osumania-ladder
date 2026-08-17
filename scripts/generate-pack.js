@@ -36,7 +36,7 @@ const REAL_TYPE_NAMES = {
   OHB: 'OtherHybrid',
   RE: 'Release', CO: 'Coordination', TE: 'Timinghell', DE: 'Density',
   SW: 'Speedy Wildcard LN', JW: 'Jacky Wildcard LN', IN: 'Inverse', LNMX: 'LN Mixed', LNTC: 'Technical LN', LNWL: 'LNwall', OLN: 'OtherLongnote',
-  SV1: 'Pattern SV', SV2: 'Rhythm SV', SI: 'Sightread SV', ME: 'Memorization SV', SVMX: 'Mix SV',
+  SV1: 'Pattern SV', SV2: 'Rhythm SV', SI: 'Sightread SV', ME: 'Memorization SV', SVMX: 'Mix SV', GM: 'Gimmick SV',
   TB: 'Tiebreaker',
 }
 
@@ -363,7 +363,7 @@ async function prefetchMap(map, packName, odFloor) {
     const rewritten = rewriteOsu(osuContent, {
       newTitle: packName,
       newArtist: 'Various Artists',
-      newCreator: 'shadiaojunshi',
+      newCreator: 'various mappers,compiled by the osu!mania Ladder Team',
       newVersion,
       newAudioFilename: newAudioName,
       newBgFilename: newBgName,
@@ -404,7 +404,7 @@ Title:DELETE THIS DIFFICULTY
 TitleUnicode:DELETE THIS DIFFICULTY
 Artist:placeholder
 ArtistUnicode:placeholder
-Creator:shadiaojunshi
+Creator:various mappers,compiled by the osu!mania Ladder Team
 Version:delete this
 BeatmapID:0
 BeatmapSetID:-1
@@ -625,7 +625,7 @@ async function generatePack(targetType) {
     const chunk = available.slice(packIdx * MAX_MAPS_PER_PACK, (packIdx + 1) * MAX_MAPS_PER_PACK)
     chunk.sort((a, b) => (a.difficulty || 0) - (b.difficulty || 0))
     const partNum = packIdx + 1
-    const packName = `4K Contest ${REAL_TYPE_NAMES[targetType] || targetType} Pack ${partNum}`
+    const packName = `4K Tournament ${REAL_TYPE_NAMES[targetType] || targetType} Pack ${partNum}`
     const outputFileName = `${targetType}_${partNum}.osz`
     const outputPath = path.join(outputDir, outputFileName)
     const output = fs.createWriteStream(outputPath)

@@ -1,7 +1,7 @@
 # 项目交接文档（给接手 AI / Codex）
 
 > 本文件写给**没有本会话记忆的接手 AI**（如 Codex）。目标是让你能独立接手本仓库，知道"这是什么、数据在哪、怎么改、怎么发布、有哪些坑"。
-> 最后核对：2026-08-20（git HEAD = c884436，工作区干净）
+> 最后核对：2026-08-20（本轮功能改动已完成验证；提交状态以 `git log` 为准）
 
 ---
 
@@ -167,6 +167,8 @@ d:/osumania ladder/              ← 注意路径带空格，bash 里用引号
 
 **2026-08-18 新加了 GM（Gimmick，归 SV 类）**：三处已注册，合包名 `Gimmick SV`。注意 poolTemplates.ts 未加 GM（非常规池位，录入时在 SV 下拉手动选），当前无含 GM 的谱面数据，暂无 GM 包。
 
+**2026-08-20 新增 Pending 键型**：`PDRC / PDLN / PDHB / PDSV` 均排在所属大类下拉末尾。主表批量导入无法命中标准图池模板时，不再误选各类第一个键型，而是落入对应 Pending。`PDRC / PDLN / PDHB` 是待分类队列，`generate-pack.js` 明确跳过且下载页不展示；`PDSV` 例外，会正常合包并显示在 SV 下载分类。
+
 ### 5.2 难度输入规则
 
 - 每张谱面有 `difficulty`（rf 难度段）。RC/SV 用 **rf**；LN 用 **ln** 段（`difficultyLn`）；HB/TB/SPECIAL **rf+ln 双框**（`needsDualDifficulty` 只对这三类返回 true）。
@@ -265,6 +267,7 @@ Tabs（`src/app/admin/page.tsx` 的 `Tab` 类型）：
 | 管理比赛 | `manage` | 列表 → 编辑 / 删除（删=软删进回收站，写 GitHub commit） |
 | 参考点 | `ReferencesEditor` | 维护 `data/references.json`（难度标尺上的显式锚点） |
 | 难度标尺 | `RefLadderEditor` | 维护 `data/ref-ladder.json`（易→难轮次链，可加 step） |
+| 拟合预测 | `DifficultyFitTool` | 按标尺轮位做散点/线性拟合。RF 侧默认启用 `14→15 = 1.5` 的“段位跨度倍率”（LN 默认关闭），输出会还原为原始段位；可手动调斜率，直线固定穿过样本中心 |
 | 谱面上传 | `MapUploader` | 自动下载+上传（一键下载上传 N）；贴 BID 补传（三阶段：粘贴→review→执行；TB↔TB1 自动匹配；未匹配 slot 手动指派；"包含已上传"=覆盖 R2）。浏览器侧 JSZip 切单难度+去 storyboard+保留打击音效，`POST /api/maps/upload` |
 | 下载链接 | `PackLinksEditor` | 按 `(realType, part)` 复合键逐包填各盘链接 |
 | realType 体检 | `RealTypeConflictChecker` | 批量体检同谱面 realType 冲突，admin 可保存（GitHub Git Data 单 commit 批量写回） |
@@ -272,7 +275,9 @@ Tabs（`src/app/admin/page.tsx` 的 `Tab` 类型）：
 | 成员 | `AdminsManager`（admin） | 四级角色名单管理 |
 | 审计 | `AuditLog`（admin） | KV 审计日志 180 天 |
 
-**批量导入**（`BulkImporter`，轮次列表上方按钮）：粘贴 slot+ID 两列 → 确认轮次 → 逐张查 osu 元数据（可中断）→ `findMatchingTemplate` 按"map 数+各 type 计数"匹配模板自动填 realType。
+**批量导入**（`BulkImporter`，轮次列表上方按钮）：粘贴 slot+ID 两列 → 确认轮次 → 逐张查 osu 元数据（可中断）→ `findMatchingTemplate` 按"map 数+各 type 计数"匹配模板自动填 realType；未命中标准模板时 RC/LN/HB/SV 分别回退到对应 Pending。
+
+**比赛修改暂存**：`JsonPreview` 的“暂存到本浏览器”把完整比赛 JSON 持久化到 localStorage（key `osumania-ladder:staged-tournaments:v1`），不会调用后端。多场暂存最后通过 `POST /api/tournaments/batch` 用 Git Data API 合成一次 commit；该接口现允许 contributor（与逐场增改权限一致）。重新编辑已有比赛时会优先载入本地暂存版本。新建比赛仍推荐直接提交。
 
 ---
 
@@ -301,7 +306,7 @@ Tabs（`src/app/admin/page.tsx` 的 `Tab` 类型）：
 - 安全改造全量：osu OAuth、四级权限、软删除回收站（KV + R2 trash）、审计日志、每日 R2 备份、Deno 代理绕 429。
 - 合包流水线 Phase 1-3：生成 → R2 直链 + Drive 镜像 → manifest 写回 → 孤儿清理 → 下载页折叠展示。
 - 近期（2026-08）：GITHUB_TOKEN 修复；合包磁盘防爆（逐包传删 + Buffer）；命名 contest→tournament（含 55 处补空格）；新增 GM 键型；priority 字段；TB/HB 难度统计修复 + 全量 recalc；BID 回填脚本。
-- git HEAD `c884436`，工作区干净，已全量 push。
+- 2026-08-20：拟合 RF 段位跨度校准与手动斜率；4 个 Pending 键型及导入回退/合包规则；键型说明折叠占位；比赛本地暂存与单 commit 批量上传；SATC 排到 JTC/WTC 之前。
 
 ### 待办 / 搁置
 1. **全量合包待跑**：manifest 改名只是显示层，R2/Drive 上 `.osz` 内部仍是 `4K Contest…` + 旧 Creator，需下次跑全量合包（Actions → Generate Map Packs → realType 留空）才会写入新 Title/Creator。**注意会让已下载玩家的成绩断（hash 变），用户已知悉接受。**

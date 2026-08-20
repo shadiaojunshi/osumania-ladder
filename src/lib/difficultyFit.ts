@@ -35,6 +35,12 @@ export interface FitPoint {
   y: number
 }
 
+export interface DifficultyGapCalibration {
+  lower: number
+  upper: number
+  multiplier: number
+}
+
 export interface LinearFit {
   slope: number
   intercept: number
@@ -50,6 +56,45 @@ export interface KnownRound {
   round: Round
   reading: DifficultyReading
   difference: number
+}
+
+export function isValidGapCalibration(
+  calibration: DifficultyGapCalibration | null,
+): calibration is DifficultyGapCalibration {
+  return !!calibration
+    && Number.isFinite(calibration.lower)
+    && Number.isFinite(calibration.upper)
+    && Number.isFinite(calibration.multiplier)
+    && calibration.upper > calibration.lower
+    && calibration.multiplier > 0
+}
+
+// Converts the displayed dan scale into an equivalent-distance scale for fitting.
+// Example: with 14 -> 15 at 1.5x, 15 becomes 15.5 and every higher value keeps
+// that extra 0.5 distance. The inverse keeps predictions on the original scale.
+export function applyDifficultyGapCalibration(
+  value: number,
+  calibration: DifficultyGapCalibration | null,
+): number {
+  if (!isValidGapCalibration(calibration) || value <= calibration.lower) return value
+  const span = calibration.upper - calibration.lower
+  if (value < calibration.upper) {
+    return calibration.lower + (value - calibration.lower) * calibration.multiplier
+  }
+  return value + span * (calibration.multiplier - 1)
+}
+
+export function removeDifficultyGapCalibration(
+  value: number,
+  calibration: DifficultyGapCalibration | null,
+): number {
+  if (!isValidGapCalibration(calibration) || value <= calibration.lower) return value
+  const span = calibration.upper - calibration.lower
+  const calibratedUpper = calibration.lower + span * calibration.multiplier
+  if (value < calibratedUpper) {
+    return calibration.lower + (value - calibration.lower) / calibration.multiplier
+  }
+  return value - span * (calibration.multiplier - 1)
 }
 
 function dimensionConfig(id: DifficultyDimensionId): DifficultyDimension {
@@ -143,6 +188,36 @@ export function linearRegression(points: FitPoint[]): LinearFit | null {
     slope,
     intercept,
     rSquared: totalSum <= Number.EPSILON ? 1 : Math.max(0, 1 - residualSum / totalSum),
+    rmse: Math.sqrt(residualSum / valid.length),
+    sampleCount: valid.length,
+    predict,
+  }
+}
+
+export function linearRegressionWithSlope(
+  points: FitPoint[],
+  slope: number,
+): LinearFit | null {
+  const valid = points.filter((point) =>
+    Number.isFinite(point.x) && Number.isFinite(point.y)
+  )
+  if (
+    !Number.isFinite(slope)
+    || valid.length < 2
+    || new Set(valid.map((point) => point.x)).size < 2
+  ) return null
+
+  const meanX = valid.reduce((sum, point) => sum + point.x, 0) / valid.length
+  const meanY = valid.reduce((sum, point) => sum + point.y, 0) / valid.length
+  const intercept = meanY - slope * meanX
+  const predict = (x: number) => slope * x + intercept
+  const residualSum = valid.reduce((sum, point) => sum + (point.y - predict(point.x)) ** 2, 0)
+  const totalSum = valid.reduce((sum, point) => sum + (point.y - meanY) ** 2, 0)
+
+  return {
+    slope,
+    intercept,
+    rSquared: totalSum <= Number.EPSILON ? 1 : 1 - residualSum / totalSum,
     rmse: Math.sqrt(residualSum / valid.length),
     sampleCount: valid.length,
     predict,

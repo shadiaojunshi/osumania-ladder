@@ -3,7 +3,7 @@
 import { useState, useRef } from 'react'
 import type { RoundWithMeta } from './RoundEditor'
 import type { ExtendedMap, MapCategory } from './MapSlotEditor'
-import { REAL_TYPES } from './MapSlotEditor'
+import { PENDING_REAL_TYPE_BY_CATEGORY, REAL_TYPES } from './MapSlotEditor'
 import { findMatchingTemplate, applyTemplateRealTypes } from '@/lib/poolTemplates'
 import { useT, type MessageKey } from '@/lib/i18n'
 
@@ -318,7 +318,8 @@ export function BulkImporter({ onImport, onClose, existingRoundCount }: Props) {
         const m = r.meta
         const category = categories[ri]
         const realTypes = REAL_TYPES[category] || []
-        const fallbackRealType = realTypes.length > 0 ? realTypes[0].id : ''
+        const fallbackRealType = PENDING_REAL_TYPE_BY_CATEGORY[category]
+          || (realTypes.length > 0 ? realTypes[0].id : '')
         const realType = matchedRealTypes?.[ri] || fallbackRealType
         const type = category === 'SPECIAL' ? r.slot.replace(/\d+$/, '') : category
         const slot = tbCount === 1 && /^TB1?$/i.test(r.slot) ? 'TB' : r.slot

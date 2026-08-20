@@ -28,17 +28,22 @@ const s3 = new S3Client({
 const REAL_TYPE_NAMES = {
   SS: 'Single/Minijack Stream/Consistency', JS: 'Jumpstream', SA: 'Stamina', CJ: 'Chordjack',
   SJ: 'Jackspeed', MX: 'Rcmix', DP: 'Dump', ADP: 'Accurate Dump', STC: 'Streamtech',
-  MTC: 'Minijacktech', JTC: 'Jack-mained tech', WTC: 'Wild/Ultra Burst tech',
-  TC: 'Tech', ORC: 'Otherrice', SATC: 'Stamina tech',
+  MTC: 'Minijacktech', SATC: 'Stamina tech', JTC: 'Jack-mained tech', WTC: 'Wild/Ultra Burst tech',
+  TC: 'Tech', ORC: 'Otherrice', PDRC: 'Pending RC',
   HB1: 'Speed/Generic Hybrid', HB2: 'Mid-tempo/Jack/Shield Hybrid', HB3: 'Technical Hybrid',
   HB4: 'Wildcard Hybrid', HB5: 'Old-school Hybrid',
   RCmainHB: 'RC-main Hybrid', LNmainHB: 'LN-main Hybrid', MXHB: 'Mixed Hybrid', MNTB: 'Mini-Tiebreaker Hybrid',
-  OHB: 'OtherHybrid',
+  OHB: 'OtherHybrid', PDHB: 'Pending Hybrid',
   RE: 'Release', CO: 'Coordination', TE: 'Timinghell', DE: 'Density',
-  SW: 'Speedy Wildcard LN', JW: 'Jacky Wildcard LN', IN: 'Inverse', LNMX: 'LN Mixed', LNTC: 'Technical LN', LNWL: 'LNwall', OLN: 'OtherLongnote',
-  SV1: 'Pattern SV', SV2: 'Rhythm SV', SI: 'Sightread SV', ME: 'Memorization SV', SVMX: 'Mix SV', GM: 'Gimmick SV',
+  SW: 'Speedy Wildcard LN', JW: 'Jacky Wildcard LN', IN: 'Inverse', LNMX: 'LN Mixed', LNTC: 'Technical LN', LNWL: 'LNwall', OLN: 'OtherLongnote', PDLN: 'Pending LN',
+  SV1: 'Pattern SV', SV2: 'Rhythm SV', SI: 'Sightread SV', ME: 'Memorization SV', SVMX: 'Mix SV', GM: 'Gimmick SV', PDSV: 'Pending SV',
   TB: 'Tiebreaker',
 }
+
+// Pending RC/LN/HB are classification queues, not downloadable pattern packs.
+// Pending SV is intentionally downloadable because unresolved SV maps still need
+// a usable catch-all pack.
+const PACK_EXCLUDED_REAL_TYPES = new Set(['PDRC', 'PDLN', 'PDHB'])
 
 // 各 realType 的 OD 下限:谱面 OD 低于此值就抬到此值,已高于则不动。
 // 未列出的(SV1/SV2/SI/ME/SVMX)= 不改 OD。HP 另行统一设 7(见 rewriteOsu)。
@@ -429,6 +434,10 @@ SliderTickRate:1
 const MAX_MAPS_PER_PACK = 80
 
 async function generatePack(targetType) {
+  if (PACK_EXCLUDED_REAL_TYPES.has(targetType)) {
+    console.log(`[${targetType}] Skipped: pending classification types are not downloadable packs`)
+    return []
+  }
   const odFloor = getOdFloor(targetType) // 该键型的 OD 下限;SV 等为 null(不改 OD)
   const tournamentsDir = path.join(__dirname, '..', 'data', 'tournaments')
   const files = fs.readdirSync(tournamentsDir).filter(f => f.endsWith('.json'))
@@ -731,7 +740,9 @@ async function main() {
     const files = fs.readdirSync(tournamentsDir).filter(f => f.endsWith('.json'))
     for (const file of files) {
       const t = JSON.parse(fs.readFileSync(path.join(tournamentsDir, file), 'utf-8'))
-      for (const r of t.rounds) for (const m of r.maps) allTypes.add(m.realType)
+      for (const r of t.rounds) for (const m of r.maps) {
+        if (!PACK_EXCLUDED_REAL_TYPES.has(m.realType)) allTypes.add(m.realType)
+      }
     }
 
     console.log(`Generating packs for ${allTypes.size} types: ${[...allTypes].join(', ')}`)

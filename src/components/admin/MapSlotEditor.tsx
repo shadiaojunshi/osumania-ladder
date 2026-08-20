@@ -14,7 +14,6 @@ export const REAL_TYPES: Record<string, { id: string; name: string }[]> = {
     { id: 'SS', name: 'Stream (SS)' },
     { id: 'JS', name: 'Jumpstream (JS)' },
     { id: 'SA', name: 'Stamina (SA)' },
-    { id: 'SATC', name: 'Stamina tech (SATC)' },
     { id: 'CJ', name: 'Chordjack (CJ)' },
     { id: 'SJ', name: 'Jackspeed (SJ)' },
     { id: 'MX', name: 'Rcmix (MX)' },
@@ -22,10 +21,12 @@ export const REAL_TYPES: Record<string, { id: string; name: string }[]> = {
     { id: 'ADP', name: 'Accurate dump (ADP)' },
     { id: 'STC', name: 'Streamtech (STC)' },
     { id: 'MTC', name: 'Minijacktech (MTC)' },
+    { id: 'SATC', name: 'Stamina tech (SATC)' },
     { id: 'JTC', name: 'Jackmained tech (JTC)' },
     { id: 'WTC', name: 'Wild tech (WTC)' },
     { id: 'TC', name: 'Tech (TC)' },
     { id: 'ORC', name: 'Otherrice (ORC)' },
+    { id: 'PDRC', name: 'Pending RC (PDRC)' },
   ],
   HB: [
     { id: 'HB1', name: 'Speed/Generic (HB1)' },
@@ -38,6 +39,7 @@ export const REAL_TYPES: Record<string, { id: string; name: string }[]> = {
     { id: 'MXHB', name: 'Mixed HB (MXHB)' },
     { id: 'MNTB', name: 'Mini Tiebreaker (MNTB)' },
     { id: 'OHB', name: 'OtherHybrid (OHB)' },
+    { id: 'PDHB', name: 'Pending HB (PDHB)' },
   ],
   LN: [
     { id: 'RE', name: 'Release (RE)' },
@@ -51,6 +53,7 @@ export const REAL_TYPES: Record<string, { id: string; name: string }[]> = {
     { id: 'LNTC', name: 'Technical LN (LNTC)' },
     { id: 'LNWL', name: 'LNwall (LNWL)' },
     { id: 'OLN', name: 'OtherLongnote (OLN)' },
+    { id: 'PDLN', name: 'Pending LN (PDLN)' },
   ],
   SV: [
     { id: 'SV1', name: 'Pattern (SV1)' },
@@ -59,11 +62,19 @@ export const REAL_TYPES: Record<string, { id: string; name: string }[]> = {
     { id: 'ME', name: 'Memorization (ME)' },
     { id: 'SVMX', name: 'SVMix (SVMX)' },
     { id: 'GM', name: 'Gimmick (GM)' },
+    { id: 'PDSV', name: 'Pending SV (PDSV)' },
   ],
   TB: [
     { id: 'TB', name: 'Tiebreaker' },
   ],
   SPECIAL: [],
+}
+
+export const PENDING_REAL_TYPE_BY_CATEGORY: Partial<Record<MapCategory, string>> = {
+  RC: 'PDRC',
+  LN: 'PDLN',
+  HB: 'PDHB',
+  SV: 'PDSV',
 }
 
 const CATEGORY_COLORS: Record<string, string> = {

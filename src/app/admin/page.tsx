@@ -39,6 +39,8 @@ interface TournamentListItem {
 
 type Tab = 'create' | 'manage' | 'references' | 'refLadder' | 'difficultyFit' | 'upload' | 'packs' | 'rtConflict' | 'admins' | 'trash' | 'audit'
 
+const STAGED_TOURNAMENTS_KEY = 'osumania-ladder:staged-tournaments:v1'
+
 export default function AdminPage() {
   const t = useT()
   const [authLoading, setAuthLoading] = useState(true)
@@ -50,13 +52,43 @@ export default function AdminPage() {
   const [editingSha, setEditingSha] = useState<string | null>(null)
   const [editInitialData, setEditInitialData] = useState<Tournament | null>(null)
   const [submitting, setSubmitting] = useState(false)
-  const [submitStatus, setSubmitStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
+  const [batchSubmitting, setBatchSubmitting] = useState(false)
+  const [submitStatus, setSubmitStatus] = useState<{ type: 'success' | 'error' | 'local'; message: string } | null>(null)
+  const [saveSignal, setSaveSignal] = useState(0)
+  const [stagedChanges, setStagedChanges] = useState<Record<string, Tournament>>({})
+  const [stagedChangesLoaded, setStagedChangesLoaded] = useState(false)
   const [tab, setTab] = useState<Tab>('create')
   const [loadingList, setLoadingList] = useState(false)
   // 编辑/新建表单是否有未保存修改(由 TournamentForm 冒泡上来),用于切栏拦截
   const [formDirty, setFormDirty] = useState(false)
   // 上传页是否有暂存未保存的元数据(由 MapUploader 冒泡上来),用于切栏拦截
   const [uploadDirty, setUploadDirty] = useState(false)
+
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(STAGED_TOURNAMENTS_KEY)
+      if (raw) {
+        const parsed = JSON.parse(raw) as Record<string, Tournament>
+        const valid = Object.fromEntries(
+          Object.entries(parsed).filter(([id, value]) => value && value.id === id),
+        )
+        setStagedChanges(valid)
+      }
+    } catch {
+      window.localStorage.removeItem(STAGED_TOURNAMENTS_KEY)
+    } finally {
+      setStagedChangesLoaded(true)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!stagedChangesLoaded) return
+    if (Object.keys(stagedChanges).length === 0) {
+      window.localStorage.removeItem(STAGED_TOURNAMENTS_KEY)
+    } else {
+      window.localStorage.setItem(STAGED_TOURNAMENTS_KEY, JSON.stringify(stagedChanges))
+    }
+  }, [stagedChanges, stagedChangesLoaded])
 
   // 角色判断
   const has = useCallback(
@@ -139,6 +171,13 @@ export default function AdminPage() {
         if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || t('admin.create.error'))
         setSubmitStatus({ type: 'success', message: t('admin.create.success', { id: tournament.id }) })
       }
+      setStagedChanges((current) => {
+        const next = { ...current }
+        delete next[tournament.id]
+        return next
+      })
+      setSaveSignal((current) => current + 1)
+      setFormDirty(false)
       fetchList()
     } catch (e) {
       setSubmitStatus({ type: 'error', message: (e as Error).message })
@@ -147,6 +186,57 @@ export default function AdminPage() {
     }
   }
 
+  const handleStage = () => {
+    if (!tournament) return
+    setStagedChanges((current) => ({ ...current, [tournament.id]: tournament }))
+    setSubmitStatus({
+      type: 'local',
+      message: t('admin.stage.success', { id: tournament.id }),
+    })
+    setSaveSignal((current) => current + 1)
+    setFormDirty(false)
+  }
+
+  const handleSubmitStaged = async () => {
+    const count = Object.keys(stagedChanges).length
+    if (count === 0) return
+    setBatchSubmitting(true)
+    setSubmitStatus(null)
+    try {
+      const res = await fetch('/api/tournaments/batch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          changes: stagedChanges,
+          summary: `Batch update tournaments (${count} files)`,
+        }),
+      })
+      if (!res.ok) {
+        throw new Error((await res.json().catch(() => ({}))).error || t('admin.stage.submitError'))
+      }
+      setStagedChanges({})
+      setSubmitStatus({ type: 'success', message: t('admin.stage.submitSuccess', { n: count }) })
+      setSaveSignal((current) => current + 1)
+      setFormDirty(false)
+      fetchList()
+    } catch (error) {
+      setSubmitStatus({ type: 'error', message: (error as Error).message })
+    } finally {
+      setBatchSubmitting(false)
+    }
+  }
+
+  const handleClearStaged = () => {
+    if (!window.confirm(t('admin.stage.clearConfirm'))) return
+    setStagedChanges({})
+    setSubmitStatus(null)
+  }
+
+  const handleTournamentUpdate = useCallback((value: Tournament | null) => {
+    setTournament(value)
+    setSubmitStatus(null)
+  }, [])
+
   const handleEdit = async (id: string) => {
     try {
       const res = await fetch(`/api/tournaments/${id}`)
@@ -154,7 +244,7 @@ export default function AdminPage() {
       const { tournament: data, sha } = await res.json()
       setEditingId(id)
       setEditingSha(sha)
-      setEditInitialData(data)
+      setEditInitialData(stagedChanges[id] || data)
       setTab('create')
     } catch {
       alert(t('admin.load.errorAlert'))
@@ -320,13 +410,24 @@ export default function AdminPage() {
               </div>
             )}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <TournamentForm onUpdate={setTournament} initialData={editInitialData} submitSuccess={submitStatus?.type === 'success'} onDirtyChange={setFormDirty} />
+              <TournamentForm
+                onUpdate={handleTournamentUpdate}
+                initialData={editInitialData}
+                saveSignal={saveSignal}
+                onDirtyChange={setFormDirty}
+              />
               <JsonPreview
                 tournament={tournament}
                 onSubmit={handleSubmit}
+                onStage={handleStage}
+                onSubmitStaged={handleSubmitStaged}
+                onClearStaged={handleClearStaged}
                 submitting={submitting}
+                batchSubmitting={batchSubmitting}
                 submitStatus={submitStatus}
                 isEditing={!!editingId}
+                stagedCount={Object.keys(stagedChanges).length}
+                currentStaged={!!tournament && !!stagedChanges[tournament.id]}
               />
             </div>
           </>
@@ -348,7 +449,14 @@ export default function AdminPage() {
               <div className="divide-y divide-gray-100 dark:divide-neutral-800">
                 {existingList.map((item) => (
                   <div key={item.id} className="px-4 py-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-neutral-800/40">
-                    <span className="text-sm text-gray-700 dark:text-neutral-200 font-mono">{item.id}</span>
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="text-sm text-gray-700 dark:text-neutral-200 font-mono truncate">{item.id}</span>
+                      {stagedChanges[item.id] && (
+                        <span className="shrink-0 px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-900/30 text-[10px] text-blue-700 dark:text-blue-200">
+                          {t('json.stagedCurrent')}
+                        </span>
+                      )}
+                    </div>
                     <div className="flex gap-2">
                       <button
                         onClick={() => handleEdit(item.id)}

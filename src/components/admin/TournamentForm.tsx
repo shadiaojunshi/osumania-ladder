@@ -12,7 +12,7 @@ import { tournaments as allKnownTournaments } from '@/generated/tournaments'
 interface Props {
   onUpdate: (tournament: Tournament | null) => void
   initialData?: Tournament | null
-  submitSuccess?: boolean
+  saveSignal?: number
   // 向上冒泡"有未保存修改",供 admin 页在切换其他栏时拦截提示
   onDirtyChange?: (dirty: boolean) => void
 }
@@ -28,7 +28,8 @@ const EMPTY_TOURNAMENT: Tournament = {
   customTypes: [],
 }
 
-export function TournamentForm({ onUpdate, initialData, submitSuccess, onDirtyChange }: Props) {
+export function TournamentForm({ onUpdate, initialData, saveSignal, onDirtyChange }: Props) {
+  const t = useT()
   const [step, setStep] = useState(0)
   const [tournament, setTournament] = useState<Tournament>(EMPTY_TOURNAMENT)
   const [rounds, setRounds] = useState<RoundWithMeta[]>([])
@@ -57,12 +58,12 @@ export function TournamentForm({ onUpdate, initialData, submitSuccess, onDirtyCh
     }
   }, [initialData])
 
-  // 提交成功后清除 dirty 标志
+  // 远端提交或本地暂存成功后清除 dirty 标志。
   useEffect(() => {
-    if (submitSuccess) {
+    if (saveSignal) {
       setIsDirty(false)
     }
-  }, [submitSuccess])
+  }, [saveSignal])
 
   useEffect(() => {
     const outputRounds = rounds.map(roundWithMetaToOutput)
@@ -103,6 +104,14 @@ export function TournamentForm({ onUpdate, initialData, submitSuccess, onDirtyCh
       </div>
 
       <div className="p-4 overflow-y-auto flex-1">
+        <details className="mb-4 border border-gray-200 dark:border-neutral-800 rounded-md bg-gray-50/70 dark:bg-neutral-900/60">
+          <summary className="cursor-pointer px-3 py-2 text-sm font-medium text-gray-700 dark:text-neutral-200">
+            {t('form.typeGuide.title')}
+          </summary>
+          <div className="border-t border-gray-200 dark:border-neutral-800 px-3 py-3 text-xs text-gray-500 dark:text-neutral-400">
+            {t('form.typeGuide.placeholder')}
+          </div>
+        </details>
         {step === 0 && (
           <BasicInfoStep
             tournament={tournament}

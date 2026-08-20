@@ -6,7 +6,8 @@
 //   这里用 GitHub Git Data API（blobs → tree → commit → 更新 ref）把所有改动合成
 //   一个 commit = 只触发 1 次构建。
 //
-// 权限: admin 及以上（会触发重建，比单文件编辑更"重"）。
+// 权限: contributor 及以上。该角色本来就能逐场增改；批量接口只把多次
+// commit 合成一次，减少 Pages 构建次数，不扩大可修改的数据范围。
 
 import { jsonResponse, noContent } from '../_lib/cors'
 import { hasRole, type AuthEnv, type SessionUser } from '../_lib/auth'
@@ -36,8 +37,8 @@ export const onRequestOptions: PagesFunction<Env> = async () => noContent()
 
 export const onRequestPost: PagesFunction<Env> = async ({ request, env, data }) => {
   const user = (data as { user?: SessionUser }).user ?? null
-  if (!hasRole(user, 'admin')) {
-    return jsonResponse({ error: '需要 admin 及以上权限', code: 'FORBIDDEN' }, 403)
+  if (!hasRole(user, 'contributor')) {
+    return jsonResponse({ error: '需要 contributor 及以上权限', code: 'FORBIDDEN' }, 403)
   }
 
   const { changes, summary } = (await request.json()) as {
@@ -48,6 +49,13 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, data }) 
   const ids = Object.keys(changes || {})
   if (ids.length === 0) {
     return jsonResponse({ error: '没有要保存的改动' }, 400)
+  }
+  const invalidId = ids.find((id) => {
+    const tournament = changes[id] as { id?: unknown } | null
+    return !/^[a-z0-9][a-z0-9-]*$/.test(id) || tournament?.id !== id
+  })
+  if (invalidId) {
+    return jsonResponse({ error: `无效的比赛 ID 或数据不匹配: ${invalidId}` }, 400)
   }
 
   try {
@@ -90,7 +98,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, data }) 
     const treeJson = (await treeRes.json()) as { sha: string }
 
     // 5. 创建 commit
-    const message = summary || `Batch fix realType conflicts (${ids.length} files)`
+    const message = summary || `Batch update tournaments (${ids.length} files)`
     const newCommitRes = await gh('/git/commits', env, {
       method: 'POST',
       body: JSON.stringify({ message, tree: treeJson.sha, parents: [baseCommitSha] }),

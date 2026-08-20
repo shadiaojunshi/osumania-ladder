@@ -8,11 +8,16 @@ import type { Tournament } from '@/lib/types'
 import type { LadderEntry } from '@/lib/referenceData'
 import {
   DIFFICULTY_DIMENSIONS,
+  applyDifficultyGapCalibration,
   buildLadderPositionMap,
   findNearestKnownRounds,
   getRoundDifficulty,
+  isValidGapCalibration,
   linearRegression,
+  linearRegressionWithSlope,
+  removeDifficultyGapCalibration,
   roundKey,
+  type DifficultyGapCalibration,
   type DifficultyDimensionId,
   type FitPoint,
 } from '@/lib/difficultyFit'
@@ -25,6 +30,22 @@ interface SelectedSample {
   round: Tournament['rounds'][number]
   position: number | null
   isOnLadder: boolean
+}
+
+interface GapSetting {
+  enabled: boolean
+  lower: string
+  upper: string
+  multiplier: string
+}
+
+const DEFAULT_GAP_SETTINGS: Record<DifficultyDimensionId, GapSetting> = {
+  'rc-rf': { enabled: true, lower: '14', upper: '15', multiplier: '1.5' },
+  'ln-ln': { enabled: false, lower: '14', upper: '15', multiplier: '1' },
+  'hb-rf': { enabled: true, lower: '14', upper: '15', multiplier: '1.5' },
+  'hb-ln': { enabled: false, lower: '14', upper: '15', multiplier: '1' },
+  'tb-rf': { enabled: true, lower: '14', upper: '15', multiplier: '1.5' },
+  'tb-ln': { enabled: false, lower: '14', upper: '15', multiplier: '1' },
 }
 
 const DIMENSION_LABEL_KEYS: Record<DifficultyDimensionId, MessageKey> = {
@@ -66,6 +87,13 @@ export function DifficultyFitTool() {
   const [targetMode, setTargetMode] = useState<TargetMode>('lowest')
   const [targetOffset, setTargetOffset] = useState('-1')
   const [absoluteTarget, setAbsoluteTarget] = useState('0')
+  const [gapSettings, setGapSettings] = useState<Record<DifficultyDimensionId, GapSetting>>(
+    DEFAULT_GAP_SETTINGS,
+  )
+  const [manualSlopeDimensions, setManualSlopeDimensions] = useState<Set<DifficultyDimensionId>>(
+    () => new Set(),
+  )
+  const [manualSlopes, setManualSlopes] = useState<Partial<Record<DifficultyDimensionId, string>>>({})
 
   useEffect(() => {
     let active = true
@@ -148,9 +176,33 @@ export function DifficultyFitTool() {
     return [{ ...sample, position, reading }]
   }), [chosenSamples, dimensionId, positionOverrides])
 
+  const gapSetting = gapSettings[dimensionId]
+  const requestedCalibration = useMemo<DifficultyGapCalibration | null>(() => {
+    if (!gapSetting.enabled) return null
+    const lower = parseFinite(gapSetting.lower)
+    const upper = parseFinite(gapSetting.upper)
+    const multiplier = parseFinite(gapSetting.multiplier)
+    if (lower === null || upper === null || multiplier === null) return null
+    return { lower, upper, multiplier }
+  }, [gapSetting])
+  const calibration = isValidGapCalibration(requestedCalibration) ? requestedCalibration : null
+  const calibrationInvalid = gapSetting.enabled && !calibration
+
+  const fitPoints = useMemo(
+    () => plottedSamples.map((sample) => ({
+      x: sample.position,
+      y: applyDifficultyGapCalibration(sample.reading.value, calibration),
+    })),
+    [calibration, plottedSamples],
+  )
+  const automaticFit = useMemo(() => linearRegression(fitPoints), [fitPoints])
+  const manualSlopeEnabled = manualSlopeDimensions.has(dimensionId)
+  const manualSlope = parseFinite(manualSlopes[dimensionId] ?? '')
   const fit = useMemo(
-    () => linearRegression(plottedSamples.map((sample) => ({ x: sample.position, y: sample.reading.value }))),
-    [plottedSamples],
+    () => manualSlopeEnabled && manualSlope !== null
+      ? linearRegressionWithSlope(fitPoints, manualSlope)
+      : automaticFit,
+    [automaticFit, fitPoints, manualSlope, manualSlopeEnabled],
   )
 
   const xExtent = useMemo(() => {
@@ -167,7 +219,10 @@ export function DifficultyFitTool() {
     return (targetMode === 'lowest' ? xExtent.min : xExtent.max) + offset
   }, [absoluteTarget, targetMode, targetOffset, xExtent])
 
-  const prediction = fit && targetPosition !== null ? fit.predict(targetPosition) : null
+  const calibratedPrediction = fit && targetPosition !== null ? fit.predict(targetPosition) : null
+  const prediction = calibratedPrediction === null
+    ? null
+    : removeDifficultyGapCalibration(calibratedPrediction, calibration)
   const nearestRounds = useMemo(
     () => prediction === null
       ? []
@@ -229,10 +284,34 @@ export function DifficultyFitTool() {
     })
   }
 
+  const updateGapSetting = (patch: Partial<GapSetting>) => {
+    setGapSettings((current) => ({
+      ...current,
+      [dimensionId]: { ...current[dimensionId], ...patch },
+    }))
+  }
+
+  const toggleManualSlope = () => {
+    setManualSlopeDimensions((current) => {
+      const next = new Set(current)
+      if (next.has(dimensionId)) next.delete(dimensionId)
+      else next.add(dimensionId)
+      return next
+    })
+    if (!manualSlopeEnabled && automaticFit) {
+      setManualSlopes((current) => ({
+        ...current,
+        [dimensionId]: automaticFit.slope.toFixed(3),
+      }))
+    }
+  }
+
   const unknownChosen = chosenSamples.length - plottedSamples.length
   const extrapolating = targetPosition !== null && xExtent
     ? targetPosition < xExtent.min || targetPosition > xExtent.max
     : false
+  const manualSlopeValue = manualSlope ?? automaticFit?.slope ?? 0
+  const manualSlopeMax = Math.max(Math.abs(automaticFit?.slope ?? 0) * 2.5, 0.25)
 
   return (
     <div className="space-y-5">
@@ -264,6 +343,122 @@ export function DifficultyFitTool() {
               {t(DIMENSION_LABEL_KEYS[dimension.id])}
             </button>
           ))}
+        </div>
+      </section>
+
+      <section className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+        <div className="border border-gray-200 dark:border-neutral-800 rounded-md p-3">
+          <label className="flex items-center justify-between gap-3 cursor-pointer">
+            <span>
+              <span className="block text-sm font-medium text-gray-800 dark:text-neutral-200">
+                {t('difficultyFit.gap.title')}
+              </span>
+              <span className="block mt-0.5 text-[11px] text-gray-500 dark:text-neutral-400">
+                {t('difficultyFit.gap.summary')}
+              </span>
+            </span>
+            <input
+              type="checkbox"
+              checked={gapSetting.enabled}
+              onChange={(event) => updateGapSetting({ enabled: event.target.checked })}
+              className="h-4 w-4 accent-purple-600"
+            />
+          </label>
+          {gapSetting.enabled && (
+            <div className="mt-3 grid grid-cols-[minmax(0,1fr)_16px_minmax(0,1fr)_minmax(90px,1.2fr)] gap-2 items-end">
+              <label className="min-w-0">
+                <span className="block text-[10px] text-gray-400 dark:text-neutral-500 mb-1">
+                  {t('difficultyFit.gap.lower')}
+                </span>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={gapSetting.lower}
+                  onChange={(event) => updateGapSetting({ lower: event.target.value })}
+                  className="w-full px-2 py-1.5 text-xs tabular-nums border border-gray-200 dark:border-neutral-700 rounded bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100"
+                />
+              </label>
+              <span className="pb-1.5 text-center text-gray-400">→</span>
+              <label className="min-w-0">
+                <span className="block text-[10px] text-gray-400 dark:text-neutral-500 mb-1">
+                  {t('difficultyFit.gap.upper')}
+                </span>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={gapSetting.upper}
+                  onChange={(event) => updateGapSetting({ upper: event.target.value })}
+                  className="w-full px-2 py-1.5 text-xs tabular-nums border border-gray-200 dark:border-neutral-700 rounded bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100"
+                />
+              </label>
+              <label className="min-w-0">
+                <span className="block text-[10px] text-gray-400 dark:text-neutral-500 mb-1">
+                  {t('difficultyFit.gap.multiplier')}
+                </span>
+                <input
+                  type="number"
+                  min="0.1"
+                  step="0.1"
+                  value={gapSetting.multiplier}
+                  onChange={(event) => updateGapSetting({ multiplier: event.target.value })}
+                  className="w-full px-2 py-1.5 text-xs tabular-nums border border-gray-200 dark:border-neutral-700 rounded bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100"
+                />
+              </label>
+            </div>
+          )}
+          {calibrationInvalid && (
+            <p className="mt-2 text-[11px] text-amber-700 dark:text-amber-300">
+              {t('difficultyFit.gap.invalid')}
+            </p>
+          )}
+        </div>
+
+        <div className="border border-gray-200 dark:border-neutral-800 rounded-md p-3">
+          <label className={`flex items-center justify-between gap-3 ${automaticFit ? 'cursor-pointer' : 'opacity-50'}`}>
+            <span>
+              <span className="block text-sm font-medium text-gray-800 dark:text-neutral-200">
+                {t('difficultyFit.manualSlope.title')}
+              </span>
+              <span className="block mt-0.5 text-[11px] text-gray-500 dark:text-neutral-400">
+                {t('difficultyFit.manualSlope.summary')}
+              </span>
+            </span>
+            <input
+              type="checkbox"
+              checked={manualSlopeEnabled}
+              disabled={!automaticFit}
+              onChange={toggleManualSlope}
+              className="h-4 w-4 accent-purple-600"
+            />
+          </label>
+          {manualSlopeEnabled && automaticFit && (
+            <div className="mt-3 grid grid-cols-[minmax(0,1fr)_90px] gap-3 items-center">
+              <input
+                type="range"
+                min="0"
+                max={manualSlopeMax}
+                step={manualSlopeMax / 200}
+                value={Math.min(Math.max(manualSlopeValue, 0), manualSlopeMax)}
+                onChange={(event) => setManualSlopes((current) => ({
+                  ...current,
+                  [dimensionId]: event.target.value,
+                }))}
+                aria-label={t('difficultyFit.manualSlope.value')}
+                className="w-full accent-purple-600"
+              />
+              <input
+                type="number"
+                step="0.001"
+                value={manualSlopes[dimensionId] ?? ''}
+                onChange={(event) => setManualSlopes((current) => ({
+                  ...current,
+                  [dimensionId]: event.target.value,
+                }))}
+                aria-label={t('difficultyFit.manualSlope.value')}
+                className="w-full px-2 py-1.5 text-xs tabular-nums border border-gray-200 dark:border-neutral-700 rounded bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100"
+              />
+            </div>
+          )}
         </div>
       </section>
 
@@ -434,12 +629,15 @@ export function DifficultyFitTool() {
           <FitChart
             points={plottedSamples.map((sample) => ({
               x: sample.position,
-              y: sample.reading.value,
+              y: applyDifficultyGapCalibration(sample.reading.value, calibration),
+              rawY: sample.reading.value,
               label: getRoundLabel(sample.tournament, sample.round),
             }))}
             fit={fit}
             targetPosition={targetPosition}
-            prediction={prediction}
+            prediction={calibratedPrediction}
+            displayPrediction={prediction}
+            calibrated={!!calibration}
           />
 
           <section className="border-t border-gray-200 dark:border-neutral-800 pt-4">
@@ -483,9 +681,15 @@ export function DifficultyFitTool() {
             {fit && prediction !== null ? (
               <div className="mt-4 grid grid-cols-2 lg:grid-cols-4 gap-x-5 gap-y-3 border-y border-gray-100 dark:border-neutral-800 py-4">
                 <Metric label={t('difficultyFit.prediction')} value={prediction.toFixed(2)} primary />
-                <Metric label={t('difficultyFit.slope')} value={fit.slope.toFixed(3)} />
+                <Metric
+                  label={t(calibration ? 'difficultyFit.slopeCalibrated' : 'difficultyFit.slope')}
+                  value={fit.slope.toFixed(3)}
+                />
                 <Metric label="R²" value={fit.rSquared.toFixed(3)} />
-                <Metric label={t('difficultyFit.rmse')} value={`±${fit.rmse.toFixed(2)}`} />
+                <Metric
+                  label={t(calibration ? 'difficultyFit.rmseCalibrated' : 'difficultyFit.rmse')}
+                  value={`±${fit.rmse.toFixed(2)}`}
+                />
               </div>
             ) : (
               <p className="mt-4 text-sm text-gray-500 dark:text-neutral-400">
@@ -507,7 +711,7 @@ export function DifficultyFitTool() {
               )}
               {fit && (
                 <p className="text-gray-500 dark:text-neutral-400">
-                  {t('difficultyFit.formula', {
+                  {t(calibration ? 'difficultyFit.formulaCalibrated' : 'difficultyFit.formula', {
                     slope: fit.slope.toFixed(3),
                     intercept: fit.intercept.toFixed(3),
                   })}
@@ -577,11 +781,15 @@ function FitChart({
   fit,
   targetPosition,
   prediction,
+  displayPrediction,
+  calibrated,
 }: {
-  points: Array<FitPoint & { label: string }>
+  points: Array<FitPoint & { label: string; rawY: number }>
   fit: ReturnType<typeof linearRegression>
   targetPosition: number | null
   prediction: number | null
+  displayPrediction: number | null
+  calibrated: boolean
 }) {
   const t = useT()
   const width = 760
@@ -673,7 +881,10 @@ function FitChart({
         {points.map((point) => (
           <g key={`${point.label}-${point.x}`}>
             <circle cx={sx(point.x)} cy={sy(point.y)} r="5" className="fill-teal-600 dark:fill-teal-300 stroke-white dark:stroke-neutral-950" strokeWidth="2" />
-            <title>{`${point.label}: (${point.x.toFixed(2)}, ${point.y.toFixed(2)})`}</title>
+            <title>{calibrated
+              ? `${point.label}: (${point.x.toFixed(2)}, ${point.rawY.toFixed(2)} → ${point.y.toFixed(2)})`
+              : `${point.label}: (${point.x.toFixed(2)}, ${point.rawY.toFixed(2)})`}
+            </title>
           </g>
         ))}
 
@@ -682,7 +893,7 @@ function FitChart({
             <line x1={sx(targetPosition)} y1={margin.top} x2={sx(targetPosition)} y2={height - margin.bottom} className="stroke-rose-400" strokeDasharray="5 5" />
             <circle cx={sx(targetPosition)} cy={sy(prediction)} r="7" className="fill-rose-500 stroke-white dark:stroke-neutral-950" strokeWidth="2" />
             <text x={sx(targetPosition)} y={Math.max(margin.top + 12, sy(prediction) - 12)} textAnchor="middle" className="fill-rose-600 dark:fill-rose-300 text-[12px] font-semibold">
-              {prediction.toFixed(2)}
+              {(displayPrediction ?? prediction).toFixed(2)}
             </text>
           </g>
         )}
@@ -691,7 +902,7 @@ function FitChart({
           {t('difficultyFit.axisPosition')}
         </text>
         <text transform={`translate(16 ${margin.top + plotHeight / 2}) rotate(-90)`} textAnchor="middle" className="fill-gray-500 dark:fill-neutral-400 text-[12px]">
-          {t('difficultyFit.axisDifficulty')}
+          {t(calibrated ? 'difficultyFit.axisCalibratedDifficulty' : 'difficultyFit.axisDifficulty')}
         </text>
       </svg>
       <div className="flex flex-wrap gap-x-5 gap-y-1 px-3 py-2 border-t border-gray-100 dark:border-neutral-800 text-[11px] text-gray-500 dark:text-neutral-400">

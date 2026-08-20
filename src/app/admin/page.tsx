@@ -6,6 +6,7 @@ import { TournamentForm } from '@/components/admin/TournamentForm'
 import { JsonPreview } from '@/components/admin/JsonPreview'
 import { ReferencesEditor } from '@/components/admin/ReferencesEditor'
 import { RefLadderEditor } from '@/components/admin/RefLadderEditor'
+import { DifficultyFitTool } from '@/components/admin/DifficultyFitTool'
 import { MapUploader } from '@/components/admin/MapUploader'
 import { PackLinksEditor } from '@/components/admin/PackLinksEditor'
 import { RealTypeConflictChecker } from '@/components/admin/RealTypeConflictChecker'
@@ -36,7 +37,7 @@ interface TournamentListItem {
   sha: string
 }
 
-type Tab = 'create' | 'manage' | 'references' | 'refLadder' | 'upload' | 'packs' | 'rtConflict' | 'admins' | 'trash' | 'audit'
+type Tab = 'create' | 'manage' | 'references' | 'refLadder' | 'difficultyFit' | 'upload' | 'packs' | 'rtConflict' | 'admins' | 'trash' | 'audit'
 
 export default function AdminPage() {
   const t = useT()
@@ -301,6 +302,7 @@ export default function AdminPage() {
           {tabBtn('manage', t('admin.tab.manage', { n: existingList.length }))}
           {tabBtn('references', t('admin.tab.references'))}
           {tabBtn('refLadder', t('admin.tab.refLadder'))}
+          {tabBtn('difficultyFit', t('admin.tab.difficultyFit'))}
           {tabBtn('upload', t('admin.tab.upload'))}
           {tabBtn('packs', t('admin.tab.packs'))}
           {tabBtn('rtConflict', t('admin.tab.rtConflict'))}
@@ -373,6 +375,8 @@ export default function AdminPage() {
         {tab === 'references' && <ReferencesEditor />}
 
         {tab === 'refLadder' && <RefLadderEditor />}
+
+        {tab === 'difficultyFit' && <DifficultyFitTool />}
 
         {tab === 'upload' && <MapUploader onDirtyChange={setUploadDirty} />}
 

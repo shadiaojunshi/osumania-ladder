@@ -96,7 +96,7 @@
       "difficulty": {
         "min": 4,
         "max": 5,
-        "average": 4.3
+        "average": 4.25
       },
       "maps": [
         {
@@ -1088,7 +1088,7 @@
         {
           "slot": "EX2",
           "type": "LN",
-          "realType": "RE",
+          "realType": "LNMX",
           "name": "xi - XaleidoscopiX [Phantasmagorical Sekai]",
           "difficulty": 0,
           "beatmapId": 5237880,

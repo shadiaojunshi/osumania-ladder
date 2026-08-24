@@ -1,0 +1,376 @@
+{
+  "id": "coe-2026-mania-tournament",
+  "name": "COE 2026 Mania Tournament",
+  "abbreviation": "COEMT",
+  "keyCount": 4,
+  "year": 2026,
+  "tags": [],
+  "rounds": [
+    {
+      "id": "round-1",
+      "name": "Qualifiers",
+      "abbreviation": "Qual",
+      "order": 1,
+      "isQualifier": true,
+      "difficulty": {
+        "min": 0,
+        "max": 0,
+        "average": 0
+      },
+      "maps": [
+        {
+          "slot": "RC1",
+          "type": "RC",
+          "realType": "MTC",
+          "name": "ARM (IOSYS) - CHAOS Terror-Tech Mix [Distress]",
+          "difficulty": 0,
+          "beatmapId": 3392120,
+          "beatmapsetId": 1661338
+        },
+        {
+          "slot": "RC2",
+          "type": "RC",
+          "realType": "TC",
+          "name": "BATPIIICORE - LAPPPOCHKA [Chii?]",
+          "difficulty": 0,
+          "beatmapId": 3877613,
+          "beatmapsetId": 1883359
+        },
+        {
+          "slot": "HB1",
+          "type": "HB",
+          "realType": "MXHB",
+          "name": "Hoshimachi Suisei - Jibunkatte Dazzling [I Wish, Starry [NSV]]",
+          "difficulty": 0,
+          "beatmapId": 3401529,
+          "beatmapsetId": 1666062
+        },
+        {
+          "slot": "LN1",
+          "type": "LN",
+          "realType": "LNMX",
+          "name": "Kobaryo - SUPER EMULATOR [feat. HiTNEX-X] [ENGINE DESTRUCTION]",
+          "difficulty": 0,
+          "beatmapId": 3880641,
+          "beatmapsetId": 1884776
+        },
+        {
+          "slot": "SV1",
+          "type": "SV",
+          "realType": "SVMX",
+          "name": "HOYO-MiX feat. Reol - No Dazzle, No Break [No Limit VIP]",
+          "difficulty": 0,
+          "beatmapId": 5157407,
+          "beatmapsetId": 2384794
+        }
+      ],
+      "typeDifficulties": {
+        "RC": {},
+        "HB": {},
+        "LN": {},
+        "SV": {},
+        "TB": {}
+      }
+    },
+    {
+      "id": "round-2",
+      "name": "Round of 16 - Quarterfinals",
+      "abbreviation": "RO16&QF",
+      "order": 2,
+      "difficulty": {
+        "min": 3.5,
+        "max": 9.45,
+        "average": 8.08
+      },
+      "maps": [
+        {
+          "slot": "RC1",
+          "type": "RC",
+          "realType": "ADP",
+          "name": "The Flashbulb - Mellann [Introspection 1.1x (116bpm)]",
+          "difficulty": 3.5,
+          "beatmapId": 3725685,
+          "beatmapsetId": 1816098
+        },
+        {
+          "slot": "RC2",
+          "type": "RC",
+          "realType": "MX",
+          "name": "OSTER project - Gaming Polar Bear [Zeta Bear]",
+          "difficulty": 6,
+          "beatmapId": 5776778,
+          "beatmapsetId": 2589280
+        },
+        {
+          "slot": "RC3",
+          "type": "RC",
+          "realType": "SS",
+          "name": "Akatsuki Records - Mizuiro Raindrop [Lunat1c (Cut ver.)]",
+          "difficulty": 6.78,
+          "beatmapId": 4148347,
+          "beatmapsetId": 1996041
+        },
+        {
+          "slot": "RC4",
+          "type": "RC",
+          "realType": "JS",
+          "name": "Yuyoyuppe feat. Hanatan - Palette [x1.2]",
+          "difficulty": 9,
+          "beatmapId": 2298689,
+          "beatmapsetId": 1100026
+        },
+        {
+          "slot": "RC5",
+          "type": "RC",
+          "realType": "ADP",
+          "name": "iromi, ijica - Aftertaste (Cut Ver.) [Divination]",
+          "difficulty": 8.6,
+          "beatmapId": 5775932,
+          "beatmapsetId": 2588972
+        },
+        {
+          "slot": "HB1",
+          "type": "HB",
+          "realType": "HB2",
+          "name": "HALLPBE.S - Bang Bang [Gun]",
+          "difficulty": 0,
+          "beatmapId": 4365918,
+          "beatmapsetId": 1666577,
+          "difficultyLn": 8
+        },
+        {
+          "slot": "HB2",
+          "type": "HB",
+          "realType": "HB1",
+          "name": "Lime - Pixel Planet [Traversing the Cosmos]",
+          "difficulty": 0,
+          "beatmapId": 4615369,
+          "beatmapsetId": 2183977,
+          "difficultyLn": 8
+        },
+        {
+          "slot": "LN1",
+          "type": "LN",
+          "realType": "RE",
+          "name": "aran - Yoake Mae feat. shully (Cut Ver.) [Wake Up]",
+          "difficulty": 9.45,
+          "beatmapId": 5741439,
+          "beatmapsetId": 2577256
+        },
+        {
+          "slot": "LN2",
+          "type": "LN",
+          "realType": "LNMX",
+          "name": "Feryquitous - Ai Nov [Crumbling]",
+          "difficulty": 9.45,
+          "beatmapId": 5776671,
+          "beatmapsetId": 2589240
+        },
+        {
+          "slot": "LN3",
+          "type": "LN",
+          "realType": "DE",
+          "name": "femtanyl - LOVESICK, CANNIBAL! (feat  takihasdied) [Stage 4: Yearning Torment]",
+          "difficulty": 9.45,
+          "beatmapId": 4623230,
+          "beatmapsetId": 2186666
+        },
+        {
+          "slot": "SV1",
+          "type": "SV",
+          "realType": "ME",
+          "name": "Schwank - HULLABALOO WRECKING CREW [GOBBLEDYGOOK GIMMICK GARBAGE]",
+          "difficulty": 0,
+          "beatmapId": 5775138,
+          "beatmapsetId": 2588649
+        },
+        {
+          "slot": "TB",
+          "type": "TB",
+          "realType": "TB",
+          "name": "BilliumMoto & Miyolophone - Faster Than You!!! [Victory Lap!!!]",
+          "difficulty": 0,
+          "beatmapId": 3996092,
+          "beatmapsetId": 1933887
+        }
+      ],
+      "typeDifficulties": {
+        "RC": {
+          "rf": 6.78
+        },
+        "HB": {
+          "ln": 8
+        },
+        "LN": {
+          "ln": 9.45
+        },
+        "SV": {},
+        "TB": {}
+      }
+    },
+    {
+      "id": "round-3",
+      "name": "Semifinals - Finals",
+      "abbreviation": "SF&F",
+      "order": 3,
+      "difficulty": {
+        "min": 7,
+        "max": 10,
+        "average": 8.46
+      },
+      "maps": [
+        {
+          "slot": "RC1",
+          "type": "RC",
+          "realType": "TC",
+          "name": "Billain - Specialist [Theory]",
+          "difficulty": 7.3,
+          "beatmapId": 3439520,
+          "beatmapsetId": 1445730
+        },
+        {
+          "slot": "RC2",
+          "type": "RC",
+          "realType": "JTC",
+          "name": "3rd Coast - Bye Bye Love [1.2]",
+          "difficulty": 8.15,
+          "beatmapId": 4306784,
+          "beatmapsetId": 2060324
+        },
+        {
+          "slot": "RC3",
+          "type": "RC",
+          "realType": "SS",
+          "name": "xi feat. Risa Yuzuki - Kyoka Suigetsu [Eternal Flower]",
+          "difficulty": 8.15,
+          "beatmapId": 5693842,
+          "beatmapsetId": 2561396
+        },
+        {
+          "slot": "RC4",
+          "type": "RC",
+          "realType": "JS",
+          "name": "Yuyoyuppe feat. Hanatan - Palette [x1.2]",
+          "difficulty": 9,
+          "beatmapId": 2298689,
+          "beatmapsetId": 1100026
+        },
+        {
+          "slot": "RC5",
+          "type": "RC",
+          "realType": "ADP",
+          "name": "iromi, ijica - Aftertaste (Cut Ver.) [Divination]",
+          "difficulty": 8.15,
+          "beatmapId": 5775932,
+          "beatmapsetId": 2588972
+        },
+        {
+          "slot": "RC6",
+          "type": "RC",
+          "realType": "CJ",
+          "name": "Relect - Get Crunk [LET'S GO STUPID]",
+          "difficulty": 8.15,
+          "beatmapId": 5778015,
+          "beatmapsetId": 2589727
+        },
+        {
+          "slot": "HB1",
+          "type": "HB",
+          "realType": "HB2",
+          "name": "Shiiki Reku - IDOL [Haniwa]",
+          "difficulty": 0,
+          "beatmapId": 3353563,
+          "beatmapsetId": 1642953
+        },
+        {
+          "slot": "HB2",
+          "type": "HB",
+          "realType": "HB1",
+          "name": "Lime - Pixel Planet [Traversing the Cosmos]",
+          "difficulty": 0,
+          "beatmapId": 4615369,
+          "beatmapsetId": 2183977
+        },
+        {
+          "slot": "HB3",
+          "type": "HB",
+          "realType": "HB3",
+          "name": "Cyte - Melty Loud Nightcore [taboo (edit) 1.15x (201bpm)]",
+          "difficulty": 0,
+          "beatmapId": 4377569,
+          "beatmapsetId": 2031155
+        },
+        {
+          "slot": "LN1",
+          "type": "LN",
+          "realType": "RE",
+          "name": "Yooh - Decoy [Squawk]",
+          "difficulty": 7,
+          "beatmapId": 3588685,
+          "beatmapsetId": 1753612
+        },
+        {
+          "slot": "LN2",
+          "type": "LN",
+          "realType": "LNMX",
+          "name": "Feryquitous - Ai Nov [Crumbling]",
+          "difficulty": 9.45,
+          "beatmapId": 5776671,
+          "beatmapsetId": 2589240
+        },
+        {
+          "slot": "LN3",
+          "type": "LN",
+          "realType": "DE",
+          "name": "femtanyl - LOVESICK, CANNIBAL! (feat  takihasdied) [Stage 4: Yearning Torment]",
+          "difficulty": 8.6,
+          "beatmapId": 4623230,
+          "beatmapsetId": 2186666
+        },
+        {
+          "slot": "LN4",
+          "type": "LN",
+          "realType": "LNMX",
+          "name": "Wolpis Carter - Batsubyou [LN Life]",
+          "difficulty": 10,
+          "beatmapId": 4635290,
+          "beatmapsetId": 2191381
+        },
+        {
+          "slot": "SV1",
+          "type": "SV",
+          "realType": "ME",
+          "name": "Schwank - HULLABALOO WRECKING CREW [GOBBLEDYGOOK GIMMICK GARBAGE]",
+          "difficulty": 0,
+          "beatmapId": 5775138,
+          "beatmapsetId": 2588649
+        },
+        {
+          "slot": "TB",
+          "type": "TB",
+          "realType": "TB",
+          "name": "Kou! - ARTFIGHT : MINMAX [TARGET : LOCKED]",
+          "difficulty": 0,
+          "beatmapId": 5777601,
+          "beatmapsetId": 2589596
+        }
+      ],
+      "typeDifficulties": {
+        "RC": {
+          "rf": 8.15
+        },
+        "HB": {},
+        "LN": {
+          "ln": 8.76
+        },
+        "SV": {},
+        "TB": {}
+      }
+    }
+  ],
+  "customTypes": [],
+  "priority": 3.1,
+  "forumUrl": "https://osu.ppy.sh/community/forums/topics/2215389",
+  "sheetUrl": "https://docs.google.com/spreadsheets/d/1lB6M2tAwAYbHq13UloBkd8qob9pcBcjBKiV7e1Pintg",
+  "wikiUrl": "https://cavoe.events/"
+}

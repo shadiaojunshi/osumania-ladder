@@ -992,7 +992,7 @@
       "difficulty": {
         "min": 13.5,
         "max": 15,
-        "average": 14.5
+        "average": 14.47
       },
       "maps": [
         {
@@ -1100,7 +1100,7 @@
         {
           "slot": "LN1",
           "type": "LN",
-          "realType": "TE",
+          "realType": "LNMX",
           "name": "Ashrount - AureoLe ~for Triumph~ [Akatsumi x Danny's Triumph and Regret]",
           "difficulty": 14.2,
           "beatmapId": 3848980,

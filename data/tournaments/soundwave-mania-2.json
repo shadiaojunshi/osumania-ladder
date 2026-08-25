@@ -1,0 +1,1192 @@
+{
+  "id": "soundwave-mania-2",
+  "name": "Soundwave Mania 2",
+  "abbreviation": "SWM2",
+  "keyCount": 4,
+  "year": 2026,
+  "tags": [],
+  "rounds": [
+    {
+      "id": "round-1",
+      "name": "Qualifiers",
+      "abbreviation": "Qual",
+      "order": 1,
+      "isQualifier": true,
+      "difficulty": {
+        "min": 0,
+        "max": 0,
+        "average": 0
+      },
+      "maps": [
+        {
+          "slot": "ST1",
+          "type": "SV",
+          "realType": "SVMX",
+          "name": "Yunosuke feat. Sennzai - Komplexe [Kurohime's Counterattack]",
+          "difficulty": 0,
+          "beatmapId": 4275989,
+          "beatmapsetId": 2048005
+        },
+        {
+          "slot": "ST2",
+          "type": "RC",
+          "realType": "TC",
+          "name": "Frums - parvorbital [Stage 2: Perihelion]",
+          "difficulty": 0,
+          "beatmapId": 3729916,
+          "beatmapsetId": 1818001
+        },
+        {
+          "slot": "ST3",
+          "type": "RC",
+          "realType": "SA",
+          "name": "Lime - Campanella [Starlight]",
+          "difficulty": 0,
+          "beatmapId": 4492767,
+          "beatmapsetId": 2134505
+        },
+        {
+          "slot": "ST4",
+          "type": "RC",
+          "realType": "MX",
+          "name": "Zekk - Feelsleft0ut [chrubble's al0ne]",
+          "difficulty": 0,
+          "beatmapId": 2396091,
+          "beatmapsetId": 1145368
+        },
+        {
+          "slot": "ST5",
+          "type": "LN",
+          "realType": "RE",
+          "name": "James Landino - Shiba Island [Stage 4: What The Dog Doin?]",
+          "difficulty": 0,
+          "beatmapId": 4183045,
+          "beatmapsetId": 2010349
+        },
+        {
+          "slot": "ST6",
+          "type": "LN",
+          "realType": "DE",
+          "name": "BlackY - Sthenno [Destination]",
+          "difficulty": 0,
+          "beatmapId": 4772273,
+          "beatmapsetId": 2244744
+        },
+        {
+          "slot": "ST7",
+          "type": "HB",
+          "realType": "HB4",
+          "name": "EmoCosine - Black sour Ruby [Duality]",
+          "difficulty": 0,
+          "beatmapId": 4389604,
+          "beatmapsetId": 2019474
+        }
+      ],
+      "typeDifficulties": {
+        "RC": {},
+        "HB": {},
+        "LN": {},
+        "SV": {},
+        "TB": {}
+      }
+    },
+    {
+      "id": "round-2",
+      "name": "Round of 64",
+      "abbreviation": "RO64",
+      "order": 2,
+      "difficulty": {
+        "min": 3.24,
+        "max": 6.5,
+        "average": 4.97
+      },
+      "maps": [
+        {
+          "slot": "RC1",
+          "type": "RC",
+          "realType": "SS",
+          "name": "Mage - The Words I Never Said In D&B [drum & stream 1.05x (181bpm)]",
+          "difficulty": 4.1,
+          "beatmapId": 2999031,
+          "beatmapsetId": 1459360
+        },
+        {
+          "slot": "RC2",
+          "type": "RC",
+          "realType": "JS",
+          "name": "Mom Jeans - What's Up? [edgy]",
+          "difficulty": 4.1,
+          "beatmapId": 4756752,
+          "beatmapsetId": 2238555
+        },
+        {
+          "slot": "RC3",
+          "type": "RC",
+          "realType": "TC",
+          "name": "",
+          "difficulty": 4.1,
+          "beatmapId": 4856819
+        },
+        {
+          "slot": "RC4",
+          "type": "RC",
+          "realType": "MX",
+          "name": "renforshort - wannabe [imitation]",
+          "difficulty": 4.1,
+          "beatmapId": 4823001,
+          "beatmapsetId": 2265366
+        },
+        {
+          "slot": "LN1",
+          "type": "LN",
+          "realType": "CO",
+          "name": "polysha - Abyss Colored Heart [Umbral Singularity [1,05x Rate]]",
+          "difficulty": 6.5,
+          "beatmapId": 2897839,
+          "beatmapsetId": 1405168
+        },
+        {
+          "slot": "LN2",
+          "type": "LN",
+          "realType": "DE",
+          "name": "HiTECH NINJA - Blah!! [Kick It!!]",
+          "difficulty": 6.5,
+          "beatmapId": 4853515,
+          "beatmapsetId": 2277408
+        },
+        {
+          "slot": "HB1",
+          "type": "HB",
+          "realType": "RCmainHB",
+          "name": "Ikimonogakari - Blue Bird feat. k*chan [ dj-Jo Remix ] (Cut ver.) [Stage 6: Freed]",
+          "difficulty": 3.24,
+          "beatmapId": 4459862,
+          "beatmapsetId": 2122383,
+          "difficultyLn": 4.3
+        },
+        {
+          "slot": "HB2",
+          "type": "HB",
+          "realType": "LNmainHB",
+          "name": "BEMANI Sound Team \"SYUNN\" - Pout [Tsundere]",
+          "difficulty": 3.24,
+          "beatmapId": 4724865,
+          "beatmapsetId": 2227193,
+          "difficultyLn": 4.3
+        },
+        {
+          "slot": "SV1",
+          "type": "SV",
+          "realType": "SI",
+          "name": "Silentroom - NULCTRL [DONTSTOP (ft. Lott)]",
+          "difficulty": 0,
+          "beatmapId": 4764210,
+          "beatmapsetId": 2241572
+        },
+        {
+          "slot": "SV2",
+          "type": "SV",
+          "realType": "PDSV",
+          "name": "updog - dying breath [edit]",
+          "difficulty": 0,
+          "beatmapId": 2421586,
+          "beatmapsetId": 1158379
+        },
+        {
+          "slot": "TB",
+          "type": "TB",
+          "realType": "TB",
+          "name": "Chroma - lost found melody [insane]",
+          "difficulty": 4.76,
+          "beatmapId": 2672609,
+          "beatmapsetId": 1287246,
+          "difficultyLn": 5.72
+        }
+      ],
+      "typeDifficulties": {
+        "RC": {
+          "rf": 4.1
+        },
+        "HB": {
+          "rf": 3.24,
+          "ln": 4.3
+        },
+        "LN": {
+          "ln": 6.5
+        },
+        "SV": {},
+        "TB": {
+          "rf": 4.76,
+          "ln": 5.72
+        }
+      }
+    },
+    {
+      "id": "round-3",
+      "name": "Round of 32",
+      "abbreviation": "RO32",
+      "order": 3,
+      "difficulty": {
+        "min": 3.78,
+        "max": 7.5,
+        "average": 5.59
+      },
+      "maps": [
+        {
+          "slot": "RC1",
+          "type": "RC",
+          "realType": "SS",
+          "name": "sun3 - Meikai Kikou [x1.15]",
+          "difficulty": 4.77,
+          "beatmapId": 4188014,
+          "beatmapsetId": 2012608
+        },
+        {
+          "slot": "RC2",
+          "type": "RC",
+          "realType": "JS",
+          "name": "LV.4 - Spriggan (Cut ver.) [Endure 1.0x]",
+          "difficulty": 4.77,
+          "beatmapId": 4542903,
+          "beatmapsetId": 2155275
+        },
+        {
+          "slot": "RC3",
+          "type": "RC",
+          "realType": "TC",
+          "name": "Tim Legend - Soda City funk [CheckY-]",
+          "difficulty": 4.77,
+          "beatmapId": 4671163,
+          "beatmapsetId": 2206270
+        },
+        {
+          "slot": "RC4",
+          "type": "RC",
+          "realType": "MX",
+          "name": "Chroma - Destroy, Destroy, Destroy The Happy End [Destroy]",
+          "difficulty": 4.77,
+          "beatmapId": 4106462,
+          "beatmapsetId": 1978107
+        },
+        {
+          "slot": "LN1",
+          "type": "LN",
+          "realType": "CO",
+          "name": "Harumaki Gohan feat. Sou - Zero Talking (Cut Ver.) [Dear]",
+          "difficulty": 7.5,
+          "beatmapId": 4597084,
+          "beatmapsetId": 2176945
+        },
+        {
+          "slot": "LN2",
+          "type": "LN",
+          "realType": "DE",
+          "name": "ZeRo-BaSs - Rave Beat [It's Time To Dance!]",
+          "difficulty": 7.5,
+          "beatmapId": 4366144,
+          "beatmapsetId": 2084436
+        },
+        {
+          "slot": "HB1",
+          "type": "HB",
+          "realType": "HB2",
+          "name": "HALLPBE.S - Bang Bang [Gun [1.1x Rate]]",
+          "difficulty": 3.78,
+          "beatmapId": 3402879,
+          "beatmapsetId": 1666577,
+          "difficultyLn": 4.5
+        },
+        {
+          "slot": "HB2",
+          "type": "HB",
+          "realType": "LNmainHB",
+          "name": "linear ring with RNAcid - Gypsophila [Everlasting Memories (edit)]",
+          "difficulty": 3.78,
+          "beatmapId": 3619174,
+          "beatmapsetId": 1768082,
+          "difficultyLn": 4.5
+        },
+        {
+          "slot": "SV1",
+          "type": "SV",
+          "realType": "SI",
+          "name": "sasakure.UK - Ruins (Neomorph remix) [Shambles (edit)]",
+          "difficulty": 0,
+          "beatmapId": 3154187,
+          "beatmapsetId": 1367133
+        },
+        {
+          "slot": "SV2",
+          "type": "SV",
+          "realType": "PDSV",
+          "name": "Silentroom - Fallensquare [Corruption]",
+          "difficulty": 0,
+          "beatmapId": 3877781,
+          "beatmapsetId": 1883475
+        },
+        {
+          "slot": "TB",
+          "type": "TB",
+          "realType": "TB",
+          "name": "Sephid - Hypothesize [Foresee. (w/ AlexDunk)]",
+          "difficulty": 5.57,
+          "beatmapId": 4139321,
+          "beatmapsetId": 1992125,
+          "difficultyLn": 6.21
+        }
+      ],
+      "typeDifficulties": {
+        "RC": {
+          "rf": 4.77
+        },
+        "HB": {
+          "rf": 3.78,
+          "ln": 4.5
+        },
+        "LN": {
+          "ln": 7.5
+        },
+        "SV": {},
+        "TB": {
+          "rf": 5.57,
+          "ln": 6.21
+        }
+      }
+    },
+    {
+      "id": "round-4",
+      "name": "Round of 16",
+      "abbreviation": "RO16",
+      "order": 4,
+      "difficulty": {
+        "min": 6.9,
+        "max": 8.2,
+        "average": 7.97
+      },
+      "maps": [
+        {
+          "slot": "RC1",
+          "type": "RC",
+          "realType": "SS",
+          "name": "E-Type - This Is The Way [short way 1.05x (149bpm)]",
+          "difficulty": 7.7,
+          "beatmapId": 3000963,
+          "beatmapsetId": 1435426
+        },
+        {
+          "slot": "RC2",
+          "type": "RC",
+          "realType": "JS",
+          "name": "Frailty - exhausted.wav (cut ver.) [Duck A-01: Fatigue]",
+          "difficulty": 7.7,
+          "beatmapId": 4702281,
+          "beatmapsetId": 2218423
+        },
+        {
+          "slot": "RC3",
+          "type": "RC",
+          "realType": "CJ",
+          "name": "KORDHELL - FATALITY [Fight!]",
+          "difficulty": 7.7,
+          "beatmapId": 4246912,
+          "beatmapsetId": 2036441
+        },
+        {
+          "slot": "RC4",
+          "type": "RC",
+          "realType": "TC",
+          "name": "Aphex Twin - Bucephalus Bouncing Ball (Cut Ver.) [Conundrum]",
+          "difficulty": 7.7,
+          "beatmapId": 4651348,
+          "beatmapsetId": 2198005
+        },
+        {
+          "slot": "RC5",
+          "type": "RC",
+          "realType": "MX",
+          "name": "Hino Isuka vs. s-don - Glooorious!! [Stage 2: Jinks]",
+          "difficulty": 7.7,
+          "beatmapId": 4673229,
+          "beatmapsetId": 2207005
+        },
+        {
+          "slot": "LN1",
+          "type": "LN",
+          "realType": "CO",
+          "name": "An - artcore JINJA [coordination JINJA]",
+          "difficulty": 8,
+          "beatmapId": 4985049,
+          "beatmapsetId": 2325618
+        },
+        {
+          "slot": "LN2",
+          "type": "LN",
+          "realType": "DE",
+          "name": "Kuki Akumu - Ki ga Kurutta Noise [Emptiness]",
+          "difficulty": 8,
+          "beatmapId": 4728419,
+          "beatmapsetId": 2228551
+        },
+        {
+          "slot": "LN3",
+          "type": "LN",
+          "realType": "WC",
+          "name": "succducc - me & u (Kara Edit) [Stage 3: Affection]",
+          "difficulty": 8,
+          "beatmapId": 3677199,
+          "beatmapsetId": 1794198
+        },
+        {
+          "slot": "HB1",
+          "type": "HB",
+          "realType": "RCmainHB",
+          "name": "Kolaa - Ichirin [rondo]",
+          "difficulty": 6.9,
+          "beatmapId": 4494778,
+          "beatmapsetId": 2136050,
+          "difficultyLn": 8.2
+        },
+        {
+          "slot": "HB2",
+          "type": "HB",
+          "realType": "HB1",
+          "name": "Chroma - Don't Fight the Music [Ecstatic Encore (CC) 1.1x]",
+          "difficulty": 6.9,
+          "beatmapId": 4484533,
+          "beatmapsetId": 1893349,
+          "difficultyLn": 8.2
+        },
+        {
+          "slot": "SV1",
+          "type": "SV",
+          "realType": "SI",
+          "name": "",
+          "difficulty": 0,
+          "beatmapId": 4985080
+        },
+        {
+          "slot": "SV2",
+          "type": "SV",
+          "realType": "SVMX",
+          "name": "Alan Walker - The Spectre [Spectre]",
+          "difficulty": 0,
+          "beatmapId": 4863923,
+          "beatmapsetId": 2281370
+        },
+        {
+          "slot": "TB",
+          "type": "TB",
+          "realType": "TB",
+          "name": "Camellia - Dyscontrolled Galaxy (\"Apoptosis\" Long ver.) [Collapse]",
+          "difficulty": 8,
+          "beatmapId": 3553471,
+          "beatmapsetId": 1738595,
+          "difficultyLn": 9
+        }
+      ],
+      "typeDifficulties": {
+        "RC": {
+          "rf": 7.7
+        },
+        "HB": {
+          "rf": 6.9,
+          "ln": 8.2
+        },
+        "LN": {
+          "ln": 8
+        },
+        "SV": {},
+        "TB": {
+          "rf": 8,
+          "ln": 9
+        }
+      }
+    },
+    {
+      "id": "round-5",
+      "name": "Quarterfinals",
+      "abbreviation": "QF",
+      "order": 5,
+      "difficulty": {
+        "min": 8.4,
+        "max": 11,
+        "average": 9.1
+      },
+      "maps": [
+        {
+          "slot": "RC1",
+          "type": "RC",
+          "realType": "SS",
+          "name": "Tobu & Syndec - Dusk (Radio Edit) (Cut Ver.) [nightfall 1.3x]",
+          "difficulty": 11,
+          "beatmapId": 4652612,
+          "beatmapsetId": 2198528
+        },
+        {
+          "slot": "RC2",
+          "type": "RC",
+          "realType": "JS",
+          "name": "Jin feat. MARiA from GARNiDELiA - daze [1.1x]",
+          "difficulty": 9,
+          "beatmapId": 4767454,
+          "beatmapsetId": 2242935
+        },
+        {
+          "slot": "RC3",
+          "type": "RC",
+          "realType": "CJ",
+          "name": "Frizk - ALL MY FELLAS [catJAM [1.0x]]",
+          "difficulty": 9,
+          "beatmapId": 4431212,
+          "beatmapsetId": 2079042
+        },
+        {
+          "slot": "RC4",
+          "type": "RC",
+          "realType": "DP",
+          "name": "Kyutatsuki - Dimension Wars (Cut Ver.) [Reality Collision]",
+          "difficulty": 9,
+          "beatmapId": 4263008,
+          "beatmapsetId": 2029816
+        },
+        {
+          "slot": "RC5",
+          "type": "RC",
+          "realType": "MX",
+          "name": "Sydosys - Wandered [Duck A-03: Gravitation]",
+          "difficulty": 9,
+          "beatmapId": 4702287,
+          "beatmapsetId": 2218426
+        },
+        {
+          "slot": "LN1",
+          "type": "LN",
+          "realType": "CO",
+          "name": "kuro - Dear my memories. [Reminiscence]",
+          "difficulty": 9,
+          "beatmapId": 4712852,
+          "beatmapsetId": 2222536
+        },
+        {
+          "slot": "LN2",
+          "type": "LN",
+          "realType": "DE",
+          "name": "Omoi - Teo [Sotto]",
+          "difficulty": 9,
+          "beatmapId": 4881466,
+          "beatmapsetId": 2287843
+        },
+        {
+          "slot": "LN3",
+          "type": "LN",
+          "realType": "WC",
+          "name": "Toromaru - Deorbit [Asynchrony]",
+          "difficulty": 9,
+          "beatmapId": 4276082,
+          "beatmapsetId": 2048064
+        },
+        {
+          "slot": "HB1",
+          "type": "HB",
+          "realType": "RCmainHB",
+          "name": "Official HIGE DANdism - Bad for me (Dz'Xa's Amenpunk) [Bittersweet (edit 1.05x)]",
+          "difficulty": 8.4,
+          "beatmapId": 4267192,
+          "beatmapsetId": 2044480,
+          "difficultyLn": 9.3
+        },
+        {
+          "slot": "HB2",
+          "type": "HB",
+          "realType": "LNmainHB",
+          "name": "Alphyderg - illum_en8 [Ad Astra Per Aspera 1.2x]",
+          "difficulty": 8.4,
+          "beatmapId": 4664219,
+          "beatmapsetId": 2203593,
+          "difficultyLn": 9.3
+        },
+        {
+          "slot": "SV1",
+          "type": "SV",
+          "realType": "SI",
+          "name": "Eliminate - ON MY MIND (Waste My Time) [Fading Hours]",
+          "difficulty": 0,
+          "beatmapId": 4996382,
+          "beatmapsetId": 2329600
+        },
+        {
+          "slot": "SV2",
+          "type": "SV",
+          "realType": "PDSV",
+          "name": "sakuraburst - serotonin [Injection]",
+          "difficulty": 0,
+          "beatmapId": 2453163,
+          "beatmapsetId": 1176176
+        },
+        {
+          "slot": "TB",
+          "type": "TB",
+          "realType": "TB",
+          "name": "tn-shi - INVERSION [MIGRATION]",
+          "difficulty": 9.8,
+          "beatmapId": 4713535,
+          "beatmapsetId": 2222864,
+          "difficultyLn": 10.8
+        }
+      ],
+      "typeDifficulties": {
+        "RC": {
+          "rf": 9
+        },
+        "HB": {
+          "rf": 8.4,
+          "ln": 9.3
+        },
+        "LN": {
+          "ln": 9
+        },
+        "SV": {},
+        "TB": {
+          "rf": 9.8,
+          "ln": 10.8
+        }
+      }
+    },
+    {
+      "id": "round-6",
+      "name": "Semifinals",
+      "abbreviation": "SF",
+      "order": 6,
+      "difficulty": {
+        "min": 9,
+        "max": 12,
+        "average": 10.5
+      },
+      "maps": [
+        {
+          "slot": "RC1",
+          "type": "RC",
+          "realType": "SS",
+          "name": "Yooh - Decoy [speed]",
+          "difficulty": 12,
+          "beatmapId": 4844640,
+          "beatmapsetId": 2273982
+        },
+        {
+          "slot": "RC2",
+          "type": "RC",
+          "realType": "JS",
+          "name": "MisomyL - Amnehilesie [Forget Me Not. // Reisen Jumpstream Restaurant]",
+          "difficulty": 9.6,
+          "beatmapId": 4570387,
+          "beatmapsetId": 2166329
+        },
+        {
+          "slot": "RC3",
+          "type": "RC",
+          "realType": "SA",
+          "name": "Kano - Yuudachi no Ribbon [Downpour]",
+          "difficulty": 10,
+          "beatmapId": 3756294,
+          "beatmapsetId": 1830190
+        },
+        {
+          "slot": "RC4",
+          "type": "RC",
+          "realType": "CJ",
+          "name": "Sewerslvt - blissful overdose [existential extortion]",
+          "difficulty": 11.3,
+          "beatmapId": 4890790,
+          "beatmapsetId": 2291176
+        },
+        {
+          "slot": "RC5",
+          "type": "RC",
+          "realType": "ADP",
+          "name": "Terminal 11 - I'm In No Mood For This [Apathy]",
+          "difficulty": 11.3,
+          "beatmapId": 4294628,
+          "beatmapsetId": 2055287
+        },
+        {
+          "slot": "RC6",
+          "type": "RC",
+          "realType": "MX",
+          "name": "ReeK - The Everlasting Calamity That Shifts The Time - Space Continuum... [DISTORTED (edit)]",
+          "difficulty": 11.3,
+          "beatmapId": 4969969,
+          "beatmapsetId": 2320029
+        },
+        {
+          "slot": "LN1",
+          "type": "LN",
+          "realType": "CO",
+          "name": "Cyriak - Welcome To Kitty City [This is not a kitty...?]",
+          "difficulty": 10.2,
+          "beatmapId": 4506483,
+          "beatmapsetId": 2141107
+        },
+        {
+          "slot": "LN2",
+          "type": "LN",
+          "realType": "DE",
+          "name": "beatMARIO - Help me, ERINNNNNN!! (Cut Ver.) [( ' w') o * Erin! Erin! ( ' w') o * Erin! Erin! 1.1x (204bpm)]",
+          "difficulty": 10.2,
+          "beatmapId": 4725089,
+          "beatmapsetId": 2214166
+        },
+        {
+          "slot": "LN3",
+          "type": "LN",
+          "realType": "LNTC",
+          "name": "Giga - BRING IT ON feat. Kagamine Rin & Len [GIVE IT ALL]",
+          "difficulty": 10.2,
+          "beatmapId": 2577387,
+          "beatmapsetId": 1239671
+        },
+        {
+          "slot": "LN4",
+          "type": "LN",
+          "realType": "WC",
+          "name": "Aoi vs. siqlo - Hacktivism [Coach Stage 2: Intrusion]",
+          "difficulty": 10.2,
+          "beatmapId": 4943989,
+          "beatmapsetId": 2311048
+        },
+        {
+          "slot": "HB1",
+          "type": "HB",
+          "realType": "HB3",
+          "name": "Taishi - Introduction (Bygone) (Cut Ver.) [Epilogue (Future)]",
+          "difficulty": 9,
+          "beatmapId": 4756987,
+          "beatmapsetId": 2238644,
+          "difficultyLn": 10
+        },
+        {
+          "slot": "HB2",
+          "type": "HB",
+          "realType": "HB2",
+          "name": "meganeko - Feral (osu! edit) [Blue_Potion's Meditation 1.0x]",
+          "difficulty": 9,
+          "beatmapId": 4723468,
+          "beatmapsetId": 2226626,
+          "difficultyLn": 10
+        },
+        {
+          "slot": "SV1",
+          "type": "SV",
+          "realType": "SI",
+          "name": "DJ Majokko Mirakurun - Mafain [Phasmos]",
+          "difficulty": 0,
+          "beatmapId": 3205012,
+          "beatmapsetId": 1569493
+        },
+        {
+          "slot": "SV2",
+          "type": "SV",
+          "realType": "PDSV",
+          "name": "sakuraburst - sha (Cut Ver.) [Stage 1: blake]",
+          "difficulty": 0,
+          "beatmapId": 4253502,
+          "beatmapsetId": 2039247
+        },
+        {
+          "slot": "TB",
+          "type": "TB",
+          "realType": "TB",
+          "name": "Sydosys - Termina [The End of The Line]",
+          "difficulty": 10.5,
+          "beatmapId": 4919452,
+          "beatmapsetId": 2301823,
+          "difficultyLn": 11
+        }
+      ],
+      "typeDifficulties": {
+        "RC": {
+          "rf": 11.3
+        },
+        "HB": {
+          "rf": 9,
+          "ln": 10
+        },
+        "LN": {
+          "ln": 10.2
+        },
+        "SV": {},
+        "TB": {
+          "rf": 10.5,
+          "ln": 11
+        }
+      }
+    },
+    {
+      "id": "round-7",
+      "name": "Finals",
+      "abbreviation": "F",
+      "order": 7,
+      "difficulty": {
+        "min": 11,
+        "max": 12.3,
+        "average": 11.6
+      },
+      "maps": [
+        {
+          "slot": "RC1",
+          "type": "RC",
+          "realType": "SS",
+          "name": "meganeko - nano love [^_^ [1,25x Rate]]",
+          "difficulty": 12.3,
+          "beatmapId": 3528258,
+          "beatmapsetId": 1726149
+        },
+        {
+          "slot": "RC2",
+          "type": "RC",
+          "realType": "JS",
+          "name": "BEMANI Sound Team \"HuMeR\" feat. Fernweh - Sakazuki [Lunatic]",
+          "difficulty": 12.3,
+          "beatmapId": 4599336,
+          "beatmapsetId": 2177816
+        },
+        {
+          "slot": "RC3",
+          "type": "RC",
+          "realType": "SA",
+          "name": "DJ SHARPNEL - SHINE!! [Sakurakou!! 1.3x (263bpm)]",
+          "difficulty": 12.3,
+          "beatmapId": 2979763,
+          "beatmapsetId": 1446657
+        },
+        {
+          "slot": "RC4",
+          "type": "RC",
+          "realType": "CJ",
+          "name": "Remo-con - Matt Silver [Silver Jacks 1.1x (161bpm) OD8]",
+          "difficulty": 12.3,
+          "beatmapId": 4783709,
+          "beatmapsetId": 2249515
+        },
+        {
+          "slot": "RC5",
+          "type": "RC",
+          "realType": "ADP",
+          "name": "KURORAK - F.F.R ~FINAL FRONTIER RESOLUTION~ [Challenge]",
+          "difficulty": 12.3,
+          "beatmapId": 4089900,
+          "beatmapsetId": 1971154
+        },
+        {
+          "slot": "RC6",
+          "type": "RC",
+          "realType": "MX",
+          "name": "False Noise - Space Angel [1.1x]",
+          "difficulty": 12.3,
+          "beatmapId": 4869083,
+          "beatmapsetId": 2283234
+        },
+        {
+          "slot": "LN1",
+          "type": "LN",
+          "realType": "TE",
+          "name": "katagiri - Sendan Life (katagiri Bootleg) [NostaLNgia (timing hell bootleg)]",
+          "difficulty": 11,
+          "beatmapId": 3901455,
+          "beatmapsetId": 1217839
+        },
+        {
+          "slot": "LN2",
+          "type": "LN",
+          "realType": "DE",
+          "name": "Amuro vs. Killer - Mei (Camellia's \"Yomigae\" Remix) (Short Ver.) [Flower]",
+          "difficulty": 11,
+          "beatmapId": 5014466,
+          "beatmapsetId": 2335924
+        },
+        {
+          "slot": "LN3",
+          "type": "LN",
+          "realType": "LNTC",
+          "name": "Camellia - Gene Disruption (Cut Ver.) [Turmoil 1.05x]",
+          "difficulty": 11,
+          "beatmapId": 3775342,
+          "beatmapsetId": 1838419
+        },
+        {
+          "slot": "LN4",
+          "type": "LN",
+          "realType": "LNTC",
+          "name": "CHUBAY - Entropic EnHancemEnt [Second Law of Thermodynamics]",
+          "difficulty": 11,
+          "beatmapId": 4785274,
+          "beatmapsetId": 2250155
+        },
+        {
+          "slot": "HB1",
+          "type": "HB",
+          "realType": "HB1",
+          "name": "Tartarate - Mental Mirage [Cognitive Abyss]",
+          "difficulty": 11,
+          "beatmapId": 4891506,
+          "beatmapsetId": 2291283,
+          "difficultyLn": 11.5
+        },
+        {
+          "slot": "HB2",
+          "type": "HB",
+          "realType": "HB2",
+          "name": "Akiri - Evolutionary Anima [Alpha Evolution 1.05x]",
+          "difficulty": 11,
+          "beatmapId": 5134995,
+          "beatmapsetId": 2376922,
+          "difficultyLn": 11.5
+        },
+        {
+          "slot": "SV1",
+          "type": "SV",
+          "realType": "GM",
+          "name": "Chroma - Destroy, Destroy, Destroy The Happy End [Kamikho's DeSVtroy (edit v2)]",
+          "difficulty": 0,
+          "beatmapId": 4874140,
+          "beatmapsetId": 2227060
+        },
+        {
+          "slot": "SV2",
+          "type": "SV",
+          "realType": "PDSV",
+          "name": "Camellia - AttraqtiA [Spatial Scission]",
+          "difficulty": 0,
+          "beatmapId": 3793332,
+          "beatmapsetId": 1846614
+        },
+        {
+          "slot": "TB",
+          "type": "TB",
+          "realType": "TB",
+          "name": "katagiri - VIVID ABYSS [Shrine of Melancholy]",
+          "difficulty": 12.5,
+          "beatmapId": 4978739,
+          "beatmapsetId": 2323330,
+          "difficultyLn": 13.4
+        }
+      ],
+      "typeDifficulties": {
+        "RC": {
+          "rf": 12.3
+        },
+        "HB": {
+          "rf": 11,
+          "ln": 11.5
+        },
+        "LN": {
+          "ln": 11
+        },
+        "SV": {},
+        "TB": {
+          "rf": 12.5,
+          "ln": 13.4
+        }
+      }
+    },
+    {
+      "id": "round-8",
+      "name": "Grand Finals",
+      "abbreviation": "GF",
+      "order": 8,
+      "difficulty": {
+        "min": 12.3,
+        "max": 13,
+        "average": 12.7
+      },
+      "maps": [
+        {
+          "slot": "RC1",
+          "type": "RC",
+          "realType": "SS",
+          "name": "Cafune - Tek It (Sped Up Ver.) [Can't stop thinking of you (edit) 1.05x]",
+          "difficulty": 13,
+          "beatmapId": 5159522,
+          "beatmapsetId": 2323646
+        },
+        {
+          "slot": "RC2",
+          "type": "RC",
+          "realType": "JS",
+          "name": "katagiri - Nyan-Nyan Naughty Night [Dance! 1.1]",
+          "difficulty": 13,
+          "beatmapId": 3306001,
+          "beatmapsetId": 1614405
+        },
+        {
+          "slot": "RC3",
+          "type": "RC",
+          "realType": "SA",
+          "name": "DJ SHARPNEL - MOONEARTH [Incursion 1.4x (266bpm)]",
+          "difficulty": 13,
+          "beatmapId": 3062653,
+          "beatmapsetId": 1413349
+        },
+        {
+          "slot": "RC4",
+          "type": "RC",
+          "realType": "CJ",
+          "name": "Camellia - The Night Is On Fire (Cut Ver.) [Jack Is On Fire 1.05x]",
+          "difficulty": 13,
+          "beatmapId": 5159513,
+          "beatmapsetId": 2385588
+        },
+        {
+          "slot": "RC5",
+          "type": "RC",
+          "realType": "ADP",
+          "name": "Terminal 11 - Roy [Despair]",
+          "difficulty": 13,
+          "beatmapId": 5200625,
+          "beatmapsetId": 2399411
+        },
+        {
+          "slot": "RC6",
+          "type": "RC",
+          "realType": "DP",
+          "name": "Celldweller - One Good Reason [Rockport 1.05x (210bpm)]",
+          "difficulty": 13,
+          "beatmapId": 4793968,
+          "beatmapsetId": 2253773
+        },
+        {
+          "slot": "RC7",
+          "type": "RC",
+          "realType": "MX",
+          "name": "Ata - Euphoria [Windoze's Challenge 1.1]",
+          "difficulty": 13,
+          "beatmapId": 3244539,
+          "beatmapsetId": 1588592
+        },
+        {
+          "slot": "LN1",
+          "type": "LN",
+          "realType": "TE",
+          "name": "mafumafu - Adagaeshi Syndrome [timing he11]",
+          "difficulty": 12.3,
+          "beatmapId": 4190770,
+          "beatmapsetId": 2013824
+        },
+        {
+          "slot": "LN2",
+          "type": "LN",
+          "realType": "DE",
+          "name": "Minami no Minami - Tonchin Kanfluencer [Mafufu & Arorau's WAH! HAH!! HAH!!! [1.05x Rate]]",
+          "difficulty": 12.3,
+          "beatmapId": 4804599,
+          "beatmapsetId": 2257961
+        },
+        {
+          "slot": "LN3",
+          "type": "LN",
+          "realType": "LNTC",
+          "name": "Silentroom - Shuu no Hazama [RaLNshower (Cut)]",
+          "difficulty": 12.3,
+          "beatmapId": 3881561,
+          "beatmapsetId": 1795612
+        },
+        {
+          "slot": "LN4",
+          "type": "LN",
+          "realType": "LNMX",
+          "name": "DJ Sharpnel - Over the Fullereneshift [Third Impact 1.05x]",
+          "difficulty": 12.3,
+          "beatmapId": 5165630,
+          "beatmapsetId": 2383314
+        },
+        {
+          "slot": "HB1",
+          "type": "HB",
+          "realType": "HB1",
+          "name": "",
+          "difficulty": 12.5,
+          "beatmapId": 5190657,
+          "difficultyLn": 12.8
+        },
+        {
+          "slot": "HB2",
+          "type": "HB",
+          "realType": "HB2",
+          "name": "owl*tree feat. nie*tree - QuiQ [how do ppl flute ts (feat 11s of ltot) 1.05x]",
+          "difficulty": 12.5,
+          "beatmapId": 5190671,
+          "beatmapsetId": 2396032,
+          "difficultyLn": 12.8
+        },
+        {
+          "slot": "HB3",
+          "type": "HB",
+          "realType": "HB3",
+          "name": "",
+          "difficulty": 12.5,
+          "beatmapId": 5200301,
+          "difficultyLn": 12.8
+        },
+        {
+          "slot": "SV1",
+          "type": "SV",
+          "realType": "SVMX",
+          "name": "Jacknife vs. Qlank - Movement (Nightcore Mix) [BACKWARDS and then foward]",
+          "difficulty": 0,
+          "beatmapId": 5245320,
+          "beatmapsetId": 2414261
+        },
+        {
+          "slot": "SV2",
+          "type": "SV",
+          "realType": "ME",
+          "name": "Camellia - Zhuzhzhalka76 (Cut Ver.) [STATION'S ON F&%KIN' FIRE RAHHHHHHH]",
+          "difficulty": 0,
+          "beatmapId": 4719609,
+          "beatmapsetId": 2225064
+        },
+        {
+          "slot": "TB",
+          "type": "TB",
+          "realType": "TB",
+          "name": "[-^v-] - iteration-prime [earth-scorching]",
+          "difficulty": 13,
+          "beatmapId": 5159642,
+          "beatmapsetId": 2385615,
+          "difficultyLn": 13.5
+        },
+        {
+          "slot": "SHOWTB",
+          "type": "TB",
+          "realType": "TB",
+          "name": "Camellia - Kikai No Tsubasa (feat. Kasane Teto) [Celtic Gearheart :: Ascension]",
+          "difficulty": 15.8,
+          "beatmapId": 5269878,
+          "beatmapsetId": 2422085,
+          "difficultyLn": 16.9
+        }
+      ],
+      "typeDifficulties": {
+        "RC": {
+          "rf": 13
+        },
+        "HB": {
+          "rf": 12.5,
+          "ln": 12.8
+        },
+        "LN": {
+          "ln": 12.3
+        },
+        "SV": {},
+        "TB": {
+          "rf": 13.5,
+          "ln": 14
+        }
+      }
+    }
+  ],
+  "customTypes": [],
+  "priority": 2.5,
+  "sheetUrl": "https://docs.google.com/spreadsheets/d/1OVPhP42jxuHjTb3wqez_gUzGo3A-O0uyp69r91PyeoQ/edit?gid=29288236#gid=29288236",
+  "forumUrl": "https://osu.ppy.sh/community/forums/topics/2067944",
+  "wikiUrl": "https://tourneymethod.com/tournaments/5017"
+}

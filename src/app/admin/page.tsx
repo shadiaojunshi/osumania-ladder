@@ -15,6 +15,7 @@ import { TrashManager } from '@/components/admin/TrashManager'
 import { AuditLog } from '@/components/admin/AuditLog'
 import type { Tournament } from '@/lib/types'
 import { useT, type MessageKey } from '@/lib/i18n'
+import { findPendingMaps } from '@/lib/tournamentDiagnostics'
 
 type Role = 'readonly' | 'contributor' | 'admin' | 'owner'
 
@@ -150,6 +151,7 @@ export default function AdminPage() {
 
   const handleSubmit = async () => {
     if (!tournament) return
+    if (!editingId && !confirmPendingMaps(tournament, t('admin.pending.action.submit'))) return
     setSubmitting(true)
     setSubmitStatus(null)
 
@@ -188,6 +190,7 @@ export default function AdminPage() {
 
   const handleStage = () => {
     if (!tournament) return
+    if (!editingId && !confirmPendingMaps(tournament, t('admin.pending.action.stage'))) return
     setStagedChanges((current) => ({ ...current, [tournament.id]: tournament }))
     setSubmitStatus({
       type: 'local',
@@ -195,6 +198,15 @@ export default function AdminPage() {
     })
     setSaveSignal((current) => current + 1)
     setFormDirty(false)
+  }
+
+  const confirmPendingMaps = (value: Tournament, action: string): boolean => {
+    const pending = findPendingMaps(value, { excludeSv: true })
+    if (pending.length === 0) return true
+    const details = pending
+      .map((map) => `${map.roundAbbr} ${map.slot} -> ${map.realType} (BID ${map.beatmapId || '?'})`)
+      .join('\n')
+    return window.confirm(t('admin.pending.confirm', { action, details }))
   }
 
   const handleSubmitStaged = async () => {

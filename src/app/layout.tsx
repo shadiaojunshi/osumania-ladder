@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import { PrefsHydrator } from '@/components/PrefsHydrator'
+import { NumberInputWheelGuard } from '@/components/NumberInputWheelGuard'
 
 export const metadata: Metadata = {
   title: 'osu!mania 难度天梯榜',
@@ -26,6 +27,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="bg-white text-gray-900 dark:bg-neutral-950 dark:text-neutral-100" suppressHydrationWarning>
         <PrefsHydrator />
+        <NumberInputWheelGuard />
         {children}
       </body>
     </html>

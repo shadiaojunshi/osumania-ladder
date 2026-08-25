@@ -1,5 +1,6 @@
 const { S3Client, ListObjectsV2Command, GetObjectCommand, PutObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3')
 const JSZip = require('jszip')
+const { formatSources } = require('./source-label')
 const { ZipArchive } = require('archiver')
 const fs = require('fs')
 const path = require('path')
@@ -297,28 +298,6 @@ async function generateMapFingerprint(oszBuffer) {
     console.warn(`  Error generating fingerprint: ${err.message}`)
     return null
   }
-}
-
-// 去重后同一物理文件可能被多个比赛槽位引用。把这些来源渲染成一段紧凑的
-// 标签写进 osu 的 Version 字段:
-//   ≤3 个: "MWC 4K 2025 F HB3 & VNMC 4K 2025 F HB3"       -- 空格 + &
-//   ≥4 个: "MWC2025F HB3/VNMC2025F HB3/..."                -- 紧凑,去 "4K"、去内空格
-// 注意:sanitizeFileName 会把 '/' 从文件名里剔掉,所以合包里的 .osu/.mp3/.jpg
-// 文件名遇到 4+ 源时会变成连着的一串(游戏内 [Version] 字段照常渲染 '/')。
-function formatSources(sources, isNsv) {
-  const nsvSuffix = isNsv ? ' NSV' : ''
-  const displaySlot = (slot) => (slot === 'TB1' ? 'TB' : slot)
-  if (sources.length <= 3) {
-    return sources
-      .map((s) => `${s.tournamentAbbr} ${s.roundAbbr} ${displaySlot(s.slot)}${nsvSuffix}`)
-      .join(' & ')
-  }
-  return sources
-    .map((s) => {
-      const compactAbbr = (s.tournamentAbbr || '').replace(/\s*4K\s*/g, '').replace(/\s+/g, '')
-      return `${compactAbbr}${s.roundAbbr} ${displaySlot(s.slot)}${nsvSuffix}`
-    })
-    .join('/')
 }
 
 async function prefetchMap(map, packName, odFloor) {

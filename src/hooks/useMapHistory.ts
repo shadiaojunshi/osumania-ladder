@@ -18,6 +18,7 @@ export interface MapUsage {
 }
 
 export interface MapHistorySummary {
+  matchKind: 'bid' | 'set'
   totalUses: number
   tournaments: string[]
   types: Map<string, number>  // type(大键型) -> 使用次数
@@ -28,31 +29,22 @@ export interface MapHistorySummary {
 }
 
 /**
- * 构建 beatmapId -> 使用历史 的索引
- * 用于在录入新比赛时检测谱面是否在其他比赛中出现过。
- * 注意:用 beatmapId(具体难度 id)而非 beatmapsetId 做 key。
- * 同一 beatmapset 下的 Hard / Insane / EX 是不同难度、不同 beatmapId,
- * 不能算作同一张图;只有 beatmapId 完全一致才是真正重复使用的同一张谱面。
+ * 同时索引具体 BID 与 set。查询时优先返回同 BID 的精确历史；只有没有精确历史时，
+ * 才返回同 set 的相关版本，供倍速版本和 set 更新后的人工核对使用。
  */
-export function useMapHistory(tournaments: Tournament[]) {
-  // 构建索引：beatmapId -> MapUsage[]
-  const historyIndex = useMemo(() => {
-    const index = new Map<number, MapUsage[]>()
+export function useMapHistory(tournaments: Tournament[], excludeTournamentId?: string) {
+  const historyIndexes = useMemo(() => {
+    const byBid = new Map<number, MapUsage[]>()
+    const bySet = new Map<number, MapUsage[]>()
 
     for (const tournament of tournaments) {
+      if (tournament.id === excludeTournamentId) continue
       // 防御：清单式响应（{id, sha}[]）没有 rounds，直接跳过而不是崩掉整个树
       if (!tournament?.rounds) continue
       for (const round of tournament.rounds) {
         if (!round?.maps) continue
         for (const map of round.maps) {
-          // 只索引有 beatmapId 的谱面(具体难度 id)。没有 BID 的图无法判定是否同一张,不参与。
-          if (!map.beatmapId) continue
-
-          if (!index.has(map.beatmapId)) {
-            index.set(map.beatmapId, [])
-          }
-
-          index.get(map.beatmapId)!.push({
+          const usage: MapUsage = {
             tournamentId: tournament.id,
             tournamentName: tournament.name,
             tournamentAbbr: tournament.abbreviation,
@@ -66,21 +58,34 @@ export function useMapHistory(tournaments: Tournament[]) {
             beatmapId: map.beatmapId,
             beatmapsetId: map.beatmapsetId,
             name: map.name,
-          })
+          }
+          if (map.beatmapId) {
+            if (!byBid.has(map.beatmapId)) byBid.set(map.beatmapId, [])
+            byBid.get(map.beatmapId)!.push(usage)
+          }
+          if (map.beatmapsetId) {
+            if (!bySet.has(map.beatmapsetId)) bySet.set(map.beatmapsetId, [])
+            bySet.get(map.beatmapsetId)!.push(usage)
+          }
         }
       }
     }
 
-    return index
-  }, [tournaments])
+    return { byBid, bySet }
+  }, [tournaments, excludeTournamentId])
 
-  /**
-   * 查询指定 beatmapId 的使用历史
-   */
-  const getMapHistory = (beatmapId: number | undefined): MapHistorySummary | null => {
-    if (!beatmapId) return null
-
-    const usages = historyIndex.get(beatmapId)
+  /** 查询指定 BID；没有精确记录时回退到同 set 版本。 */
+  const getMapHistory = (
+    beatmapId: number | undefined,
+    beatmapsetId: number | undefined,
+  ): MapHistorySummary | null => {
+    const bidUsages = beatmapId ? historyIndexes.byBid.get(beatmapId) : undefined
+    const matchKind: 'bid' | 'set' = bidUsages?.length ? 'bid' : 'set'
+    const usages = bidUsages?.length
+      ? bidUsages
+      : beatmapsetId
+        ? historyIndexes.bySet.get(beatmapsetId)
+        : undefined
     if (!usages || usages.length === 0) return null
 
     // 统计每个 type / realType 的使用次数
@@ -117,6 +122,7 @@ export function useMapHistory(tournaments: Tournament[]) {
     }
 
     return {
+      matchKind,
       totalUses: usages.length,
       tournaments: Array.from(tournaments),
       types: typeCounts,

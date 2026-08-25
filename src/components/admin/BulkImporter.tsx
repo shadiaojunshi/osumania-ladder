@@ -1,11 +1,13 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useMemo, useState, useRef } from 'react'
 import type { RoundWithMeta } from './RoundEditor'
 import type { ExtendedMap, MapCategory } from './MapSlotEditor'
 import { PENDING_REAL_TYPE_BY_CATEGORY, REAL_TYPES } from './MapSlotEditor'
 import { findMatchingTemplate, applyTemplateRealTypes } from '@/lib/poolTemplates'
 import { useT, type MessageKey } from '@/lib/i18n'
+import { tournaments as allTournaments } from '@/generated/tournaments'
+import { analyzeImportedMapIds } from '@/lib/tournamentDiagnostics'
 
 interface BeatmapApiResponse {
   beatmapId: string
@@ -44,6 +46,7 @@ interface Props {
   onImport: (rounds: RoundWithMeta[]) => void
   onClose: () => void
   existingRoundCount: number
+  currentTournamentId?: string
 }
 
 const SLOT_PREFIX_TO_CATEGORY: { prefix: RegExp; category: MapCategory }[] = [
@@ -181,7 +184,7 @@ function formatLength(seconds: number | null): string {
 
 const GROUP_COLORS = ['bg-purple-100', 'bg-blue-100', 'bg-emerald-100', 'bg-pink-100', 'bg-amber-100', 'bg-indigo-100', 'bg-teal-100', 'bg-rose-100']
 
-export function BulkImporter({ onImport, onClose, existingRoundCount }: Props) {
+export function BulkImporter({ onImport, onClose, existingRoundCount, currentTournamentId }: Props) {
   const t = useT()
   const [step, setStep] = useState<Step>('input')
   const [text, setText] = useState('')
@@ -192,6 +195,17 @@ export function BulkImporter({ onImport, onClose, existingRoundCount }: Props) {
   const abortRef = useRef(false)
 
   const groupCount = rows.length > 0 ? Math.max(...rows.map((r) => r.groupIndex)) + 1 : 0
+  const importDiagnostics = useMemo(() => analyzeImportedMapIds(
+    Array.from({ length: groupCount }, (_, groupIndex) => ({
+      groupIndex,
+      mapIds: rows.filter((row) => row.groupIndex === groupIndex && row.mapId).map((row) => row.mapId),
+    })),
+    allTournaments,
+    currentTournamentId,
+  ), [rows, groupCount, currentTournamentId])
+  const hasImportWarnings = importDiagnostics.identicalRounds.length > 0
+    || importDiagnostics.crossRoundMaps.length > 0
+    || importDiagnostics.duplicateTournaments.length > 0
 
   const groupSizes: number[] = Array.from({ length: groupCount }, () => 0)
   for (const r of rows) groupSizes[r.groupIndex]++
@@ -226,6 +240,34 @@ export function BulkImporter({ onImport, onClose, existingRoundCount }: Props) {
   }
 
   const startFetch = async () => {
+    if (hasImportWarnings) {
+      const details = [
+        ...importDiagnostics.duplicateTournaments.map((warning) =>
+          t('bulk.warning.duplicateTournamentLine', {
+            tournament: warning.tournamentAbbr,
+            overlap: String(warning.overlap),
+            total: String(warning.importedUniqueMaps),
+            ratio: String(Math.round(warning.ratio * 100)),
+          }),
+        ),
+        ...importDiagnostics.identicalRounds.map((warning) =>
+          t('bulk.warning.identicalRoundsLine', {
+            first: groupMetas[warning.firstGroupIndex]?.abbreviation || String(warning.firstGroupIndex + 1),
+            second: groupMetas[warning.secondGroupIndex]?.abbreviation || String(warning.secondGroupIndex + 1),
+            count: String(warning.mapCount),
+          }),
+        ),
+        ...importDiagnostics.crossRoundMaps.map((warning) =>
+          t('bulk.warning.crossRoundLine', {
+            bid: warning.mapId,
+            rounds: warning.groupIndexes
+              .map((index) => groupMetas[index]?.abbreviation || String(index + 1))
+              .join(' & '),
+          }),
+        ),
+      ]
+      if (!window.confirm(t('bulk.warning.confirm', { details: details.join('\n') }))) return
+    }
     setStep('fetch')
     setRunning(true)
     abortRef.current = false
@@ -464,6 +506,48 @@ export function BulkImporter({ onImport, onClose, existingRoundCount }: Props) {
               <div className="text-xs text-gray-400 dark:text-neutral-500">
                 {t('bulk.summary', { total: String(rows.length), valid: String(rows.filter((r) => r.mapId).length) })}
               </div>
+
+              {hasImportWarnings && (
+                <div className="space-y-2">
+                  <div className="text-xs font-medium text-amber-800 dark:text-amber-200">
+                    {t('bulk.warning.title')}
+                  </div>
+                  {importDiagnostics.duplicateTournaments.map((warning) => (
+                    <div key={warning.tournamentId} className="rounded border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-800 dark:border-red-900 dark:bg-red-950/30 dark:text-red-200">
+                      {t('bulk.warning.duplicateTournamentLine', {
+                        tournament: warning.tournamentAbbr,
+                        overlap: String(warning.overlap),
+                        total: String(warning.importedUniqueMaps),
+                        ratio: String(Math.round(warning.ratio * 100)),
+                      })}
+                    </div>
+                  ))}
+                  {importDiagnostics.identicalRounds.map((warning) => (
+                    <div key={
+                      String(warning.firstGroupIndex) + ':' + String(warning.secondGroupIndex)
+                    } className="rounded border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-800 dark:border-red-900 dark:bg-red-950/30 dark:text-red-200">
+                      {t('bulk.warning.identicalRoundsLine', {
+                        first: groupMetas[warning.firstGroupIndex]?.abbreviation || String(warning.firstGroupIndex + 1),
+                        second: groupMetas[warning.secondGroupIndex]?.abbreviation || String(warning.secondGroupIndex + 1),
+                        count: String(warning.mapCount),
+                      })}
+                    </div>
+                  ))}
+                  {importDiagnostics.crossRoundMaps.map((warning) => (
+                    <div key={warning.mapId} className="rounded border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
+                      {t('bulk.warning.crossRoundLine', {
+                        bid: warning.mapId,
+                        rounds: warning.groupIndexes
+                          .map((index) => groupMetas[index]?.abbreviation || String(index + 1))
+                          .join(' & '),
+                      })}
+                    </div>
+                  ))}
+                  <p className="text-[11px] text-amber-700 dark:text-amber-300">
+                    {t('bulk.warning.beforeFetch')}
+                  </p>
+                </div>
+              )}
             </>
           )}
 

@@ -6,6 +6,7 @@ import { useT, type MessageKey } from '@/lib/i18n'
 import { DifficultyRefPicker } from './DifficultyRefPicker'
 import type { RefType } from '@/lib/referenceData'
 import type { MapHistorySummary } from '@/hooks/useMapHistory'
+import { classifySetConflict } from '@/lib/mapConflictDetection'
 
 export type MapCategory = 'RC' | 'LN' | 'HB' | 'SV' | 'TB' | 'SPECIAL'
 
@@ -103,7 +104,7 @@ interface Props {
   map: ExtendedMap
   onChange: (map: ExtendedMap) => void
   onRemove: () => void
-  getMapHistory?: (beatmapId: number | undefined) => MapHistorySummary | null
+  getMapHistory?: (beatmapId: number | undefined, beatmapsetId: number | undefined) => MapHistorySummary | null
 }
 
 function needsDualDifficulty(category: MapCategory): boolean {
@@ -140,22 +141,37 @@ export function MapSlotEditor({ map, onChange, onRemove, getMapHistory }: Props)
       )
     : (REAL_TYPES[map.category] || [])
 
-  // 获取历史记录(按 beatmapId 匹配:同 set 不同难度不算同一张图)
-  const history = getMapHistory ? getMapHistory(map.beatmapId) : null
+  const history = getMapHistory ? getMapHistory(map.beatmapId, map.beatmapsetId) : null
 
   // 检测类型冲突:大键型(type)或真实类型(realType)只要和历史不一致就提示。
   // 之前只在大键型不同才弹,导致同为 RC 但 realType 不同(如 Stream vs Jack)不提示。
-  const typeConflict = history &&
+  const exactHistory = history?.matchKind === 'bid'
+  const rateSetConflict = history?.matchKind === 'set'
+    && classifySetConflict([
+      ...history.usages.map((usage) => ({
+        beatmapId: usage.beatmapId || 0,
+        beatmapsetId: usage.beatmapsetId,
+        realType: usage.realType,
+        name: usage.name,
+      })),
+      {
+        beatmapId: map.beatmapId || 0,
+        beatmapsetId: map.beatmapsetId,
+        realType: map.realType,
+        name: map.name,
+      },
+    ]) === 'rateSet'
+  const typeConflict = exactHistory && history &&
     history.totalUses > 0 &&
     map.type !== history.mostCommonType &&
     history.types.has(map.type) === false  // 当前 type 从未被用过
-  const realTypeConflict = history &&
+  const realTypeConflict = exactHistory && history &&
     history.totalUses > 0 &&
     !!map.realType &&
     !!history.mostCommonRealType &&
     map.realType !== history.mostCommonRealType &&
     history.realTypes.has(map.realType) === false  // 当前 realType 从未被用过
-  const hasTypeConflict = typeConflict || realTypeConflict
+  const hasTypeConflict = typeConflict || realTypeConflict || rateSetConflict
 
   const updateField = <K extends keyof ExtendedMap>(key: K, value: ExtendedMap[K]) => {
     onChange({ ...map, [key]: value })
@@ -206,7 +222,9 @@ export function MapSlotEditor({ map, onChange, onRemove, getMapHistory }: Props)
             >
               {hasTypeConflict ? '⚠️' : '📋'}
               <span>
-                {t('mapSlot.history.used', { n: history.totalUses })}
+                {history.matchKind === 'set'
+                  ? t('mapSlot.history.relatedSet', { n: history.totalUses })
+                  : t('mapSlot.history.used', { n: history.totalUses })}
               </span>
               <span className="text-[10px]">
                 ({history.mostCommonType})
@@ -216,7 +234,12 @@ export function MapSlotEditor({ map, onChange, onRemove, getMapHistory }: Props)
 
             {hasTypeConflict && (
               <span className="text-yellow-700 dark:text-yellow-300 text-xs">
-                {typeConflict
+                {rateSetConflict
+                  ? t('mapSlot.history.rateSetConflict', {
+                      current: map.realType,
+                      suggested: history.mostCommonRealType,
+                    })
+                  : typeConflict
                   ? t('mapSlot.history.conflict', {
                       current: map.type,
                       suggested: history.mostCommonType,

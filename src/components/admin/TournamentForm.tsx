@@ -42,7 +42,7 @@ export function TournamentForm({ onUpdate, initialData, saveSignal, onDirtyChang
 
   // 构建谱面历史索引：直接用编译期打进 bundle 的全量 tournaments
   // （/api/tournaments 只返回 {id, sha}[] 清单，没有 rounds，不能用来建索引）
-  const { getMapHistory } = useMapHistory(allKnownTournaments)
+  const { getMapHistory } = useMapHistory(allKnownTournaments, initialData?.id)
 
   useEffect(() => {
     if (initialData) {
@@ -126,6 +126,7 @@ export function TournamentForm({ onUpdate, initialData, saveSignal, onDirtyChang
             onUpdate={updateRoundsWithDirty}
             onBack={() => setStep(0)}
             getMapHistory={getMapHistory}
+            editingTournamentId={initialData?.id}
           />
         )}
       </div>
@@ -450,11 +451,13 @@ function RoundsStep({
   onUpdate,
   onBack,
   getMapHistory,
+  editingTournamentId,
 }: {
   rounds: RoundWithMeta[]
   onUpdate: (rounds: RoundWithMeta[]) => void
   onBack: () => void
-  getMapHistory?: (beatmapId: number | undefined) => import('@/hooks/useMapHistory').MapHistorySummary | null
+  getMapHistory?: (beatmapId: number | undefined, beatmapsetId: number | undefined) => import('@/hooks/useMapHistory').MapHistorySummary | null
+  editingTournamentId?: string
 }) {
   const t = useT()
   const [importerOpen, setImporterOpen] = useState(false)
@@ -545,6 +548,7 @@ function RoundsStep({
           onImport={handleImport}
           onClose={() => setImporterOpen(false)}
           existingRoundCount={rounds.length}
+          currentTournamentId={editingTournamentId}
         />
       )}
     </div>

@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "node scripts/generate-tournaments.js && next dev",
     "build": "node scripts/generate-tournaments.js && next build",
+    "test": "node --test --experimental-strip-types scripts/*.test.mjs",
     "start": "next start",
     "lint": "next lint"
   },

@@ -44,7 +44,7 @@ interface Props {
   index: number
   onChange: (round: RoundWithMeta) => void
   onRemove: () => void
-  getMapHistory?: (beatmapId: number | undefined) => MapHistorySummary | null
+  getMapHistory?: (beatmapId: number | undefined, beatmapsetId: number | undefined) => MapHistorySummary | null
   // 本比赛所有轮缩写(易→难),供整轮参考按非标准轮邻居反推档位
   siblingAbbrs?: string[]
 }

@@ -18,7 +18,7 @@ interface Pack {
 
 const CATEGORIES: { labelKey: MessageKey; types: string[] }[] = [
   { labelKey: 'download.cat.rice', types: ['SS', 'JS', 'SA', 'CJ', 'SJ', 'MX', 'DP', 'ADP', 'STC', 'MTC', 'SATC', 'JTC', 'WTC', 'TC', 'ORC'] },
-  { labelKey: 'download.cat.ln', types: ['RE', 'CO', 'TE', 'DE', 'SW', 'JW', 'IN', 'LNMX', 'LNTC', 'LNWL', 'OLN'] },
+  { labelKey: 'download.cat.ln', types: ['RE', 'CO', 'TE', 'DE', 'SW', 'JW', 'IN', 'LNMX', 'LNTC', 'LNWL', 'OLN', 'WC'] },
   { labelKey: 'download.cat.hb', types: ['HB1', 'HB2', 'HB3', 'HB4', 'HB5', 'RCmainHB', 'LNmainHB', 'MXHB', 'MNTB', 'OHB'] },
   { labelKey: 'download.cat.sv', types: ['SV1', 'SV2', 'SI', 'ME', 'SVMX', 'GM', 'PDSV'] },
   { labelKey: 'download.cat.other', types: ['TB'] },

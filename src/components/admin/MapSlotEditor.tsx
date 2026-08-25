@@ -54,6 +54,7 @@ export const REAL_TYPES: Record<string, { id: string; name: string }[]> = {
     { id: 'LNTC', name: 'Technical LN (LNTC)' },
     { id: 'LNWL', name: 'LNwall (LNWL)' },
     { id: 'OLN', name: 'OtherLongnote (OLN)' },
+    { id: 'WC', name: 'Wildcard (WC)' },
     { id: 'PDLN', name: 'Pending LN (PDLN)' },
   ],
   SV: [

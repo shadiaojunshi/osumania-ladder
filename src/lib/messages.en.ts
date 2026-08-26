@@ -103,6 +103,7 @@ export const messagesEn: Record<keyof typeof messagesZh, string> = {
   'admin.tab.difficultyFit': 'Fit & predict',
   'admin.tab.upload': 'Upload maps',
   'admin.tab.packs': 'Pack manager',
+  'admin.tab.realTypeMaps': 'Keytype maps',
   'admin.tab.rtConflict': 'Keytype conflicts',
   'admin.tab.trash': 'Trash',
   'admin.tab.admins': 'Admins',
@@ -181,6 +182,23 @@ export const messagesEn: Record<keyof typeof messagesZh, string> = {
   'rtConflict.pendingTitle': 'Pending maps ({n})',
   'rtConflict.pendingHint': 'Lists PDRC / PDLN / PDHB / PDSV. The first three are excluded from downloads; PDSV remains downloadable.',
   'rtConflict.pendingNone': 'No Pending maps',
+
+  // ---------- RealTypeMapBrowser ----------
+  'realTypeMaps.title': 'Real keytype map browser',
+  'realTypeMaps.subtitle': 'Choose a real keytype, then browse its maps across all tournaments or one tournament.',
+  'realTypeMaps.realType': 'Real keytype',
+  'realTypeMaps.tournament': 'Tournament scope',
+  'realTypeMaps.allTournaments': 'All tournaments',
+  'realTypeMaps.customGroup': 'Custom keytypes',
+  'realTypeMaps.count': '{n} maps',
+  'realTypeMaps.empty': 'No maps of this keytype in the selected scope',
+  'realTypeMaps.noBid': 'No BID',
+  'realTypeMaps.col.tournament': 'Tournament',
+  'realTypeMaps.col.round': 'Round',
+  'realTypeMaps.col.slot': 'Slot',
+  'realTypeMaps.col.map': 'Map',
+  'realTypeMaps.col.difficulty': 'Difficulty',
+  'realTypeMaps.col.link': 'Link',
 
   // ---------- AdminsManager ----------
   'admins.title': 'Admin manager',

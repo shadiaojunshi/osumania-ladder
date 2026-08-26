@@ -10,6 +10,7 @@ import { DifficultyFitTool } from '@/components/admin/DifficultyFitTool'
 import { MapUploader } from '@/components/admin/MapUploader'
 import { PackLinksEditor } from '@/components/admin/PackLinksEditor'
 import { RealTypeConflictChecker } from '@/components/admin/RealTypeConflictChecker'
+import { RealTypeMapBrowser } from '@/components/admin/RealTypeMapBrowser'
 import { AdminsManager } from '@/components/admin/AdminsManager'
 import { TrashManager } from '@/components/admin/TrashManager'
 import { AuditLog } from '@/components/admin/AuditLog'
@@ -38,7 +39,7 @@ interface TournamentListItem {
   sha: string
 }
 
-type Tab = 'create' | 'manage' | 'references' | 'refLadder' | 'difficultyFit' | 'upload' | 'packs' | 'rtConflict' | 'admins' | 'trash' | 'audit'
+type Tab = 'create' | 'manage' | 'references' | 'refLadder' | 'difficultyFit' | 'upload' | 'packs' | 'realTypeMaps' | 'rtConflict' | 'admins' | 'trash' | 'audit'
 
 const STAGED_TOURNAMENTS_KEY = 'osumania-ladder:staged-tournaments:v1'
 
@@ -407,6 +408,7 @@ export default function AdminPage() {
           {tabBtn('difficultyFit', t('admin.tab.difficultyFit'))}
           {tabBtn('upload', t('admin.tab.upload'))}
           {tabBtn('packs', t('admin.tab.packs'))}
+          {tabBtn('realTypeMaps', t('admin.tab.realTypeMaps'))}
           {tabBtn('rtConflict', t('admin.tab.rtConflict'))}
           {isAdmin && tabBtn('trash', t('admin.tab.trash'))}
           {isAdmin && tabBtn('admins', t('admin.tab.admins'))}
@@ -501,6 +503,8 @@ export default function AdminPage() {
         {tab === 'upload' && <MapUploader onDirtyChange={setUploadDirty} />}
 
         {tab === 'packs' && <PackLinksEditor />}
+
+        {tab === 'realTypeMaps' && <RealTypeMapBrowser />}
 
         {tab === 'rtConflict' && <RealTypeConflictChecker canSave={isAdmin} />}
 

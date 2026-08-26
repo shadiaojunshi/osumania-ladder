@@ -36,7 +36,7 @@ const REAL_TYPE_NAMES = {
   RCmainHB: 'RC-main Hybrid', LNmainHB: 'LN-main Hybrid', MXHB: 'Mixed Hybrid', MNTB: 'Mini-Tiebreaker Hybrid',
   OHB: 'OtherHybrid', PDHB: 'Pending Hybrid',
   RE: 'Release', CO: 'Coordination', TE: 'Timinghell', DE: 'Density',
-  SW: 'Speedy Wildcard LN', JW: 'Jacky Wildcard LN', IN: 'Inverse', LNMX: 'LN Mixed', LNTC: 'Technical LN', LNWL: 'LNwall', OLN: 'OtherLongnote', WC: 'Wildcard LN', PDLN: 'Pending LN',
+  JW: 'Jacky Wildcard LN', SW: 'Speedy Wildcard LN', LNMX: 'LN Mixed', LNWC: 'LN Wildcard', LNTC: 'Technical LN', IN: 'Inverse', LNWL: 'LNwall', OLN: 'Other LN', PDLN: 'Pending LN',
   SV1: 'Pattern SV', SV2: 'Rhythm SV', SI: 'Sightread SV', ME: 'Memorization SV', SVMX: 'Mix SV', GM: 'Gimmick SV', PDSV: 'Pending SV',
   TB: 'Tiebreaker',
 }
@@ -56,7 +56,7 @@ const OD_FLOOR = {
   SS: 8, MX: 8, DP: 8, ADP: 8, STC: 8, MTC: 8, WTC: 8, TC: 8, ORC: 8, SATC: 8,
   // LN
   RE: 7.2, CO: 7.2, TE: 7.2,
-  DE: 7.5, SW: 7.5, JW: 7.5, IN: 7.5, LNMX: 7.5, LNTC: 7.5, LNWL: 7.5, OLN: 7.5, WC: 7.5,
+  DE: 7.5, JW: 7.5, SW: 7.5, LNMX: 7.5, LNWC: 7.5, LNTC: 7.5, IN: 7.5, LNWL: 7.5, OLN: 7.5,
   // HB (HB3 特例 7.2,其余含 RCmainHB/LNmainHB 一律 7.5)
   HB3: 7.2,
   HB1: 7.5, HB2: 7.5, HB4: 7.5, HB5: 7.5, RCmainHB: 7.5, LNmainHB: 7.5, MXHB: 7.5, MNTB: 7.5, OHB: 7.5,

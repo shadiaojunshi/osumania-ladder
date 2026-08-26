@@ -102,6 +102,7 @@ export const messagesZh = {
   'admin.tab.difficultyFit': '拟合预测',
   'admin.tab.upload': '上传谱面',
   'admin.tab.packs': '合包管理',
+  'admin.tab.realTypeMaps': '键型谱面',
   'admin.tab.rtConflict': '键型冲突检查',
   'admin.tab.trash': '回收站',
   'admin.tab.admins': '管理员管理',
@@ -180,6 +181,23 @@ export const messagesZh = {
   'rtConflict.pendingTitle': 'Pending 谱面 ({n})',
   'rtConflict.pendingHint': '这里集中列出 PDRC / PDLN / PDHB / PDSV。前三类不会进入下载栏；PDSV 仍会纳入下载栏。',
   'rtConflict.pendingNone': '目前没有 Pending 谱面',
+
+  // ---------- RealTypeMapBrowser ----------
+  'realTypeMaps.title': '真实键型谱面浏览',
+  'realTypeMaps.subtitle': '选择一个真实键型，查看全部比赛或指定比赛中归入该键型的谱面。',
+  'realTypeMaps.realType': '真实键型',
+  'realTypeMaps.tournament': '比赛范围',
+  'realTypeMaps.allTournaments': '全部比赛',
+  'realTypeMaps.customGroup': '自定义键型',
+  'realTypeMaps.count': '共 {n} 张谱面',
+  'realTypeMaps.empty': '当前范围内没有这个键型的谱面',
+  'realTypeMaps.noBid': '无 BID',
+  'realTypeMaps.col.tournament': '比赛',
+  'realTypeMaps.col.round': '轮次',
+  'realTypeMaps.col.slot': '槽位',
+  'realTypeMaps.col.map': '谱面',
+  'realTypeMaps.col.difficulty': '难度',
+  'realTypeMaps.col.link': '链接',
 
   // ---------- AdminsManager ----------
   'admins.title': '管理员管理',

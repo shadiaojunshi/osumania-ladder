@@ -1175,13 +1175,19 @@
           "slot": "LN1",
           "type": "LN",
           "realType": "TE",
-          "difficulty": 13.75
+          "difficulty": 13.75,
+          "name": "Yousei Teikoku - Shinteki Souzou [Genesis]",
+          "beatmapId": 5843044,
+          "beatmapsetId": 2609593
         },
         {
           "slot": "LN2",
           "type": "LN",
           "realType": "DE",
-          "difficulty": 14.9
+          "difficulty": 14.9,
+          "name": "Uetsu Shi - Firmament Castle \"Velier\" [Enter 1.15x]",
+          "beatmapId": 5842901,
+          "beatmapsetId": 2609558
         },
         {
           "slot": "LN3",

@@ -1,4 +1,5 @@
 import type { Tournament } from './types'
+import { normalizeRealType } from './realType.ts'
 
 export const PENDING_REAL_TYPES = new Set(['PDRC', 'PDLN', 'PDHB', 'PDSV'])
 export const NON_SV_PENDING_REAL_TYPES = new Set(['PDRC', 'PDLN', 'PDHB'])
@@ -18,6 +19,8 @@ export interface PendingMapLocation {
 export interface ImportedRoundInput {
   groupIndex: number
   mapIds: string[]
+  /** Stable, human-independent keys for rows that do not have a numeric BID. */
+  mapKeys?: string[]
 }
 
 export interface IdenticalRoundWarning {
@@ -45,6 +48,80 @@ export interface ImportDiagnostics {
   duplicateTournaments: DuplicateTournamentWarning[]
 }
 
+export interface DuplicateRoundMapWarning {
+  tournamentId: string
+  tournamentAbbr: string
+  beatmapId?: number
+  mapKey: string
+  mapName?: string
+  rounds: string[]
+  slots: string[]
+}
+
+function normalizeMapName(name: unknown): string {
+  return String(name || '').trim().toLowerCase().replace(/\s+/g, ' ')
+}
+
+/** Build a stable identity for duplicate-map checks, even when a BID is absent or stale. */
+export function mapIdentityKey(map: {
+  beatmapId?: number
+  type?: string
+  realType?: string
+  name?: string
+  difficulty?: number
+  difficultyLn?: number
+}): string | null {
+  const name = normalizeMapName(map.name)
+  if (name) {
+    return `meta:${String(map.type || '').toUpperCase()}|${name}|${map.difficulty ?? ''}|${map.difficultyLn ?? ''}`
+  }
+  return map.beatmapId ? `bid:${map.beatmapId}` : null
+}
+
+/** Find a map reused in more than one round of the same tournament. */
+export function findDuplicateRoundMaps(tournaments: Tournament[]): DuplicateRoundMapWarning[] {
+  const byTournament = new Map<string, Map<string, { round: string; slot: string; beatmapId?: number; name?: string }[]>>()
+  for (const tournament of tournaments) {
+    const byIdentity = new Map<string, { round: string; slot: string; beatmapId?: number; name?: string }[]>()
+    for (const round of tournament.rounds || []) {
+      for (const map of round.maps || []) {
+        const mapKey = mapIdentityKey(map)
+        if (!mapKey) continue
+        if (!byIdentity.has(mapKey)) byIdentity.set(mapKey, [])
+        byIdentity.get(mapKey)!.push({
+          round: round.abbreviation || round.name || round.id,
+          slot: map.slot,
+          beatmapId: map.beatmapId,
+          name: map.name,
+        })
+      }
+    }
+    byTournament.set(tournament.id, byIdentity)
+  }
+
+  const result: DuplicateRoundMapWarning[] = []
+  for (const tournament of tournaments) {
+    const byIdentity = byTournament.get(tournament.id)
+    if (!byIdentity) continue
+    for (const [mapKey, usages] of byIdentity) {
+      const rounds = Array.from(new Set(usages.map((usage) => usage.round)))
+      if (rounds.length < 2) continue
+      const beatmapId = usages.find((usage) => usage.beatmapId)?.beatmapId
+      result.push({
+        tournamentId: tournament.id,
+        tournamentAbbr: tournament.abbreviation || tournament.id,
+        beatmapId,
+        mapKey,
+        mapName: usages.find((usage) => usage.name)?.name,
+        rounds,
+        slots: usages.map((usage) => usage.slot),
+      })
+    }
+  }
+  return result.sort((a, b) => a.tournamentAbbr.localeCompare(b.tournamentAbbr)
+    || (a.mapName || a.mapKey).localeCompare(b.mapName || b.mapKey))
+}
+
 export function findPendingMaps(
   tournaments: Tournament | Tournament[],
   options: { excludeSv?: boolean } = {},
@@ -56,7 +133,8 @@ export function findPendingMaps(
   for (const tournament of list) {
     for (const round of tournament.rounds || []) {
       for (const map of round.maps || []) {
-        if (!pendingTypes.has(map.realType)) continue
+        const realType = normalizeRealType(map.realType)
+        if (!pendingTypes.has(realType)) continue
         result.push({
           tournamentId: tournament.id,
           tournamentAbbr: tournament.abbreviation || tournament.id,
@@ -64,7 +142,7 @@ export function findPendingMaps(
           roundAbbr: round.abbreviation || round.name || round.id,
           slot: map.slot,
           type: map.type,
-          realType: map.realType,
+          realType,
           beatmapId: map.beatmapId,
           name: map.name,
         })
@@ -85,21 +163,27 @@ export function analyzeImportedMapIds(
   excludeTournamentId?: string,
 ): ImportDiagnostics {
   const normalizedRounds = rounds
-    .map((round) => ({ ...round, mapIds: round.mapIds.filter(Boolean).map(String) }))
-    .filter((round) => round.mapIds.length > 0)
+    .map((round) => {
+      const mapIds = round.mapIds.filter(Boolean).map(String)
+      const mapKeys = round.mapKeys && round.mapKeys.length > 0
+        ? round.mapKeys.filter(Boolean).map(String)
+        : mapIds.map((mapId) => `bid:${mapId}`)
+      return { ...round, mapIds, mapKeys }
+    })
+    .filter((round) => round.mapKeys.length > 0)
 
   const identicalRounds: IdenticalRoundWarning[] = []
   for (let i = 0; i < normalizedRounds.length; i++) {
     const left = normalizedRounds[i]
-    const leftSignature = canonicalRoundMapIds(left.mapIds)
+    const leftSignature = canonicalRoundMapIds(left.mapKeys)
     for (let j = i + 1; j < normalizedRounds.length; j++) {
       const right = normalizedRounds[j]
-      if (left.mapIds.length !== right.mapIds.length) continue
-      if (leftSignature !== canonicalRoundMapIds(right.mapIds)) continue
+      if (left.mapKeys.length !== right.mapKeys.length) continue
+      if (leftSignature !== canonicalRoundMapIds(right.mapKeys)) continue
       identicalRounds.push({
         firstGroupIndex: left.groupIndex,
         secondGroupIndex: right.groupIndex,
-        mapCount: left.mapIds.length,
+        mapCount: left.mapKeys.length,
       })
     }
   }

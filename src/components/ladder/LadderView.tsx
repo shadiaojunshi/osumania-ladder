@@ -6,6 +6,7 @@ import type { Tournament, Round } from '@/lib/types'
 import { tournaments } from '@/generated/tournaments'
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { HoverCard } from './HoverCard'
+import { normalizeRealType } from '@/lib/realType'
 
 const DIFFICULTY_RANGE = { min: 0.5, max: 16.5 }
 const BOX_HEIGHT_TYPE = 28
@@ -14,13 +15,15 @@ const LN_REAL_TYPES = new Set(['RE', 'CO', 'TE', 'DE', 'JW', 'SW', 'LNMX', 'LNWC
 const HB_REAL_TYPES = new Set(['HB1', 'HB2', 'HB3', 'HB4', 'HB5', 'RCmainHB', 'LNmainHB', 'MXHB', 'MNTB', 'OHB'])
 
 function isLnBased(m: { type: string; realType: string }): boolean {
-  return m.type === 'LN' || m.type === 'HB' || LN_REAL_TYPES.has(m.realType) || HB_REAL_TYPES.has(m.realType)
+  const realType = normalizeRealType(m.realType)
+  return m.type === 'LN' || m.type === 'HB' || LN_REAL_TYPES.has(realType) || HB_REAL_TYPES.has(realType)
 }
 
 function getLnDiff(m: { type: string; realType: string; difficulty: number; difficultyLn?: number }): number {
   if (m.type === 'LN') return m.difficulty
-  if (LN_REAL_TYPES.has(m.realType)) return m.difficultyLn || m.difficulty
-  if (m.type === 'HB' || HB_REAL_TYPES.has(m.realType)) return m.difficultyLn || m.difficulty
+  const realType = normalizeRealType(m.realType)
+  if (LN_REAL_TYPES.has(realType)) return m.difficultyLn || m.difficulty
+  if (m.type === 'HB' || HB_REAL_TYPES.has(realType)) return m.difficultyLn || m.difficulty
   return m.difficulty
 }
 
@@ -455,7 +458,10 @@ function TournamentColumn({
 
           return (
             <div
-              key={round.id}
+              // Round ids are legacy data and are not guaranteed unique within a tournament
+              // (SSR SF/F both use round-8). Include the visible index so React and the
+              // overlap layout keep the two rounds separate.
+              key={`${round.id}-${idx}`}
               className={`round-box absolute left-1 right-1 ${isDimmed ? 'dimmed' : ''} ${roundBorderAlways ? 'always-border' : ''}`}
               style={{
                 top,
@@ -477,8 +483,9 @@ function TournamentColumn({
   }
 
   // mode === 'type'
-  const allTypeBoxes: { round: Round; type: string; adjustedAvg: number }[] = []
-  for (const round of visibleRounds) {
+  const allTypeBoxes: { round: Round; type: string; adjustedAvg: number; roundKey: string }[] = []
+  for (const [roundIdx, round] of visibleRounds.entries()) {
+    const roundKey = `${round.id}-${roundIdx}`
     const types = getUniqueTypes(round)
     for (const type of types) {
       const typeMaps = round.maps.filter((m) => m.type === type)
@@ -507,7 +514,7 @@ function TournamentColumn({
           adjustedAvg = lnAvg - rfLnOffset
         }
         if (adjustedAvg === null) continue
-        allTypeBoxes.push({ round, type, adjustedAvg })
+        allTypeBoxes.push({ round, type, adjustedAvg, roundKey })
         continue
       }
 
@@ -535,7 +542,7 @@ function TournamentColumn({
           adjustedAvg = lnAvg - rfLnOffset
         }
         if (adjustedAvg === null) continue
-        allTypeBoxes.push({ round, type, adjustedAvg })
+        allTypeBoxes.push({ round, type, adjustedAvg, roundKey })
         continue
       }
 
@@ -552,7 +559,7 @@ function TournamentColumn({
       }
       if (typeAvg === null) continue
       const adjustedAvg = typeIsLn ? typeAvg - rfLnOffset : typeAvg
-      allTypeBoxes.push({ round, type, adjustedAvg })
+      allTypeBoxes.push({ round, type, adjustedAvg, roundKey })
     }
   }
 
@@ -571,7 +578,7 @@ function TournamentColumn({
       const size = j - i
       if (size > 1) {
         for (let k = i; k < j; k++) {
-          const key = `${sorted[k].round.id}-${sorted[k].type}`
+          const key = `${sorted[k].roundKey}-${sorted[k].type}`
           overlapInfo.set(key, { idx: k - i, size })
         }
       }
@@ -584,12 +591,12 @@ function TournamentColumn({
       <div className="text-xs text-center text-gray-500 dark:text-neutral-400 truncate mb-1 font-medium sticky top-0 bg-white dark:bg-neutral-950 z-20">
         {tournament.abbreviation}
       </div>
-      {allTypeBoxes.map(({ round, type, adjustedAvg }) => {
+      {allTypeBoxes.map(({ round, type, adjustedAvg, roundKey }) => {
         const y = difficultyToY(adjustedAvg, containerHeight, DIFFICULTY_RANGE)
         const boxH = BOX_HEIGHT_TYPE
         const isDimmed = activeFilter && activeFilter !== type
         const color = getDifficultyColor(adjustedAvg)
-        const key = `${round.id}-${type}`
+        const key = `${roundKey}-${type}`
         const info = overlapInfo.get(key)
         // 重叠时把可用区间(cellWidth - 8px,两侧各留 4px)等分 N,box 变窄不撑总宽。
         const left = info

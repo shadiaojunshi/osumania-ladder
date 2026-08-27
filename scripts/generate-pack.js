@@ -6,6 +6,12 @@ const fs = require('fs')
 const path = require('path')
 const crypto = require('crypto')
 
+const REAL_TYPE_ALIASES = { WC: 'LNWC' }
+function normalizeRealType(realType) {
+  const value = String(realType || '').trim()
+  return REAL_TYPE_ALIASES[value] || value
+}
+
 const R2_ACCOUNT_ID = process.env.R2_ACCOUNT_ID
 const R2_ACCESS_KEY = process.env.R2_ACCESS_KEY
 const R2_SECRET_KEY = process.env.R2_SECRET_KEY
@@ -413,6 +419,7 @@ SliderTickRate:1
 const MAX_MAPS_PER_PACK = 80
 
 async function generatePack(targetType) {
+  targetType = normalizeRealType(targetType)
   if (PACK_EXCLUDED_REAL_TYPES.has(targetType)) {
     console.log(`[${targetType}] Skipped: pending classification types are not downloadable packs`)
     return []
@@ -422,6 +429,7 @@ async function generatePack(targetType) {
   const files = fs.readdirSync(tournamentsDir).filter(f => f.endsWith('.json'))
 
   const mapsToProcess = []
+  const r2PathClaims = new Map()
 
   const tournamentsList = files.map(file =>
     JSON.parse(fs.readFileSync(path.join(tournamentsDir, file), 'utf-8'))
@@ -439,7 +447,21 @@ async function generatePack(targetType) {
   for (const tournament of tournamentsList) {
     for (const round of tournament.rounds) {
       for (const map of round.maps) {
-        if (map.realType === targetType) {
+        if (normalizeRealType(map.realType) === targetType) {
+          const r2Key = `maps/${tournament.id}/${round.id}/${map.slot}.osz`
+          const claim = r2PathClaims.get(r2Key)
+          if (claim && (claim.beatmapId !== (map.beatmapId || null) || claim.name !== map.name)) {
+            // Keep the legacy path for compatibility, but surface data that
+            // cannot be represented by the roundId/slot storage convention.
+            // Duplicate IDs (e.g. SSR SF/F) otherwise silently read one file.
+            console.warn(`[${targetType}] R2 path collision: ${r2Key} is claimed by ${claim.roundAbbr} and ${round.abbreviation || round.id}`)
+          } else if (!claim) {
+            r2PathClaims.set(r2Key, {
+              beatmapId: map.beatmapId || null,
+              name: map.name,
+              roundAbbr: round.abbreviation || round.id,
+            })
+          }
           mapsToProcess.push({
             tournamentId: tournament.id,
             tournamentAbbr: tournament.abbreviation,
@@ -448,7 +470,7 @@ async function generatePack(targetType) {
             slot: map.slot,
             difficulty: map.difficulty || 0,
             beatmapId: map.beatmapId || null,
-            r2Key: `maps/${tournament.id}/${round.id}/${map.slot}.osz`,
+            r2Key,
           })
         }
       }
@@ -720,7 +742,8 @@ async function main() {
     for (const file of files) {
       const t = JSON.parse(fs.readFileSync(path.join(tournamentsDir, file), 'utf-8'))
       for (const r of t.rounds) for (const m of r.maps) {
-        if (!PACK_EXCLUDED_REAL_TYPES.has(m.realType)) allTypes.add(m.realType)
+        const realType = normalizeRealType(m.realType)
+        if (!PACK_EXCLUDED_REAL_TYPES.has(realType)) allTypes.add(realType)
       }
     }
 

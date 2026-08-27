@@ -7,6 +7,7 @@ import { DifficultyRefPicker } from './DifficultyRefPicker'
 import type { RefType } from '@/lib/referenceData'
 import type { MapHistorySummary } from '@/hooks/useMapHistory'
 import { classifySetConflict } from '@/lib/mapConflictDetection'
+import { normalizeRealType } from '@/lib/realType'
 
 export type MapCategory = 'RC' | 'LN' | 'HB' | 'SV' | 'TB' | 'SPECIAL'
 
@@ -108,7 +109,7 @@ interface Props {
   getMapHistory?: (beatmapId: number | undefined, beatmapsetId: number | undefined) => MapHistorySummary | null
 }
 
-function needsDualDifficulty(category: MapCategory): boolean {
+export function needsDualDifficulty(category: MapCategory): boolean {
   return category === 'HB' || category === 'TB' || category === 'SPECIAL'
 }
 
@@ -135,6 +136,7 @@ function toRefType(category: MapCategory): RefType {
 export function MapSlotEditor({ map, onChange, onRemove, getMapHistory }: Props) {
   const t = useT()
   const [showHistory, setShowHistory] = useState(false)
+  const canonicalRealType = normalizeRealType(map.realType)
   const dual = needsDualDifficulty(map.category)
   const realTypeOptions = map.category === 'SPECIAL'
     ? Object.entries(REAL_TYPES).flatMap(([cat, types]) =>
@@ -158,7 +160,7 @@ export function MapSlotEditor({ map, onChange, onRemove, getMapHistory }: Props)
       {
         beatmapId: map.beatmapId || 0,
         beatmapsetId: map.beatmapsetId,
-        realType: map.realType,
+        realType: canonicalRealType,
         name: map.name,
       },
     ]) === 'rateSet'
@@ -168,10 +170,10 @@ export function MapSlotEditor({ map, onChange, onRemove, getMapHistory }: Props)
     history.types.has(map.type) === false  // 当前 type 从未被用过
   const realTypeConflict = exactHistory && history &&
     history.totalUses > 0 &&
-    !!map.realType &&
+    !!canonicalRealType &&
     !!history.mostCommonRealType &&
-    map.realType !== history.mostCommonRealType &&
-    history.realTypes.has(map.realType) === false  // 当前 realType 从未被用过
+    canonicalRealType !== history.mostCommonRealType &&
+    history.realTypes.has(canonicalRealType) === false  // 当前 realType 从未被用过
   const hasTypeConflict = typeConflict || realTypeConflict || rateSetConflict
 
   const updateField = <K extends keyof ExtendedMap>(key: K, value: ExtendedMap[K]) => {
@@ -237,7 +239,7 @@ export function MapSlotEditor({ map, onChange, onRemove, getMapHistory }: Props)
               <span className="text-yellow-700 dark:text-yellow-300 text-xs">
                 {rateSetConflict
                   ? t('mapSlot.history.rateSetConflict', {
-                      current: map.realType,
+                      current: canonicalRealType,
                       suggested: history.mostCommonRealType,
                     })
                   : typeConflict
@@ -246,7 +248,7 @@ export function MapSlotEditor({ map, onChange, onRemove, getMapHistory }: Props)
                       suggested: history.mostCommonType,
                     })
                   : t('mapSlot.history.conflictRealType', {
-                      current: map.realType,
+                      current: canonicalRealType,
                       suggested: history.mostCommonRealType,
                     })}
               </span>
@@ -328,8 +330,8 @@ export function MapSlotEditor({ map, onChange, onRemove, getMapHistory }: Props)
 
           {realTypeOptions.length > 0 && (
             <select
-              value={map.realType}
-              onChange={(e) => updateField('realType', e.target.value)}
+              value={canonicalRealType}
+              onChange={(e) => updateField('realType', normalizeRealType(e.target.value))}
               className="px-1.5 py-1 border border-gray-200 dark:border-neutral-700 rounded text-xs flex-1 min-w-0 bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 focus:outline-none focus:border-purple-400"
             >
               {realTypeOptions.map((rt) => (
@@ -341,7 +343,7 @@ export function MapSlotEditor({ map, onChange, onRemove, getMapHistory }: Props)
           {realTypeOptions.length === 0 && (
             <input
               type="text"
-              value={map.realType}
+              value={canonicalRealType}
               onChange={(e) => updateField('realType', e.target.value)}
               placeholder={t('mapSlot.realType.custom')}
               className="px-1.5 py-1 border border-gray-200 dark:border-neutral-700 rounded text-xs flex-1 min-w-0 bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 placeholder:text-gray-400 dark:placeholder:text-neutral-500 focus:outline-none focus:border-purple-400"

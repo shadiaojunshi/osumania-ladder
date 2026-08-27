@@ -199,6 +199,9 @@ export function BulkImporter({ onImport, onClose, existingRoundCount, currentTou
     Array.from({ length: groupCount }, (_, groupIndex) => ({
       groupIndex,
       mapIds: rows.filter((row) => row.groupIndex === groupIndex && row.mapId).map((row) => row.mapId),
+      mapKeys: rows
+        .filter((row) => row.groupIndex === groupIndex)
+        .map((row) => row.mapId ? `bid:${row.mapId}` : `raw:${row.raw.trim().toLowerCase().replace(/\s+/g, ' ')}`),
     })),
     allTournaments,
     currentTournamentId,

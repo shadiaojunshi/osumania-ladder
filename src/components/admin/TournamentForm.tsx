@@ -8,6 +8,7 @@ import { BulkImporter } from './BulkImporter'
 import { useT, type MessageKey } from '@/lib/i18n'
 import { useMapHistory } from '@/hooks/useMapHistory'
 import { tournaments as allKnownTournaments } from '@/generated/tournaments'
+import { normalizeRealType } from '@/lib/realType'
 
 interface Props {
   onUpdate: (tournament: Tournament | null) => void
@@ -42,7 +43,10 @@ export function TournamentForm({ onUpdate, initialData, saveSignal, onDirtyChang
 
   // 构建谱面历史索引：直接用编译期打进 bundle 的全量 tournaments
   // （/api/tournaments 只返回 {id, sha}[] 清单，没有 rounds，不能用来建索引）
-  const { getMapHistory } = useMapHistory(allKnownTournaments, initialData?.id)
+  // During a new tournament entry, use the typed ID as the exclusion key too.
+  // Otherwise an existing tournament with the same ID can shadow a same-set
+  // conflict and prevent the set fallback from running.
+  const { getMapHistory } = useMapHistory(allKnownTournaments, initialData?.id || tournament.id || undefined)
 
   useEffect(() => {
     if (initialData) {
@@ -108,7 +112,7 @@ export function TournamentForm({ onUpdate, initialData, saveSignal, onDirtyChang
           <summary className="cursor-pointer px-3 py-2 text-sm font-medium text-gray-700 dark:text-neutral-200">
             {t('form.typeGuide.title')}
           </summary>
-          <div className="border-t border-gray-200 dark:border-neutral-800 px-3 py-3 text-xs text-gray-500 dark:text-neutral-400">
+          <div className="border-t border-gray-200 dark:border-neutral-800 px-3 py-3 text-xs leading-5 whitespace-pre-line text-gray-500 dark:text-neutral-400">
             {t('form.typeGuide.placeholder')}
           </div>
         </details>
@@ -163,7 +167,7 @@ function roundWithMetaToOutput(r: RoundWithMeta): Round {
 
   const maps = _maps.map((m) => {
     const { category, ...mapRest } = m
-    return { ...mapRest }
+    return { ...mapRest, realType: normalizeRealType(mapRest.realType) }
   })
 
   distributeDiffsForType(maps.filter((m) => m.type === 'RC'), _typeDiffs.rcMin, _typeDiffs.rcMax, _typeDiffs.rc, 'difficulty')

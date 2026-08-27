@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { createRequire } from 'node:module'
 import test from 'node:test'
 
-import { analyzeImportedMapIds, findPendingMaps } from '../src/lib/tournamentDiagnostics.ts'
+import { analyzeImportedMapIds, findDuplicateRoundMaps, findPendingMaps } from '../src/lib/tournamentDiagnostics.ts'
 import { classifySetConflict, extractRate } from '../src/lib/mapConflictDetection.ts'
 
 const require = createRequire(import.meta.url)
@@ -25,6 +25,14 @@ test('import diagnostics catch identical rounds before metadata lookup, includin
   assert.equal(diagnostics.crossRoundMaps.length, 2)
 })
 
+test('import diagnostics catch identical rounds from raw rows when no BID is available', () => {
+  const diagnostics = analyzeImportedMapIds([
+    { groupIndex: 0, mapIds: [], mapKeys: ['raw:artist - song [hard]', 'raw:artist - song [insane]'] },
+    { groupIndex: 1, mapIds: [], mapKeys: ['raw:artist - song [insane]', 'raw:artist - song [hard]'] },
+  ], [])
+  assert.deepEqual(diagnostics.identicalRounds, [{ firstGroupIndex: 0, secondGroupIndex: 1, mapCount: 2 }])
+})
+
 test('import diagnostics warn when at least half of imported unique BIDs belong to one tournament', () => {
   const existing = tournament('known', 'KNOWN', [round('qf', 'QF', [map('RC1', 1), map('RC2', 2), map('RC3', 3)])])
   const diagnostics = analyzeImportedMapIds([{ groupIndex: 0, mapIds: ['1', '2', '9', '10'] }], [existing])
@@ -38,6 +46,30 @@ test('pending scan can exclude PDSV from submit warnings', () => {
     { ...map('SV1', 2, 'PDSV'), type: 'SV' },
   ])])
   assert.deepEqual(findPendingMaps(input, { excludeSv: true }).map((item) => item.realType), ['PDRC'])
+})
+
+test('duplicate-round scan identifies reused maps within one tournament', () => {
+  const duplicate = findDuplicateRoundMaps([
+    tournament('reuse', 'REUSE', [
+      round('qf', 'QF', [map('RC1', 123)]),
+      round('sf', 'SF', [map('RC1', 123)]),
+    ]),
+  ])
+  assert.deepEqual(duplicate.map(({ tournamentAbbr, beatmapId, rounds }) => ({ tournamentAbbr, beatmapId, rounds })), [
+    { tournamentAbbr: 'REUSE', beatmapId: 123, rounds: ['QF', 'SF'] },
+  ])
+})
+
+test('duplicate-round scan falls back to map metadata when BID is absent', () => {
+  const duplicate = findDuplicateRoundMaps([
+    tournament('reuse-no-bid', 'REUSE-NB', [
+      round('qf', 'QF', [{ ...map('RC1', undefined), name: 'Artist - Song [Hard]', difficulty: 10 }]),
+      round('sf', 'SF', [{ ...map('RC1', undefined), name: 'Artist - Song [Hard]', difficulty: 10 }]),
+    ]),
+  ])
+  assert.equal(duplicate.length, 1)
+  assert.equal(duplicate[0].beatmapId, undefined)
+  assert.equal(duplicate[0].rounds.join('&'), 'QF&SF')
 })
 
 test('same-set conflicts distinguish explicit rate variants from uncertain set reuse', () => {

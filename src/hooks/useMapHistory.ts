@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import type { Tournament } from '@/lib/types'
+import { normalizeRealType } from '@/lib/realType'
 
 export interface MapUsage {
   tournamentId: string
@@ -53,7 +54,7 @@ export function useMapHistory(tournaments: Tournament[], excludeTournamentId?: s
             roundAbbr: round.abbreviation,
             slot: map.slot,
             type: map.type,
-            realType: map.realType,
+            realType: normalizeRealType(map.realType),
             difficulty: map.difficulty,
             beatmapId: map.beatmapId,
             beatmapsetId: map.beatmapsetId,

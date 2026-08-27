@@ -69,7 +69,7 @@ export function RoundRefPicker({ roundAbbr, siblingAbbrs, roundIndex, onApply, e
   const t = useT()
   const [open, setOpen] = useState(false)
   const [entries, setEntries] = useState<LadderEntry[] | null>(null)
-  const [baseRoundId, setBaseRoundId] = useState<string>('')
+  const [baseRoundKey, setBaseRoundKey] = useState<string>('')
   const [offset, setOffset] = useState<string>('0')
   const buttonRef = useRef<HTMLButtonElement>(null)
   const [popoverPos, setPopoverPos] = useState<{ top: number; left: number; maxHeight: number } | null>(null)
@@ -85,6 +85,7 @@ export function RoundRefPicker({ roundAbbr, siblingAbbrs, roundIndex, onApply, e
     () => (entries ? baseLadderRounds(tournaments, entries) : []),
     [entries]
   )
+  const usingFallbackBase = baseRounds.length > 0 && baseRounds[0].isFallback
 
   // 当前轮缩写自动匹配:
   // 1. 优先 MWC 同名轮(偏移 0)。
@@ -92,12 +93,12 @@ export function RoundRefPicker({ roundAbbr, siblingAbbrs, roundIndex, onApply, e
   //    偏移 = 本轮 rank - 该 MWC 轮 rank(可正可负)。
   //    例:本轮 RO64(rank2),MWC 最低是 RO32(rank3)→ 锚 RO32,偏移 -1。
   // 3. 都不行(非标准轮 / MWC 无标准轮)→ 无自动匹配,用户手选。
-  const autoMatch = useMemo<{ roundId: string; roundAbbr: string; offset: number; exact: boolean } | null>(() => {
+  const autoMatch = useMemo<{ key: string; roundId: string; roundAbbr: string; offset: number; exact: boolean; isFallback: boolean } | null>(() => {
     if (baseRounds.length === 0) return null
     const exact = baseRounds.find(
       (r) => r.roundAbbr.toLowerCase() === roundAbbr.trim().toLowerCase()
     )
-    if (exact) return { roundId: exact.roundId, roundAbbr: exact.roundAbbr, offset: 0, exact: true }
+    if (exact) return { key: exact.key, roundId: exact.roundId, roundAbbr: exact.roundAbbr, offset: 0, exact: true, isFallback: exact.isFallback }
 
     // 本轮 rank:先看自身是否标准轮;不是就顺着后面的兄弟轮找第一个标准轮,
     // 用它的 rank 减去间隔步数反推(淘汰赛里非标准轮的下一/下下轮通常就是标准轮)。
@@ -117,27 +118,27 @@ export function RoundRefPicker({ roundAbbr, siblingAbbrs, roundIndex, onApply, e
     }
     if (myRank === undefined) return null
     // MWC 里带标准 rank 的轮,取 rank 与本轮最接近的一个
-    let best: { roundId: string; roundAbbr: string; rank: number } | null = null
+    let best: { key: string; roundId: string; roundAbbr: string; rank: number; isFallback: boolean } | null = null
     for (const r of baseRounds) {
       const rk = standardRank(r.roundAbbr)
       if (rk === undefined) continue
       if (!best || Math.abs(rk - myRank) < Math.abs(best.rank - myRank)) {
-        best = { roundId: r.roundId, roundAbbr: r.roundAbbr, rank: rk }
+        best = { key: r.key, roundId: r.roundId, roundAbbr: r.roundAbbr, rank: rk, isFallback: r.isFallback }
       }
     }
     if (!best) return null
-    return { roundId: best.roundId, roundAbbr: best.roundAbbr, offset: myRank - best.rank, exact: false }
+    return { key: best.key, roundId: best.roundId, roundAbbr: best.roundAbbr, offset: myRank - best.rank, exact: false, isFallback: best.isFallback }
   }, [baseRounds, roundAbbr, siblingAbbrs, roundIndex])
 
   useEffect(() => {
     if (!open) return
-    if (baseRounds.length === 0) { setBaseRoundId(''); return }
-    if (!baseRounds.find((r) => r.roundId === baseRoundId)) {
-      setBaseRoundId(autoMatch?.roundId || baseRounds[0].roundId)
+    if (baseRounds.length === 0) { setBaseRoundKey(''); return }
+    if (!baseRounds.find((r) => r.key === baseRoundKey)) {
+      setBaseRoundKey(autoMatch?.key || baseRounds[0].key)
       // 非精确匹配时把推断出的偏移预填进去(如 RO64 → RO32 -1)
       if (autoMatch && !autoMatch.exact) setOffset(String(autoMatch.offset))
     }
-  }, [open, baseRounds, autoMatch, baseRoundId])
+  }, [open, baseRounds, autoMatch, baseRoundKey])
 
   useEffect(() => {
     if (!open) { setPopoverPos(null); return }
@@ -172,8 +173,8 @@ export function RoundRefPicker({ roundAbbr, siblingAbbrs, roundIndex, onApply, e
 
   // 基准轮在真实轮位轴上的坐标(pos)。找不到为 null。
   const basePos = useMemo(
-    () => baseRounds.find((r) => r.roundId === baseRoundId)?.pos ?? null,
-    [baseRounds, baseRoundId]
+    () => baseRounds.find((r) => r.key === baseRoundKey)?.pos ?? null,
+    [baseRounds, baseRoundKey]
   )
 
   const offsetNum = useMemo(() => {
@@ -234,12 +235,14 @@ export function RoundRefPicker({ roundAbbr, siblingAbbrs, roundIndex, onApply, e
                   <div className="flex items-center gap-1.5">
                     <span className="text-gray-500 dark:text-neutral-400 shrink-0">{t('roundRef.base')}</span>
                     <select
-                      value={baseRoundId}
-                      onChange={(e) => setBaseRoundId(e.target.value)}
+                      value={baseRoundKey}
+                      onChange={(e) => setBaseRoundKey(e.target.value)}
                       className="flex-1 min-w-0 px-1.5 py-1 border border-gray-200 dark:border-neutral-700 rounded bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100"
                     >
                       {baseRounds.map((r) => (
-                        <option key={r.roundId} value={r.roundId}>MWC {r.roundAbbr}</option>
+                        <option key={r.key} value={r.key}>
+                          {r.isFallback ? `${r.tournamentAbbr} · ${r.roundAbbr}` : `MWC ${r.roundAbbr}`}
+                        </option>
                       ))}
                     </select>
                     <span className="text-gray-500 dark:text-neutral-400">+</span>
@@ -251,7 +254,11 @@ export function RoundRefPicker({ roundAbbr, siblingAbbrs, roundIndex, onApply, e
                       className="w-14 px-1.5 py-1 border border-gray-200 dark:border-neutral-700 rounded text-center bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100"
                     />
                   </div>
-                  {autoMatch && (autoMatch.exact || autoMatch.offset === 0) ? (
+                  {usingFallbackBase ? (
+                    <p className="text-[10px] text-amber-600 dark:text-amber-400">
+                      {t('roundRef.fallbackBase')}
+                    </p>
+                  ) : autoMatch && (autoMatch.exact || autoMatch.offset === 0) ? (
                     <p className="text-[10px] text-green-600 dark:text-green-400">
                       {t('roundRef.autoMatched', { round: autoMatch.roundAbbr })}
                     </p>

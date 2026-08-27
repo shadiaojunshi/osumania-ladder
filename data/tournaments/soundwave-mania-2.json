@@ -430,7 +430,7 @@
         {
           "slot": "LN3",
           "type": "LN",
-          "realType": "WC",
+          "realType": "LNWC",
           "name": "succducc - me & u (Kara Edit) [Stage 3: Affection]",
           "difficulty": 8,
           "beatmapId": 3677199,
@@ -579,7 +579,7 @@
         {
           "slot": "LN3",
           "type": "LN",
-          "realType": "WC",
+          "realType": "LNWC",
           "name": "Toromaru - Deorbit [Asynchrony]",
           "difficulty": 9,
           "beatmapId": 4276082,
@@ -747,7 +747,7 @@
         {
           "slot": "LN4",
           "type": "LN",
-          "realType": "WC",
+          "realType": "LNWC",
           "name": "Aoi vs. siqlo - Hacktivism [Coach Stage 2: Intrusion]",
           "difficulty": 10.2,
           "beatmapId": 4943989,

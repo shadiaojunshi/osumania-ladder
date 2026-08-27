@@ -17,6 +17,7 @@ import { AuditLog } from '@/components/admin/AuditLog'
 import type { Tournament } from '@/lib/types'
 import { useT, type MessageKey } from '@/lib/i18n'
 import { findPendingMaps } from '@/lib/tournamentDiagnostics'
+import { tournaments as allKnownTournaments } from '@/generated/tournaments'
 
 type Role = 'readonly' | 'contributor' | 'admin' | 'owner'
 
@@ -243,6 +244,32 @@ export default function AdminPage() {
     if (!window.confirm(t('admin.stage.clearConfirm'))) return
     setStagedChanges({})
     setSubmitStatus(null)
+  }
+
+  const handleStageMapChange = (change: {
+    tournamentId: string
+    roundId: string
+    roundIndex: number
+    slot: string
+    beatmapId?: number
+    realType: string
+  }) => {
+    setStagedChanges((current) => {
+      const source = current[change.tournamentId]
+        || allKnownTournaments.find((item) => item.id === change.tournamentId)
+      if (!source) return current
+      const draft = JSON.parse(JSON.stringify(source)) as Tournament
+      // Legacy tournament files can reuse a round id (SSR SF/F both use round-8).
+      // Prefer the browser-provided index, with the id as a compatibility fallback.
+      const round = draft.rounds[change.roundIndex] || draft.rounds.find((item) => item.id === change.roundId)
+      const map = round?.maps.find((item) =>
+        item.slot === change.slot && (change.beatmapId ? item.beatmapId === change.beatmapId : true),
+      )
+      if (!map) return current
+      map.realType = change.realType
+      return { ...current, [change.tournamentId]: draft }
+    })
+    setSubmitStatus({ type: 'local', message: t('realTypeMaps.stagedOne') })
   }
 
   const handleTournamentUpdate = useCallback((value: Tournament | null) => {
@@ -504,7 +531,13 @@ export default function AdminPage() {
 
         {tab === 'packs' && <PackLinksEditor />}
 
-        {tab === 'realTypeMaps' && <RealTypeMapBrowser />}
+        {tab === 'realTypeMaps' && (
+          <RealTypeMapBrowser
+            canStage={has('contributor')}
+            stagedCount={Object.keys(stagedChanges).length}
+            onStageMapChange={handleStageMapChange}
+          />
+        )}
 
         {tab === 'rtConflict' && <RealTypeConflictChecker canSave={isAdmin} />}
 

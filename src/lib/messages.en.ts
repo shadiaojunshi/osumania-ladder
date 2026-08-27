@@ -199,6 +199,12 @@ export const messagesEn: Record<keyof typeof messagesZh, string> = {
   'realTypeMaps.col.map': 'Map',
   'realTypeMaps.col.difficulty': 'Difficulty',
   'realTypeMaps.col.link': 'Link',
+  'realTypeMaps.col.convert': 'Convert',
+  'realTypeMaps.convertTitle': 'Convert to another real keytype (staged for batch submit)',
+  'realTypeMaps.staged': '{n} tournament change(s) staged; submit them together from Create/Edit.',
+  'realTypeMaps.stagedOne': 'The keytype change was staged in this browser.',
+  'realTypeMaps.duplicateWarning': 'The same BID is reused across rounds of one tournament. SSR SF/F are examples; verify the source pool before changing data.',
+  'realTypeMaps.duplicateRowHint': 'Also used in: {rounds}',
 
   // ---------- AdminsManager ----------
   'admins.title': 'Admin manager',
@@ -309,6 +315,7 @@ export const messagesEn: Record<keyof typeof messagesZh, string> = {
   'roundRef.resolvedMatch': 'MWC has no {round}; anchored to MWC {base} offset {offset} rounds (adjustable)',
   'roundRef.noAutoMatch': 'Round "{round}" is non-standard; pick which MWC round it maps to',
   'roundRef.noBase': 'No MWC rounds in the ladder',
+  'roundRef.fallbackBase': 'No usable MWC rounds; using ordinary ladder rounds as fallback',
   'roundRef.apply': 'Apply to round',
 
   // ---------- RefLadderEditor ----------
@@ -401,7 +408,7 @@ export const messagesEn: Record<keyof typeof messagesZh, string> = {
   'form.step.basic': 'Basic info',
   'form.step.rounds': 'Rounds & maps',
   'form.typeGuide.title': 'Pattern type guide',
-  'form.typeGuide.placeholder': 'The guide content will be added in the next update.',
+  'form.typeGuide.placeholder': 'RC\nSS Stream: single/jump/large-random patterns, often 1/8 notes.\nJS Jumpstream: two- or three-note chord switches; burst and speed focused.\nSA Stamina: continuous switches with few breaks; endurance and consistency.\nCJ Chordjack: chordjack-focused, sometimes anchors or chord switches.\nSJ Jackspeed: short, dense high-BPM jacks.\nMX Rcmix: mixed rice patterns without being especially chaotic.\nDP Dump: blurred or vocal dump timing.\nADP Accurate dump: precise dump-style timing.\nSTC Streamtech: mostly random but not fully random; prefer over generic Tech.\nMTC Minijacktech: bullet patterns are the main difficulty.\nSATC Stamina tech: technical endurance with few or no breaks.\nJTC Jackmained tech: non-bullet jacks and anchors are central.\nWTC Wild/Ultra burst tech: extreme burst, reading, or unusual difficulty; highest priority.\nTC Tech: fallback for other irregular RC.\nORC Otherrice: other RC.\n\nHB\nHB1 Speed/Generic: high-BPM flowing switches, often random or chord bursts.\nHB2 Mid-tempo/Jack/Shield: mid-speed shield chords and awkward hand positions.\nHB3 Technical: burst rice into shield or abstract, very awkward patterns.\nHB4 Wildcard: mixed and unusually chaotic patterns.\nRCmainHB / LNmainHB: RC- or LN-focused hybrid.\nMXHB Mixed HB: rice and LN sections mixed together.\nMNTB Mini Tiebreaker: longer and broad, but not an official TB.\nHB5 Old-school: legacy hybrid patterns; classify late.\nOHB OtherHybrid: other HB.\n\nLN (order: RE CO TE DE JW SW LNMX LNWC LNTC IN LNWL OLN)\nRE Release: low-speed release timing.\nCO Coordination: coordination or release at moderate speed.\nTE Timinghell: very complex high-BPM head/tail timing.\nDE Density: density-focused LN, often LN switches.\nJW Jacky Wildcard: LN chords or shields; classify first.\nSW Speedy Wildcard: random/reverse patterns or LN dumps; classify first.\nLNMX LN Mixed: varied combinations without being especially chaotic.\nLNWC LN Wildcard: freer and more chaotic, but tidier than LN tech.\nLNTC LN tech: very irregular heads/tails, including innovative LN.\nIN Inverse: mostly or fully inverse patterns.\nLNWL LNwall: definition pending; the attachment only says “same as above”.\nOLN Other LN: other LN.\n\nSV (the attachment warns these definitions may be partly or entirely wrong)\nSV1 Pattern: hidden patterns and memory elements.\nSV2 Rhythm: rhythm and deception elements.\nSI Sightread: directly readable speed changes, not memory-focused.\nME Memorization: memory is the main difficulty.\nSVMX SVMix: mixed SV elements.\nGM Gimmick: deceptive or misleading first-read elements.\nPDSV Pending SV: unclassified SV, still downloadable.\n\nTB\nTB Tiebreaker: not subdivided yet.',
   'form.label.name': 'Tournament name',
   'form.placeholder.name': 'e.g. osu!mania World Cup 2025',
   'form.label.abbr': 'Abbreviation',
@@ -446,6 +453,7 @@ export const messagesEn: Record<keyof typeof messagesZh, string> = {
   'round.diff.summaryHint': 'In range-only mode, every map difficulty defaults to its pattern average',
   'round.diff.avgHint': 'Pattern average difficulty (leave empty to auto-calc)',
   'round.maps.title': 'Maps',
+  'round.maps.clearDifficulties': 'Clear map difficulties',
   'round.custom.placeholder': 'Custom pattern (e.g. EX, DF)',
   'round.custom.add': '+Add',
   'round.maps.empty': 'Click the buttons above to add map slots',
@@ -481,7 +489,7 @@ export const messagesEn: Record<keyof typeof messagesZh, string> = {
   'bulk.summary': '{total} rows, {valid} valid mapIDs. Next step calls osu! API for each, ~0.4s per map.',
   'bulk.warning.title': 'Pre-import data checks',
   'bulk.warning.duplicateTournamentLine': 'Possible duplicate tournament: {overlap} of {total} unique imported BIDs ({ratio}%) already exist in {tournament}.',
-  'bulk.warning.identicalRoundsLine': 'Possible duplicated round paste: {first} and {second} have exactly the same {count} BIDs.',
+  'bulk.warning.identicalRoundsLine': 'Possible duplicated round paste: {first} and {second} have exactly the same {count} map identifiers.',
   'bulk.warning.crossRoundLine': 'Map reused across rounds: BID {bid} appears in {rounds}.',
   'bulk.warning.beforeFetch': 'Review these findings before proceeding to step 3 and fetching metadata.',
   'bulk.warning.confirm': 'The following import risks were detected:\n\n{details}\n\nConfirm that you reviewed them and continue fetching metadata?',

@@ -198,6 +198,12 @@ export const messagesZh = {
   'realTypeMaps.col.map': '谱面',
   'realTypeMaps.col.difficulty': '难度',
   'realTypeMaps.col.link': '链接',
+  'realTypeMaps.col.convert': '转换键型',
+  'realTypeMaps.convertTitle': '转换为其他真实键型（修改会暂存到批量提交）',
+  'realTypeMaps.staged': '已暂存 {n} 个比赛的修改，请在新建/编辑页统一提交。',
+  'realTypeMaps.stagedOne': '键型修改已暂存到本浏览器。',
+  'realTypeMaps.duplicateWarning': '检测到同一比赛的不同轮次复用了相同 BID；SSR 的 SF/F 正是这种情况，请先核对原始图池。',
+  'realTypeMaps.duplicateRowHint': '该 BID 还出现在：{rounds}',
 
   // ---------- AdminsManager ----------
   'admins.title': '管理员管理',
@@ -308,6 +314,7 @@ export const messagesZh = {
   'roundRef.resolvedMatch': 'MWC 无 {round},已锚定 MWC {base} 偏移 {offset} 轮(可再调)',
   'roundRef.noAutoMatch': '本轮"{round}"非标准轮,请手选相当于 MWC 哪一轮',
   'roundRef.noBase': '标尺里没有 MWC 轮次',
+  'roundRef.fallbackBase': '标尺中没有可用 MWC,已使用普通轮次托底',
   'roundRef.apply': '应用到整轮',
 
   // ---------- RefLadderEditor ----------
@@ -400,7 +407,7 @@ export const messagesZh = {
   'form.step.basic': '基本信息',
   'form.step.rounds': '轮次与谱面',
   'form.typeGuide.title': '键型说明',
-  'form.typeGuide.placeholder': '说明内容将在下一次改动中补充。',
+  'form.typeGuide.placeholder': 'RC\nSS Stream：单乱、子弹乱、大乱为主，常见 1/8 音符。\nJS Jumpstream：双押切或三押切，偏爆发与切速。\nSA Stamina：切换为主、休息少，考验耐力与稳定。\nCJ Chordjack：叠键为主，可有锚键或切叠。\nSJ Jackspeed：较高 BPM、短而密的叠键。\nMX Rcmix：碎切、叠切、叠乱等混合但不特别混乱。\nDP Dump：模糊踩音或人声踩音。\nADP Accurate dump：精确 dump 式踩音。\nSTC Streamtech：乱键为主但不完全乱，优先于普通 Tech。\nMTC Minijacktech：子弹是主要难点，优先分类。\nSATC Stamina tech：以耐力为难点，少或无休息，优先分类。\nJTC Jackmained tech：非子弹叠键、锚键为主。\nWTC Wild/Ultra burst tech：极端爆发、读谱或非常规难度，最优先。\nTC Tech：无法归入上述 RC 子类时使用。\nORC Otherrice：其他 RC。\n\nHB\nHB1 Speed/Generic：高 BPM 流式切换，可带乱键或叠爆发。\nHB2 Mid-tempo/Jack/Shield：中速、盾叠、卡手。\nHB3 Technical：爆发米接面盾或抽象排列，最卡手。\nHB4 Wildcard：多种键型混合且更混乱。\nRCmainHB / LNmainHB：分别以 RC / LN 为主。\nMXHB Mixed HB：米面段落混合。\nMNTB Mini Tiebreaker：较长、键型全面但非正式 TB。\nHB5 Old-school：老式 HB，滞后分类。\nOHB OtherHybrid：其他 HB。\n\nLN（顺序：RE CO TE DE JW SW LNMX LNWC LNTC IN LNWL OLN）\nRE Release：低速放手时机为难点。\nCO Coordination：协调或放手为难点，速度中等。\nTE Timinghell：高 BPM、面头面尾抓判最复杂。\nDE Density：密度为难点，常见 LN 切换。\nJW Jacky Wildcard：面叠或面盾为主，优先分类。\nSW Speedy Wildcard：单乱、大乱反键或大量 LN dump，优先分类。\nLNMX LN Mixed：多种键型组合但不特别混乱。\nLNWC LN Wildcard：更自由、更混乱，但比 LN tech 整齐。\nLNTC LN tech：面头面尾很不整齐，包含创新型 LN。\nIN Inverse：几乎或完全反键。\nLNWL LNwall：定义待补充（附件仅标注“同上”）。\nOLN Other LN：其他 LN。\n\nSV（附件注明：以下定义可能部分或完全错误）\nSV1 Pattern：藏键、记忆要素。\nSV2 Rhythm：节奏、欺骗要素。\nSI Sightread：直读变速，不以记忆为主。\nME Memorization：记忆要素为难点。\nSVMX SVMix：多种 SV 要素混合。\nGM Gimmick：欺骗或误导初见的要素。\nPDSV Pending SV：待分类 SV，仍进入下载栏。\n\nTB\nTB Tiebreaker：暂不细分。',
   'form.label.name': '比赛全称',
   'form.placeholder.name': '例: osu!mania World Cup 2025',
   'form.label.abbr': '缩写',
@@ -445,6 +452,7 @@ export const messagesZh = {
   'round.diff.summaryHint': '只填范围模式下，每张谱面的难度会自动设为对应键型的平均值',
   'round.diff.avgHint': '各键型平均难度（留空自动计算）',
   'round.maps.title': '谱面列表',
+  'round.maps.clearDifficulties': '清除本轮单曲难度',
   'round.custom.placeholder': '自定义键型名 (如 EX, DF)',
   'round.custom.add': '+添加',
   'round.maps.empty': '点击上方按钮添加谱面槽位',
@@ -480,7 +488,7 @@ export const messagesZh = {
   'bulk.summary': '共 {total} 行,{valid} 个有效 mapID。下一步会逐张调 osu! API 拉取元数据,每张约 0.4 秒。',
   'bulk.warning.title': '导入前数据检查',
   'bulk.warning.duplicateTournamentLine': '疑似重复录入：导入的 {total} 个唯一 BID 中有 {overlap} 个（{ratio}%）已存在于 {tournament}。',
-  'bulk.warning.identicalRoundsLine': '疑似整轮重复粘贴：{first} 与 {second} 的 {count} 个 BID 完全一致。',
+  'bulk.warning.identicalRoundsLine': '疑似整轮重复粘贴：{first} 与 {second} 的 {count} 个谱面标识完全一致。',
   'bulk.warning.crossRoundLine': '跨轮共用谱面：BID {bid} 同时出现在 {rounds}。',
   'bulk.warning.beforeFetch': '请在进入第 3 步查询元数据前检查上述内容。',
   'bulk.warning.confirm': '检测到以下导入风险：\n\n{details}\n\n确认已检查并继续查询元数据吗？',

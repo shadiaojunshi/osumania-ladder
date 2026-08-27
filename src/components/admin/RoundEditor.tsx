@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import type { Round, BeatmapMeta } from '@/lib/types'
-import { MapSlotEditor, type ExtendedMap, type MapCategory, REAL_TYPES } from './MapSlotEditor'
+import { MapSlotEditor, needsDualDifficulty, type ExtendedMap, type MapCategory, REAL_TYPES } from './MapSlotEditor'
 import { getTemplatesByBestOf, type PoolTemplate } from '@/lib/poolTemplates'
 import { useT } from '@/lib/i18n'
 import { DifficultyRefPicker } from './DifficultyRefPicker'
@@ -99,6 +99,20 @@ export function RoundEditor({ round, index, onChange, onRemove, getMapHistory, s
     const typeDiffs = autoCalcTypeDiffs(maps, round._typeDiffs, round._typeDiffsLocked)
     onChange({ ...round, _maps: maps, _typeDiffs: typeDiffs, maps: mapsToOutput(maps), difficulty: recalcDifficulty(maps) })
   }
+
+  const clearAllMapDifficulties = () => {
+    const maps = round._maps.map((map) => ({
+      ...map,
+      difficulty: 0,
+      ...(needsDualDifficulty(map.category) ? { difficultyLn: undefined } : {}),
+    }))
+    // Keep round-level difficulty and type averages intact while the map pool is edited.
+    onChange({ ...round, _maps: maps, maps: mapsToOutput(maps) })
+  }
+
+  const hasMapDifficulties = round._maps.some(
+    (map) => map.difficulty > 0 || (needsDualDifficulty(map.category) && (map.difficultyLn || 0) > 0)
+  )
 
   const updateTypeDiff = (key: keyof RoundWithMeta['_typeDiffs'], value: number) => {
     const locked = { ...round._typeDiffsLocked, [key]: value > 0 }
@@ -410,6 +424,15 @@ export function RoundEditor({ round, index, onChange, onRemove, getMapHistory, s
             <div className="flex items-center justify-between mb-2">
               <label className="text-xs font-medium text-gray-700 dark:text-neutral-200">{t('round.maps.title')}</label>
               <div className="flex gap-1 flex-wrap">
+                <button
+                  type="button"
+                  onClick={clearAllMapDifficulties}
+                  disabled={!hasMapDifficulties}
+                  title={t('round.maps.clearDifficulties')}
+                  className="px-2 py-0.5 text-xs bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-200 rounded hover:bg-red-100 dark:hover:bg-red-900/50 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  {t('round.maps.clearDifficulties')}
+                </button>
                 {STANDARD_TYPES.map((type) => (
                   <button
                     key={type}

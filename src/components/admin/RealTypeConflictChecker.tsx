@@ -6,12 +6,14 @@ import { tournaments as allTournaments } from '@/generated/tournaments'
 import type { Tournament } from '@/lib/types'
 import { classifySetConflict, extractRate } from '@/lib/mapConflictDetection'
 import { findPendingMaps } from '@/lib/tournamentDiagnostics'
+import { normalizeRealType } from '@/lib/realType'
 
 // 一处谱面用法（用于展示 + 定位改哪个文件）
 interface Usage {
   tournamentId: string
   tournamentAbbr: string
   roundId: string
+  roundIndex: number
   roundAbbr: string
   slot: string
   realType: string
@@ -49,16 +51,17 @@ function findConflicts(tournaments: Tournament[]): Conflict[] {
   const bySet = new Map<number, Usage[]>()
   for (const t of tournaments) {
     if (!t?.rounds) continue
-    for (const r of t.rounds) {
+    for (const [roundIndex, r] of t.rounds.entries()) {
       if (!r?.maps) continue
       for (const m of r.maps) {
         const usage: Usage = {
           tournamentId: t.id,
           tournamentAbbr: t.abbreviation || t.id,
           roundId: r.id,
+          roundIndex,
           roundAbbr: r.abbreviation || r.name || r.id,
           slot: m.slot,
-          realType: m.realType,
+          realType: normalizeRealType(m.realType),
           name: m.name,
           beatmapId: m.beatmapId || 0,
           beatmapsetId: m.beatmapsetId,
@@ -166,12 +169,18 @@ export function RealTypeConflictChecker({ canSave }: { canSave: boolean }) {
         if (u.realType === target) continue
         const draft = getDraft(u.tournamentId)
         if (!draft) continue
-        const round = draft.rounds.find((r) => r.id === u.roundId)
+        // IDs are normally unique, but older data can contain duplicate IDs
+        // (for example SSR SF/F both use round-8). Preserve the source index
+        // so a conflict from the later round cannot be written into the first.
+        const indexedRound = draft.rounds[u.roundIndex]
+        const round = indexedRound?.id === u.roundId
+          ? indexedRound
+          : draft.rounds.find((r) => r.id === u.roundId)
         // 用 slot + 各 usage 自己的 beatmapId 定位（倍速变体每张 bid 不同）
         const map = round?.maps.find(
           (m) => m.slot === u.slot && (u.beatmapId ? m.beatmapId === u.beatmapId : m.name === u.name)
         )
-        if (map) map.realType = target
+        if (map) map.realType = normalizeRealType(target)
       }
     }
 

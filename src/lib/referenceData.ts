@@ -53,6 +53,19 @@ export interface RefLadderRound {
   pos: number
 }
 
+export interface BaseLadderRound {
+  key: string
+  tournamentId: string
+  tournamentAbbr: string
+  roundId: string
+  roundAbbr: string
+  roundName: string
+  ladderIndex: number
+  pos: number
+  isFallback: boolean
+  isSynthetic?: boolean
+}
+
 // 找单个 round 在该 (type, field) 下的均值。
 // 优先取 round.typeDifficulties[type][field](管理员显式录入),
 // fallback 到该 round 中 type 谱面的 difficulty / difficultyLn 平均。
@@ -94,37 +107,23 @@ export function resolveLadder(
   field: RefField,
   exclude?: { tournamentId: string; roundId: string }
 ): RefLadderRound[] {
-  const out: RefLadderRound[] = []
-  let pos = 0
-  let first = true
-  for (const e of entries) {
-    const tn = tournaments.find((t) => t.id === e.tournamentId)
-    if (!tn) continue
-    const round = tn.rounds.find((r) => r.id === e.roundId)
-    if (!round) continue
-    if (!first) {
-      // step 合法则累加,否则视作 1
-      const s = typeof e.step === 'number' && Number.isFinite(e.step) && e.step > 0 ? e.step : 1
-      pos += s
-    }
-    first = false
+  return validLadderEntries(tournaments, entries).map(({ entry, tournament, round, pos }) => {
     const isExcluded =
-      !!exclude && exclude.tournamentId === e.tournamentId && exclude.roundId === e.roundId
-    const value = isExcluded ? null : getRefValue(tn, e.roundId, type, field)
-    const tournamentAbbr = tn.abbreviation || tn.id
+      !!exclude && exclude.tournamentId === entry.tournamentId && exclude.roundId === entry.roundId
+    const value = isExcluded ? null : getRefValue(tournament, entry.roundId, type, field)
+    const tournamentAbbr = tournament.abbreviation || tournament.id
     const roundAbbr = round.abbreviation || round.name || round.id
-    out.push({
-      tournamentId: e.tournamentId,
+    return {
+      tournamentId: entry.tournamentId,
       tournamentAbbr,
-      year: tn.year || 0,
-      roundId: e.roundId,
+      year: tournament.year || 0,
+      roundId: entry.roundId,
       roundAbbr,
       label: `${tournamentAbbr} · ${roundAbbr}`,
       value,
       pos,
-    })
-  }
-  return out
+    }
+  })
 }
 
 // ── 整轮快捷偏移(mwc±N)支持 ──────────────────────────────────
@@ -132,42 +131,107 @@ export function resolveLadder(
 // N 为"格数",1 格 = 标尺相邻一项;符号即方向,正 = 更难(往 GF/标尺末尾走)。
 export const MWC_LADDER_TOURNAMENT_ID = 'osumania-4k-world-cup-2025'
 
-// 标尺上属于基准比赛(MWC)的各轮,带它们在已解析 ladder 中的真实坐标。
-// 注意:ladderIndex 现在已改为 pos(真实轮位坐标),旧字段保留别名防兼容问题。
+function isMwcTournament(tournament: Tournament): boolean {
+  // Keep NMWC out: its abbreviation contains MWC but it is a different
+  // competition and should not silently become the global MWC anchor.
+  const identity = `${tournament.id} ${tournament.abbreviation || ''} ${tournament.name || ''}`
+  return /\bMWC\b/i.test(identity) || /^osumania-4k-world-cup-\d{4}$/i.test(tournament.id)
+}
+
+function validLadderEntries(
+  tournaments: Tournament[],
+  entries: LadderEntry[]
+): { entry: LadderEntry; rawIndex: number; pos: number; tournament: Tournament; round: Tournament['rounds'][number] }[] {
+  const out: { entry: LadderEntry; rawIndex: number; pos: number; tournament: Tournament; round: Tournament['rounds'][number] }[] = []
+  let pos = 0
+  for (const [rawIndex, entry] of entries.entries()) {
+    const tournament = tournaments.find((candidate) => candidate.id === entry.tournamentId)
+    const round = tournament?.rounds.find((candidate) => candidate.id === entry.roundId)
+    if (!tournament || !round) continue
+    if (out.length > 0) {
+      const step = typeof entry.step === 'number' && Number.isFinite(entry.step) && entry.step > 0 ? entry.step : 1
+      pos += step
+    }
+    out.push({ entry, rawIndex, pos, tournament, round })
+  }
+  return out
+}
+
+// 返回当前可用 MWC 系列的轮次；若标尺里完全没有 MWC，则返回所有有效轮次作为托底。
+// pos 使用与 resolveLadder 相同的有效条目坐标，避免删除旧轮次后偏移错位。
 export function baseLadderRounds(
   tournaments: Tournament[],
   entries: LadderEntry[],
   baseTournamentId: string = MWC_LADDER_TOURNAMENT_ID
-): { roundId: string; roundAbbr: string; roundName: string; ladderIndex: number; pos: number }[] {
-  // 先把 entries 里的 pos 算出来(只算 pos,不过滤 type/field)
-  const posMap = new Map<string, number>()
-  let curPos = 0
-  let first = true
-  for (const e of entries) {
-    if (!first) {
-      const s = typeof e.step === 'number' && Number.isFinite(e.step) && e.step > 0 ? e.step : 1
-      curPos += s
+): BaseLadderRound[] {
+  const valid = validLadderEntries(tournaments, entries)
+  if (valid.length === 0) return []
+
+  // Prefer the configured current MWC when it still has ladder entries.
+  // If an admin removes those rounds, select the available MWC series with
+  // the most entries (latest year breaks ties). This keeps partial MWC
+  // ladders usable without requiring a data migration.
+  const preferred = valid.filter((item) => item.entry.tournamentId === baseTournamentId)
+  let selectedTournamentId: string | null = preferred.length > 0 ? baseTournamentId : null
+  if (!selectedTournamentId) {
+    const counts = new Map<string, { count: number; year: number }>()
+    for (const item of valid) {
+      if (!isMwcTournament(item.tournament)) continue
+      const current = counts.get(item.tournament.id)
+      counts.set(item.tournament.id, {
+        count: (current?.count ?? 0) + 1,
+        year: Math.max(current?.year ?? 0, item.tournament.year || 0),
+      })
     }
-    first = false
-    posMap.set(`${e.tournamentId}::${e.roundId}`, curPos)
+    selectedTournamentId = [...counts.entries()]
+      .sort((a, b) => b[1].count - a[1].count || b[1].year - a[1].year || a[0].localeCompare(b[0]))[0]?.[0] ?? null
   }
 
-  const out: { roundId: string; roundAbbr: string; roundName: string; ladderIndex: number; pos: number }[] = []
-  entries.forEach((e, idx) => {
-    if (e.tournamentId !== baseTournamentId) return
-    const tn = tournaments.find((t) => t.id === e.tournamentId)
-    const round = tn?.rounds.find((r) => r.id === e.roundId)
-    if (!round) return
-    const p = posMap.get(`${e.tournamentId}::${e.roundId}`) ?? idx
-    out.push({
-      roundId: e.roundId,
-      roundAbbr: round.abbreviation || round.name || round.id,
-      roundName: round.name || round.abbreviation || round.id,
-      ladderIndex: idx,   // 保留兼容
-      pos: p,
-    })
+  const isFallback = selectedTournamentId === null
+  const selected = isFallback
+    ? valid
+    : valid.filter((item) => item.entry.tournamentId === selectedTournamentId)
+
+  const resolved: BaseLadderRound[] = selected.map((item) => {
+    const tournamentAbbr = item.tournament.abbreviation || item.tournament.id
+    const roundAbbr = item.round.abbreviation || item.round.name || item.round.id
+    return {
+      key: `${item.tournament.id}::${item.round.id}`,
+      tournamentId: item.tournament.id,
+      tournamentAbbr,
+      roundId: item.round.id,
+      roundAbbr,
+      roundName: item.round.name || roundAbbr,
+      ladderIndex: item.rawIndex, // 保留旧字段语义
+      pos: item.pos,
+      isFallback,
+    }
   })
-  return out
+
+  // GF is commonly treated as one standard round after F. If an admin removes
+  // only the MWC GF pool, keep it available as a virtual anchor so the picker
+  // can still show "MWC GF + 0" and sample at F.pos + 1.
+  if (!isFallback) {
+    const hasGf = resolved.some((item) => item.roundAbbr.trim().toUpperCase() === 'GF')
+    const fIndex = resolved.findIndex((item) => item.roundAbbr.trim().toUpperCase() === 'F')
+    if (!hasGf && fIndex >= 0) {
+      const f = resolved[fIndex]
+      resolved.splice(fIndex + 1, 0, {
+        key: `${f.tournamentId}::__synthetic-gf__`,
+        tournamentId: f.tournamentId,
+        tournamentAbbr: f.tournamentAbbr,
+        roundId: '__synthetic-gf__',
+        roundAbbr: 'GF',
+        roundName: 'Grand Finals',
+        ladderIndex: f.ladderIndex,
+        pos: f.pos + 1,
+        isFallback: false,
+        isSynthetic: true,
+      })
+    }
+  }
+
+  return resolved
 }
 
 // 按真实轮位坐标(pos)取值:以 basePos 为原点、offset 为"标准轮数",

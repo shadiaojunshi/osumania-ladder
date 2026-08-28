@@ -311,6 +311,7 @@ export const messagesEn: Record<keyof typeof messagesZh, string> = {
   'roundRef.title': 'Round difficulty reference (mwc±N)',
   'roundRef.hint': 'Anchor on an MWC round; N is standard rounds (respects ladder steps), positive = harder. Fills every non-SV difficulty of this round at once.',
   'roundRef.base': 'Base',
+  'roundRef.offset': 'Round offset',
   'roundRef.autoMatched': 'Auto-matched MWC {round}',
   'roundRef.resolvedMatch': 'MWC has no {round}; anchored to MWC {base} offset {offset} rounds (adjustable)',
   'roundRef.noAutoMatch': 'Round "{round}" is non-standard; pick which MWC round it maps to',

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
-import { baseLadderRounds, resolveLadder } from '../src/lib/referenceData.ts'
+import { baseLadderRounds, resolveLadder, sampleLadderAtPos } from '../src/lib/referenceData.ts'
 
 const tournament = (id, abbreviation, rounds) => ({
   id,
@@ -66,6 +66,21 @@ test('base ladder provides a synthetic GF one round after F when MWC GF is missi
   assert.deepEqual(rounds.map((entry) => entry.pos), [0, 1])
   assert.equal(rounds[1].isSynthetic, true)
   assert.notEqual(rounds[1].key, rounds[0].key)
+})
+
+test('synthetic MWC GF minus one samples the remaining MWC F difficulty', () => {
+  const tournaments = [
+    tournament('osumania-4k-world-cup-2025', 'MWC 4K 2025', [
+      round('f', 'F', 12),
+    ]),
+  ]
+  const entries = [{ tournamentId: 'osumania-4k-world-cup-2025', roundId: 'f' }]
+  const baseRounds = baseLadderRounds(tournaments, entries)
+  const gf = baseRounds.find((entry) => entry.roundAbbr === 'GF')
+  assert.ok(gf)
+
+  const ladder = resolveLadder(tournaments, entries, 'RC', 'rf')
+  assert.equal(sampleLadderAtPos(ladder, gf.pos, -1), 12)
 })
 
 test('base ladder falls back to ordinary ladder entries when no MWC round remains', () => {

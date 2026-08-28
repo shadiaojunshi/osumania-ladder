@@ -310,6 +310,7 @@ export const messagesZh = {
   'roundRef.title': '整轮难度参考 (mwc±N)',
   'roundRef.hint': '以 MWC 某轮为基准,N 为"标准轮数"(考虑标尺步长),正=更难。一次填满本轮所有非 SV 难度。',
   'roundRef.base': '基准',
+  'roundRef.offset': '轮次偏移',
   'roundRef.autoMatched': '已自动匹配 MWC {round}',
   'roundRef.resolvedMatch': 'MWC 无 {round},已锚定 MWC {base} 偏移 {offset} 轮(可再调)',
   'roundRef.noAutoMatch': '本轮"{round}"非标准轮,请手选相当于 MWC 哪一轮',

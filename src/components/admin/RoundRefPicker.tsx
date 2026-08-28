@@ -247,10 +247,15 @@ export function RoundRefPicker({ roundAbbr, siblingAbbrs, roundIndex, onApply, e
                     </select>
                     <span className="text-gray-500 dark:text-neutral-400">+</span>
                     <input
-                      type="number"
-                      step="any"
+                      type="text"
+                      inputMode="decimal"
                       value={offset}
-                      onChange={(e) => setOffset(e.target.value)}
+                      onFocus={(e) => e.currentTarget.select()}
+                      onChange={(e) => {
+                        const next = e.target.value
+                        if (/^-?\d*(?:\.\d*)?$/.test(next)) setOffset(next)
+                      }}
+                      aria-label={t('roundRef.offset')}
                       className="w-14 px-1.5 py-1 border border-gray-200 dark:border-neutral-700 rounded text-center bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100"
                     />
                   </div>

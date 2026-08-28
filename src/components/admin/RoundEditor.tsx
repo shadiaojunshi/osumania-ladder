@@ -37,6 +37,9 @@ interface RoundWithMeta extends Round {
   }
   _typeDiffsLocked: { rc: boolean; hbRf: boolean; hbLn: boolean; ln: boolean; sv: boolean; tbRf: boolean; tbLn: boolean }
   _diffMode: 'perMap' | 'summary'
+  // Explicitly cleared map fields must not be repopulated from summary values
+  // when TournamentForm serializes the editor state.
+  _mapDifficultiesCleared?: boolean
 }
 
 interface Props {
@@ -104,10 +107,12 @@ export function RoundEditor({ round, index, onChange, onRemove, getMapHistory, s
     const maps = round._maps.map((map) => ({
       ...map,
       difficulty: 0,
-      ...(needsDualDifficulty(map.category) ? { difficultyLn: undefined } : {}),
+      // Clear both fields even if legacy data attached difficultyLn to a
+      // category that is not currently marked as dual-valued.
+      difficultyLn: undefined,
     }))
     // Keep round-level difficulty and type averages intact while the map pool is edited.
-    onChange({ ...round, _maps: maps, maps: mapsToOutput(maps) })
+    onChange({ ...round, _maps: maps, maps: mapsToOutput(maps), _mapDifficultiesCleared: true })
   }
 
   const hasMapDifficulties = round._maps.some(
@@ -116,7 +121,13 @@ export function RoundEditor({ round, index, onChange, onRemove, getMapHistory, s
 
   const updateTypeDiff = (key: keyof RoundWithMeta['_typeDiffs'], value: number) => {
     const locked = { ...round._typeDiffsLocked, [key]: value > 0 }
-    onChange({ ...round, _typeDiffs: { ...round._typeDiffs, [key]: value }, _typeDiffsLocked: locked })
+    onChange({
+      ...round,
+      _typeDiffs: { ...round._typeDiffs, [key]: value },
+      _typeDiffsLocked: locked,
+      // Editing a summary is an explicit request to use summary values again.
+      _mapDifficultiesCleared: false,
+    })
   }
 
   // TB(rf)/TB(ln) 与唯一 TB 谱面的 difficulty/difficultyLn 完全联动:
@@ -142,6 +153,32 @@ export function RoundEditor({ round, index, onChange, onRemove, getMapHistory, s
 
   // 整轮「参考」:把 6 个非 SV 平均值一次写回并 lock。SV / min/max 不动。
   const applyRoundRef = (v: RoundRefValues) => {
+    // Keep the visible per-map editor and the summary editor in sync. The
+    // exported round is derived from both, so updating only _typeDiffs made a
+    // reference appear to do nothing while the editor was in per-map mode.
+    const maps = round._maps.map((map) => {
+      switch (map.category) {
+        case 'RC':
+          return v.rc > 0 ? { ...map, difficulty: v.rc } : map
+        case 'HB':
+          return {
+            ...map,
+            ...(v.hbRf > 0 ? { difficulty: v.hbRf } : {}),
+            ...(v.hbLn > 0 ? { difficultyLn: v.hbLn } : {}),
+          }
+        case 'LN':
+          return v.ln > 0 ? { ...map, difficulty: v.ln } : map
+        case 'TB':
+          return {
+            ...map,
+            ...(v.tbRf > 0 ? { difficulty: v.tbRf } : {}),
+            ...(v.tbLn > 0 ? { difficultyLn: v.tbLn } : {}),
+          }
+        default:
+          // SV and custom SPECIAL pools are intentionally not touched.
+          return map
+      }
+    })
     const nextDiffs = { ...round._typeDiffs }
     const nextLocked = { ...round._typeDiffsLocked }
     const set = (key: keyof RoundWithMeta['_typeDiffs'], lockKey: keyof RoundWithMeta['_typeDiffsLocked'], val: number) => {
@@ -153,7 +190,15 @@ export function RoundEditor({ round, index, onChange, onRemove, getMapHistory, s
     set('ln', 'ln', v.ln)
     set('tbRf', 'tbRf', v.tbRf)
     set('tbLn', 'tbLn', v.tbLn)
-    onChange({ ...round, _typeDiffs: nextDiffs, _typeDiffsLocked: nextLocked })
+    onChange({
+      ...round,
+      _maps: maps,
+      maps: mapsToOutput(maps),
+      difficulty: recalcDifficulty(maps),
+      _typeDiffs: nextDiffs,
+      _typeDiffsLocked: nextLocked,
+      _mapDifficultiesCleared: false,
+    })
   }
 
   const applyPreset = (preset: typeof ROUND_PRESETS[number]) => {

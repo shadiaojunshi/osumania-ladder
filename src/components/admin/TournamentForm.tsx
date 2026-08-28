@@ -163,23 +163,25 @@ function distributeDiffsForType<F extends 'difficulty' | 'difficultyLn'>(
 }
 
 function roundWithMetaToOutput(r: RoundWithMeta): Round {
-  const { _maps, _typeDiffs, _typeDiffsLocked, _diffMode, ...rest } = r
+  const { _maps, _typeDiffs, _typeDiffsLocked, _diffMode, _mapDifficultiesCleared, ...rest } = r
 
   const maps = _maps.map((m) => {
     const { category, ...mapRest } = m
     return { ...mapRest, realType: normalizeRealType(mapRest.realType) }
   })
 
-  distributeDiffsForType(maps.filter((m) => m.type === 'RC'), _typeDiffs.rcMin, _typeDiffs.rcMax, _typeDiffs.rc, 'difficulty')
-  distributeDiffsForType(maps.filter((m) => m.type === 'LN'), _typeDiffs.lnMin, _typeDiffs.lnMax, _typeDiffs.ln, 'difficulty')
-  distributeDiffsForType(maps.filter((m) => m.type === 'HB'), _typeDiffs.hbMin, _typeDiffs.hbMax, _typeDiffs.hbLn, 'difficultyLn')
-  distributeDiffsForType(maps.filter((m) => m.type === 'HB'), 0, 0, _typeDiffs.hbRf, 'difficulty')
-  distributeDiffsForType(maps.filter((m) => m.type === 'SV'), _typeDiffs.svMin, _typeDiffs.svMax, _typeDiffs.sv, 'difficulty')
-  // TB 双字段:rf 走 difficulty 用 tbMin/tbMax,ln 走 difficultyLn 用 tbLnMin/tbLnMax。
-  // 纯米 TB 不填 ln(=0),纯长 TB 不填 rf(=0),distributeDiffsForType 在 avg/min/max 全 0
-  // 时不会动 map 上的字段,自然就让计算路径忽略掉那一面。
-  distributeDiffsForType(maps.filter((m) => m.type === 'TB'), _typeDiffs.tbMin, _typeDiffs.tbMax, _typeDiffs.tbRf, 'difficulty')
-  distributeDiffsForType(maps.filter((m) => m.type === 'TB'), _typeDiffs.tbLnMin, _typeDiffs.tbLnMax, _typeDiffs.tbLn, 'difficultyLn')
+  if (!_mapDifficultiesCleared) {
+    distributeDiffsForType(maps.filter((m) => m.type === 'RC'), _typeDiffs.rcMin, _typeDiffs.rcMax, _typeDiffs.rc, 'difficulty')
+    distributeDiffsForType(maps.filter((m) => m.type === 'LN'), _typeDiffs.lnMin, _typeDiffs.lnMax, _typeDiffs.ln, 'difficulty')
+    distributeDiffsForType(maps.filter((m) => m.type === 'HB'), _typeDiffs.hbMin, _typeDiffs.hbMax, _typeDiffs.hbLn, 'difficultyLn')
+    distributeDiffsForType(maps.filter((m) => m.type === 'HB'), 0, 0, _typeDiffs.hbRf, 'difficulty')
+    distributeDiffsForType(maps.filter((m) => m.type === 'SV'), _typeDiffs.svMin, _typeDiffs.svMax, _typeDiffs.sv, 'difficulty')
+    // TB 双字段:rf 走 difficulty 用 tbMin/tbMax,ln 走 difficultyLn 用 tbLnMin/tbLnMax。
+    // 纯米 TB 不填 ln(=0),纯长 TB 不填 rf(=0),distributeDiffsForType 在 avg/min/max 全 0
+    // 时不会动 map 上的字段,自然就让计算路径忽略掉那一面。
+    distributeDiffsForType(maps.filter((m) => m.type === 'TB'), _typeDiffs.tbMin, _typeDiffs.tbMax, _typeDiffs.tbRf, 'difficulty')
+    distributeDiffsForType(maps.filter((m) => m.type === 'TB'), _typeDiffs.tbLnMin, _typeDiffs.tbLnMax, _typeDiffs.tbLn, 'difficultyLn')
+  }
 
   const nonTbDiffs = maps
     .filter((m) => m.type !== 'TB')
@@ -202,7 +204,9 @@ function roundWithMetaToOutput(r: RoundWithMeta): Round {
 
   return {
     ...rest,
-    difficulty: { min, max, average },
+    // A deliberate round-wide clear is meant to remove map fields while
+    // retaining the stored round-level difficulty summary.
+    difficulty: _mapDifficultiesCleared ? rest.difficulty : { min, max, average },
     maps,
     typeDifficulties: {
       RC: { rf: _typeDiffs.rc || undefined },

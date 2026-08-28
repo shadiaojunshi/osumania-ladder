@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import type { BeatmapMeta } from '@/lib/types'
 import { useT, type MessageKey } from '@/lib/i18n'
 import { DifficultyRefPicker } from './DifficultyRefPicker'
@@ -8,6 +8,7 @@ import type { RefType } from '@/lib/referenceData'
 import type { MapHistorySummary } from '@/hooks/useMapHistory'
 import { classifySetConflict } from '@/lib/mapConflictDetection'
 import { normalizeRealType } from '@/lib/realType'
+import { estimateBeatmapDifficulty, type ManiaAnalysisEstimate } from '@/lib/maniaAnalyserClient'
 
 export type MapCategory = 'RC' | 'LN' | 'HB' | 'SV' | 'TB' | 'SPECIAL'
 
@@ -107,6 +108,8 @@ interface Props {
   onChange: (map: ExtendedMap) => void
   onRemove: () => void
   getMapHistory?: (beatmapId: number | undefined, beatmapsetId: number | undefined) => MapHistorySummary | null
+  enableEstimation?: boolean
+  estimateSignal?: number
 }
 
 export function needsDualDifficulty(category: MapCategory): boolean {
@@ -133,9 +136,75 @@ function toRefType(category: MapCategory): RefType {
   }
 }
 
-export function MapSlotEditor({ map, onChange, onRemove, getMapHistory }: Props) {
+function labelToNumeric(label: string): number | null {
+  const text = String(label || '').trim().toLowerCase()
+  if (!text || /^(?:-|invalid|unknown|<)/i.test(text)) return null
+  const gradeOffsets: Record<string, number> = {
+    'mid/low': -0.2,
+    'low/mid': -0.2,
+    low: -0.4,
+    'mid/high': 0.2,
+    high: 0.4,
+    mid: 0,
+  }
+  const grade = Object.entries(gradeOffsets).find(([name]) => text.endsWith(name))
+  const offset = grade?.[1] || 0
+  const numbered = text.match(/(?:reform|regular|ln)\s*(-?\d+(?:\.\d+)?)/i)
+  if (numbered) return Number(numbered[1]) + offset
+  const levels: Record<string, number> = {
+    alpha: 11, beta: 12, gamma: 13, delta: 14, epsilon: 15,
+    zeta: 16, eta: 17, theta: 18, iota: 19, kappa: 20,
+    zenith: 10, stellium: 10,
+  }
+  const found = Object.entries(levels).find(([name]) => new RegExp(`\\b${name}\\b`, 'i').test(text))
+  return found ? found[1] + offset : null
+}
+
+function EstimateHint({
+  estimate,
+  status,
+  field,
+  onApply,
+  onEstimate,
+}: {
+  estimate: ManiaAnalysisEstimate | null
+  status: 'idle' | 'loading' | 'ready' | 'error'
+  field: 'rc' | 'ln'
+  onApply: (value: number) => void
+  onEstimate: () => void
+}) {
+  const t = useT()
+  if (status === 'idle') return (
+    <button type="button" onClick={onEstimate} className="text-[10px] text-emerald-700 dark:text-emerald-300 hover:underline">
+      {t('mapSlot.estimate.run')}
+    </button>
+  )
+  if (status === 'loading') return <span className="text-[10px] text-gray-400 dark:text-neutral-500">{t('mapSlot.estimate.loading')}</span>
+  if (status === 'error') return <button type="button" onClick={onEstimate} className="text-[10px] text-gray-400 dark:text-neutral-500 hover:underline" title={t('mapSlot.estimate.unavailable')}>{t('mapSlot.estimate.unavailableShort')}</button>
+  if (!estimate) return null
+  const label = field === 'ln' ? estimate.lnLabel : estimate.rcLabel
+  const parsed = field === 'ln' ? labelToNumeric(estimate.lnLabel) : (estimate.rcNumeric ?? labelToNumeric(estimate.rcLabel))
+  return (
+    <span className="inline-flex items-center gap-1 text-[10px] text-emerald-700 dark:text-emerald-300 whitespace-nowrap" title={t('mapSlot.estimate.source')}>
+      <span>{t('mapSlot.estimate.prefix')} {label}{parsed != null ? ` (${parsed.toFixed(2)})` : ''}</span>
+      {parsed != null && (
+        <button
+          type="button"
+          onClick={() => onApply(parsed)}
+          className="px-1 py-0.5 border border-emerald-300 dark:border-emerald-700 rounded hover:bg-emerald-50 dark:hover:bg-emerald-900/30"
+        >
+          {t('mapSlot.estimate.apply')}
+        </button>
+      )}
+    </span>
+  )
+}
+
+export function MapSlotEditor({ map, onChange, onRemove, getMapHistory, enableEstimation = false, estimateSignal = 0 }: Props) {
   const t = useT()
   const [showHistory, setShowHistory] = useState(false)
+  const [estimate, setEstimate] = useState<ManiaAnalysisEstimate | null>(null)
+  const [estimateStatus, setEstimateStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle')
   const canonicalRealType = normalizeRealType(map.realType)
   const dual = needsDualDifficulty(map.category)
   const realTypeOptions = map.category === 'SPECIAL'
@@ -145,6 +214,32 @@ export function MapSlotEditor({ map, onChange, onRemove, getMapHistory }: Props)
     : (REAL_TYPES[map.category] || [])
 
   const history = getMapHistory ? getMapHistory(map.beatmapId, map.beatmapsetId) : null
+
+  const canEstimate = enableEstimation && !!map.beatmapId && map.category !== 'SV'
+  const runEstimate = useCallback((retry = false) => {
+    if (!canEstimate || !map.beatmapId || estimateStatus === 'loading') return
+    setEstimateStatus('loading')
+    estimateBeatmapDifficulty(map.beatmapId, retry)
+      .then((value) => {
+        setEstimate(value)
+        setEstimateStatus('ready')
+      })
+      .catch(() => {
+        setEstimate(null)
+        setEstimateStatus('error')
+      })
+  }, [canEstimate, estimateStatus, map.beatmapId])
+
+  useEffect(() => {
+    setEstimate(null)
+    setEstimateStatus('idle')
+  }, [map.beatmapId, map.category])
+
+  useEffect(() => {
+    if (estimateSignal > 0) runEstimate(false)
+    // Request state changes must not restart a batch signal.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [estimateSignal])
 
   // 检测类型冲突:大键型(type)或真实类型(realType)只要和历史不一致就提示。
   // 之前只在大键型不同才弹,导致同为 RC 但 realType 不同(如 Stream vs Jack)不提示。
@@ -351,8 +446,8 @@ export function MapSlotEditor({ map, onChange, onRemove, getMapHistory }: Props)
           )}
         </div>
 
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-1">
             <input
               type="number"
               step="any"
@@ -370,10 +465,19 @@ export function MapSlotEditor({ map, onChange, onRemove, getMapHistory }: Props)
               type={toRefType(map.category)}
               field={map.category === 'LN' ? 'ln' : 'rf'}
             />
+            {canEstimate && (
+              <EstimateHint
+                estimate={estimate}
+                status={estimateStatus}
+                field={map.category === 'LN' ? 'ln' : 'rc'}
+                onApply={(value) => updateField('difficulty', value)}
+                onEstimate={() => runEstimate(true)}
+              />
+            )}
           </div>
 
           {dual && (
-            <div className="flex items-center gap-1">
+            <div className="flex flex-wrap items-center gap-1">
               <input
                 type="number"
                 step="any"
@@ -391,6 +495,15 @@ export function MapSlotEditor({ map, onChange, onRemove, getMapHistory }: Props)
                 type={toRefType(map.category)}
                 field="ln"
               />
+              {canEstimate && (
+                <EstimateHint
+                  estimate={estimate}
+                  status={estimateStatus}
+                  field="ln"
+                  onApply={(value) => updateField('difficultyLn', value)}
+                  onEstimate={() => runEstimate(true)}
+                />
+              )}
             </div>
           )}
 

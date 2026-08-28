@@ -37,6 +37,7 @@ export function JsonPreview({
   if (!tournament) {
     return (
       <div className="bg-white dark:bg-neutral-900 rounded-lg border border-gray-200 dark:border-neutral-800 shadow-sm p-6 sticky top-6 space-y-5">
+        {!isEditing && <NewTournamentDifficultyNotice />}
         <div className="text-center text-gray-400 dark:text-neutral-500 text-sm py-4">
           <p className="mb-2">{t('json.empty.line1')}</p>
           <p className="text-xs">{t('json.empty.line2')}</p>
@@ -63,6 +64,7 @@ export function JsonPreview({
 
   return (
     <div className="bg-white dark:bg-neutral-900 rounded-lg border border-gray-200 dark:border-neutral-800 shadow-sm flex flex-col max-h-[calc(100vh-180px)] sticky top-6">
+      {!isEditing && <NewTournamentDifficultyNotice />}
       <div className="border-b border-gray-200 dark:border-neutral-800 px-4 py-3 flex items-center justify-between shrink-0">
         <div>
           <div className="flex items-center gap-2">
@@ -135,6 +137,16 @@ export function JsonPreview({
           onClear={onClearStaged}
         />
       </div>
+    </div>
+  )
+}
+
+function NewTournamentDifficultyNotice() {
+  const t = useT()
+  return (
+    <div className="shrink-0 border-b border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 px-4 py-3">
+      <div className="text-sm font-medium text-amber-900 dark:text-amber-100">{t('json.newDifficulty.title')}</div>
+      <p className="mt-1 text-xs leading-5 text-amber-800 dark:text-amber-200">{t('json.newDifficulty.body')}</p>
     </div>
   )
 }

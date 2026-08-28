@@ -50,12 +50,14 @@ interface Props {
   getMapHistory?: (beatmapId: number | undefined, beatmapsetId: number | undefined) => MapHistorySummary | null
   // 本比赛所有轮缩写(易→难),供整轮参考按非标准轮邻居反推档位
   siblingAbbrs?: string[]
+  enableEstimation?: boolean
 }
 
-export function RoundEditor({ round, index, onChange, onRemove, getMapHistory, siblingAbbrs }: Props) {
+export function RoundEditor({ round, index, onChange, onRemove, getMapHistory, siblingAbbrs, enableEstimation }: Props) {
   const t = useT()
   const [expanded, setExpanded] = useState(true)
   const [customSlotName, setCustomSlotName] = useState('')
+  const [estimateSignal, setEstimateSignal] = useState(0)
 
   const updateField = <K extends keyof RoundWithMeta>(key: K, value: RoundWithMeta[K]) => {
     onChange({ ...round, [key]: value })
@@ -469,6 +471,16 @@ export function RoundEditor({ round, index, onChange, onRemove, getMapHistory, s
             <div className="flex items-center justify-between mb-2">
               <label className="text-xs font-medium text-gray-700 dark:text-neutral-200">{t('round.maps.title')}</label>
               <div className="flex gap-1 flex-wrap">
+                {enableEstimation && round._maps.some((map) => map.category !== 'SV' && !!map.beatmapId) && (
+                  <button
+                    type="button"
+                    onClick={() => setEstimateSignal((value) => value + 1)}
+                    title={t('round.maps.estimate.title')}
+                    className="px-2 py-0.5 text-xs bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-200 rounded hover:bg-emerald-100 dark:hover:bg-emerald-900/50"
+                  >
+                    {t('round.maps.estimate')}
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={clearAllMapDifficulties}
@@ -522,6 +534,8 @@ export function RoundEditor({ round, index, onChange, onRemove, getMapHistory, s
                   onChange={(m) => updateMap(i, m)}
                   onRemove={() => removeMap(i)}
                   getMapHistory={getMapHistory}
+                  enableEstimation={enableEstimation}
+                  estimateSignal={estimateSignal}
                 />
               ))}
             </div>

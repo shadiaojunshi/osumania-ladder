@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import type { Tournament, Round } from '@/lib/types'
 import { RoundEditor, type RoundWithMeta } from './RoundEditor'
 import type { MapCategory, ExtendedMap } from './MapSlotEditor'
@@ -29,12 +29,26 @@ const EMPTY_TOURNAMENT: Tournament = {
   customTypes: [],
 }
 
+const TOURNAMENT_DRAFT_VERSION = 1
+type TournamentDraft = {
+  version: number
+  mode: 'create' | 'edit'
+  tournamentId: string
+  savedAt: number
+  tournament: Tournament
+  rounds: RoundWithMeta[]
+  step: number
+}
+
 export function TournamentForm({ onUpdate, initialData, saveSignal, onDirtyChange }: Props) {
   const t = useT()
   const [step, setStep] = useState(0)
   const [tournament, setTournament] = useState<Tournament>(EMPTY_TOURNAMENT)
   const [rounds, setRounds] = useState<RoundWithMeta[]>([])
   const [isDirty, setIsDirty] = useState(false)
+  const checkedDraftKeys = useRef(new Set<string>())
+  const skipDraftCleanupSave = useRef(false)
+  const draftKey = `osumania-ladder:tournament-draft:v${TOURNAMENT_DRAFT_VERSION}:${initialData ? `edit:${initialData.id}` : 'create'}`
 
   // dirty 变化时向上通知(用于跨栏切换拦截)
   useEffect(() => {
@@ -49,25 +63,80 @@ export function TournamentForm({ onUpdate, initialData, saveSignal, onDirtyChang
   const { getMapHistory } = useMapHistory(allKnownTournaments, initialData?.id || tournament.id || undefined)
 
   useEffect(() => {
-    if (initialData) {
-      setTournament(initialData)
-      setRounds(initialData.rounds.map(roundToMeta))
-      setStep(1)
-      setIsDirty(false)
-    } else {
-      setTournament(EMPTY_TOURNAMENT)
-      setRounds([])
-      setStep(0)
-      setIsDirty(false)
+    const baseTournament = initialData || EMPTY_TOURNAMENT
+    const baseRounds = initialData ? initialData.rounds.map(roundToMeta) : []
+    const baseStep = initialData ? 1 : 0
+    setTournament(baseTournament)
+    setRounds(baseRounds)
+    setStep(baseStep)
+    setIsDirty(false)
+
+    // Drafts are deliberately scoped by mode and tournament ID. This keeps a
+    // half-finished new tournament from replacing an edit draft (and vice versa).
+    try {
+      const raw = window.localStorage.getItem(draftKey)
+      if (!raw) return
+      if (checkedDraftKeys.current.has(draftKey)) return
+      checkedDraftKeys.current.add(draftKey)
+      const draft = JSON.parse(raw) as Partial<TournamentDraft>
+      const valid = draft.version === TOURNAMENT_DRAFT_VERSION
+        && draft.mode === (initialData ? 'edit' : 'create')
+        && Array.isArray(draft.rounds)
+        && !!draft.tournament
+        && (!initialData || draft.tournamentId === initialData.id)
+      if (!valid) return
+      const savedAt = Number(draft.savedAt)
+      const when = Number.isFinite(savedAt) ? new Date(savedAt).toLocaleString() : ''
+      if (!window.confirm(t('form.draft.restore', { time: when }))) {
+        window.localStorage.removeItem(draftKey)
+        return
+      }
+      setTournament(draft.tournament as Tournament)
+      setRounds(draft.rounds as RoundWithMeta[])
+      setStep(Number.isFinite(Number(draft.step)) ? Number(draft.step) : baseStep)
+      setIsDirty(true)
+    } catch {
+      try { window.localStorage.removeItem(draftKey) } catch { /* storage may be disabled */ }
     }
-  }, [initialData])
+  }, [initialData, draftKey, t])
 
   // 远端提交或本地暂存成功后清除 dirty 标志。
   useEffect(() => {
     if (saveSignal) {
+      skipDraftCleanupSave.current = true
       setIsDirty(false)
+      try { window.localStorage.removeItem(draftKey) } catch { /* storage may be disabled */ }
     }
-  }, [saveSignal])
+  }, [saveSignal, draftKey])
+
+  // Persist edits locally with a short debounce and a periodic safety write.
+  // localStorage survives an Edge crash/restart, unlike React state or sessionStorage.
+  useEffect(() => {
+    if (!isDirty) {
+      skipDraftCleanupSave.current = false
+      return
+    }
+    skipDraftCleanupSave.current = false
+    const saveDraft = () => {
+      const draft: TournamentDraft = {
+        version: TOURNAMENT_DRAFT_VERSION,
+        mode: initialData ? 'edit' : 'create',
+        tournamentId: tournament.id || initialData?.id || '',
+        savedAt: Date.now(),
+        tournament,
+        rounds,
+        step,
+      }
+      try { window.localStorage.setItem(draftKey, JSON.stringify(draft)) } catch { /* quota/private mode */ }
+    }
+    const debounce = window.setTimeout(saveDraft, 800)
+    const interval = window.setInterval(saveDraft, 60_000)
+    return () => {
+      if (!skipDraftCleanupSave.current) saveDraft()
+      window.clearTimeout(debounce)
+      window.clearInterval(interval)
+    }
+  }, [draftKey, initialData, isDirty, rounds, step, tournament])
 
   useEffect(() => {
     const outputRounds = rounds.map(roundWithMetaToOutput)
@@ -131,6 +200,7 @@ export function TournamentForm({ onUpdate, initialData, saveSignal, onDirtyChang
             onBack={() => setStep(0)}
             getMapHistory={getMapHistory}
             editingTournamentId={initialData?.id}
+            enableEstimation={!!initialData}
           />
         )}
       </div>
@@ -460,12 +530,14 @@ function RoundsStep({
   onBack,
   getMapHistory,
   editingTournamentId,
+  enableEstimation,
 }: {
   rounds: RoundWithMeta[]
   onUpdate: (rounds: RoundWithMeta[]) => void
   onBack: () => void
   getMapHistory?: (beatmapId: number | undefined, beatmapsetId: number | undefined) => import('@/hooks/useMapHistory').MapHistorySummary | null
   editingTournamentId?: string
+  enableEstimation?: boolean
 }) {
   const t = useT()
   const [importerOpen, setImporterOpen] = useState(false)
@@ -539,6 +611,7 @@ function RoundsStep({
           onRemove={() => removeRound(i)}
           getMapHistory={getMapHistory}
           siblingAbbrs={rounds.map((r) => r.abbreviation)}
+          enableEstimation={enableEstimation}
         />
       ))}
 

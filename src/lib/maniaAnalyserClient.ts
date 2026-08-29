@@ -8,6 +8,15 @@ export interface ManiaAnalysisEstimate {
   columnCount: number
 }
 
+type MixedEstimatorModule = {
+  runMixedEstimatorFromText: (osuText: string, options?: Record<string, unknown>) => {
+    estDiff?: string
+    numericDifficulty?: number | null
+    lnRatio?: number
+    columnCount?: number
+  }
+}
+
 type QueueItem<T> = {
   run: () => Promise<T>
   resolve: (value: T) => void
@@ -19,18 +28,12 @@ const analysisInFlight = new Map<number, Promise<ManiaAnalysisEstimate>>()
 const analysisQueue: QueueItem<ManiaAnalysisEstimate>[] = []
 let queueRunning = false
 let serviceUnavailableUntil = 0
+let estimatorModulePromise: Promise<MixedEstimatorModule> | null = null
 
-// A stopped local bridge should fail quickly while an estimator that is
-// loading its parser still gets a few seconds to respond.
+// The raw-map proxy and parser may need a few seconds on a cold request, but
+// never allow a stalled upstream to hold the serial queue forever.
 const REQUEST_TIMEOUT_MS = 20_000
 const SERVICE_COOLDOWN_MS = 60_000
-
-function analyserBaseUrl(): string {
-  // A deploy can point at a different local bridge, while the bundled
-  // osu-toolbox uses this default during local editing.
-  const configured = process.env.NEXT_PUBLIC_OSU_TOOLBOX_URL?.trim()
-  return (configured || 'http://localhost:5173').replace(/\/$/, '')
-}
 
 function splitDifficulty(value: unknown): { rc: string; ln: string } {
   const parts = String(value || '')
@@ -44,7 +47,7 @@ function splitDifficulty(value: unknown): { rc: string; ln: string } {
 }
 
 function isLikelyServiceFailure(error: unknown): boolean {
-  return error instanceof TypeError || (error instanceof Error && /abort|network|failed|cors|fetch|osu-toolbox HTTP 5/i.test(error.message))
+  return error instanceof TypeError || (error instanceof Error && /abort|network|failed|cors|fetch|estimation service HTTP (?:429|5\d\d)/i.test(error.message))
 }
 
 async function drainQueue() {
@@ -78,26 +81,25 @@ async function fetchEstimate(beatmapId: number): Promise<ManiaAnalysisEstimate> 
   const cached = analysisCache.get(beatmapId)
   if (cached) return cached
   if (Date.now() < serviceUnavailableUntil) {
-    throw new Error('osu-toolbox unavailable')
+    throw new Error('estimation service unavailable')
   }
 
   const controller = new AbortController()
   const timeout = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
   try {
-    const response = await fetch(
-      `${analyserBaseUrl()}/api/analyse/${encodeURIComponent(beatmapId)}?mod=NM`,
-      { signal: controller.signal, cache: 'no-store' },
-    )
-    if (!response.ok) throw new Error(`osu-toolbox HTTP ${response.status}`)
-    const data = await response.json() as {
-      beatmapId?: number
-      estDiff?: string
-      numericDifficulty?: number | null
-      lnRatio?: number
-      columnCount?: number
-      supported?: boolean
+    const response = await fetch(`/api/osu/raw?id=${encodeURIComponent(beatmapId)}`, { signal: controller.signal, cache: 'no-store' })
+    if (!response.ok) throw new Error(`estimation service HTTP ${response.status}`)
+    const osuText = await response.text()
+    if (!estimatorModulePromise) {
+      estimatorModulePromise = import('@/vendor/mania-analyser/estimator/mixedEstimator.js') as Promise<MixedEstimatorModule>
     }
-    if (data.supported === false) throw new Error('unsupported beatmap')
+    const { runMixedEstimatorFromText } = await estimatorModulePromise
+    const data = runMixedEstimatorFromText(osuText, {
+      estimatorAlgorithm: 'Mixed',
+      speedRate: 1,
+      cvtFlag: '',
+      withGraph: false,
+    })
     const labels = splitDifficulty(data.estDiff)
     const numeric = data.numericDifficulty === null || data.numericDifficulty === undefined
       ? null

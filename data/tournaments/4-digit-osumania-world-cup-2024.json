@@ -264,9 +264,9 @@
       "abbreviation": "RO16",
       "order": 3,
       "difficulty": {
-        "min": 0,
-        "max": 0,
-        "average": 0
+        "min": 4.6,
+        "max": 6.25,
+        "average": 6.1
       },
       "maps": [
         {
@@ -274,7 +274,7 @@
           "type": "RC",
           "realType": "JTC",
           "name": "KARUT - Neo City Dive [Utopia (edit)]",
-          "difficulty": 0,
+          "difficulty": 5.85,
           "beatmapId": 4461899,
           "beatmapsetId": 2123210
         },
@@ -283,7 +283,7 @@
           "type": "RC",
           "realType": "STC",
           "name": "moyu - Show Me Your Love [Show Me Your Heart]",
-          "difficulty": 0,
+          "difficulty": 5.85,
           "beatmapId": 4462358,
           "beatmapsetId": 2123370
         },
@@ -292,7 +292,7 @@
           "type": "RC",
           "realType": "JTC",
           "name": "Pa's Lam System - City Lights Feat. EVO+ , Jinmenusagi (Pa's Lam System Remix) [Phosphorescent]",
-          "difficulty": 0,
+          "difficulty": 5.85,
           "beatmapId": 4462321,
           "beatmapsetId": 2123348
         },
@@ -301,7 +301,7 @@
           "type": "RC",
           "realType": "STC",
           "name": "",
-          "difficulty": 0,
+          "difficulty": 5.85,
           "beatmapId": 4416050
         },
         {
@@ -309,7 +309,7 @@
           "type": "RC",
           "realType": "TC",
           "name": "Kanzaki Shion - Palette Lab (Extended) [-MysticEyes' Scarlet Another (cut)]",
-          "difficulty": 0,
+          "difficulty": 5.85,
           "beatmapId": 4462360,
           "beatmapsetId": 2123371
         },
@@ -318,7 +318,7 @@
           "type": "RC",
           "realType": "MX",
           "name": "lapix - Silvia [Another]",
-          "difficulty": 0,
+          "difficulty": 5.85,
           "beatmapId": 1690565,
           "beatmapsetId": 805336
         },
@@ -327,77 +327,80 @@
           "type": "HB",
           "realType": "HB3",
           "name": "t+pazolite & Punipuni denki - deja vu [Daydreamer]",
-          "difficulty": 0,
+          "difficulty": 4.6,
           "beatmapId": 4461743,
-          "beatmapsetId": 2123122
+          "beatmapsetId": 2123122,
+          "difficultyLn": 6
         },
         {
           "slot": "HB3",
           "type": "HB",
           "realType": "HB1",
           "name": "MYUKKE. - BUNA*SYNERGY!!! [M [1.1x Rate]]",
-          "difficulty": 0,
+          "difficulty": 4.6,
           "beatmapId": 2885985,
-          "beatmapsetId": 1398645
+          "beatmapsetId": 1398645,
+          "difficultyLn": 6
         },
         {
           "slot": "HB4",
           "type": "HB",
           "realType": "HB1",
           "name": "Hommarju - BEAST BASS BOMB [MAXIMUM]",
-          "difficulty": 0,
+          "difficulty": 4.6,
           "beatmapId": 1940816,
-          "beatmapsetId": 929247
+          "beatmapsetId": 929247,
+          "difficultyLn": 6
         },
         {
           "slot": "LN1",
           "type": "LN",
-          "realType": "PDLN",
+          "realType": "CO",
           "name": "Sakuzyo - Amenohoakari [Raveille's Nokoribi (edit)]",
-          "difficulty": 0,
+          "difficulty": 6.25,
           "beatmapId": 4462361,
           "beatmapsetId": 2123372
         },
         {
           "slot": "LN2",
           "type": "LN",
-          "realType": "PDLN",
+          "realType": "RE",
           "name": "Mili - String Theocracy [Marionette]",
-          "difficulty": 0,
+          "difficulty": 6.25,
           "beatmapId": 4460030,
           "beatmapsetId": 2122479
         },
         {
           "slot": "LN3",
           "type": "LN",
-          "realType": "PDLN",
+          "realType": "DE",
           "name": "R300K - Please [nah]",
-          "difficulty": 0,
+          "difficulty": 6.25,
           "beatmapId": 4462261,
           "beatmapsetId": 2056808
         },
         {
           "slot": "LN4",
           "type": "LN",
-          "realType": "PDLN",
+          "realType": "LNTC",
           "name": "xi - Beatrice [Apotheosis]",
-          "difficulty": 0,
+          "difficulty": 6.25,
           "beatmapId": 4462331,
           "beatmapsetId": 2123352
         },
         {
           "slot": "LN5",
           "type": "LN",
-          "realType": "PDLN",
+          "realType": "LNMX",
           "name": "Nekomata Master - Scars of FAUNA [Orchid]",
-          "difficulty": 0,
+          "difficulty": 6.25,
           "beatmapId": 1770185,
           "beatmapsetId": 846374
         },
         {
           "slot": "SV1",
           "type": "SV",
-          "realType": "PDSV",
+          "realType": "SV2",
           "name": "PSYQUI - Nervousness [Stress-inducing]",
           "difficulty": 0,
           "beatmapId": 4462299,
@@ -406,7 +409,7 @@
         {
           "slot": "SV2",
           "type": "SV",
-          "realType": "PDSV",
+          "realType": "SV1",
           "name": "ETIA. - Daisycutter [BLU-82 (SV)]",
           "difficulty": 0,
           "beatmapId": 4461920,
@@ -417,17 +420,28 @@
           "type": "TB",
           "realType": "TB",
           "name": "SiLiS - GAME MAKE OVER [RETRO ANAMNESIS]",
-          "difficulty": 0,
+          "difficulty": 7.4,
           "beatmapId": 4462335,
-          "beatmapsetId": 2123356
+          "beatmapsetId": 2123356,
+          "difficultyLn": 7.8
         }
       ],
       "typeDifficulties": {
-        "RC": {},
-        "HB": {},
-        "LN": {},
+        "RC": {
+          "rf": 6
+        },
+        "HB": {
+          "rf": 5,
+          "ln": 6
+        },
+        "LN": {
+          "ln": 6.3
+        },
         "SV": {},
-        "TB": {}
+        "TB": {
+          "rf": 7.4,
+          "ln": 7.8
+        }
       }
     },
     {
@@ -436,140 +450,144 @@
       "abbreviation": "QF",
       "order": 4,
       "difficulty": {
-        "min": 0,
-        "max": 0,
-        "average": 0
+        "min": 5.88,
+        "max": 7.8,
+        "average": 6.77
       },
       "maps": [
         {
           "slot": "RC1",
           "type": "RC",
-          "realType": "PDRC",
+          "realType": "MX",
           "name": "Intervals - D.O.S.E. (feat. Saxl Rose) [cut ver without sax ohno]",
-          "difficulty": 0,
+          "difficulty": 6.5,
           "beatmapId": 4460875,
           "beatmapsetId": 2122798
         },
         {
           "slot": "RC2",
           "type": "RC",
-          "realType": "PDRC",
+          "realType": "DP",
           "name": "TOOBOE - Chili Sauce [sauce?]",
-          "difficulty": 0,
+          "difficulty": 7.06,
           "beatmapId": 4471743,
           "beatmapsetId": 2127160
         },
         {
           "slot": "RC3",
           "type": "RC",
-          "realType": "PDRC",
+          "realType": "CJ",
           "name": "Frums - one of none (Cut Ver.) [contingency 1.1x (132bpm)]",
-          "difficulty": 0,
+          "difficulty": 7.66,
           "beatmapId": 3716890,
           "beatmapsetId": 1812007
         },
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "PDRC",
+          "realType": "JTC",
           "name": "",
-          "difficulty": 0,
+          "difficulty": 7,
           "beatmapId": 4471816
         },
         {
           "slot": "RC5",
           "type": "RC",
-          "realType": "PDRC",
+          "realType": "MTC",
           "name": "Kommisar - Mint Tango [Spring Scent]",
-          "difficulty": 0,
+          "difficulty": 7.6,
           "beatmapId": 4471653,
           "beatmapsetId": 2127073
         },
         {
           "slot": "HB1",
           "type": "HB",
-          "realType": "PDHB",
+          "realType": "HB4",
           "name": "Polyphia - ABC (feat. Sophia Black) [abcdefghijklmnopqrstuvwxyz]",
-          "difficulty": 0,
+          "difficulty": 6,
           "beatmapId": 4168877,
-          "beatmapsetId": 2004631
+          "beatmapsetId": 2004631,
+          "difficultyLn": 7.8
         },
         {
           "slot": "HB2",
           "type": "HB",
-          "realType": "PDHB",
+          "realType": "MXHB",
           "name": "KARUT - Oxygen Destroyer [Asphyxiate]",
-          "difficulty": 0,
+          "difficulty": 6,
           "beatmapId": 4471275,
-          "beatmapsetId": 2126961
+          "beatmapsetId": 2126961,
+          "difficultyLn": 7.28
         },
         {
           "slot": "HB3",
           "type": "HB",
-          "realType": "PDHB",
+          "realType": "HB3",
           "name": "Shadow Community - Restless Song [Perennial]",
-          "difficulty": 0,
+          "difficulty": 5.88,
           "beatmapId": 4471047,
-          "beatmapsetId": 2126848
+          "beatmapsetId": 2126848,
+          "difficultyLn": 7.28
         },
         {
           "slot": "HB4",
           "type": "HB",
-          "realType": "PDHB",
+          "realType": "LNmainHB",
           "name": "Ardolf - lapse of memory [oblivion]",
-          "difficulty": 0,
+          "difficulty": 5.88,
           "beatmapId": 4467978,
-          "beatmapsetId": 2125631
+          "beatmapsetId": 2125631,
+          "difficultyLn": 7.28
         },
         {
           "slot": "LN1",
           "type": "LN",
-          "realType": "PDLN",
+          "realType": "CO",
           "name": "Mili - world.execute(me); [logkristal.execute(LN);]",
-          "difficulty": 0,
+          "difficulty": 6.7,
           "beatmapId": 4471815,
           "beatmapsetId": 2127212
         },
         {
           "slot": "LN2",
           "type": "LN",
-          "realType": "PDLN",
+          "realType": "LNWC",
           "name": "Noisestorm - Barracuda [Torpedo]",
-          "difficulty": 0,
+          "difficulty": 6.8,
           "beatmapId": 4199045,
           "beatmapsetId": 2016927
         },
         {
           "slot": "LN3",
           "type": "LN",
-          "realType": "PDLN",
+          "realType": "CO",
           "name": "sekai - Doctorine [live well, mr. \"greatest\" with your \"perfect cure-all\"!]",
-          "difficulty": 0,
+          "difficulty": 7.35,
           "beatmapId": 4471161,
           "beatmapsetId": 2126901
         },
         {
           "slot": "LN4",
           "type": "LN",
-          "realType": "PDLN",
+          "realType": "DE",
           "name": "onoken - Viden [another editation 1.05x]",
-          "difficulty": 0,
+          "difficulty": 7,
           "beatmapId": 4212691,
           "beatmapsetId": 1788533
         },
         {
           "slot": "LN5",
           "type": "LN",
-          "realType": "PDLN",
+          "realType": "LNTC",
           "name": "Mono. - Tricolor Prizm*** [Refraction]",
-          "difficulty": 0,
+          "difficulty": 7.2,
           "beatmapId": 4246904,
           "beatmapsetId": 2036437
         },
         {
           "slot": "SV1",
           "type": "SV",
-          "realType": "PDSV",
+          "realType": "GM",
           "name": "Frums - sing sing red indigo [mundane loops;]",
           "difficulty": 0,
           "beatmapId": 4471723,
@@ -578,7 +596,7 @@
         {
           "slot": "SV2",
           "type": "SV",
-          "realType": "PDSV",
+          "realType": "SV1",
           "name": "Sasuke Haraguchi feat. Kasane Teto - HITO Mania [osu!mania [Mods: [HR]]]",
           "difficulty": 0,
           "beatmapId": 4471537,
@@ -589,17 +607,28 @@
           "type": "TB",
           "realType": "TB",
           "name": "Frums - UMBRA, RADIOLOGOS. [[ENTRY NUMBER SEVENTEEN :: DARKNESS PREVAILS]]",
-          "difficulty": 0,
+          "difficulty": 7.69,
           "beatmapId": 4471794,
-          "beatmapsetId": 2127200
+          "beatmapsetId": 2127200,
+          "difficultyLn": 9
         }
       ],
       "typeDifficulties": {
-        "RC": {},
-        "HB": {},
-        "LN": {},
+        "RC": {
+          "rf": 7
+        },
+        "HB": {
+          "rf": 5.88,
+          "ln": 6.5
+        },
+        "LN": {
+          "ln": 6.8
+        },
         "SV": {},
-        "TB": {}
+        "TB": {
+          "rf": 7.69,
+          "ln": 8.58
+        }
       }
     },
     {
@@ -608,141 +637,145 @@
       "abbreviation": "SF",
       "order": 5,
       "difficulty": {
-        "min": 0,
-        "max": 0,
-        "average": 0
+        "min": 7,
+        "max": 10.8,
+        "average": 9.83
       },
       "maps": [
         {
           "slot": "RC1",
           "type": "RC",
-          "realType": "PDRC",
+          "realType": "MX",
           "name": "hya - snake [Basilisk]",
-          "difficulty": 0,
+          "difficulty": 10.2,
           "beatmapId": 4481181,
           "beatmapsetId": 2130734
         },
         {
           "slot": "RC2",
           "type": "RC",
-          "realType": "PDRC",
+          "realType": "SA",
           "name": "EXO-K - MAMA (Sped Up Ver.) [No One Who Care About Me... x1.05]",
-          "difficulty": 0,
+          "difficulty": 10.8,
           "beatmapId": 4480775,
           "beatmapsetId": 2130561
         },
         {
           "slot": "RC3",
           "type": "RC",
-          "realType": "PDRC",
+          "realType": "TC",
           "name": "mayumusi, SHAKABOOZ, FUNKYHIGEHANK - Magicrash Ice [Easy]",
-          "difficulty": 0,
+          "difficulty": 10.2,
           "beatmapId": 4476515,
           "beatmapsetId": 2128990
         },
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "PDRC",
+          "realType": "DP",
           "name": "Suue & Petboy - Meant To Be (Nightcore Mix) [Be Yourself]",
-          "difficulty": 0,
+          "difficulty": 10.2,
           "beatmapId": 4481183,
           "beatmapsetId": 2130736
         },
         {
           "slot": "RC5",
           "type": "RC",
-          "realType": "PDRC",
+          "realType": "MX",
           "name": "Camellia - Wolves Standing Towards Enemies [IshBosheth]",
-          "difficulty": 0,
+          "difficulty": 10.2,
           "beatmapId": 3389167,
           "beatmapsetId": 1660179
         },
         {
           "slot": "HB1",
           "type": "HB",
-          "realType": "PDHB",
+          "realType": "RCmainHB",
           "name": "JOYRYDE & Skrillex - AGEN WIDA [Nitro [1.1x Rate]]",
-          "difficulty": 0,
+          "difficulty": 9.7,
           "beatmapId": 4481258,
-          "beatmapsetId": 1120583
+          "beatmapsetId": 1120583,
+          "difficultyLn": 10.1
         },
         {
           "slot": "HB2",
           "type": "HB",
-          "realType": "PDHB",
+          "realType": "HB1",
           "name": "litmus* - Rush-Hour [Traffic Congestion]",
-          "difficulty": 0,
+          "difficulty": 9.7,
           "beatmapId": 4480889,
-          "beatmapsetId": 2130605
+          "beatmapsetId": 2130605,
+          "difficultyLn": 10.1
         },
         {
           "slot": "HB3",
           "type": "HB",
-          "realType": "PDHB",
+          "realType": "HB3",
           "name": "Kolaa & Kumako - Ichirin [Polaris.]",
-          "difficulty": 0,
+          "difficulty": 9.7,
           "beatmapId": 4481214,
-          "beatmapsetId": 2130743
+          "beatmapsetId": 2130743,
+          "difficultyLn": 10.1
         },
         {
           "slot": "HB4",
           "type": "HB",
-          "realType": "PDHB",
+          "realType": "MNTB",
           "name": "DIVELA feat. KomugiKiritani - VANTABLACK RAVER [BLACKOUT x1.05]",
-          "difficulty": 0,
+          "difficulty": 9.7,
           "beatmapId": 4236469,
-          "beatmapsetId": 1589952
+          "beatmapsetId": 1589952,
+          "difficultyLn": 10.1
         },
         {
           "slot": "LN1",
           "type": "LN",
-          "realType": "PDLN",
+          "realType": "LNWC",
           "name": "ZxNX - FORTALiCE [Irone & FolAH's Fortress]",
-          "difficulty": 0,
+          "difficulty": 10.2,
           "beatmapId": 4196794,
           "beatmapsetId": 2015919
         },
         {
           "slot": "LN2",
           "type": "LN",
-          "realType": "PDLN",
+          "realType": "TE",
           "name": "Jeff Williams - Time to say Goodbye (feat. Casey Lee Williams) [Team LNBY 2024]",
-          "difficulty": 0,
+          "difficulty": 10.2,
           "beatmapId": 4481255,
           "beatmapsetId": 524244
         },
         {
           "slot": "LN3",
           "type": "LN",
-          "realType": "PDLN",
+          "realType": "RE",
           "name": "John Coltrane - Giant Steps [Sheets of sound]",
-          "difficulty": 0,
+          "difficulty": 7,
           "beatmapId": 3253520,
           "beatmapsetId": 1592995
         },
         {
           "slot": "LN4",
           "type": "LN",
-          "realType": "PDLN",
+          "realType": "DE",
           "name": "iconoclasm feat. GUMI - Idola [Reborn]",
-          "difficulty": 0,
+          "difficulty": 10,
           "beatmapId": 4477318,
           "beatmapsetId": 2129282
         },
         {
           "slot": "LN5",
           "type": "LN",
-          "realType": "PDLN",
+          "realType": "LNMX",
           "name": "penoreri - Seiren ~Hisou no Tategoto~ [HEAVENLY]",
-          "difficulty": 0,
+          "difficulty": 9.5,
           "beatmapId": 3757068,
           "beatmapsetId": 1830480
         },
         {
           "slot": "SV1",
           "type": "SV",
-          "realType": "PDSV",
+          "realType": "SV2",
           "name": "ZAQUVA - Speculation [Haphephobia]",
           "difficulty": 0,
           "beatmapId": 4480208,
@@ -751,7 +784,7 @@
         {
           "slot": "SV2",
           "type": "SV",
-          "realType": "PDSV",
+          "realType": "SVMX",
           "name": "Five Hammer - fffff [sssssv]",
           "difficulty": 0,
           "beatmapId": 4480871,
@@ -762,17 +795,28 @@
           "type": "TB",
           "realType": "TB",
           "name": "Raphlesia - ResolvE -means to an end- [Endless Shutdown]",
-          "difficulty": 0,
+          "difficulty": 11,
           "beatmapId": 4480781,
-          "beatmapsetId": 2130562
+          "beatmapsetId": 2130562,
+          "difficultyLn": 11.5
         }
       ],
       "typeDifficulties": {
-        "RC": {},
-        "HB": {},
-        "LN": {},
+        "RC": {
+          "rf": 10.2
+        },
+        "HB": {
+          "rf": 9,
+          "ln": 9.5
+        },
+        "LN": {
+          "ln": 9.8
+        },
         "SV": {},
-        "TB": {}
+        "TB": {
+          "rf": 11,
+          "ln": 11.5
+        }
       }
     },
     {
@@ -781,158 +825,163 @@
       "abbreviation": "F",
       "order": 6,
       "difficulty": {
-        "min": 0,
-        "max": 0,
-        "average": 0
+        "min": 10.6,
+        "max": 11.3,
+        "average": 10.53
       },
       "maps": [
         {
           "slot": "RC1",
           "type": "RC",
-          "realType": "PDRC",
+          "realType": "MX",
           "name": "Blacklolita - Sound Alchemist [Corrupted Transformation]",
-          "difficulty": 0,
+          "difficulty": 11.3,
           "beatmapId": 3562090,
           "beatmapsetId": 1742466
         },
         {
           "slot": "RC2",
           "type": "RC",
-          "realType": "PDRC",
+          "realType": "SA",
           "name": "Daisuke Ishiwatari - Awe of She [Duality]",
-          "difficulty": 0,
+          "difficulty": 11.3,
           "beatmapId": 4490312,
           "beatmapsetId": 2134246
         },
         {
           "slot": "RC3",
           "type": "RC",
-          "realType": "PDRC",
+          "realType": "STC",
           "name": "TOOBOE - Melancholy [Sorrow]",
-          "difficulty": 0,
+          "difficulty": 11.3,
           "beatmapId": 4489869,
           "beatmapsetId": 2134075
         },
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "PDRC",
+          "realType": "MX",
           "name": "",
-          "difficulty": 0,
+          "difficulty": 11.3,
           "beatmapId": 4490314
         },
         {
           "slot": "RC5",
           "type": "RC",
-          "realType": "PDRC",
+          "realType": "ADP",
           "name": "Her Bright Skies - The Glorious (Final Sketch Remix) [Another 1.15x (299bpm)]",
-          "difficulty": 0,
+          "difficulty": 11.3,
           "beatmapId": 3553820,
           "beatmapsetId": 852660
         },
         {
           "slot": "RC6",
-          "type": "RC",
-          "realType": "PDRC",
+          "type": "HB",
+          "realType": "RCmainHB",
           "name": "CHARAN-PO-RANTAN - Ano Ko No Jinta [Dance 1.1x]",
-          "difficulty": 0,
+          "difficulty": 10.6,
           "beatmapId": 1488278,
-          "beatmapsetId": 703414
+          "beatmapsetId": 703414,
+          "difficultyLn": 10.8
         },
         {
           "slot": "HB1",
           "type": "HB",
-          "realType": "PDHB",
+          "realType": "HB1",
           "name": "TAG - Astral Stranger [Stargazer 1.05x]",
-          "difficulty": 0,
+          "difficulty": 10.6,
           "beatmapId": 4488247,
-          "beatmapsetId": 2133509
+          "beatmapsetId": 2133509,
+          "difficultyLn": 10.8
         },
         {
           "slot": "HB2",
           "type": "HB",
-          "realType": "PDHB",
+          "realType": "HB1",
           "name": "DJ Raisei - T.R.A.P. [T.R.A.P.P.E.D.]",
-          "difficulty": 0,
+          "difficulty": 10.6,
           "beatmapId": 3903621,
-          "beatmapsetId": 1894276
+          "beatmapsetId": 1894276,
+          "difficultyLn": 10.8
         },
         {
           "slot": "HB3",
           "type": "HB",
-          "realType": "PDHB",
+          "realType": "HB4",
           "name": "Akiri - Beyond Wood [Medium Density Fiber]",
-          "difficulty": 0,
+          "difficulty": 10.6,
           "beatmapId": 4490359,
-          "beatmapsetId": 2134266
+          "beatmapsetId": 2134266,
+          "difficultyLn": 10.8
         },
         {
           "slot": "HB4",
           "type": "HB",
-          "realType": "PDHB",
+          "realType": "HB3",
           "name": "Rregula & Dementia x Smooth - Obfuscate (Billain Remix) [Disambiguation]",
-          "difficulty": 0,
+          "difficulty": 10.6,
           "beatmapId": 2496420,
-          "beatmapsetId": 1185353
+          "beatmapsetId": 1185353,
+          "difficultyLn": 10.8
         },
         {
           "slot": "LN1",
           "type": "LN",
-          "realType": "PDLN",
+          "realType": "DE",
           "name": "DJ Myosuke - Killing Rhythm [Cessation]",
-          "difficulty": 0,
+          "difficulty": 11,
           "beatmapId": 2511454,
           "beatmapsetId": 1206127
         },
         {
           "slot": "LN2",
           "type": "LN",
-          "realType": "PDLN",
+          "realType": "LNTC",
           "name": "II-L - VANGUARD-2 [MULTITUDES OF RHYTHMIC DISHEVELMENT]",
-          "difficulty": 0,
+          "difficulty": 11,
           "beatmapId": 4486936,
           "beatmapsetId": 2132945
         },
         {
           "slot": "LN3",
           "type": "LN",
-          "realType": "PDLN",
+          "realType": "DE",
           "name": "D-D-Dice - World's end loneliness (full ver.) [LN Prodigy // Solitary (cut)]",
-          "difficulty": 0,
+          "difficulty": 11,
           "beatmapId": 4486061,
           "beatmapsetId": 2132586
         },
         {
           "slot": "LN4",
           "type": "LN",
-          "realType": "PDLN",
+          "realType": "DE",
           "name": "NIWASHI - Look At That Emerald [Brilliant Jewel]",
-          "difficulty": 0,
+          "difficulty": 11,
           "beatmapId": 4490409,
           "beatmapsetId": 2134296
         },
         {
           "slot": "LN5",
           "type": "LN",
-          "realType": "PDLN",
+          "realType": "LNTC",
           "name": "Camellia - NEURO-CLOUD-9 [Neurotoxin]",
-          "difficulty": 0,
+          "difficulty": 11,
           "beatmapId": 4146509,
           "beatmapsetId": 1995244
         },
         {
           "slot": "LN6",
           "type": "LN",
-          "realType": "PDLN",
+          "realType": "CO",
           "name": "USAO - Night Sky [YuEast's Night [4DM 2024]]",
-          "difficulty": 0,
+          "difficulty": 11,
           "beatmapId": 4490269,
           "beatmapsetId": 2134217
         },
         {
           "slot": "SV1",
           "type": "SV",
-          "realType": "PDSV",
+          "realType": "GM",
           "name": "The Living Proof & Kaval - Solar Eclipse [Blood Moon]",
           "difficulty": 0,
           "beatmapId": 4490421,
@@ -941,7 +990,7 @@
         {
           "slot": "SV2",
           "type": "SV",
-          "realType": "PDSV",
+          "realType": "SV1",
           "name": "BlackY - VAZiLiSQ [Stasis]",
           "difficulty": 0,
           "beatmapId": 4490283,
@@ -952,17 +1001,28 @@
           "type": "TB",
           "realType": "TB",
           "name": "ZxNX & Sot-C - 1KONOS [PLANETO1D RAD1ATOR]",
-          "difficulty": 0,
+          "difficulty": 11,
           "beatmapId": 4490430,
-          "beatmapsetId": 2134306
+          "beatmapsetId": 2134306,
+          "difficultyLn": 11.5
         }
       ],
       "typeDifficulties": {
-        "RC": {},
-        "HB": {},
-        "LN": {},
+        "RC": {
+          "rf": 10.8
+        },
+        "HB": {
+          "rf": 9,
+          "ln": 10
+        },
+        "LN": {
+          "ln": 10.8
+        },
         "SV": {},
-        "TB": {}
+        "TB": {
+          "rf": 11,
+          "ln": 11.5
+        }
       }
     },
     {

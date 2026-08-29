@@ -216,6 +216,9 @@ export function MapSlotEditor({ map, onChange, onRemove, getMapHistory, enableEs
   const history = getMapHistory ? getMapHistory(map.beatmapId, map.beatmapsetId) : null
 
   const canEstimate = enableEstimation && !!map.beatmapId && map.category !== 'SV'
+  const hasEnteredDifficulty = map.category === 'HB' || map.category === 'TB' || map.category === 'SPECIAL'
+    ? (map.difficulty || 0) > 0 || (map.difficultyLn || 0) > 0
+    : (map.difficulty || 0) > 0
   const runEstimate = useCallback((retry = false) => {
     if (!canEstimate || !map.beatmapId || estimateStatus === 'loading') return
     setEstimateStatus('loading')
@@ -240,6 +243,15 @@ export function MapSlotEditor({ map, onChange, onRemove, getMapHistory, enableEs
     // Request state changes must not restart a batch signal.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [estimateSignal])
+
+  // Empty map difficulties are useful candidates for an automatic suggestion.
+  // The estimator only fills the read-only hint; applying the value remains an
+  // explicit user action, so an automatic request can never overwrite data.
+  useEffect(() => {
+    if (!canEstimate || hasEnteredDifficulty || estimateStatus !== 'idle') return
+    const timer = window.setTimeout(() => runEstimate(false), 250)
+    return () => window.clearTimeout(timer)
+  }, [canEstimate, estimateStatus, hasEnteredDifficulty, map.beatmapId, runEstimate])
 
   // 检测类型冲突:大键型(type)或真实类型(realType)只要和历史不一致就提示。
   // 之前只在大键型不同才弹,导致同为 RC 但 realType 不同(如 Stream vs Jack)不提示。

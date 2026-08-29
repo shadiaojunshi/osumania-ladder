@@ -96,123 +96,125 @@
       "abbreviation": "RO32",
       "order": 2,
       "difficulty": {
-        "min": 0,
-        "max": 0,
-        "average": 0
+        "min": 3.96,
+        "max": 5.6,
+        "average": 5.22
       },
       "maps": [
         {
           "slot": "RC1",
           "type": "RC",
-          "realType": "PDRC",
+          "realType": "TC",
           "name": "nitro - kiss the sexy robot?? ultimate championship 201X!!! (Cut Ver.) [podium \"\"\"finish\"\"\"\"\"\"\"]",
-          "difficulty": 0,
+          "difficulty": 4.6,
           "beatmapId": 3275345,
           "beatmapsetId": 1393640
         },
         {
           "slot": "RC2",
           "type": "RC",
-          "realType": "PDRC",
+          "realType": "DP",
           "name": "ARAKI x nqrse x Meychan - Odo (Cut Ver.) [K.O.]",
-          "difficulty": 0,
+          "difficulty": 5.3,
           "beatmapId": 3850861,
           "beatmapsetId": 1871561
         },
         {
           "slot": "RC3",
           "type": "RC",
-          "realType": "PDRC",
+          "realType": "ADP",
           "name": "Terminal 11 - The Bird's Midair Heatstroke [Mipha's Challenge]",
-          "difficulty": 0,
+          "difficulty": 4.5,
           "beatmapId": 4452481,
           "beatmapsetId": 2119591
         },
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "PDRC",
+          "realType": "MX",
           "name": "MAX MAXIMIZER VS DJ TOTTO - Rebellio [Stage 4: Chaos]",
-          "difficulty": 0,
+          "difficulty": 4.7,
           "beatmapId": 2403563,
           "beatmapsetId": 1151487
         },
         {
           "slot": "RC5",
           "type": "RC",
-          "realType": "PDRC",
+          "realType": "MX",
           "name": "Yuyoyuppe - brbyjpusr2vip(o) [Insane (edit)]",
-          "difficulty": 0,
+          "difficulty": 5.6,
           "beatmapId": 4432255,
           "beatmapsetId": 676323
         },
         {
           "slot": "HB1",
           "type": "HB",
-          "realType": "PDHB",
+          "realType": "MXHB",
           "name": "Schwank - Deimos [Insane]",
-          "difficulty": 0,
+          "difficulty": 3.96,
           "beatmapId": 4022929,
-          "beatmapsetId": 1808053
+          "beatmapsetId": 1808053,
+          "difficultyLn": 5
         },
         {
           "slot": "HB2",
           "type": "HB",
-          "realType": "PDHB",
+          "realType": "MXHB",
           "name": "Blacklolita - CyberConnect [Expert]",
-          "difficulty": 0,
+          "difficulty": 3.96,
           "beatmapId": 3417228,
-          "beatmapsetId": 1672894
+          "beatmapsetId": 1672894,
+          "difficultyLn": 5
         },
         {
           "slot": "LN1",
           "type": "LN",
-          "realType": "PDLN",
+          "realType": "RE",
           "name": "Creo - Dark Tides [lost]",
-          "difficulty": 0,
+          "difficulty": 5.46,
           "beatmapId": 4452318,
           "beatmapsetId": 2119509
         },
         {
           "slot": "LN2",
           "type": "LN",
-          "realType": "PDLN",
+          "realType": "RE",
           "name": "Kurokotei feat. AKA - Belle de Nuit [Se souvenir]",
-          "difficulty": 0,
+          "difficulty": 4,
           "beatmapId": 4451576,
           "beatmapsetId": 2119221
         },
         {
           "slot": "LN3",
           "type": "LN",
-          "realType": "PDLN",
+          "realType": "LNWC",
           "name": "Tokisawa Nao - Analyze [MX]",
-          "difficulty": 0,
+          "difficulty": 5.46,
           "beatmapId": 4409645,
           "beatmapsetId": 2101966
         },
         {
           "slot": "LN4",
           "type": "LN",
-          "realType": "PDLN",
+          "realType": "LNMX",
           "name": "Kairiki Bear - Shippaisaku Shoujo [inabakumori Remix] [Forlorn]",
-          "difficulty": 0,
+          "difficulty": 5.46,
           "beatmapId": 3334514,
           "beatmapsetId": 1604016
         },
         {
           "slot": "LN5",
           "type": "LN",
-          "realType": "PDLN",
+          "realType": "LNTC",
           "name": "Ado - Show [Ain't Nobody Stop]",
-          "difficulty": 0,
+          "difficulty": 5.46,
           "beatmapId": 4452484,
           "beatmapsetId": 2119593
         },
         {
           "slot": "SV1",
           "type": "SV",
-          "realType": "PDSV",
+          "realType": "SI",
           "name": "Nor - Usagi Flap [Orbital Rabbit SVrike]",
           "difficulty": 0,
           "beatmapId": 4452195,
@@ -221,7 +223,7 @@
         {
           "slot": "SV2",
           "type": "SV",
-          "realType": "PDSV",
+          "realType": "SI",
           "name": "Nor - Aoharu [Miracles]",
           "difficulty": 0,
           "beatmapId": 4452191,
@@ -232,17 +234,28 @@
           "type": "TB",
           "realType": "TB",
           "name": "BrayanKitsn vs. burger ate pizza - plana stella achernar [lux eridanus]",
-          "difficulty": 0,
+          "difficulty": 5.84,
           "beatmapId": 4452403,
-          "beatmapsetId": 2119559
+          "beatmapsetId": 2119559,
+          "difficultyLn": 6.38
         }
       ],
       "typeDifficulties": {
-        "RC": {},
-        "HB": {},
-        "LN": {},
+        "RC": {
+          "rf": 5
+        },
+        "HB": {
+          "rf": 3.96,
+          "ln": 5.2
+        },
+        "LN": {
+          "ln": 5.46
+        },
         "SV": {},
-        "TB": {}
+        "TB": {
+          "rf": 5.84,
+          "ln": 6.38
+        }
       }
     },
     {
@@ -259,7 +272,7 @@
         {
           "slot": "RC1",
           "type": "RC",
-          "realType": "PDRC",
+          "realType": "JTC",
           "name": "KARUT - Neo City Dive [Utopia (edit)]",
           "difficulty": 0,
           "beatmapId": 4461899,
@@ -268,7 +281,7 @@
         {
           "slot": "RC2",
           "type": "RC",
-          "realType": "PDRC",
+          "realType": "STC",
           "name": "moyu - Show Me Your Love [Show Me Your Heart]",
           "difficulty": 0,
           "beatmapId": 4462358,
@@ -277,7 +290,7 @@
         {
           "slot": "RC3",
           "type": "RC",
-          "realType": "PDRC",
+          "realType": "JTC",
           "name": "Pa's Lam System - City Lights Feat. EVO+ , Jinmenusagi (Pa's Lam System Remix) [Phosphorescent]",
           "difficulty": 0,
           "beatmapId": 4462321,
@@ -286,7 +299,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "PDRC",
+          "realType": "STC",
           "name": "",
           "difficulty": 0,
           "beatmapId": 4416050
@@ -294,7 +307,7 @@
         {
           "slot": "RC5",
           "type": "RC",
-          "realType": "PDRC",
+          "realType": "TC",
           "name": "Kanzaki Shion - Palette Lab (Extended) [-MysticEyes' Scarlet Another (cut)]",
           "difficulty": 0,
           "beatmapId": 4462360,
@@ -302,8 +315,8 @@
         },
         {
           "slot": "HB1",
-          "type": "HB",
-          "realType": "PDHB",
+          "type": "RC",
+          "realType": "MX",
           "name": "lapix - Silvia [Another]",
           "difficulty": 0,
           "beatmapId": 1690565,
@@ -312,7 +325,7 @@
         {
           "slot": "HB2",
           "type": "HB",
-          "realType": "PDHB",
+          "realType": "HB3",
           "name": "t+pazolite & Punipuni denki - deja vu [Daydreamer]",
           "difficulty": 0,
           "beatmapId": 4461743,
@@ -321,7 +334,7 @@
         {
           "slot": "HB3",
           "type": "HB",
-          "realType": "PDHB",
+          "realType": "HB1",
           "name": "MYUKKE. - BUNA*SYNERGY!!! [M [1.1x Rate]]",
           "difficulty": 0,
           "beatmapId": 2885985,
@@ -330,7 +343,7 @@
         {
           "slot": "HB4",
           "type": "HB",
-          "realType": "PDHB",
+          "realType": "HB1",
           "name": "Hommarju - BEAST BASS BOMB [MAXIMUM]",
           "difficulty": 0,
           "beatmapId": 1940816,

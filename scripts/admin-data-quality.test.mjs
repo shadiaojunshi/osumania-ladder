@@ -4,6 +4,7 @@ import test from 'node:test'
 
 import { analyzeImportedMapIds, findDuplicateRoundMaps, findPendingMaps } from '../src/lib/tournamentDiagnostics.ts'
 import { classifySetConflict, extractRate } from '../src/lib/mapConflictDetection.ts'
+import { isMatchingTournamentId, isValidTournamentId } from '../functions/api/_lib/tournamentId.ts'
 
 const require = createRequire(import.meta.url)
 const { formatSources } = require('./source-label.js')
@@ -15,6 +16,15 @@ const round = (id, abbreviation, maps) => ({
   id, name: abbreviation, abbreviation, order: 1, difficulty: { min: 0, max: 0, average: 0 }, maps,
 })
 const map = (slot, beatmapId, realType = 'SS') => ({ slot, type: 'RC', realType, difficulty: 0, beatmapId })
+
+test('batch tournament IDs accept the existing case-sensitive filename format', () => {
+  const id = 'gbc-2025-spring-A-and-B'
+  assert.equal(isValidTournamentId(id), true)
+  assert.equal(isMatchingTournamentId(id, { id }), true)
+  assert.equal(isMatchingTournamentId(id, { id: id.toLowerCase() }), false)
+  assert.equal(isValidTournamentId('../main'), false)
+  assert.equal(isValidTournamentId('folder/name'), false)
+})
 
 test('import diagnostics catch identical rounds before metadata lookup, including invalid numeric BIDs', () => {
   const diagnostics = analyzeImportedMapIds([

@@ -12,6 +12,7 @@
 import { jsonResponse, noContent } from '../_lib/cors'
 import { hasRole, type AuthEnv, type SessionUser } from '../_lib/auth'
 import { writeAudit } from '../_lib/audit'
+import { isMatchingTournamentId } from '../_lib/tournamentId'
 
 interface Env extends AuthEnv {
   GITHUB_TOKEN: string
@@ -52,7 +53,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, data }) 
   }
   const invalidId = ids.find((id) => {
     const tournament = changes[id] as { id?: unknown } | null
-    return !/^[a-z0-9][a-z0-9-]*$/.test(id) || tournament?.id !== id
+    return !isMatchingTournamentId(id, tournament)
   })
   if (invalidId) {
     return jsonResponse({ error: `无效的比赛 ID 或数据不匹配: ${invalidId}` }, 400)

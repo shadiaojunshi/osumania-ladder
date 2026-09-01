@@ -543,7 +543,12 @@ function RoundsStep({
   const [importerOpen, setImporterOpen] = useState(false)
 
   const addRound = () => {
-    const order = rounds.length + 1
+    // id 必须全局唯一:R2 的 key 是 maps/{tid}/{rid}/{slot}.osz,两个 round 同 id
+    // 会上传互相覆盖、补丁按 roundId 定位也会写串(SSR 的 SF/F 曾因此互吞数据)。
+    // 取未占用的最小序号,而不是 rounds.length+1。
+    const usedIds = new Set(rounds.map((r) => r.id))
+    let order = 1
+    while (usedIds.has(`round-${order}`)) order++
     const newRound: RoundWithMeta = {
       id: `round-${order}`,
       name: '',

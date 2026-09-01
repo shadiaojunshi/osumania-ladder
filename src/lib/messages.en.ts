@@ -168,6 +168,7 @@ export const messagesEn: Record<keyof typeof messagesZh, string> = {
   'rtConflict.title': 'Real Keytype Conflict Check',
   'rtConflict.subtitle': 'Same map (same beatmapId), or rate variants within one beatmapset, tagged with different real keytypes. Pick a target per row, then Save & Rebuild (one build). Note: rate variants can legitimately differ (density scales with rate) — rows badged "Rate" need manual review.',
   'rtConflict.none': 'No real keytype conflicts found ✓',
+  'rtConflict.dupRoundTitle': '⚠ {n} duplicate round id group(s) — R2 files will overwrite each other, ids must be made unique',
   'rtConflict.rateBadge': 'Rate',
   'rtConflict.reviewBadge': 'Review set',
   'rtConflict.reviewHint': 'The names do not prove these are rate variants. This row is for manual review and is excluded from batch unification.',

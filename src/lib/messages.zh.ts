@@ -167,6 +167,7 @@ export const messagesZh = {
   'rtConflict.title': '真实键型冲突检查',
   'rtConflict.subtitle': '同一张图(相同 beatmapId),或同一 beatmapset 内的倍速变体,被标了不一样的真实键型。逐条选定统一目标后,保存并重建(只触发一次构建)。注:倍速变体的键型有时本就该不同(密度随倍速变化),标"倍速"的组需人工确认。',
   'rtConflict.none': '未发现真实键型冲突 ✓',
+  'rtConflict.dupRoundTitle': '⚠ 发现 {n} 组重复的 round id —— R2 文件会互相覆盖，必须改成唯一 id',
   'rtConflict.rateBadge': '倍速',
   'rtConflict.reviewBadge': '同 set 待核对',
   'rtConflict.reviewHint': '无法从名称确认这些是否为倍速版本，仅供人工核对，不会参与批量统一。',

@@ -2,6 +2,7 @@ import { jsonResponse, noContent } from '../_lib/cors'
 import { hasRole, type AuthEnv, type SessionUser } from '../_lib/auth'
 import { writeAudit } from '../_lib/audit'
 import { addTrash } from '../_lib/trash'
+import { findDuplicateRoundIds } from '../_lib/roundIds'
 
 interface Env extends AuthEnv {
   GITHUB_TOKEN: string
@@ -50,6 +51,12 @@ export const onRequestPut: PagesFunction<Env> = async ({ params, request, env, d
   const { tournament, sha } = (await request.json()) as {
     tournament: { id: string; [key: string]: unknown }
     sha: string
+  }
+
+  // round id 必须唯一(R2 key 冲突,见 _lib/roundIds.ts)。
+  const dupRounds = findDuplicateRoundIds(tournament as unknown as { rounds?: unknown })
+  if (dupRounds.length > 0) {
+    return jsonResponse({ error: `存在重复的 round id: ${dupRounds.map((d) => d.roundId).join(', ')}。请把每轮改成唯一 id 后再保存。` }, 400)
   }
 
   const path = `/contents/data/tournaments/${id}.json`

@@ -1,0 +1,35 @@
+name: R2 Maintenance
+
+# 手动触发的 R2 一次性维护脚本。目前承载 fix-ssr-r2.js(SSR SF/F 同 round id
+# 事故的 R2 文件搬移)。以后同类 R2 修复脚本加进 choices 即可。
+
+on:
+  workflow_dispatch:
+    inputs:
+      script:
+        description: '要跑的维护脚本'
+        required: true
+        default: 'fix-ssr-r2.js'
+        type: choice
+        options:
+          - fix-ssr-r2.js
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - run: npm ci
+
+      - name: Run maintenance script
+        run: node scripts/${{ github.event.inputs.script }} --apply
+        env:
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY: ${{ secrets.R2_ACCESS_KEY }}
+          R2_SECRET_KEY: ${{ secrets.R2_SECRET_KEY }}
+          R2_BUCKET: osumania-ladder-maps

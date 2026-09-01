@@ -13,6 +13,7 @@ import { jsonResponse, noContent } from '../_lib/cors'
 import { hasRole, type AuthEnv, type SessionUser } from '../_lib/auth'
 import { writeAudit } from '../_lib/audit'
 import { isMatchingTournamentId } from '../_lib/tournamentId'
+import { findDuplicateRoundIds } from '../_lib/roundIds'
 
 interface Env extends AuthEnv {
   GITHUB_TOKEN: string
@@ -57,6 +58,14 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, data }) 
   })
   if (invalidId) {
     return jsonResponse({ error: `无效的比赛 ID 或数据不匹配: ${invalidId}` }, 400)
+  }
+
+  // round id 必须在比赛内唯一:R2 key 是 maps/{tid}/{rid}/{slot}.osz,重复 id
+  // 会让上传互相覆盖、补丁定位写串(SSR SF/F 事故)。
+  const dup = ids.find((id) => findDuplicateRoundIds(changes[id] as { rounds?: unknown[] }).length > 0)
+  if (dup) {
+    const dups = findDuplicateRoundIds(changes[dup] as { rounds?: unknown[] })
+    return jsonResponse({ error: `${dup} 存在重复的 round id: ${dups.map((d) => d.roundId).join(', ')}。请把每轮改成唯一 id 后再保存。` }, 400)
   }
 
   try {

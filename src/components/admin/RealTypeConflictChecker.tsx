@@ -45,6 +45,29 @@ function majority(realTypes: string[]): string {
   return best
 }
 
+// 同一比赛里两个 round 用了同一个 id。R2 的 key 是 maps/{tid}/{rid}/{slot}.osz,
+// round id 重复 = 上传互相覆盖 + 补丁按 roundId 定位写串(SSR 的 SF/F 事故根源)。
+export function findDuplicateRoundIds(tournaments: Tournament[]): { tournamentId: string; tournamentAbbr: string; roundId: string; rounds: string[] }[] {
+  const result: { tournamentId: string; tournamentAbbr: string; roundId: string; rounds: string[] }[] = []
+  for (const tournament of tournaments) {
+    const byId = new Map<string, string[]>()
+    for (const round of tournament.rounds || []) {
+      if (!byId.has(round.id)) byId.set(round.id, [])
+      byId.get(round.id)!.push(round.abbreviation || round.name || round.id)
+    }
+    for (const [roundId, abbrs] of byId) {
+      if (abbrs.length < 2) continue
+      result.push({
+        tournamentId: tournament.id,
+        tournamentAbbr: tournament.abbreviation || tournament.id,
+        roundId,
+        rounds: abbrs,
+      })
+    }
+  }
+  return result
+}
+
 // 遍历 bundle 数据，找出同 BID 冲突、可识别的倍速 set 冲突，以及只供人工核对的同 set 差异。
 function findConflicts(tournaments: Tournament[]): Conflict[] {
   const byBid = new Map<number, Usage[]>()
@@ -127,6 +150,7 @@ export function RealTypeConflictChecker({ canSave }: { canSave: boolean }) {
   const t = useT()
   const conflicts = useMemo(() => findConflicts(allTournaments), [])
   const pendingMaps = useMemo(() => findPendingMaps(allTournaments), [])
+  const duplicateRoundIds = useMemo(() => findDuplicateRoundIds(allTournaments), [])
   const saveableConflicts = useMemo(
     () => conflicts.filter((conflict) => conflict.kind !== 'setReview'),
     [conflicts],
@@ -233,6 +257,17 @@ export function RealTypeConflictChecker({ canSave }: { canSave: boolean }) {
       {status && (
         <div className={`mx-4 mt-3 px-3 py-2 rounded text-xs ${status.type === 'success' ? 'bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-200' : 'bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-200'}`}>
           {status.message}
+        </div>
+      )}
+
+      {duplicateRoundIds.length > 0 && (
+        <div className="mx-4 mt-3 px-3 py-2.5 rounded text-xs bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-200 border border-red-200 dark:border-red-800">
+          <div className="font-medium mb-1">{t('rtConflict.dupRoundTitle', { n: duplicateRoundIds.length })}</div>
+          {duplicateRoundIds.map((d) => (
+            <div key={`${d.tournamentId}:${d.roundId}`} className="font-mono mt-0.5">
+              {d.tournamentAbbr} · id={d.roundId} · {d.rounds.join(' + ')}
+            </div>
+          ))}
         </div>
       )}
 

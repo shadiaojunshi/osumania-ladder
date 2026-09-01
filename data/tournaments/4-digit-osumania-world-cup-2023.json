@@ -22,14 +22,18 @@
           "type": "SV",
           "realType": "SV1",
           "name": "SV1",
-          "difficulty": 0
+          "difficulty": 0,
+          "beatmapId": 3958440,
+          "beatmapsetId": 1918273
         },
         {
           "slot": "RC1",
           "type": "RC",
           "realType": "TC",
           "name": "RC1",
-          "difficulty": 6.5
+          "difficulty": 6.5,
+          "beatmapId": 3958784,
+          "beatmapsetId": 1918411
         },
         {
           "slot": "HB1",
@@ -37,14 +41,18 @@
           "realType": "HB1",
           "name": "HB1",
           "difficulty": 6.5,
-          "difficultyLn": 7
+          "difficultyLn": 7,
+          "beatmapId": 3958820,
+          "beatmapsetId": 1918428
         },
         {
           "slot": "LN1",
           "type": "LN",
           "realType": "RE",
           "name": "LN1",
-          "difficulty": 8
+          "difficulty": 8,
+          "beatmapId": 3958778,
+          "beatmapsetId": 1918406
         },
         {
           "slot": "LN2",
@@ -59,21 +67,27 @@
           "realType": "HB1",
           "name": "HB2",
           "difficulty": 7,
-          "difficultyLn": 8
+          "difficultyLn": 8,
+          "beatmapId": 3958785,
+          "beatmapsetId": 1918412
         },
         {
           "slot": "RC2",
           "type": "RC",
           "realType": "JS",
           "name": "RC2",
-          "difficulty": 9
+          "difficulty": 9,
+          "beatmapId": 3958797,
+          "beatmapsetId": 1918418
         },
         {
           "slot": "RC3",
           "type": "RC",
           "realType": "TC",
           "name": "RC3",
-          "difficulty": 9
+          "difficulty": 9,
+          "beatmapId": 3958847,
+          "beatmapsetId": 1918438
         }
       ],
       "isQualifier": true,
@@ -107,35 +121,45 @@
           "type": "RC",
           "realType": "JS",
           "name": "RC1",
-          "difficulty": 6
+          "difficulty": 6,
+          "beatmapId": 3844526,
+          "beatmapsetId": 1868761
         },
         {
           "slot": "RC2",
           "type": "RC",
           "realType": "SS",
           "name": "RC2",
-          "difficulty": 6
+          "difficulty": 6,
+          "beatmapId": 3960212,
+          "beatmapsetId": 1919091
         },
         {
           "slot": "RC3",
           "type": "RC",
           "realType": "DP",
           "name": "RC3",
-          "difficulty": 6
+          "difficulty": 6,
+          "beatmapId": 3965029,
+          "beatmapsetId": 1920978
         },
         {
           "slot": "RC4",
           "type": "RC",
           "realType": "ADP",
           "name": "RC4",
-          "difficulty": 6
+          "difficulty": 6,
+          "beatmapId": 3959400,
+          "beatmapsetId": 1918671
         },
         {
           "slot": "RC5",
           "type": "RC",
           "realType": "TC",
           "name": "RC5",
-          "difficulty": 6
+          "difficulty": 6,
+          "beatmapId": 3963299,
+          "beatmapsetId": 1920291
         },
         {
           "slot": "HB1",
@@ -143,7 +167,9 @@
           "realType": "HB1",
           "name": "HB1",
           "difficulty": 5.7,
-          "difficultyLn": 6.2
+          "difficultyLn": 6.2,
+          "beatmapId": 3959729,
+          "beatmapsetId": 903360
         },
         {
           "slot": "HB2",
@@ -151,49 +177,63 @@
           "realType": "LNmainHB",
           "name": "HB2",
           "difficulty": 5.7,
-          "difficultyLn": 6.2
+          "difficultyLn": 6.2,
+          "beatmapId": 3517331,
+          "beatmapsetId": 1721103
         },
         {
           "slot": "LN1",
           "type": "LN",
           "realType": "RE",
           "name": "LN1",
-          "difficulty": 6.4
+          "difficulty": 6.4,
+          "beatmapId": 3741072,
+          "beatmapsetId": 1823196
         },
         {
           "slot": "LN2",
           "type": "LN",
           "realType": "DE",
           "name": "LN2",
-          "difficulty": 6.4
+          "difficulty": 6.4,
+          "beatmapId": 3960222,
+          "beatmapsetId": 1541763
         },
         {
           "slot": "LN3",
           "type": "LN",
           "realType": "LNMX",
           "name": "LN3",
-          "difficulty": 6.4
+          "difficulty": 6.4,
+          "beatmapId": 3981200,
+          "beatmapsetId": 1612144
         },
         {
           "slot": "SV1",
           "type": "SV",
           "realType": "SI",
           "name": "SV1",
-          "difficulty": 0
+          "difficulty": 0,
+          "beatmapId": 3970874,
+          "beatmapsetId": 1923542
         },
         {
           "slot": "SV2",
           "type": "SV",
           "realType": "ME",
           "name": "SV2",
-          "difficulty": 0
+          "difficulty": 0,
+          "beatmapId": 3971246,
+          "beatmapsetId": 1923685
         },
         {
           "slot": "TB1",
           "type": "TB",
           "realType": "TB",
           "name": "TB1",
-          "difficulty": 0
+          "difficulty": 0,
+          "beatmapId": 3971245,
+          "beatmapsetId": 1923684
         }
       ],
       "bestOf": 9,
@@ -248,14 +288,18 @@
           "type": "RC",
           "realType": "JTC",
           "name": "RC4",
-          "difficulty": 8
+          "difficulty": 8,
+          "beatmapId": 3973196,
+          "beatmapsetId": 1924559
         },
         {
           "slot": "RC5",
           "type": "RC",
           "realType": "TC",
           "name": "RC5",
-          "difficulty": 8
+          "difficulty": 8,
+          "beatmapId": 3973286,
+          "beatmapsetId": 1924580
         },
         {
           "slot": "HB1",
@@ -263,7 +307,9 @@
           "realType": "HB1",
           "name": "HB1",
           "difficulty": 7.5,
-          "difficultyLn": 8.2
+          "difficultyLn": 8.2,
+          "beatmapId": 3973074,
+          "beatmapsetId": 1924515
         },
         {
           "slot": "HB2",
@@ -271,14 +317,18 @@
           "realType": "HB2",
           "name": "HB2",
           "difficulty": 7.5,
-          "difficultyLn": 8.2
+          "difficultyLn": 8.2,
+          "beatmapId": 2817877,
+          "beatmapsetId": 1361861
         },
         {
           "slot": "LN1",
           "type": "LN",
           "realType": "CO",
           "name": "LN1",
-          "difficulty": 8.5
+          "difficulty": 8.5,
+          "beatmapId": 3978783,
+          "beatmapsetId": 1625473
         },
         {
           "slot": "LN2",
@@ -299,21 +349,27 @@
           "type": "SV",
           "realType": "ME",
           "name": "SV1",
-          "difficulty": 0
+          "difficulty": 0,
+          "beatmapId": 3980498,
+          "beatmapsetId": 1927522
         },
         {
           "slot": "SV2",
           "type": "SV",
           "realType": "SI",
           "name": "SV2",
-          "difficulty": 0
+          "difficulty": 0,
+          "beatmapId": 3980450,
+          "beatmapsetId": 1927511
         },
         {
           "slot": "TB1",
           "type": "TB",
           "realType": "TB",
           "name": "TB1",
-          "difficulty": 0
+          "difficulty": 0,
+          "beatmapId": 3977098,
+          "beatmapsetId": 1657643
         }
       ],
       "bestOf": 9,
@@ -347,7 +403,9 @@
           "type": "RC",
           "realType": "SA",
           "name": "RC1",
-          "difficulty": 9
+          "difficulty": 9,
+          "beatmapId": 2083579,
+          "beatmapsetId": 996116
         },
         {
           "slot": "RC2",
@@ -361,7 +419,9 @@
           "type": "RC",
           "realType": "JTC",
           "name": "RC3",
-          "difficulty": 9
+          "difficulty": 9,
+          "beatmapId": 3987469,
+          "beatmapsetId": 1705189
         },
         {
           "slot": "RC4",
@@ -375,14 +435,18 @@
           "type": "RC",
           "realType": "ADP",
           "name": "RC5",
-          "difficulty": 9
+          "difficulty": 9,
+          "beatmapId": 3988723,
+          "beatmapsetId": 999132
         },
         {
           "slot": "RC6",
           "type": "RC",
           "realType": "CJ",
           "name": "RC6",
-          "difficulty": 9
+          "difficulty": 9,
+          "beatmapId": 3981008,
+          "beatmapsetId": 1927760
         },
         {
           "slot": "HB1",
@@ -390,7 +454,9 @@
           "realType": "HB3",
           "name": "HB1",
           "difficulty": 8.5,
-          "difficultyLn": 9.3
+          "difficultyLn": 9.3,
+          "beatmapId": 3984465,
+          "beatmapsetId": 1929150
         },
         {
           "slot": "HB2",
@@ -398,7 +464,9 @@
           "realType": "HB2",
           "name": "HB2",
           "difficulty": 8.5,
-          "difficultyLn": 9.3
+          "difficultyLn": 9.3,
+          "beatmapId": 3982841,
+          "beatmapsetId": 1676258
         },
         {
           "slot": "HB3",
@@ -406,14 +474,18 @@
           "realType": "HB1",
           "name": "HB3",
           "difficulty": 8.5,
-          "difficultyLn": 9.3
+          "difficultyLn": 9.3,
+          "beatmapId": 3987764,
+          "beatmapsetId": 1924770
         },
         {
           "slot": "LN1",
           "type": "LN",
           "realType": "RE",
           "name": "LN1",
-          "difficulty": 9
+          "difficulty": 9,
+          "beatmapId": 3990123,
+          "beatmapsetId": 1931452
         },
         {
           "slot": "LN2",
@@ -427,28 +499,36 @@
           "type": "LN",
           "realType": "RE",
           "name": "LN3",
-          "difficulty": 9
+          "difficulty": 9,
+          "beatmapId": 3989388,
+          "beatmapsetId": 1931135
         },
         {
           "slot": "SV1",
           "type": "SV",
           "realType": "ME",
           "name": "SV1",
-          "difficulty": 0
+          "difficulty": 0,
+          "beatmapId": 3990217,
+          "beatmapsetId": 1931485
         },
         {
           "slot": "SV2",
           "type": "SV",
           "realType": "SI",
           "name": "SV2",
-          "difficulty": 0
+          "difficulty": 0,
+          "beatmapId": 3989898,
+          "beatmapsetId": 1931366
         },
         {
           "slot": "TB1",
           "type": "TB",
           "realType": "TB",
           "name": "TB1",
-          "difficulty": 0
+          "difficulty": 0,
+          "beatmapId": 3990073,
+          "beatmapsetId": 1931432
         }
       ],
       "bestOf": 11,
@@ -482,21 +562,27 @@
           "type": "RC",
           "realType": "SA",
           "name": "RC1",
-          "difficulty": 9.5
+          "difficulty": 9.5,
+          "beatmapId": 3401286,
+          "beatmapsetId": 1665954
         },
         {
           "slot": "RC2",
           "type": "RC",
           "realType": "SS",
           "name": "RC2",
-          "difficulty": 9.8
+          "difficulty": 9.8,
+          "beatmapId": 4000364,
+          "beatmapsetId": 1935600
         },
         {
           "slot": "RC3",
           "type": "RC",
           "realType": "TC",
           "name": "RC3",
-          "difficulty": 10
+          "difficulty": 10,
+          "beatmapId": 3999010,
+          "beatmapsetId": 1935063
         },
         {
           "slot": "RC4",
@@ -510,7 +596,9 @@
           "type": "RC",
           "realType": "MTC",
           "name": "RC5",
-          "difficulty": 10.5
+          "difficulty": 10.5,
+          "beatmapId": 2099056,
+          "beatmapsetId": 1002885
         },
         {
           "slot": "RC6",
@@ -525,7 +613,9 @@
           "realType": "HB1",
           "name": "HB1",
           "difficulty": 9,
-          "difficultyLn": 9.5
+          "difficultyLn": 9.5,
+          "beatmapId": 3999102,
+          "beatmapsetId": 1935107
         },
         {
           "slot": "HB2",
@@ -533,7 +623,9 @@
           "realType": "HB2",
           "name": "HB2",
           "difficulty": 9,
-          "difficultyLn": 9.8
+          "difficultyLn": 9.8,
+          "beatmapId": 3917229,
+          "beatmapsetId": 1900372
         },
         {
           "slot": "HB3",
@@ -541,7 +633,9 @@
           "realType": "HB2",
           "name": "HB3",
           "difficulty": 9,
-          "difficultyLn": 10
+          "difficultyLn": 10,
+          "beatmapId": 2751419,
+          "beatmapsetId": 1328186
         },
         {
           "slot": "LN1",
@@ -555,35 +649,45 @@
           "type": "LN",
           "realType": "DE",
           "name": "LN2",
-          "difficulty": 9.3
+          "difficulty": 9.3,
+          "beatmapId": 3862183,
+          "beatmapsetId": 1876680
         },
         {
           "slot": "LN3",
           "type": "LN",
           "realType": "LNMX",
           "name": "LN3",
-          "difficulty": 9.6
+          "difficulty": 9.6,
+          "beatmapId": 3999014,
+          "beatmapsetId": 1935065
         },
         {
           "slot": "SV1",
           "type": "SV",
           "realType": "ME",
           "name": "SV1",
-          "difficulty": 0
+          "difficulty": 0,
+          "beatmapId": 3999979,
+          "beatmapsetId": 1935441
         },
         {
           "slot": "SV2",
           "type": "SV",
           "realType": "SI",
           "name": "SV2",
-          "difficulty": 0
+          "difficulty": 0,
+          "beatmapId": 3999964,
+          "beatmapsetId": 1935432
         },
         {
           "slot": "TB1",
           "type": "TB",
           "realType": "TB",
           "name": "TB1",
-          "difficulty": 0
+          "difficulty": 0,
+          "beatmapId": 3749678,
+          "beatmapsetId": 1827115
         }
       ],
       "bestOf": 11,
@@ -659,7 +763,9 @@
           "type": "RC",
           "realType": "JTC",
           "name": "RC7",
-          "difficulty": 11
+          "difficulty": 11,
+          "beatmapId": 3642199,
+          "beatmapsetId": 1778365
         },
         {
           "slot": "HB1",
@@ -667,7 +773,9 @@
           "realType": "HB2",
           "name": "HB1",
           "difficulty": 10.5,
-          "difficultyLn": 11.2
+          "difficultyLn": 11.2,
+          "beatmapId": 4009748,
+          "beatmapsetId": 1939404
         },
         {
           "slot": "HB2",
@@ -675,7 +783,9 @@
           "realType": "HB2",
           "name": "HB2",
           "difficulty": 10.5,
-          "difficultyLn": 11.2
+          "difficultyLn": 11.2,
+          "beatmapId": 4008170,
+          "beatmapsetId": 1938859
         },
         {
           "slot": "HB3",
@@ -683,42 +793,54 @@
           "realType": "HB3",
           "name": "HB3",
           "difficulty": 10.5,
-          "difficultyLn": 11.2
+          "difficultyLn": 11.2,
+          "beatmapId": 4007619,
+          "beatmapsetId": 1938627
         },
         {
           "slot": "LN1",
           "type": "LN",
           "realType": "TE",
           "name": "LN1",
-          "difficulty": 10.8
+          "difficulty": 10.8,
+          "beatmapId": 4008174,
+          "beatmapsetId": 1938863
         },
         {
           "slot": "LN2",
           "type": "LN",
           "realType": "DE",
           "name": "LN2",
-          "difficulty": 10.8
+          "difficulty": 10.8,
+          "beatmapId": 4007714,
+          "beatmapsetId": 1938678
         },
         {
           "slot": "LN3",
           "type": "LN",
           "realType": "JW",
           "name": "LN3",
-          "difficulty": 10.8
+          "difficulty": 10.8,
+          "beatmapId": 4008183,
+          "beatmapsetId": 1938867
         },
         {
           "slot": "LN4",
           "type": "LN",
           "realType": "LNTC",
           "name": "LN4",
-          "difficulty": 10.8
+          "difficulty": 10.8,
+          "beatmapId": 3881139,
+          "beatmapsetId": 1270439
         },
         {
           "slot": "SV1",
           "type": "SV",
           "realType": "ME",
           "name": "SV1",
-          "difficulty": 0
+          "difficulty": 0,
+          "beatmapId": 4009815,
+          "beatmapsetId": 1939427
         },
         {
           "slot": "SV2",
@@ -732,7 +854,9 @@
           "type": "TB",
           "realType": "TB",
           "name": "TB1",
-          "difficulty": 0
+          "difficulty": 0,
+          "beatmapId": 4009689,
+          "beatmapsetId": 1939380
         }
       ],
       "bestOf": 13,
@@ -766,21 +890,27 @@
           "type": "RC",
           "realType": "SA",
           "name": "RC1",
-          "difficulty": 12.2
+          "difficulty": 12.2,
+          "beatmapId": 4018764,
+          "beatmapsetId": 1942797
         },
         {
           "slot": "RC2",
           "type": "RC",
           "realType": "SS",
           "name": "RC2",
-          "difficulty": 12.2
+          "difficulty": 12.2,
+          "beatmapId": 4020905,
+          "beatmapsetId": 1943701
         },
         {
           "slot": "RC3",
           "type": "RC",
           "realType": "TC",
           "name": "RC3",
-          "difficulty": 12.2
+          "difficulty": 12.2,
+          "beatmapId": 4019195,
+          "beatmapsetId": 1943032
         },
         {
           "slot": "RC4",
@@ -808,7 +938,9 @@
           "type": "RC",
           "realType": "CJ",
           "name": "RC7",
-          "difficulty": 12.2
+          "difficulty": 12.2,
+          "beatmapId": 2540250,
+          "beatmapsetId": 1221155
         },
         {
           "slot": "HB1",
@@ -816,7 +948,9 @@
           "realType": "HB1",
           "name": "HB1",
           "difficulty": 11.5,
-          "difficultyLn": 11.8
+          "difficultyLn": 11.8,
+          "beatmapId": 4018744,
+          "beatmapsetId": 1942787
         },
         {
           "slot": "HB2",
@@ -824,14 +958,18 @@
           "realType": "HB2",
           "name": "HB2",
           "difficulty": 11.5,
-          "difficultyLn": 11.8
+          "difficultyLn": 11.8,
+          "beatmapId": 4018544,
+          "beatmapsetId": 1942708
         },
         {
           "slot": "HB3",
           "type": "LN",
           "realType": "JW",
           "name": "HB3",
-          "difficulty": 12
+          "difficulty": 12,
+          "beatmapId": 4019887,
+          "beatmapsetId": 1943362
         },
         {
           "slot": "LN1",
@@ -852,28 +990,36 @@
           "type": "LN",
           "realType": "LNTC",
           "name": "LN3",
-          "difficulty": 12
+          "difficulty": 12,
+          "beatmapId": 4099552,
+          "beatmapsetId": 1943025
         },
         {
           "slot": "LN4",
           "type": "LN",
           "realType": "CO",
           "name": "LN4",
-          "difficulty": 12
+          "difficulty": 12,
+          "beatmapId": 4009798,
+          "beatmapsetId": 1939419
         },
         {
           "slot": "SV1",
           "type": "SV",
           "realType": "SV1",
           "name": "SV1",
-          "difficulty": 0
+          "difficulty": 0,
+          "beatmapId": 4021087,
+          "beatmapsetId": 1943788
         },
         {
           "slot": "SV2",
           "type": "SV",
           "realType": "SV2",
           "name": "SV2",
-          "difficulty": 0
+          "difficulty": 0,
+          "beatmapId": 4020859,
+          "beatmapsetId": 1943680
         },
         {
           "slot": "TB1",
@@ -881,7 +1027,9 @@
           "realType": "TB",
           "name": "TB1",
           "difficulty": 12,
-          "difficultyLn": 12.7
+          "difficultyLn": 12.7,
+          "beatmapId": 4021083,
+          "beatmapsetId": 1943786
         }
       ],
       "bestOf": 13,

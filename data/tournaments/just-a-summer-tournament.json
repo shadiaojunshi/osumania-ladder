@@ -246,44 +246,44 @@
       "abbreviation": "RO64",
       "order": 3,
       "difficulty": {
-        "min": 0,
-        "max": 0,
-        "average": 0
+        "min": 6.9,
+        "max": 9,
+        "average": 7.97
       },
       "maps": [
         {
           "slot": "RC1",
           "type": "RC",
-          "realType": "PDRC",
+          "realType": "SS",
           "name": "Arctic Monkeys - 505 [s]",
-          "difficulty": 0,
+          "difficulty": 7.1,
           "beatmapId": 5192200,
           "beatmapsetId": 2344388
         },
         {
           "slot": "RC2",
           "type": "RC",
-          "realType": "PDRC",
+          "realType": "SA",
           "name": "youman feat. GUMI - Worst Regret [1.15x]",
-          "difficulty": 0,
+          "difficulty": 9,
           "beatmapId": 5742841,
           "beatmapsetId": 2577388
         },
         {
           "slot": "RC3",
           "type": "RC",
-          "realType": "PDRC",
+          "realType": "TC",
           "name": "leroy - ...during pride month? [...znow's love?]",
-          "difficulty": 0,
+          "difficulty": 7.42,
           "beatmapId": 5715538,
           "beatmapsetId": 2568463
         },
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "PDRC",
+          "realType": "DP",
           "name": "leroy - CROWDKILLING 101 [ZNOWINSANE 601]",
-          "difficulty": 0,
+          "difficulty": 7.49,
           "beatmapId": 5715421,
           "beatmapsetId": 2562004
         },
@@ -292,16 +292,16 @@
           "type": "RC",
           "realType": "PDRC",
           "name": "Dizzee Rascal - Bonkers [Midgy's i just think i'm free (Edit) | 1.1x]",
-          "difficulty": 0,
+          "difficulty": 8.64,
           "beatmapId": 5741812,
           "beatmapsetId": 2577377
         },
         {
           "slot": "LN1",
           "type": "LN",
-          "realType": "PDLN",
+          "realType": "CO",
           "name": "Mili - world.execute(me); [logkristal.execute(LN);]",
-          "difficulty": 0,
+          "difficulty": 8,
           "beatmapId": 4471815,
           "beatmapsetId": 2127212
         },
@@ -310,7 +310,7 @@
           "type": "LN",
           "realType": "DE",
           "name": "ALiCE'S EMOTiON - Dark Flight Dreamer [Stage 5: Soaring]",
-          "difficulty": 0,
+          "difficulty": 8,
           "beatmapId": 4838412,
           "beatmapsetId": 2271506
         },
@@ -319,7 +319,7 @@
           "type": "LN",
           "realType": "LNTC",
           "name": "MIMI feat. Kasane Teto SV - Trick Heart [Apprehension]",
-          "difficulty": 0,
+          "difficulty": 8,
           "beatmapId": 5741706,
           "beatmapsetId": 2577362
         },
@@ -328,44 +328,58 @@
           "type": "HB",
           "realType": "HB1",
           "name": "Feint - Homebound [The Land of Fifteen Thousand Lakes]",
-          "difficulty": 0,
+          "difficulty": 6.9,
           "beatmapId": 5741710,
-          "beatmapsetId": 2577366
+          "beatmapsetId": 2577366,
+          "difficultyLn": 8.2
         },
         {
           "slot": "HB2",
           "type": "HB",
           "realType": "HB2",
           "name": "VOLTA & icesawder - IF (Ft. Letsu) [Never again. (Edit) 1.05x]",
-          "difficulty": 0,
+          "difficulty": 6.9,
           "beatmapId": 5739673,
-          "beatmapsetId": 2433063
+          "beatmapsetId": 2433063,
+          "difficultyLn": 8.2
         },
         {
           "slot": "HB3",
           "type": "HB",
           "realType": "HB3",
           "name": "Frost Children - HARP + PONY [LVUM + DOFY]",
-          "difficulty": 0,
+          "difficulty": 6.9,
           "beatmapId": 5741806,
-          "beatmapsetId": 2577376
+          "beatmapsetId": 2577376,
+          "difficultyLn": 8.2
         },
         {
           "slot": "TB",
           "type": "TB",
           "realType": "TB",
           "name": "kmoe - ALL TALK (CHEWED OUT) [British Queberta]",
-          "difficulty": 0,
+          "difficulty": 8.5,
           "beatmapId": 5741741,
-          "beatmapsetId": 2577370
+          "beatmapsetId": 2577370,
+          "difficultyLn": 9.5
         }
       ],
       "typeDifficulties": {
-        "RC": {},
-        "HB": {},
-        "LN": {},
+        "RC": {
+          "rf": 7.7
+        },
+        "HB": {
+          "rf": 6.9,
+          "ln": 8.2
+        },
+        "LN": {
+          "ln": 8
+        },
         "SV": {},
-        "TB": {}
+        "TB": {
+          "rf": 8.5,
+          "ln": 9.5
+        }
       }
     },
     {
@@ -374,9 +388,9 @@
       "abbreviation": "RO32",
       "order": 4,
       "difficulty": {
-        "min": 0,
-        "max": 0,
-        "average": 0
+        "min": 5.78,
+        "max": 10.65,
+        "average": 9.23
       },
       "maps": [
         {
@@ -384,7 +398,7 @@
           "type": "RC",
           "realType": "PDRC",
           "name": "Mendum - Stay With Me [Alone (Cut + Edit)]",
-          "difficulty": 0,
+          "difficulty": 9.6,
           "beatmapId": 5660877,
           "beatmapsetId": 2261920
         },
@@ -393,107 +407,121 @@
           "type": "RC",
           "realType": "PDRC",
           "name": "Hellblinde - Aura [Explosive | 1.15x]",
-          "difficulty": 0,
+          "difficulty": 10.65,
           "beatmapId": 5753504,
           "beatmapsetId": 2581240
         },
         {
           "slot": "RC3",
           "type": "RC",
-          "realType": "PDRC",
+          "realType": "TC",
           "name": "tsubi club - re:laced.up [i.hate.it]",
-          "difficulty": 0,
+          "difficulty": 5.78,
           "beatmapId": 4863452,
           "beatmapsetId": 2281183
         },
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "PDRC",
+          "realType": "DP",
           "name": "eery - her [P3Prod1's Hard (Edit)]",
-          "difficulty": 0,
+          "difficulty": 8.61,
           "beatmapId": 5712301,
           "beatmapsetId": 2563249
         },
         {
           "slot": "RC5",
           "type": "RC",
-          "realType": "PDRC",
+          "realType": "TC",
           "name": "96-glass - I'm kidding (Cut Ver.) [Infinite Jest (Edit)]",
-          "difficulty": 0,
+          "difficulty": 7.53,
           "beatmapId": 5746291,
           "beatmapsetId": 2578866
         },
         {
           "slot": "LN1",
           "type": "LN",
-          "realType": "PDLN",
+          "realType": "RE",
           "name": "Oklou - blade bird [caged to release]",
-          "difficulty": 0,
+          "difficulty": 7,
           "beatmapId": 5753496,
           "beatmapsetId": 2581234
         },
         {
           "slot": "LN2",
           "type": "LN",
-          "realType": "PDLN",
+          "realType": "DE",
           "name": "Sewerslvt - Psychosis [Schizophrenia Simulation | 1.05x]",
-          "difficulty": 0,
+          "difficulty": 9.4,
           "beatmapId": 5653850,
           "beatmapsetId": 2136329
         },
         {
           "slot": "LN3",
           "type": "LN",
-          "realType": "PDLN",
+          "realType": "LNTC",
           "name": "YENA - Spring Fever feat. DinDin & Jung Hyung Don [Somersault]",
-          "difficulty": 0,
+          "difficulty": 8,
           "beatmapId": 5753502,
           "beatmapsetId": 2581239
         },
         {
           "slot": "HB1",
           "type": "HB",
-          "realType": "PDHB",
+          "realType": "HB1",
           "name": "Kaneko Chiharu - Lachryma<Re:Queen'M> [A Graceful End]",
-          "difficulty": 0,
+          "difficulty": 8.4,
           "beatmapId": 5753537,
-          "beatmapsetId": 2581247
+          "beatmapsetId": 2581247,
+          "difficultyLn": 9.3
         },
         {
           "slot": "HB2",
           "type": "HB",
-          "realType": "PDHB",
+          "realType": "HB2",
           "name": "enxel - Rising Water [Devissage]",
-          "difficulty": 0,
+          "difficulty": 8.4,
           "beatmapId": 5741711,
-          "beatmapsetId": 1967964
+          "beatmapsetId": 1967964,
+          "difficultyLn": 9.3
         },
         {
           "slot": "HB3",
           "type": "HB",
-          "realType": "PDHB",
+          "realType": "HB3",
           "name": "117*FC - RECESSION_INDICATOR (Cut Ver.) [117fullcombo.com (JAST Edit)]",
-          "difficulty": 0,
+          "difficulty": 8.4,
           "beatmapId": 5753486,
-          "beatmapsetId": 2581227
+          "beatmapsetId": 2581227,
+          "difficultyLn": 9.3
         },
         {
           "slot": "TB",
           "type": "TB",
           "realType": "TB",
           "name": "Kou! - Fermion Amplification [Particle Annihilation]",
-          "difficulty": 0,
+          "difficulty": 9.8,
           "beatmapId": 5755282,
-          "beatmapsetId": 2581740
+          "beatmapsetId": 2581740,
+          "difficultyLn": 10
         }
       ],
       "typeDifficulties": {
-        "RC": {},
-        "HB": {},
-        "LN": {},
+        "RC": {
+          "rf": 9.12
+        },
+        "HB": {
+          "rf": 8.53,
+          "ln": 9.38
+        },
+        "LN": {
+          "ln": 9.2
+        },
         "SV": {},
-        "TB": {}
+        "TB": {
+          "rf": 9.8,
+          "ln": 10
+        }
       }
     },
     {
@@ -510,7 +538,7 @@
         {
           "slot": "RC1",
           "type": "RC",
-          "realType": "PDRC",
+          "realType": "SS",
           "name": "Salmon Mikan - Juusangatsu Loop [CrewK's <edit?> 1.2x]",
           "difficulty": 0,
           "beatmapId": 4248208,
@@ -519,7 +547,7 @@
         {
           "slot": "RC2",
           "type": "RC",
-          "realType": "PDRC",
+          "realType": "JS",
           "name": "umu. - humanly [docdocdoc. [GBC Edit]]",
           "difficulty": 0,
           "beatmapId": 4614466,
@@ -528,7 +556,7 @@
         {
           "slot": "RC3",
           "type": "RC",
-          "realType": "PDRC",
+          "realType": "TC",
           "name": "drug bug - secret admirer [like we used to]",
           "difficulty": 0,
           "beatmapId": 5765982,

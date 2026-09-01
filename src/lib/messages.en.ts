@@ -567,6 +567,13 @@ export const messagesEn: Record<keyof typeof messagesZh, string> = {
   'mapUpload.row.bg': 'Background',
   'mapUpload.row.upload': 'Upload',
 
+  // ---------- Backfill (reverse metadata from uploaded .osz files) ----------
+  'mapUpload.backfill.title': 'Read title/artist/diff name back from the uploaded .osz files and fill them into the tournament data',
+  'mapUpload.backfill.button': 'Backfill metadata ({n})',
+  'mapUpload.backfill.running': 'Backfilling {done}/{total}...',
+  'mapUpload.backfill.summary': 'Staged full metadata for {staged} map(s), {nameOnly} with title only (no BID in the .osu — unsubmitted map), {noFile} without a file on R2.',
+  'mapUpload.backfill.errors': '{n} failed to parse: {errors}',
+
   // ---------- PasteBidPanel: paste BID three-phase flow ----------
   'mapUpload.paste.heading': 'Paste BID to fill in ·',
   'mapUpload.paste.step1': ' Step 1/3: paste',

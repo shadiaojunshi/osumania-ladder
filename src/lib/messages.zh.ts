@@ -566,6 +566,13 @@ export const messagesZh = {
   'mapUpload.row.bg': '曲绘',
   'mapUpload.row.upload': '上传',
 
+  // ---------- 一键补全(从 R2 已有 .osz 反解元数据) ----------
+  'mapUpload.backfill.title': '从已上传的 .osz 文件反解标题/作者/难度名并补全到比赛数据',
+  'mapUpload.backfill.button': '补全元数据 ({n})',
+  'mapUpload.backfill.running': '补全中 {done}/{total}...',
+  'mapUpload.backfill.summary': '已暂存 {staged} 张完整元数据，{nameOnly} 张仅有曲名（.osu 里没写 BID，属未上传谱），{noFile} 张 R2 无文件。',
+  'mapUpload.backfill.errors': '{n} 张解析失败：{errors}',
+
   // ---------- PasteBidPanel: 贴 BID 三阶段流程 ----------
   'mapUpload.paste.heading': '贴 BID 补传 ·',
   'mapUpload.paste.step1': ' 步骤 1/3：粘贴',

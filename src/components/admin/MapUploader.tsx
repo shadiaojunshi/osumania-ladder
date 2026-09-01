@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import JSZip from 'jszip'
 import { useT } from '@/lib/i18n'
 
@@ -27,6 +27,16 @@ const MAX_SIZE = 100 * 1024 * 1024
 // key = "roundId/slot"，value 字段缺席=不动，为 null=删除该字段。
 type MapPatch = { name?: string | null; beatmapId?: number | null; beatmapsetId?: number | null }
 type PatchMap = Map<string, MapPatch>
+
+// 从 .osu [Metadata] 解析出、可随上传一起回填的元数据子集。
+type UploadMeta = Pick<OsuDiffInfo, 'artist' | 'title' | 'version' | 'beatmapId' | 'beatmapsetId'>
+
+interface BackfillSummary {
+  staged: number
+  nameOnly: number
+  noFile: number
+  errors: string[]
+}
 
 export function MapUploader({ onDirtyChange }: { onDirtyChange?: (dirty: boolean) => void } = {}) {
   const t = useT()
@@ -94,7 +104,110 @@ export function MapUploader({ onDirtyChange }: { onDirtyChange?: (dirty: boolean
   const cellKey = (roundId: string, slot: string, isNsv: boolean) =>
     `${roundId}/${slot}${isNsv ? '#nsv' : ''}`
 
-  const uploadFile = useCallback(async (roundId: string, slot: string, file: File, isNsv: boolean) => {
+  // 本地回显:只改前端 state,不触网。暂存时用,让每张图 row 立即看到新 name/BID。
+  const applyPatchesLocal = useCallback((patches: PatchMap) => {
+    setTournamentData((prev) => {
+      if (!prev) return prev
+      const rounds = prev.rounds.map((r) => ({ ...r, maps: r.maps.map((m) => ({ ...m })) as unknown as Record<string, unknown>[] }))
+      applyPatchesTo(rounds, patches)
+      return {
+        id: prev.id,
+        rounds: rounds.map((r) => ({
+          id: r.id as unknown as string,
+          abbreviation: (r as unknown as { abbreviation: string }).abbreviation,
+          maps: (r.maps as unknown as MapInfo[]).map((m) => ({
+            slot: m.slot, type: m.type, name: m.name, beatmapId: m.beatmapId, beatmapsetId: m.beatmapsetId,
+          })),
+        })),
+      }
+    })
+  }, [])
+
+  // 暂存本轮:合进待提交池 + 本地回显。不触网、不重建。
+  const stagePatches = useCallback((patches: PatchMap) => {
+    if (patches.size === 0) return
+    setPendingPatches((prev) => {
+      const next = new Map(prev)
+      for (const [k, v] of patches) next.set(k, { ...next.get(k), ...v })
+      return next
+    })
+    applyPatchesLocal(patches)
+    setSaveMsg(null)
+  }, [applyPatchesLocal])
+
+  // ---------- 一键补全:从 R2 已有 .osz 反解 [Metadata],补缺失的 name/BID ----------
+
+  // 找出"R2 有文件但 JSON 缺 name 或 BID"的 slot——补全按钮只处理这批。
+  const backfillCandidates = useMemo(() => {
+    const list: { roundId: string; slot: string }[] = []
+    if (!tournamentData) return list
+    for (const round of tournamentData.rounds) {
+      for (const m of round.maps) {
+        if (!uploadedSlots.has(`${round.id}/${m.slot}`)) continue
+        if (m.name && m.beatmapId) continue
+        list.push({ roundId: round.id, slot: m.slot })
+      }
+    }
+    return list
+  }, [tournamentData, uploadedSlots])
+
+  const [backfillRunning, setBackfillRunning] = useState(false)
+  const [backfillProgress, setBackfillProgress] = useState({ done: 0, total: 0 })
+  const [backfillSummary, setBackfillSummary] = useState<BackfillSummary | null>(null)
+
+  const runBackfill = useCallback(async () => {
+    if (backfillRunning || backfillCandidates.length === 0) return
+    setBackfillRunning(true)
+    setBackfillSummary(null)
+    setBackfillProgress({ done: 0, total: backfillCandidates.length })
+
+    const summary: BackfillSummary = { staged: 0, nameOnly: 0, noFile: 0, errors: [] }
+    // 分批请求,单批 80 个 slot,给 R2 list/range 读留余量。
+    const BATCH = 80
+    for (let i = 0; i < backfillCandidates.length; i += BATCH) {
+      const batch: { roundId: string; slot: string }[] = backfillCandidates.slice(i, i + BATCH)
+      const roundsParam = batch.map(c => `${c.roundId}:${c.slot}`).join('&')
+      try {
+        const res = await fetch(`/api/maps/meta?tournamentId=${selectedTournament}&rounds=${encodeURIComponent(roundsParam)}`)
+        const body = await res.json().catch(() => ({})) as {
+          results?: Record<string, { status: string; artist?: string; title?: string; version?: string; beatmapId?: number; beatmapsetId?: number; unsubmitted?: boolean; error?: string }>
+          error?: string
+        }
+        if (!res.ok) throw new Error(body.error || `HTTP ${res.status}`)
+
+        const patches: PatchMap = new Map()
+        for (const c of batch) {
+          const ck = `${c.roundId}:${c.slot}`
+          const r = body.results?.[ck]
+          if (!r) continue
+          if (r.status === 'no-file') { summary.noFile++; continue }
+          if (r.status !== 'ok') {
+            summary.errors.push(`${c.slot}(${r.error || r.status})`)
+            continue
+          }
+          const patch: MapPatch = {}
+          const cur = tournamentData?.rounds.find(rr => rr.id === c.roundId)?.maps.find(mm => mm.slot === c.slot)
+          if (!cur?.name && r.artist && r.title) {
+            patch.name = `${r.artist} - ${r.title}${r.version ? ` [${r.version}]` : ''}`
+          }
+          if (!cur?.beatmapId && r.beatmapId) patch.beatmapId = r.beatmapId
+          if (!cur?.beatmapsetId && r.beatmapsetId) patch.beatmapsetId = r.beatmapsetId
+          if (Object.keys(patch).length === 0) continue
+          patches.set(`${c.roundId}/${c.slot}`, patch)
+          if (patch.beatmapId) summary.staged++; else summary.nameOnly++
+        }
+        if (patches.size > 0) stagePatches(patches)
+      } catch (err) {
+        summary.errors.push(err instanceof Error ? err.message : String(err))
+      }
+      setBackfillProgress({ done: Math.min(i + BATCH, backfillCandidates.length), total: backfillCandidates.length })
+    }
+
+    setBackfillSummary(summary)
+    setBackfillRunning(false)
+  }, [backfillRunning, backfillCandidates, selectedTournament, tournamentData, stagePatches])
+
+  const uploadFile = useCallback(async (roundId: string, slot: string, file: File, isNsv: boolean, meta?: UploadMeta) => {
     const key = cellKey(roundId, slot, isNsv)
     setUploading(prev => ({ ...prev, [key]: true }))
     setStatus(prev => { const n = { ...prev }; delete n[key]; return n })
@@ -147,13 +260,29 @@ export function MapUploader({ onDirtyChange }: { onDirtyChange?: (dirty: boolean
       const setKey = `${roundId}/${slot}`
       if (isNsv) setUploadedNsvSlots(prev => new Set([...prev, setKey]))
       else setUploadedSlots(prev => new Set([...prev, setKey]))
+
+      // 手动上传也回填元数据:从 .osu [Metadata] 解析出的 artist/title/version/BID。
+      // 只补缺失字段,绝不覆盖 JSON 里已有的值;NSV 文件与主文件同曲,不重复暂存。
+      if (!isNsv && meta && (meta.artist || meta.title || meta.beatmapId)) {
+        const patch: MapPatch = {}
+        const cur = tournamentData?.rounds.find(r => r.id === roundId)?.maps.find(m => m.slot === slot)
+        const builtName = meta.artist && meta.title
+          ? `${meta.artist} - ${meta.title}${meta.version ? ` [${meta.version}]` : ''}`
+          : undefined
+        if (builtName && !cur?.name) patch.name = builtName
+        if (meta.beatmapId && !cur?.beatmapId) patch.beatmapId = meta.beatmapId
+        if (meta.beatmapsetId && !cur?.beatmapsetId) patch.beatmapsetId = meta.beatmapsetId
+        if (Object.keys(patch).length > 0) {
+          stagePatches(new Map([[`${roundId}/${slot}`, patch]]))
+        }
+      }
     } catch (err) {
       setStatus(prev => ({ ...prev, [key]: 'error' }))
       setErrorMsg(prev => ({ ...prev, [key]: err instanceof Error ? err.message : String(err) }))
     } finally {
       setUploading(prev => ({ ...prev, [key]: false }))
     }
-  }, [selectedTournament, t])
+  }, [selectedTournament, tournamentData, stagePatches, t])
 
   const uploadThreeFiles = useCallback(async (roundId: string, slot: string, osuFile: File, audioFile: File, bgFile: File, isNsv: boolean) => {
     const totalSize = osuFile.size + audioFile.size + bgFile.size
@@ -161,13 +290,15 @@ export function MapUploader({ onDirtyChange }: { onDirtyChange?: (dirty: boolean
       alert(t('mapUpload.alert.totalTooBig', { n: MAX_SIZE / 1024 / 1024 }))
       return
     }
+    // .osu 文本先读出来解析 [Metadata],随上传一起回填 name/BID。
+    const meta = parseOsuMeta(await osuFile.text())
     const zip = new JSZip()
     zip.file(osuFile.name, osuFile)
     zip.file(audioFile.name, audioFile)
     zip.file(bgFile.name, bgFile)
     const blob = await zip.generateAsync({ type: 'blob' })
     const oszFile = new File([blob], `${slot}${isNsv ? '.nsv' : ''}.osz`, { type: 'application/octet-stream' })
-    await uploadFile(roundId, slot, oszFile, isNsv)
+    await uploadFile(roundId, slot, oszFile, isNsv, meta)
   }, [uploadFile])
 
   // 贴 BID 补传拿到新元数据后,把 name/beatmapId/beatmapsetId 一次性写回 tournament JSON。
@@ -190,37 +321,6 @@ export function MapUploader({ onDirtyChange }: { onDirtyChange?: (dirty: boolean
     }
     return applied
   }
-
-  // 本地回显:只改前端 state,不触网。暂存时用,让每张图 row 立即看到新 name/BID。
-  const applyPatchesLocal = useCallback((patches: PatchMap) => {
-    setTournamentData((prev) => {
-      if (!prev) return prev
-      const rounds = prev.rounds.map((r) => ({ ...r, maps: r.maps.map((m) => ({ ...m })) as unknown as Record<string, unknown>[] }))
-      applyPatchesTo(rounds, patches)
-      return {
-        id: prev.id,
-        rounds: rounds.map((r) => ({
-          id: r.id as unknown as string,
-          abbreviation: (r as unknown as { abbreviation: string }).abbreviation,
-          maps: (r.maps as unknown as MapInfo[]).map((m) => ({
-            slot: m.slot, type: m.type, name: m.name, beatmapId: m.beatmapId, beatmapsetId: m.beatmapsetId,
-          })),
-        })),
-      }
-    })
-  }, [])
-
-  // 暂存本轮:合进待提交池 + 本地回显。不触网、不重建。
-  const stagePatches = useCallback((patches: PatchMap) => {
-    if (patches.size === 0) return
-    setPendingPatches((prev) => {
-      const next = new Map(prev)
-      for (const [k, v] of patches) next.set(k, { ...next.get(k), ...v })
-      return next
-    })
-    applyPatchesLocal(patches)
-    setSaveMsg(null)
-  }, [applyPatchesLocal])
 
   // 统一保存:把整个待提交池一次 PUT(一次 commit / 一次重建),成功后清空池。
   const commitPending = useCallback(async () => {
@@ -319,12 +419,42 @@ export function MapUploader({ onDirtyChange }: { onDirtyChange?: (dirty: boolean
 
       {tournamentData && !loading && (
         <div className="bg-white dark:bg-neutral-900 rounded-lg border border-gray-200 dark:border-neutral-800 shadow-sm p-4">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
             <h3 className="text-sm font-medium text-gray-900 dark:text-neutral-100">{tournamentData.id}</h3>
-            <span className="text-xs text-gray-500 dark:text-neutral-400">
-              {t('mapUpload.uploadedSummary', { ok: uploadedCount, total: totalMaps })}
-            </span>
+            <div className="flex items-center gap-2">
+              {backfillCandidates.length > 0 && (
+                <button
+                  onClick={runBackfill}
+                  disabled={backfillRunning}
+                  className="px-2.5 py-1 text-xs bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-200 rounded hover:bg-indigo-100 dark:hover:bg-indigo-900/50 border border-indigo-200 dark:border-indigo-800 disabled:opacity-50 shrink-0"
+                  title={t('mapUpload.backfill.title', { n: backfillCandidates.length })}
+                >
+                  {backfillRunning
+                    ? t('mapUpload.backfill.running', { done: backfillProgress.done, total: backfillProgress.total })
+                    : t('mapUpload.backfill.button', { n: backfillCandidates.length })}
+                </button>
+              )}
+              <span className="text-xs text-gray-500 dark:text-neutral-400">
+                {t('mapUpload.uploadedSummary', { ok: uploadedCount, total: totalMaps })}
+              </span>
+            </div>
           </div>
+
+          {backfillSummary && (
+            <div className="mb-3 px-3 py-2 rounded text-xs bg-gray-50 dark:bg-neutral-900/50 border border-gray-200 dark:border-neutral-800 text-gray-600 dark:text-neutral-300">
+              {t('mapUpload.backfill.summary', {
+                staged: backfillSummary.staged,
+                nameOnly: backfillSummary.nameOnly,
+                noFile: backfillSummary.noFile,
+              })}
+              {backfillSummary.errors.length > 0 && (
+                <div className="mt-1 text-yellow-700 dark:text-yellow-300">
+                  {t('mapUpload.backfill.errors', { n: backfillSummary.errors.length, errors: backfillSummary.errors.slice(0, 8).join('，') })}
+                  {backfillSummary.errors.length > 8 ? '…' : ''}
+                </div>
+              )}
+            </div>
+          )}
 
           <div className="space-y-4">
             {tournamentData.rounds.map(round => (
@@ -390,7 +520,7 @@ function RoundUploadSection({
   uploading: Record<string, boolean>
   status: Record<string, 'success' | 'error'>
   errorMsg: Record<string, string>
-  onUploadOsz: (roundId: string, slot: string, file: File, isNsv: boolean) => Promise<void> | void
+  onUploadOsz: (roundId: string, slot: string, file: File, isNsv: boolean, meta?: UploadMeta) => Promise<void> | void
   onUploadThree: (roundId: string, slot: string, osu: File, audio: File, bg: File, isNsv: boolean) => void
   onDelete: (roundId: string, slot: string, isNsv: boolean) => void
   onStagePatches: (patches: PatchMap) => void
@@ -429,7 +559,7 @@ function RoundUploadSection({
         if (result.needsManualSelect) {
           errors.push({ slot: m.slot, msg: t('mapUpload.bulk.multiDiff') })
         } else {
-          await onUploadOsz(round.id, m.slot, result.file, false)
+          await onUploadOsz(round.id, m.slot, result.file, false, result.meta)
           // 如果检测到 NSV 文件，自动上传
           if (result.nsvFile) {
             await onUploadOsz(round.id, m.slot, result.nsvFile, true)
@@ -542,7 +672,7 @@ function PasteBidPanel({
   roundMaps: MapInfo[]
   uploadedSlots: Set<string>
   onClose: () => void
-  onUploadOsz: (roundId: string, slot: string, file: File, isNsv: boolean) => Promise<void> | void
+  onUploadOsz: (roundId: string, slot: string, file: File, isNsv: boolean, meta?: UploadMeta) => Promise<void> | void
   onStagePatches: (patches: PatchMap) => void
 }) {
   type RowState = 'pending' | 'fetching' | 'downloading' | 'uploading' | 'ok' | 'error' | 'skip'
@@ -968,10 +1098,15 @@ interface OsuDiffInfo {
   title: string
   audioFilename: string
   bgFile: string
+  // .osu [Metadata] 里自带的 BID/SetID。手动上传时只有拿到正数才有意义
+  // (未上传谱是 0/-1,没有可回填的值)。
+  beatmapId?: number
+  beatmapsetId?: number
 }
 
 function parseOsuMeta(content: string): OsuDiffInfo {
   let version = '', audioFilename = '', bgFile = '', artist = '', title = ''
+  let beatmapId: number | undefined, beatmapsetId: number | undefined
   let section = ''
   for (const line of content.split('\n')) {
     const t = line.trim()
@@ -980,6 +1115,8 @@ function parseOsuMeta(content: string): OsuDiffInfo {
       if (t.startsWith('Version:')) version = t.slice(8).trim()
       if (t.startsWith('Artist:')) artist = t.slice(7).trim()
       if (t.startsWith('Title:')) title = t.slice(6).trim()
+      if (t.startsWith('BeatmapID:')) { const n = parseInt(t.slice(10).trim(), 10); if (n > 0) beatmapId = n }
+      if (t.startsWith('BeatmapSetID:')) { const n = parseInt(t.slice(14).trim(), 10); if (n > 0) beatmapsetId = n }
     }
     if (section === 'General' && t.startsWith('AudioFilename:'))
       audioFilename = t.slice(14).trim()
@@ -988,7 +1125,7 @@ function parseOsuMeta(content: string): OsuDiffInfo {
       if (m) bgFile = m[1]
     }
   }
-  return { fileName: '', version, audioFilename, bgFile, artist, title }
+  return { fileName: '', version, audioFilename, bgFile, artist, title, beatmapId, beatmapsetId }
 }
 
 // 我们只保留 .osu + 音频 + 曲绘，丢掉 .osb 和所有 storyboard 精灵图。
@@ -1092,7 +1229,7 @@ async function autoDownloadAndTrim(
   isNsv: boolean,
   t: ReturnType<typeof useT>,
 ): Promise<
-  | { file: File; nsvFile?: File; needsManualSelect: false }
+  | { file: File; nsvFile?: File; meta: OsuDiffInfo; needsManualSelect: false }
   | { zip: JSZip; diffs: OsuDiffInfo[]; needsManualSelect: true }
 > {
   const res = await fetch(`/api/osu/download?setId=${setId}`)
@@ -1126,13 +1263,13 @@ async function autoDownloadAndTrim(
       const file = await buildTrimmedOsz(zip, matched, slot, isNsv)
       // 如果是 SV 版本且检测到唯一 NSV，自动生成 NSV 文件
       const nsvFile = hasUniqueNsv ? await buildTrimmedOsz(zip, nsvDiffs[0], slot, true) : undefined
-      return { file, nsvFile, needsManualSelect: false }
+      return { file, nsvFile, meta: matched, needsManualSelect: false }
     }
   }
 
   if (diffs.length === 1) {
     const file = await buildTrimmedOsz(zip, diffs[0], slot, isNsv)
-    return { file, needsManualSelect: false }
+    return { file, meta: diffs[0], needsManualSelect: false }
   }
 
   return { zip, diffs, needsManualSelect: true }
@@ -1163,7 +1300,7 @@ function MapUploadRow({
   uploading: Record<string, boolean>
   status: Record<string, 'success' | 'error'>
   errorMsg: Record<string, string>
-  onUploadOsz: (roundId: string, slot: string, file: File, isNsv: boolean) => void
+  onUploadOsz: (roundId: string, slot: string, file: File, isNsv: boolean, meta?: UploadMeta) => void
   onUploadThree: (roundId: string, slot: string, osu: File, audio: File, bg: File, isNsv: boolean) => void
   onDelete: (roundId: string, slot: string, isNsv: boolean) => void
 }) {
@@ -1240,7 +1377,7 @@ function MapUploadCell({
   beatmapsetId?: number
   expectedVersion: string | null
   mapName?: string
-  onUploadOsz: (roundId: string, slot: string, file: File, isNsv: boolean) => void
+  onUploadOsz: (roundId: string, slot: string, file: File, isNsv: boolean, meta?: UploadMeta) => void
   onUploadThree: (roundId: string, slot: string, osu: File, audio: File, bg: File, isNsv: boolean) => void
   onDelete: (roundId: string, slot: string, isNsv: boolean) => void
 }) {
@@ -1287,7 +1424,7 @@ function MapUploadCell({
       const meta = parseOsuMeta(content)
       meta.fileName = osuFiles[0]
       const trimmed = await buildTrimmedOsz(zip, meta, slot, isNsv)
-      onUploadOsz(roundId, slot, trimmed, isNsv)
+      onUploadOsz(roundId, slot, trimmed, isNsv, meta)
       return
     }
 
@@ -1318,7 +1455,7 @@ function MapUploadCell({
     if (!pendingZip || availableDiffs.length === 0) return
     const diff = availableDiffs[selectedDiff]
     const trimmed = await buildTrimmedOsz(pendingZip, diff, slot, isNsv)
-    onUploadOsz(roundId, slot, trimmed, isNsv)
+    onUploadOsz(roundId, slot, trimmed, isNsv, diff)
     setPendingZip(null)
     setAvailableDiffs([])
   }
@@ -1345,7 +1482,7 @@ function MapUploadCell({
         setAvailableDiffs(result.diffs)
         setSelectedDiff(0)
       } else {
-        await onUploadOsz(roundId, slot, result.file, isNsv)
+        await onUploadOsz(roundId, slot, result.file, isNsv, result.meta)
         // 如果检测到 NSV 文件，自动上传
         if (result.nsvFile && !isNsv) {
           await onUploadOsz(roundId, slot, result.nsvFile, true)

@@ -13,9 +13,9 @@
       "order": 1,
       "isQualifier": true,
       "difficulty": {
-        "min": 0,
-        "max": 0,
-        "average": 0
+        "min": 6.26,
+        "max": 11.4,
+        "average": 8.61
       },
       "maps": [
         {
@@ -23,7 +23,7 @@
           "type": "RC",
           "realType": "DP",
           "name": "Frost Children - Falling (Cut Ver.) [Stage 1: The Love We Forgot]",
-          "difficulty": 0,
+          "difficulty": 6.26,
           "beatmapId": 5718549,
           "beatmapsetId": 2569795
         },
@@ -32,7 +32,7 @@
           "type": "LN",
           "realType": "RE",
           "name": "r-906 - Manimani (2025 Edit) ft. Hatsune Miku [Stage 2: You're crazy? me too.]",
-          "difficulty": 0,
+          "difficulty": 6.4,
           "beatmapId": 5718629,
           "beatmapsetId": 2569822
         },
@@ -41,16 +41,17 @@
           "type": "HB",
           "realType": "HB2",
           "name": "Camellia - Seagull [Stage 3: Dream]",
-          "difficulty": 0,
+          "difficulty": 7.6,
           "beatmapId": 5718624,
-          "beatmapsetId": 2569818
+          "beatmapsetId": 2569818,
+          "difficultyLn": 8
         },
         {
           "slot": "ST4",
           "type": "RC",
           "realType": "ADP",
           "name": "Yem - Damage [Stage 4: borked :3]",
-          "difficulty": 0,
+          "difficulty": 8.52,
           "beatmapId": 5718651,
           "beatmapsetId": 2569829
         },
@@ -59,16 +60,17 @@
           "type": "HB",
           "realType": "HB1",
           "name": "xi - Last Resort [Stage 5: Hysteria]",
-          "difficulty": 0,
+          "difficulty": 9.8,
           "beatmapId": 5718605,
-          "beatmapsetId": 2569808
+          "beatmapsetId": 2569808,
+          "difficultyLn": 10
         },
         {
           "slot": "ST6",
           "type": "LN",
           "realType": "LNTC",
           "name": "Sheena Ringo, Hiroji Miyamoto - The Narrow Way (Cut Ver.) [Stage 6: Amor Fati]",
-          "difficulty": 0,
+          "difficulty": 9.8,
           "beatmapId": 5718611,
           "beatmapsetId": 2569814
         },
@@ -77,7 +79,7 @@
           "type": "RC",
           "realType": "JS",
           "name": "Sokoninaru - Self Connection [Stage 7: Oppobrium]",
-          "difficulty": 0,
+          "difficulty": 11.4,
           "beatmapId": 5718626,
           "beatmapsetId": 2569820
         },
@@ -86,17 +88,28 @@
           "type": "TB",
           "realType": "TB",
           "name": "Culprate & Joe Ford - Gaucho [Cathartic Degradation]",
-          "difficulty": 0,
+          "difficulty": 9.8,
           "beatmapId": 5718634,
-          "beatmapsetId": 2569825
+          "beatmapsetId": 2569825,
+          "difficultyLn": 10.2
         }
       ],
       "typeDifficulties": {
-        "RC": {},
-        "HB": {},
-        "LN": {},
+        "RC": {
+          "rf": 8.73
+        },
+        "HB": {
+          "rf": 8.7,
+          "ln": 9
+        },
+        "LN": {
+          "ln": 8.1
+        },
         "SV": {},
-        "TB": {}
+        "TB": {
+          "rf": 9.8,
+          "ln": 10.2
+        }
       }
     },
     {
@@ -643,7 +656,7 @@
         {
           "slot": "RC1",
           "type": "RC",
-          "realType": "PDRC",
+          "realType": "SS",
           "name": "P4koo - 8th:Planet ~Re:search~ [Planet Speed 1.05x (163bpm) OD8]",
           "difficulty": 0,
           "beatmapId": 4635627,
@@ -652,7 +665,7 @@
         {
           "slot": "RC2",
           "type": "RC",
-          "realType": "PDRC",
+          "realType": "JS",
           "name": "DJ K1RA - Acid Speed Demon [tininiw]",
           "difficulty": 0,
           "beatmapId": 4891721,
@@ -661,7 +674,7 @@
         {
           "slot": "RC3",
           "type": "RC",
-          "realType": "PDRC",
+          "realType": "ADP",
           "name": "Terminal 11 - Clex3 [ositzxz369's Hard | 105]",
           "difficulty": 0,
           "beatmapId": 5352498,
@@ -670,7 +683,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "PDRC",
+          "realType": "STC",
           "name": "Machine Girl - Batsu Forever (Cut) [till im dead]",
           "difficulty": 0,
           "beatmapId": 4587114,
@@ -679,7 +692,7 @@
         {
           "slot": "RC5",
           "type": "RC",
-          "realType": "PDRC",
+          "realType": "CJ",
           "name": "trapman - minefield outlaw [inescapable misery | 1.05x]",
           "difficulty": 0,
           "beatmapId": 5776279,
@@ -688,7 +701,7 @@
         {
           "slot": "RC6",
           "type": "RC",
-          "realType": "PDRC",
+          "realType": "DP",
           "name": "Porter Robinson - Look at the Sky [Skyseer]",
           "difficulty": 0,
           "beatmapId": 5742362,
@@ -697,7 +710,7 @@
         {
           "slot": "LN1",
           "type": "LN",
-          "realType": "PDLN",
+          "realType": "TE",
           "name": "Umetora - Ifuudoudou [[GB]Reisen's Timing Paradise]",
           "difficulty": 0,
           "beatmapId": 4409242,
@@ -706,7 +719,7 @@
         {
           "slot": "LN2",
           "type": "LN",
-          "realType": "PDLN",
+          "realType": "DE",
           "name": "xi - Event Hor!zon [LN Prodigy 1.1x (220bpm)]",
           "difficulty": 0,
           "beatmapId": 4444276,
@@ -715,7 +728,7 @@
         {
           "slot": "LN3",
           "type": "LN",
-          "realType": "PDLN",
+          "realType": "LNTC",
           "name": "Feryquitous feat. Aitsuki Nakuru - Tsukuyomi ni Naru [Lunar Renaissance]",
           "difficulty": 0,
           "beatmapId": 5776224,
@@ -724,7 +737,7 @@
         {
           "slot": "LN4",
           "type": "LN",
-          "realType": "PDLN",
+          "realType": "JW",
           "name": "Demetori - Native Faith ~ Memory of a Free Festival [Phantasm]",
           "difficulty": 0,
           "beatmapId": 5028374,
@@ -733,7 +746,7 @@
         {
           "slot": "HB1",
           "type": "HB",
-          "realType": "PDHB",
+          "realType": "HB1",
           "name": "MetaHumanBoi & Nstryder - 4NDROMEDA [Observing Betelgeuse with Sanae]",
           "difficulty": 0,
           "beatmapId": 4747765,
@@ -742,7 +755,7 @@
         {
           "slot": "HB2",
           "type": "HB",
-          "realType": "PDHB",
+          "realType": "HB2",
           "name": "Culprate & Skorpion - Jester (Cut Ver.) [AS%4DLJ!1O3KDC2XV]",
           "difficulty": 0,
           "beatmapId": 5776258,
@@ -751,7 +764,7 @@
         {
           "slot": "HB3",
           "type": "HB",
-          "realType": "PDHB",
+          "realType": "HB3",
           "name": "TAKU INOUE & Hoshimachi Suisei - 3-ji 12-fun [My dream... \"Change the world.\" | 1.05x]",
           "difficulty": 0,
           "beatmapId": 5777016,
@@ -789,7 +802,7 @@
         {
           "slot": "RC1",
           "type": "RC",
-          "realType": "PDRC",
+          "realType": "SS",
           "name": "Dimrain47 - At the Speed of Light (Cut Ver.) [1.1x]",
           "difficulty": 0,
           "beatmapId": 4161672,
@@ -798,7 +811,7 @@
         {
           "slot": "RC2",
           "type": "RC",
-          "realType": "PDRC",
+          "realType": "SA",
           "name": "t+pazolite - World End's Yama Xanadu [Parousia 1.4x (266bpm)]",
           "difficulty": 0,
           "beatmapId": 2887057,
@@ -807,7 +820,7 @@
         {
           "slot": "RC3",
           "type": "RC",
-          "realType": "PDRC",
+          "realType": "TC",
           "name": "Camellia - In Black & White [Curve and Light (Cut + Edit)]",
           "difficulty": 0,
           "beatmapId": 5537492,
@@ -816,7 +829,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "PDRC",
+          "realType": "DP",
           "name": "kradness & Reol - Remote Control [Sit Down Please!]",
           "difficulty": 0,
           "beatmapId": 5790156,
@@ -825,7 +838,7 @@
         {
           "slot": "RC5",
           "type": "RC",
-          "realType": "PDRC",
+          "realType": "CJ",
           "name": "Jessica Jay - Can't Take My Eyes Off You (F.T. And Company Edit) (Nightcore Mix) (Cut Ver.) [0.95x]",
           "difficulty": 0,
           "beatmapId": 5790692,
@@ -935,7 +948,7 @@
         {
           "slot": "RC1",
           "type": "RC",
-          "realType": "PDRC",
+          "realType": "SS",
           "name": "Azumi Takahashi feat. Lotus Juice - Full Moon Full Life [Carpe Diem (cut)]",
           "difficulty": 0,
           "beatmapId": 4793933,

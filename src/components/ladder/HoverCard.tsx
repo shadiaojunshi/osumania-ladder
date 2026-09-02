@@ -18,6 +18,7 @@ export function HoverCard({
   y,
   onMouseEnter,
   onMouseLeave,
+  onOpenDetail,
 }: {
   round: Round
   tournament: Tournament
@@ -26,6 +27,7 @@ export function HoverCard({
   y: number
   onMouseEnter: () => void
   onMouseLeave: () => void
+  onOpenDetail: () => void
 }) {
   const { activeFilter } = useViewStore()
   const t = useT()
@@ -34,11 +36,17 @@ export function HoverCard({
   const cardX = typeof window !== 'undefined' ? Math.min(x + 12, window.innerWidth - 300) : x + 12
   const cardY = typeof window !== 'undefined' ? Math.min(y + 12, window.innerHeight - 220) : y + 12
 
-  const typeMaps = hoveredType ? round.maps.filter((m) => m.type === hoveredType) : round.maps
+  // 无 hoveredType 时不数 TB(TB 不进框范围,数进去会显得"框过大"且张数虚高)。
+  const typeMaps = hoveredType ? round.maps.filter((m) => m.type === hoveredType) : round.maps.filter((m) => m.type !== 'TB')
   let minDiff: number, maxDiff: number
   if (hoveredType && typeMaps.length > 0) {
     minDiff = Math.min(...typeMaps.map((m) => m.difficultyLn || m.difficulty))
     maxDiff = Math.max(...typeMaps.map((m) => m.difficultyLn || m.difficulty))
+  } else if (typeMaps.length > 0) {
+    // 与 LadderView 的 round 框口径一致:逐图难度(排除 TB)是权威,stored 只作 fallback。
+    const vals = typeMaps.map((m) => m.difficultyLn || m.difficulty).filter((d) => d > 0)
+    minDiff = vals.length > 0 ? Math.min(...vals) : round.difficulty.min
+    maxDiff = vals.length > 0 ? Math.max(...vals) : round.difficulty.max
   } else {
     minDiff = round.difficulty.min
     maxDiff = round.difficulty.max
@@ -51,8 +59,16 @@ export function HoverCard({
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
     >
-      <div className="font-semibold text-sm mb-1 text-gray-900 dark:text-neutral-100">
-        {tournament.abbreviation} {round.abbreviation}{hoveredType ? ` ${hoveredType}` : ''}
+      <div className="font-semibold text-sm mb-1 text-gray-900 dark:text-neutral-100 flex items-center justify-between gap-2">
+        <span className="truncate">
+          {tournament.abbreviation} {round.abbreviation}{hoveredType ? ` ${hoveredType}` : ''}
+        </span>
+        <button
+          onClick={onOpenDetail}
+          className="shrink-0 text-[11px] px-1.5 py-0.5 rounded bg-gray-100 hover:bg-gray-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-gray-600 dark:text-neutral-300"
+        >
+          {t('hover.detail')}
+        </button>
       </div>
       <div className="text-xs text-gray-700 dark:text-neutral-300 mb-2 font-mono">
         {diffLabel}

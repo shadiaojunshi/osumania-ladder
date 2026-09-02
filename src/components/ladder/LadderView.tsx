@@ -6,6 +6,7 @@ import type { Tournament, Round } from '@/lib/types'
 import { tournaments } from '@/generated/tournaments'
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { HoverCard } from './HoverCard'
+import { RoundDetailModal } from './RoundDetailModal'
 import { normalizeRealType } from '@/lib/realType'
 
 const DIFFICULTY_RANGE = { min: 0.5, max: 16.5 }
@@ -34,6 +35,7 @@ export function LadderView() {
   const rightRef = useRef<HTMLDivElement>(null)
 
   const [hoveredRound, setHoveredRound] = useState<{ round: Round; tournament: Tournament; x: number; y: number; type?: string } | null>(null)
+  const [detailRound, setDetailRound] = useState<{ round: Round; tournament: Tournament } | null>(null)
   const hideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const diffRange = DIFFICULTY_RANGE.max - DIFFICULTY_RANGE.min
@@ -144,6 +146,18 @@ export function LadderView() {
           y={hoveredRound.y}
           onMouseEnter={cancelHide}
           onMouseLeave={() => setHoveredRound(null)}
+          onOpenDetail={() => {
+            setDetailRound({ round: hoveredRound.round, tournament: hoveredRound.tournament })
+            setHoveredRound(null)
+          }}
+        />
+      )}
+
+      {detailRound && (
+        <RoundDetailModal
+          round={detailRound.round}
+          tournament={detailRound.tournament}
+          onClose={() => setDetailRound(null)}
         />
       )}
     </div>

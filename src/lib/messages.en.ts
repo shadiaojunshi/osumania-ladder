@@ -47,6 +47,12 @@ export const messagesEn: Record<keyof typeof messagesZh, string> = {
   'hover.wiki': 'Wiki',
   'hover.sheet': 'Sheet',
   'hover.summary': '{count} maps · difficulty {min} ~ {max}',
+  'hover.detail': 'Details',
+
+  // ---------- Round detail modal ----------
+  'roundDetail.summary': '{count} maps · difficulty {min} ~ {max}',
+  'roundDetail.close': 'Close',
+  'roundDetail.openOsu': 'Open on osu! website',
 
   // ---------- Download page ----------
   'download.title': 'osu!mania 4K Tournament Pack Downloads',

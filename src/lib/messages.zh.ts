@@ -46,6 +46,12 @@ export const messagesZh = {
   'hover.wiki': 'Wiki',
   'hover.sheet': '主表格',
   'hover.summary': '{count} 张谱面 · 难度 {min} ~ {max}',
+  'hover.detail': '详细信息',
+
+  // ---------- Round detail modal ----------
+  'roundDetail.summary': '共 {count} 张谱面 · 难度 {min} ~ {max}',
+  'roundDetail.close': '关闭',
+  'roundDetail.openOsu': '在 osu! 网站打开',
 
   // ---------- Download page ----------
   'download.title': 'osu!mania 4K 比赛合包下载',

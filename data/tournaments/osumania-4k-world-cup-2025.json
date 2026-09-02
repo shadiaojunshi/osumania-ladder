@@ -15,7 +15,7 @@
       "difficulty": {
         "min": 7.5,
         "max": 11,
-        "average": 10.2
+        "average": 10.17
       },
       "maps": [
         {
@@ -107,7 +107,7 @@
       "difficulty": {
         "min": 6,
         "max": 8.5,
-        "average": 8
+        "average": 7.97
       },
       "maps": [
         {
@@ -256,7 +256,7 @@
       "difficulty": {
         "min": 7,
         "max": 10.5,
-        "average": 9.2
+        "average": 9.27
       },
       "maps": [
         {
@@ -383,10 +383,10 @@
       ],
       "typeDifficulties": {
         "RC": {
-          "rf": 9
+          "rf": 9.2
         },
         "HB": {
-          "rf": 8.4,
+          "rf": 8.8,
           "ln": 9.3
         },
         "LN": {
@@ -394,8 +394,8 @@
         },
         "SV": {},
         "TB": {
-          "rf": 9.8,
-          "ln": 10.8
+          "rf": 10,
+          "ln": 11
         }
       }
     },
@@ -407,7 +407,7 @@
       "difficulty": {
         "min": 8,
         "max": 10.6,
-        "average": 10.2
+        "average": 10.17
       },
       "maps": [
         {
@@ -572,7 +572,7 @@
       "difficulty": {
         "min": 9,
         "max": 11.6,
-        "average": 11
+        "average": 11.03
       },
       "maps": [
         {
@@ -741,7 +741,7 @@
       "difficulty": {
         "min": 11,
         "max": 12.7,
-        "average": 12.2
+        "average": 12.17
       },
       "maps": [
         {
@@ -843,7 +843,7 @@
         {
           "slot": "HB4",
           "type": "HB",
-          "realType": "HB2",
+          "realType": "HB4",
           "name": "seatrus - ILLEGAL LEGACY [AFTERMATH 1.1x]",
           "difficulty": 11.8,
           "beatmapId": 5308481,
@@ -855,7 +855,7 @@
           "type": "LN",
           "realType": "TE",
           "name": "Kuhaku Gokko - Zettai Zetsumei [dilemma]",
-          "difficulty": 12,
+          "difficulty": 11,
           "beatmapId": 5308459,
           "beatmapsetId": 2435352
         },
@@ -899,14 +899,14 @@
       ],
       "typeDifficulties": {
         "RC": {
-          "rf": 12.3
+          "rf": 12.4
         },
         "HB": {
-          "rf": 11.4,
+          "rf": 11.6,
           "ln": 12
         },
         "LN": {
-          "ln": 12.2
+          "ln": 12.1
         },
         "SV": {},
         "TB": {
@@ -923,7 +923,7 @@
       "difficulty": {
         "min": 12,
         "max": 13.7,
-        "average": 13.2
+        "average": 13.1
       },
       "maps": [
         {
@@ -1029,7 +1029,7 @@
         {
           "slot": "HB4",
           "type": "HB",
-          "realType": "MNTB",
+          "realType": "HB4",
           "name": "Kou! - TERABYTE [HARD DRIVE 1.1x]",
           "difficulty": 12.5,
           "beatmapId": 5318901,
@@ -1088,11 +1088,11 @@
           "rf": 13.3
         },
         "HB": {
-          "rf": 12.6,
-          "ln": 13.2
+          "rf": 12.8,
+          "ln": 12.9
         },
         "LN": {
-          "ln": 13.2
+          "ln": 13.1
         },
         "SV": {},
         "TB": {

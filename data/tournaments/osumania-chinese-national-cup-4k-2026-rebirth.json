@@ -369,7 +369,7 @@
           "rf": 9
         },
         "HB": {
-          "rf": 8.4,
+          "rf": 8.5,
           "ln": 9.3
         },
         "LN": {
@@ -390,7 +390,7 @@
       "difficulty": {
         "min": 9.7,
         "max": 10.2,
-        "average": 10.17
+        "average": 10.23
       },
       "maps": [
         {
@@ -517,7 +517,7 @@
       ],
       "typeDifficulties": {
         "RC": {
-          "rf": 10.2
+          "rf": 10.4
         },
         "HB": {
           "rf": 9.7,
@@ -847,10 +847,10 @@
           "type": "TB",
           "realType": "TB",
           "name": "DJ Raisei - Ginkyo Sekai (feat. Kasane Teto) [Fractured Infinity]",
-          "difficulty": 12.5,
+          "difficulty": 13.1,
           "beatmapId": 5814746,
           "beatmapsetId": 2600937,
-          "difficultyLn": 13
+          "difficultyLn": 13.3
         }
       ],
       "typeDifficulties": {
@@ -858,7 +858,7 @@
           "rf": 12.3
         },
         "HB": {
-          "rf": 11.4,
+          "rf": 11.8,
           "ln": 12
         },
         "LN": {
@@ -866,8 +866,8 @@
         },
         "SV": {},
         "TB": {
-          "rf": 12.5,
-          "ln": 13
+          "rf": 13.1,
+          "ln": 13.3
         }
       }
     },
@@ -1045,7 +1045,7 @@
           "rf": 13.2
         },
         "HB": {
-          "rf": 12.5,
+          "rf": 12.7,
           "ln": 13
         },
         "LN": {
@@ -1066,7 +1066,7 @@
       "difficulty": {
         "min": 13,
         "max": 15,
-        "average": 13.9
+        "average": 13.8
       },
       "maps": [
         {
@@ -1137,7 +1137,7 @@
           "type": "RC",
           "realType": "WTC",
           "name": "Kenji Ito - Magical Tank Battle (Hellion Sounds Arrangement) (Cut Ver.) [Nacht Zweiger]",
-          "difficulty": 14.4,
+          "difficulty": 14.2,
           "beatmapId": 5843373,
           "beatmapsetId": 2609718
         },
@@ -1184,7 +1184,7 @@
           "slot": "LN2",
           "type": "LN",
           "realType": "DE",
-          "difficulty": 14.9,
+          "difficulty": 14.6,
           "name": "Uetsu Shi - Firmament Castle \"Velier\" [Enter 1.15x]",
           "beatmapId": 5842901,
           "beatmapsetId": 2609558
@@ -1221,22 +1221,22 @@
           "type": "TB",
           "realType": "TB",
           "name": "DJ Raisei - Catharticus ~ Herald angels sing [Omnes redeunt, illa manet]",
-          "difficulty": 14.4,
+          "difficulty": 14.3,
           "beatmapId": 5843040,
           "beatmapsetId": 2609591,
-          "difficultyLn": 15.2
+          "difficultyLn": 15.1
         }
       ],
       "typeDifficulties": {
         "RC": {
-          "rf": 13.75
+          "rf": 13.7
         },
         "HB": {
-          "rf": 13,
+          "rf": 13.4,
           "ln": 13.7
         },
         "LN": {
-          "ln": 14.25
+          "ln": 14
         },
         "SV": {},
         "TB": {

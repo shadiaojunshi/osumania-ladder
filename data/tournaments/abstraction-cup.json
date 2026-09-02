@@ -992,7 +992,7 @@
       "difficulty": {
         "min": 13.5,
         "max": 15,
-        "average": 14.47
+        "average": 14.18
       },
       "maps": [
         {
@@ -1147,27 +1147,27 @@
           "type": "TB",
           "realType": "TB",
           "name": "spoonXYZ - Moonloss.X_T [_~\"\\-*-/\"~_]",
-          "difficulty": 14.7,
+          "difficulty": 14.6,
           "beatmapId": 5743233,
           "beatmapsetId": 2577830,
-          "difficultyLn": 16.3
+          "difficultyLn": 15.8
         }
       ],
       "typeDifficulties": {
         "RC": {
-          "rf": 14.2
+          "rf": 14.05
         },
         "HB": {
-          "rf": 14,
-          "ln": 15
+          "rf": 13.9,
+          "ln": 14.2
         },
         "LN": {
-          "ln": 14.2
+          "ln": 14.3
         },
         "SV": {},
         "TB": {
-          "rf": 14.7,
-          "ln": 16.3
+          "rf": 14.6,
+          "ln": 15.8
         }
       }
     }

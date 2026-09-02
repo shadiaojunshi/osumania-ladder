@@ -243,9 +243,9 @@
       "abbreviation": "RO32",
       "order": 3,
       "difficulty": {
-        "min": 4.5,
+        "min": 5,
         "max": 8,
-        "average": 6.6
+        "average": 6.57
       },
       "maps": [
         {
@@ -307,7 +307,7 @@
           "type": "HB",
           "realType": "HB1",
           "name": "BUTAOTOME - Towa no Maigo [Gastronomic Alchemy]",
-          "difficulty": 4.5,
+          "difficulty": 5.3,
           "beatmapId": 4985013,
           "beatmapsetId": 2325603,
           "difficultyLn": 6.5
@@ -372,7 +372,7 @@
           "rf": 6.4
         },
         "HB": {
-          "rf": 5,
+          "rf": 5.5,
           "ln": 6.5
         },
         "LN": {
@@ -540,7 +540,7 @@
       "difficulty": {
         "min": 8.6,
         "max": 9.7,
-        "average": 9.4
+        "average": 9.37
       },
       "maps": [
         {

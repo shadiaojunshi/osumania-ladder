@@ -14,7 +14,8 @@
     },
     {
       "tournamentId": "china-university-cup-4k-2026",
-      "roundId": "round-4"
+      "roundId": "round-4",
+      "step": 1.2
     },
     {
       "tournamentId": "touhou-project-mania-cup-4th",

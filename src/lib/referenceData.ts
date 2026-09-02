@@ -138,6 +138,19 @@ function isMwcTournament(tournament: Tournament): boolean {
   return /\bMWC\b/i.test(identity) || /^osumania-4k-world-cup-\d{4}$/i.test(tournament.id)
 }
 
+const MWC_STANDARD_ROUNDS = [
+  { abbreviation: 'RO32', name: 'Round of 32', rank: 3 },
+  { abbreviation: 'RO16', name: 'Round of 16', rank: 4 },
+  { abbreviation: 'QF', name: 'Quarterfinals', rank: 5 },
+  { abbreviation: 'SF', name: 'Semifinals', rank: 6 },
+  { abbreviation: 'F', name: 'Finals', rank: 7 },
+  { abbreviation: 'GF', name: 'Grand Finals', rank: 8 },
+] as const
+
+function mwcStandardRank(abbreviation: string): number | undefined {
+  return MWC_STANDARD_ROUNDS.find((round) => round.abbreviation === abbreviation.trim().toUpperCase())?.rank
+}
+
 function validLadderEntries(
   tournaments: Tournament[],
   entries: LadderEntry[]
@@ -208,27 +221,52 @@ export function baseLadderRounds(
     }
   })
 
-  // GF is commonly treated as one standard round after F. If an admin removes
-  // only the MWC GF pool, keep it available as a virtual anchor so the picker
-  // can still show "MWC GF + 0" and sample at F.pos + 1.
+  // The MWC picker always exposes the complete RO32-GF sequence. Missing
+  // pools stay out of the ladder data and are represented by virtual anchors
+  // at the corresponding positions on the existing difficulty scale.
   if (!isFallback) {
-    const hasGf = resolved.some((item) => item.roundAbbr.trim().toUpperCase() === 'GF')
-    const fIndex = resolved.findIndex((item) => item.roundAbbr.trim().toUpperCase() === 'F')
-    if (!hasGf && fIndex >= 0) {
-      const f = resolved[fIndex]
-      resolved.splice(fIndex + 1, 0, {
-        key: `${f.tournamentId}::__synthetic-gf__`,
-        tournamentId: f.tournamentId,
-        tournamentAbbr: f.tournamentAbbr,
-        roundId: '__synthetic-gf__',
-        roundAbbr: 'GF',
-        roundName: 'Grand Finals',
-        ladderIndex: f.ladderIndex,
-        pos: f.pos + 1,
+    const actualByRank = new Map<number, BaseLadderRound>()
+    for (const item of resolved) {
+      const rank = mwcStandardRank(item.roundAbbr)
+      if (rank !== undefined) actualByRank.set(rank, item)
+    }
+
+    const actual = [...actualByRank.entries()].sort(([a], [b]) => a - b)
+    const fallbackAnchor = resolved[0]
+    const positionForRank = (rank: number): number => {
+      const exact = actualByRank.get(rank)
+      if (exact) return exact.pos
+
+      const lower = [...actual].reverse().find(([candidate]) => candidate < rank)
+      const upper = actual.find(([candidate]) => candidate > rank)
+      if (lower && upper) {
+        const [lowerRank, lowerRound] = lower
+        const [upperRank, upperRound] = upper
+        const ratio = (rank - lowerRank) / (upperRank - lowerRank)
+        return lowerRound.pos + (upperRound.pos - lowerRound.pos) * ratio
+      }
+      if (lower) return lower[1].pos + (rank - lower[0])
+      if (upper) return upper[1].pos - (upper[0] - rank)
+      return fallbackAnchor.pos + rank - 3
+    }
+
+    for (const standard of MWC_STANDARD_ROUNDS) {
+      if (actualByRank.has(standard.rank)) continue
+      resolved.push({
+        key: `${fallbackAnchor.tournamentId}::__synthetic-${standard.abbreviation.toLowerCase()}__`,
+        tournamentId: fallbackAnchor.tournamentId,
+        tournamentAbbr: fallbackAnchor.tournamentAbbr,
+        roundId: `__synthetic-${standard.abbreviation.toLowerCase()}__`,
+        roundAbbr: standard.abbreviation,
+        roundName: standard.name,
+        ladderIndex: fallbackAnchor.ladderIndex,
+        pos: positionForRank(standard.rank),
         isFallback: false,
         isSynthetic: true,
       })
     }
+
+    resolved.sort((a, b) => a.pos - b.pos)
   }
 
   return resolved

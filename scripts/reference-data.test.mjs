@@ -28,7 +28,7 @@ test('base ladder uses an available MWC series when the configured 2025 rounds a
   ]
   const entries = [{ tournamentId: 'osumania-4k-world-cup-2024', roundId: 'qf' }]
 
-  assert.deepEqual(baseLadderRounds(tournaments, entries).map((entry) => entry.tournamentId), [
+  assert.deepEqual(baseLadderRounds(tournaments, entries).filter((entry) => !entry.isSynthetic).map((entry) => entry.tournamentId), [
     'osumania-4k-world-cup-2024',
   ])
 })
@@ -48,9 +48,22 @@ test('base ladder keeps remaining MWC rounds when some pools are replaced', () =
   ]
 
   const rounds = baseLadderRounds(tournaments, entries)
-  assert.deepEqual(rounds.map((entry) => entry.roundId), ['qf', 'gf'])
-  assert.deepEqual(rounds.map((entry) => entry.pos), [0, 2])
+  const actual = rounds.filter((entry) => !entry.isSynthetic)
+  assert.deepEqual(actual.map((entry) => entry.roundId), ['qf', 'gf'])
+  assert.deepEqual(actual.map((entry) => entry.pos), [0, 2])
   assert.equal(rounds.every((entry) => !entry.isFallback), true)
+})
+
+test('base ladder exposes every MWC RO32-GF anchor when only one MWC round remains', () => {
+  const tournaments = [
+    tournament('osumania-4k-world-cup-2025', 'MWC 4K 2025', [round('qf', 'QF', 11)]),
+  ]
+  const entries = [{ tournamentId: 'osumania-4k-world-cup-2025', roundId: 'qf' }]
+
+  const rounds = baseLadderRounds(tournaments, entries)
+  assert.deepEqual(rounds.map((entry) => entry.roundAbbr), ['RO32', 'RO16', 'QF', 'SF', 'F', 'GF'])
+  assert.deepEqual(rounds.map((entry) => entry.pos), [-2, -1, 0, 1, 2, 3])
+  assert.equal(rounds.find((entry) => entry.roundAbbr === 'QF')?.isSynthetic, undefined)
 })
 
 test('base ladder provides a synthetic GF one round after F when MWC GF is missing', () => {
@@ -62,10 +75,11 @@ test('base ladder provides a synthetic GF one round after F when MWC GF is missi
   const entries = [{ tournamentId: 'osumania-4k-world-cup-2025', roundId: 'f' }]
 
   const rounds = baseLadderRounds(tournaments, entries)
-  assert.deepEqual(rounds.map((entry) => entry.roundAbbr), ['F', 'GF'])
-  assert.deepEqual(rounds.map((entry) => entry.pos), [0, 1])
+  assert.deepEqual(rounds.map((entry) => entry.roundAbbr), ['RO32', 'RO16', 'QF', 'SF', 'F', 'GF'])
+  assert.deepEqual(rounds.map((entry) => entry.pos), [-4, -3, -2, -1, 0, 1])
   assert.equal(rounds[1].isSynthetic, true)
-  assert.notEqual(rounds[1].key, rounds[0].key)
+  assert.equal(rounds[4].isSynthetic, undefined)
+  assert.notEqual(rounds[5].key, rounds[4].key)
 })
 
 test('synthetic MWC GF minus one samples the remaining MWC F difficulty', () => {

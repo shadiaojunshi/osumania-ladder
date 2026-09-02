@@ -107,7 +107,7 @@
       "difficulty": {
         "min": 6,
         "max": 8.5,
-        "average": 7.97
+        "average": 7.8
       },
       "maps": [
         {
@@ -236,7 +236,7 @@
         },
         "HB": {
           "rf": 6.9,
-          "ln": 8.2
+          "ln": 7.7
         },
         "LN": {
           "ln": 8
@@ -256,7 +256,7 @@
       "difficulty": {
         "min": 7,
         "max": 10.5,
-        "average": 9.27
+        "average": 9.06
       },
       "maps": [
         {
@@ -378,24 +378,24 @@
           "difficulty": 10,
           "beatmapId": 5278520,
           "beatmapsetId": 2425003,
-          "difficultyLn": 11
+          "difficultyLn": 10.75
         }
       ],
       "typeDifficulties": {
         "RC": {
-          "rf": 9.2
+          "rf": 9.075
         },
         "HB": {
-          "rf": 8.8,
-          "ln": 9.3
+          "rf": 8.6,
+          "ln": 8.9
         },
         "LN": {
-          "ln": 9.3
+          "ln": 9.2
         },
         "SV": {},
         "TB": {
           "rf": 10,
-          "ln": 11
+          "ln": 10.75
         }
       }
     },

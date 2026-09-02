@@ -118,8 +118,8 @@
       "order": 2,
       "difficulty": {
         "min": 3.5,
-        "max": 5.5,
-        "average": 4.5
+        "max": 5,
+        "average": 4.35
       },
       "maps": [
         {
@@ -218,7 +218,7 @@
           "type": "SV",
           "realType": "SI",
           "name": "Nor - Aoharu [Miracles]",
-          "difficulty": 5.5,
+          "difficulty": 5,
           "beatmapId": 4452191,
           "beatmapsetId": 2119447
         },
@@ -227,7 +227,7 @@
           "type": "SV",
           "realType": "SV1",
           "name": "Scott Lloyd Shelly - Underground [Boulder]",
-          "difficulty": 5.5,
+          "difficulty": 5,
           "beatmapId": 5548067,
           "beatmapsetId": 2515805
         },
@@ -248,14 +248,14 @@
           "rf": 3.8
         },
         "HB": {
-          "rf": 3,
-          "ln": 4
+          "rf": 3.2,
+          "ln": 4.1
         },
         "LN": {
           "ln": 4.5
         },
         "SV": {
-          "rf": 5.5
+          "rf": 5
         },
         "TB": {
           "rf": 4.4,
@@ -269,9 +269,9 @@
       "abbreviation": "F",
       "order": 3,
       "difficulty": {
-        "min": 7.5,
-        "max": 10,
-        "average": 9.2
+        "min": 6.9,
+        "max": 8.5,
+        "average": 8.1
       },
       "maps": [
         {
@@ -279,7 +279,7 @@
           "type": "RC",
           "realType": "SS",
           "name": "Haniwa - shukyo ni okasareteiru node hanai ka (Cur Ver.) [1.05x]",
-          "difficulty": 7.5,
+          "difficulty": 7.7,
           "beatmapId": 5582171,
           "beatmapsetId": 2526772
         },
@@ -288,7 +288,7 @@
           "type": "RC",
           "realType": "JS",
           "name": "Plum - Dustwind [sharkful's GO across the desert [225bpm]]",
-          "difficulty": 7.5,
+          "difficulty": 7.7,
           "beatmapId": 5582222,
           "beatmapsetId": 2526783
         },
@@ -297,7 +297,7 @@
           "type": "RC",
           "realType": "SA",
           "name": "goreshit - still all scared of ouija boards (edit ver.) [choco cornet]",
-          "difficulty": 8.5,
+          "difficulty": 7.7,
           "beatmapId": 5277930,
           "beatmapsetId": 2424752
         },
@@ -306,7 +306,7 @@
           "type": "RC",
           "realType": "CJ",
           "name": "cygnus - Bloody Mary [Vodka+Lime juice+Tomato+Black pepper+Hot sauce]",
-          "difficulty": 7.5,
+          "difficulty": 7.7,
           "beatmapId": 5581897,
           "beatmapsetId": 2526715
         },
@@ -315,7 +315,7 @@
           "type": "RC",
           "realType": "MX",
           "name": "Terminal11 - My Fist In Your Carcass [ha PPY]",
-          "difficulty": 7.5,
+          "difficulty": 7.7,
           "beatmapId": 5581382,
           "beatmapsetId": 2526576
         },
@@ -324,7 +324,7 @@
           "type": "RC",
           "realType": "DP",
           "name": "Good Kid - From The Start [Don't you feel it too?]",
-          "difficulty": 7.5,
+          "difficulty": 7.7,
           "beatmapId": 4764183,
           "beatmapsetId": 2241561
         },
@@ -333,15 +333,15 @@
           "type": "RC",
           "realType": "JTC",
           "name": "RC7",
-          "difficulty": 7.5
+          "difficulty": 7.7
         },
         {
           "slot": "HB1",
           "type": "HB",
           "realType": "HB1",
           "name": "Hino Isuka - ULTRA MEGA HAPPY PARTY!!! [Wonderful Paradise]",
-          "difficulty": 8,
-          "difficultyLn": 8,
+          "difficulty": 6.9,
+          "difficultyLn": 8.2,
           "beatmapId": 5007691,
           "beatmapsetId": 2333499
         },
@@ -350,8 +350,8 @@
           "type": "HB",
           "realType": "HB2",
           "name": "Camellia - Routing [Stage 3: Shinkansen]",
-          "difficulty": 8,
-          "difficultyLn": 8,
+          "difficulty": 6.9,
+          "difficultyLn": 8.2,
           "beatmapId": 4732525,
           "beatmapsetId": 2230148
         },
@@ -360,8 +360,8 @@
           "type": "HB",
           "realType": "HB3",
           "name": "FWLR - Hot [Heat Wave]",
-          "difficulty": 8,
-          "difficultyLn": 8,
+          "difficulty": 6.9,
+          "difficultyLn": 8.2,
           "beatmapId": 4880416,
           "beatmapsetId": 2287379
         },
@@ -370,7 +370,7 @@
           "type": "LN",
           "realType": "CO",
           "name": "rie - Additional Memory [XXXX/08/15]",
-          "difficulty": 7.5,
+          "difficulty": 8,
           "beatmapId": 5582274,
           "beatmapsetId": 2526801
         },
@@ -388,7 +388,7 @@
           "type": "LN",
           "realType": "CO",
           "name": "MAISONdes - Tokyo Shandy Rendez-vous [Escapade]",
-          "difficulty": 7.5,
+          "difficulty": 8,
           "beatmapId": 5318776,
           "beatmapsetId": 2438690
         },
@@ -397,7 +397,7 @@
           "type": "LN",
           "realType": "SW",
           "name": "Zekk - Ashes [NSV (OD7.6 + edit)]",
-          "difficulty": 7.5,
+          "difficulty": 8,
           "beatmapId": 4874675,
           "beatmapsetId": 2191543
         },
@@ -406,7 +406,7 @@
           "type": "SV",
           "realType": "SV2",
           "name": "A-39 & Suna P - Galaxy (feat. Hatsune Miku) [Longing for infinite possibilities [SV]]",
-          "difficulty": 10,
+          "difficulty": 8.5,
           "beatmapId": 4713211,
           "beatmapsetId": 2222713
         },
@@ -415,7 +415,7 @@
           "type": "SV",
           "realType": "SV1",
           "name": "Aire - Get Down [[The Pre-Buffed Ver. before everything went downhill]]",
-          "difficulty": 10,
+          "difficulty": 8.5,
           "beatmapId": 4041810,
           "beatmapsetId": 1939427
         },
@@ -425,7 +425,7 @@
           "realType": "TB",
           "name": "Halv - Akashic Hex [The Untrodden]",
           "difficulty": 8.5,
-          "difficultyLn": 10,
+          "difficultyLn": 9.5,
           "beatmapId": 5582277,
           "beatmapsetId": 2526803
         }
@@ -433,21 +433,21 @@
       "bestOf": 13,
       "typeDifficulties": {
         "RC": {
-          "rf": 8.5
+          "rf": 7.7
         },
         "HB": {
-          "rf": 9,
-          "ln": 9
+          "rf": 6.9,
+          "ln": 8.2
         },
         "LN": {
-          "ln": 9.2
+          "ln": 8
         },
         "SV": {
-          "rf": 10
+          "rf": 8.5
         },
         "TB": {
           "rf": 8.5,
-          "ln": 10
+          "ln": 9.5
         }
       }
     },
@@ -458,8 +458,8 @@
       "order": 4,
       "difficulty": {
         "min": 4.6,
-        "max": 8,
-        "average": 6.1
+        "max": 7,
+        "average": 5.85
       },
       "maps": [
         {
@@ -578,7 +578,7 @@
           "type": "SV",
           "realType": "SI",
           "name": "Tobu - Colors (Cut Ver.) [Arcoiris]",
-          "difficulty": 8,
+          "difficulty": 7,
           "beatmapId": 5560085,
           "beatmapsetId": 2519432
         },
@@ -587,7 +587,7 @@
           "type": "SV",
           "realType": "SV1",
           "name": "linear ring - isomorph [Stage 1: Procrastination]",
-          "difficulty": 8,
+          "difficulty": 7,
           "beatmapId": 4193330,
           "beatmapsetId": 2014844
         },
@@ -596,7 +596,7 @@
           "type": "TB",
           "realType": "TB",
           "name": "Yooh - RPG [Reign, Power, Glory.]",
-          "difficulty": 6.2,
+          "difficulty": 6,
           "difficultyLn": 6.6,
           "beatmapId": 5338727,
           "beatmapsetId": 2445853
@@ -608,17 +608,17 @@
           "rf": 5.3
         },
         "HB": {
-          "rf": 4.2,
-          "ln": 5.5
+          "rf": 4.6,
+          "ln": 5.4
         },
         "LN": {
           "ln": 5.7
         },
         "SV": {
-          "rf": 8
+          "rf": 7
         },
         "TB": {
-          "rf": 6.2,
+          "rf": 6,
           "ln": 6.6
         }
       }
@@ -630,8 +630,8 @@
       "order": 5,
       "difficulty": {
         "min": 6.6,
-        "max": 9,
-        "average": 7.7
+        "max": 8,
+        "average": 7.4
       },
       "maps": [
         {
@@ -750,7 +750,7 @@
           "type": "SV",
           "realType": "SV2",
           "name": "Synthion - VIVIDVELOCITY [First Stage | a celestial journey;]",
-          "difficulty": 9,
+          "difficulty": 8,
           "beatmapId": 4235473,
           "beatmapsetId": 2031971
         },
@@ -759,7 +759,7 @@
           "type": "SV",
           "realType": "SV1",
           "name": "KORAII - Empress (Cut Ver.) [Seeking]",
-          "difficulty": 9,
+          "difficulty": 8,
           "beatmapId": 5571308,
           "beatmapsetId": 2522965
         },
@@ -780,15 +780,19 @@
           "rf": 6.6
         },
         "HB": {
+          "rf": 7.5,
           "ln": 7.5
         },
         "LN": {
           "ln": 7.5
         },
         "SV": {
-          "rf": 9
+          "rf": 8
         },
-        "TB": {}
+        "TB": {
+          "rf": 7.5,
+          "ln": 8
+        }
       }
     },
     {
@@ -797,9 +801,9 @@
       "abbreviation": "GF",
       "order": 6,
       "difficulty": {
-        "min": 9.2,
-        "max": 11.5,
-        "average": 9.9
+        "min": 8,
+        "max": 10,
+        "average": 9.48
       },
       "maps": [
         {
@@ -816,7 +820,7 @@
           "type": "RC",
           "realType": "JS",
           "name": "Rohi - Slan Leat [Take Care.(buffed)]",
-          "difficulty": 9.2,
+          "difficulty": 9.6,
           "beatmapId": 5594671,
           "beatmapsetId": 2531084
         },
@@ -834,7 +838,7 @@
           "type": "RC",
           "realType": "CJ",
           "name": "Jamie Christopherson - The Only Thing I Know For Real (Maniac Agenda Mix) [edit(CUC ver.)]",
-          "difficulty": 9.2,
+          "difficulty": 8.95,
           "beatmapId": 5594459,
           "beatmapsetId": 2530984
         },
@@ -843,7 +847,7 @@
           "type": "RC",
           "realType": "MX",
           "name": "mayumusi, SHAKABOOZ, FUNKYHIGEHANK - Magicrash Ice [Easy]",
-          "difficulty": 9.2,
+          "difficulty": 8.61,
           "beatmapId": 4476515,
           "beatmapsetId": 2128990
         },
@@ -852,7 +856,7 @@
           "type": "RC",
           "realType": "DP",
           "name": "Suue & Petboy - Meant To Be (Nightcore Mix) [Be Yourself]",
-          "difficulty": 9.2,
+          "difficulty": 9.6,
           "beatmapId": 4481183,
           "beatmapsetId": 2130736
         },
@@ -861,7 +865,7 @@
           "type": "RC",
           "realType": "JTC",
           "name": "Early Eyes - Marigolds [endaye]",
-          "difficulty": 9.2,
+          "difficulty": 8,
           "beatmapId": 4397819,
           "beatmapsetId": 2097007
         },
@@ -870,8 +874,8 @@
           "type": "HB",
           "realType": "HB1",
           "name": "t+pazolite - ma[kai]zo [Demonic IntegraXion]",
-          "difficulty": 9.5,
-          "difficultyLn": 9.5,
+          "difficulty": 8.8,
+          "difficultyLn": 9.3,
           "beatmapId": 5330989,
           "beatmapsetId": 2443141
         },
@@ -880,8 +884,8 @@
           "type": "HB",
           "realType": "HB2",
           "name": "BlackY - Banbard's Summer (Cut Ver.) [Stage 3: Solstice]",
-          "difficulty": 9.5,
-          "difficultyLn": 9.5,
+          "difficulty": 8.8,
+          "difficultyLn": 9.3,
           "beatmapId": 5526619,
           "beatmapsetId": 2508960
         },
@@ -890,8 +894,8 @@
           "type": "HB",
           "realType": "HB3",
           "name": "Culprate & Dictate - Pencilina (Cut Ver.) [Despondency //  Extra]",
-          "difficulty": 9.5,
-          "difficultyLn": 9.5,
+          "difficulty": 8.8,
+          "difficultyLn": 9.3,
           "beatmapId": 4975463,
           "beatmapsetId": 2322173
         },
@@ -900,7 +904,7 @@
           "type": "LN",
           "realType": "CO",
           "name": "Natori - Absolute zero [<!!!>+273.15<!!!>]",
-          "difficulty": 9.5,
+          "difficulty": 9.3,
           "beatmapId": 5594672,
           "beatmapsetId": 2531085
         },
@@ -909,7 +913,7 @@
           "type": "LN",
           "realType": "DE",
           "name": "Morimori Atsushi - PUPA [LN Prodigy]",
-          "difficulty": 9.5,
+          "difficulty": 9.3,
           "beatmapId": 4007715,
           "beatmapsetId": 1938678
         },
@@ -918,7 +922,7 @@
           "type": "LN",
           "realType": "JW",
           "name": "Kairiki Bear feat. Hatsune Miku - MELLOMELLOID [I LOVE]",
-          "difficulty": 9.5,
+          "difficulty": 9.3,
           "beatmapId": 4664763,
           "beatmapsetId": 2203770
         },
@@ -927,7 +931,7 @@
           "type": "LN",
           "realType": "SW",
           "name": "Wuthering Waves, jixwang, Tarokiki, Emi Evans - Voyaging Star's Farewell [Bon Voyage]",
-          "difficulty": 9.5,
+          "difficulty": 9.3,
           "beatmapId": 5514626,
           "beatmapsetId": 2504846
         },
@@ -936,7 +940,7 @@
           "type": "SV",
           "realType": "SV1",
           "name": "FANTAGIRAFF - FLAME/FROST [Re:MASvTER]",
-          "difficulty": 11.5,
+          "difficulty": 10,
           "beatmapId": 5594598,
           "beatmapsetId": 2531052
         },
@@ -945,7 +949,7 @@
           "type": "SV",
           "realType": "SV2",
           "name": "schwarzekugel - $trange Attraktor [$peed Violation]",
-          "difficulty": 11.5,
+          "difficulty": 10,
           "beatmapId": 5594719,
           "beatmapsetId": 2531097
         },
@@ -954,7 +958,7 @@
           "type": "TB",
           "realType": "TB",
           "name": "Sad Keyboard Guy & Myntian - Snow Refraction (When The Last Crystal is Gone) [Buried in snow, covered by refraction.]",
-          "difficulty": 9.8,
+          "difficulty": 10,
           "difficultyLn": 11,
           "beatmapId": 5594821,
           "beatmapsetId": 2531126
@@ -963,18 +967,22 @@
       "bestOf": 13,
       "typeDifficulties": {
         "RC": {
-          "rf": 9.2
+          "rf": 9.3
         },
         "HB": {
-          "ln": 9.5
+          "rf": 8.8,
+          "ln": 9.3
         },
         "LN": {
-          "ln": 9.5
+          "ln": 9.3
         },
         "SV": {
-          "rf": 11.5
+          "rf": 10
         },
-        "TB": {}
+        "TB": {
+          "rf": 10,
+          "ln": 11
+        }
       }
     }
   ],

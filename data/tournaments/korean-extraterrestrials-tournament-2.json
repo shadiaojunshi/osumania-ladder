@@ -633,8 +633,8 @@
       "order": 6,
       "difficulty": {
         "min": 14,
-        "max": 15.5,
-        "average": 14.8
+        "max": 16.4,
+        "average": 14.88
       },
       "maps": [
         {
@@ -735,7 +735,7 @@
           "difficulty": 14.4,
           "beatmapId": 4040905,
           "beatmapsetId": 1951477,
-          "difficultyLn": 15.5
+          "difficultyLn": 15.8
         },
         {
           "slot": "LN1",
@@ -760,7 +760,7 @@
           "type": "LN",
           "realType": "DE",
           "name": "Essbee - Desperado [Chaotic Neutral]",
-          "difficulty": 14.9,
+          "difficulty": 15,
           "beatmapId": 4985262,
           "beatmapsetId": 2325711
         },
@@ -769,7 +769,7 @@
           "type": "LN",
           "realType": "LNMX",
           "name": "LOVEBITES - Judgement Day [Incandescence [1.05x Rate] (Cut)]",
-          "difficulty": 14.9,
+          "difficulty": 16.4,
           "beatmapId": 4985259,
           "beatmapsetId": 2325710
         },
@@ -778,27 +778,27 @@
           "type": "TB",
           "realType": "TB",
           "name": "kuro - Judgement of \"Justitia\" [An Equal Fate]",
-          "difficulty": 15.2,
+          "difficulty": 15.3,
           "beatmapId": 4985228,
           "beatmapsetId": 2325695,
-          "difficultyLn": 16
+          "difficultyLn": 16.4
         }
       ],
       "typeDifficulties": {
         "RC": {
-          "rf": 14.7
+          "rf": 14.75
         },
         "HB": {
-          "rf": 14,
+          "rf": 14.3,
           "ln": 14.9
         },
         "LN": {
-          "ln": 14.9
+          "ln": 15
         },
         "SV": {},
         "TB": {
-          "rf": 15.2,
-          "ln": 16.3
+          "rf": 15.3,
+          "ln": 16.4
         }
       }
     }

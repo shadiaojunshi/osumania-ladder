@@ -635,9 +635,10 @@
           "slot": "RC3",
           "type": "RC",
           "realType": "SA",
-          "name": "",
+          "name": "Kurokotei - Lagtrain (Kurokotei Bootleg) [Delayed]",
           "difficulty": 0,
-          "beatmapId": 5505856
+          "beatmapId": 5505856,
+          "beatmapsetId": 796416
         },
         {
           "slot": "RC4",
@@ -771,9 +772,10 @@
           "slot": "RC1",
           "type": "RC",
           "realType": "SS",
-          "name": "",
+          "name": "Cynthoni - The Fucking Apocalypse [We're Already Fucking Dead]",
           "difficulty": 0,
-          "beatmapId": 5403186
+          "beatmapId": 5403186,
+          "beatmapsetId": 467699
         },
         {
           "slot": "RC2",

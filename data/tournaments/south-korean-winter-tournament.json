@@ -482,9 +482,10 @@
           "slot": "TB",
           "type": "TB",
           "realType": "TB",
-          "name": "",
+          "name": "ReeK - Mo-no/liTH [Fin/aLE]",
           "difficulty": 0,
-          "beatmapId": 5505340
+          "beatmapId": 5505340,
+          "beatmapsetId": 732497
         }
       ],
       "typeDifficulties": {
@@ -827,9 +828,10 @@
           "slot": "TB",
           "type": "TB",
           "realType": "TB",
-          "name": "",
+          "name": "SKWT Sound Team \"Aurora\" - Celestial Winter Wake (feat. neur6sia) [The starry firmament stretching far away]",
           "difficulty": 0,
-          "beatmapId": 5527217
+          "beatmapId": 5527217,
+          "beatmapsetId": 509179
         }
       ],
       "typeDifficulties": {

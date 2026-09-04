@@ -131,8 +131,10 @@
           "slot": "RC2",
           "type": "RC",
           "realType": "SA",
-          "name": "",
-          "difficulty": 8.5
+          "name": "Ariabl'eyeS - Senkou no Flare [Tragedia]",
+          "difficulty": 8.5,
+          "beatmapId": 4887879,
+          "beatmapsetId": 2234576
         },
         {
           "slot": "RC3",
@@ -302,7 +304,7 @@
           "slot": "RC5",
           "type": "RC",
           "realType": "DP",
-          "name": "",
+          "name": "aespa - Supernova (Cut Ver.) [Armageddon 1.15x]",
           "difficulty": 8.9
         },
         {
@@ -639,8 +641,10 @@
           "slot": "RC6",
           "type": "RC",
           "realType": "DP",
-          "name": "",
-          "difficulty": 11
+          "name": "YOASOBI - Idol [Rising Star! 1.05x (174bpm)]",
+          "difficulty": 11,
+          "beatmapId": 4775926,
+          "beatmapsetId": 246343
         },
         {
           "slot": "RC7",
@@ -1069,15 +1073,19 @@
           "slot": "LN3",
           "type": "LN",
           "realType": "LNTC",
-          "name": "",
-          "difficulty": 13.4
+          "name": "kanemiko - comet casting capsule (\"catching celestial clusters\" Long Version) (Cut Ver.) [crystal chamber combustion]",
+          "difficulty": 13.4,
+          "beatmapId": 4793974,
+          "beatmapsetId": 2253775
         },
         {
           "slot": "LN4",
           "type": "LN",
           "realType": "LNMX",
-          "name": "",
-          "difficulty": 13.6
+          "name": "DJ TECHNORCH - Digital Kecak No.5 (Cut Ver.) [Cybernetic Ritual 1.05x]",
+          "difficulty": 13.6,
+          "beatmapId": 4793984,
+          "beatmapsetId": 2253780
         },
         {
           "slot": "SV1",

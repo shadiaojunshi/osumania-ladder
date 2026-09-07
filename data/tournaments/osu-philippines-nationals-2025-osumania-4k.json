@@ -96,9 +96,10 @@
           "slot": "RC1",
           "type": "RC",
           "realType": "PDRC",
-          "name": "",
+          "name": "Arctic Monkeys - 505 [1.1]",
           "difficulty": 0,
-          "beatmapId": 5039789
+          "beatmapId": 5039789,
+          "beatmapsetId": 344388
         },
         {
           "slot": "RC2",
@@ -313,9 +314,10 @@
           "slot": "HB1",
           "type": "HB",
           "realType": "PDHB",
-          "name": "",
+          "name": "sasakure.UK feat. Shirakami Fubuki - KINGWORLD (Cut Ver.) [PORTTAYER's FubuKING (edit) 1.05x]",
           "difficulty": 0,
-          "beatmapId": 5169637
+          "beatmapId": 5169637,
+          "beatmapsetId": 388891
         },
         {
           "slot": "HB2",
@@ -541,9 +543,10 @@
           "slot": "RC4",
           "type": "RC",
           "realType": "PDRC",
-          "name": "",
+          "name": "Falcom Sound Team jdk - To Grasp Tomorrow [Hylotl's Trails of Rean (Edit) 1.15x (161bpm) OD8]",
           "difficulty": 0,
-          "beatmapId": 5190658
+          "beatmapId": 5190658,
+          "beatmapsetId": 396024
         },
         {
           "slot": "RC5",
@@ -621,9 +624,10 @@
           "slot": "HB1",
           "type": "HB",
           "realType": "PDHB",
-          "name": "",
+          "name": "Sakuzyo - Ultimate Force [Total Destruction till the WORLD'S END (edit)]",
           "difficulty": 0,
-          "beatmapId": 5190657
+          "beatmapId": 5190657,
+          "beatmapsetId": 318291
         },
         {
           "slot": "HB2",
@@ -730,9 +734,10 @@
           "slot": "RC7",
           "type": "RC",
           "realType": "PDRC",
-          "name": "",
+          "name": "Sewerslvt - Mr. Kill Myself [slow death 1.1x (187bpm) OD8]",
           "difficulty": 0,
-          "beatmapId": 5197664
+          "beatmapId": 5197664,
+          "beatmapsetId": 398450
         },
         {
           "slot": "LN1",
@@ -801,9 +806,10 @@
           "slot": "HB3",
           "type": "HB",
           "realType": "PDHB",
-          "name": "",
+          "name": "Frums + nitro - overdead. [%underflow_error 1.1x]",
           "difficulty": 0,
-          "beatmapId": 4417278
+          "beatmapId": 4417278,
+          "beatmapsetId": 105220
         },
         {
           "slot": "TB",

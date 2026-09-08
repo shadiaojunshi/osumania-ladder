@@ -51,9 +51,10 @@ interface Props {
   // 本比赛所有轮缩写(易→难),供整轮参考按非标准轮邻居反推档位
   siblingAbbrs?: string[]
   enableEstimation?: boolean
+  tournamentId?: string
 }
 
-export function RoundEditor({ round, index, onChange, onRemove, getMapHistory, siblingAbbrs, enableEstimation }: Props) {
+export function RoundEditor({ round, index, onChange, onRemove, getMapHistory, siblingAbbrs, enableEstimation, tournamentId }: Props) {
   const t = useT()
   const [expanded, setExpanded] = useState(true)
   const [customSlotName, setCustomSlotName] = useState('')
@@ -471,7 +472,7 @@ export function RoundEditor({ round, index, onChange, onRemove, getMapHistory, s
             <div className="flex items-center justify-between mb-2">
               <label className="text-xs font-medium text-gray-700 dark:text-neutral-200">{t('round.maps.title')}</label>
               <div className="flex gap-1 flex-wrap">
-                {enableEstimation && round._maps.some((map) => map.category !== 'SV' && !!map.beatmapId) && (
+                {enableEstimation && round._maps.some((map) => map.category !== 'SV' && (!!map.beatmapId || !!tournamentId)) && (
                   <button
                     type="button"
                     onClick={() => setEstimateSignal((value) => value + 1)}
@@ -535,6 +536,8 @@ export function RoundEditor({ round, index, onChange, onRemove, getMapHistory, s
                   onRemove={() => removeMap(i)}
                   getMapHistory={getMapHistory}
                   enableEstimation={enableEstimation}
+                  tournamentId={tournamentId}
+                  roundId={round.id}
                   estimateSignal={estimateSignal}
                 />
               ))}

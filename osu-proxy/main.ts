@@ -6,14 +6,13 @@
 //   于是我们的 token 交换请求被同一 IP 池里别的流量连累，恒返回
 //   429 (server=cloudflare)，怎么等都不退。
 //
-//   这个代理跑在 Deno Deploy（Google 的 IP，不是 Cloudflare），把 osu 的两个
-//   请求（换 token、拉用户信息）原样转发出去，绕开限流。
+//   这个代理跑在 Deno Deploy，将登录、元数据及 .osu 下载请求转发给 osu。
 //
 // 安全：
 //   - 仅放行带正确 X-Proxy-Secret 头的请求（与 Cloudflare 端共享的密钥）。
 //   - 代理不持有任何 osu 凭据：client_secret 由 Cloudflare 端放进请求体，
 //     access_token 由 Cloudflare 端放进 Authorization 头，代理只透传。
-//   - 只允许两个固定的 osu 端点，杜绝被当成开放代理滥用。
+//   - 只允许固定的 osu 端点，杜绝被当成开放代理滥用。
 //
 // 部署：
 //   1. 把这个 osu-proxy 目录推到一个 GitHub 仓库（或单独的仓库）。
@@ -68,6 +67,23 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
+    // GET /osu/:id — chart text only; same shared-secret gate as OAuth.
+    if (req.method === 'GET' && /^\/osu\/[1-9]\d*$/.test(url.pathname)) {
+      const upstream = await fetch(`https://osu.ppy.sh${url.pathname}`, {
+        headers: { Accept: 'text/plain,*/*', 'User-Agent': USER_AGENT },
+        signal: AbortSignal.timeout(7_000),
+      })
+      const text = await upstream.text()
+      return new Response(text, {
+        status: upstream.status,
+        headers: {
+          ...cors(),
+          'Content-Type': 'text/plain; charset=utf-8',
+          ...(upstream.headers.has('Retry-After') ? { 'Retry-After': upstream.headers.get('Retry-After')! } : {}),
+        },
+      })
+    }
+
     // POST /token —— 转发换 token 请求（form-encoded）。
     if (url.pathname === '/token' && req.method === 'POST') {
       const body = await req.text()

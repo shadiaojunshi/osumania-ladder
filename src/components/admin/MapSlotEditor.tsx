@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { BeatmapMeta } from '@/lib/types'
 import { useT, type MessageKey } from '@/lib/i18n'
 import { DifficultyRefPicker } from './DifficultyRefPicker'
@@ -8,7 +8,7 @@ import type { RefType } from '@/lib/referenceData'
 import type { MapHistorySummary } from '@/hooks/useMapHistory'
 import { classifySetConflict } from '@/lib/mapConflictDetection'
 import { normalizeRealType } from '@/lib/realType'
-import { estimateBeatmapDifficulty, type ManiaAnalysisEstimate } from '@/lib/maniaAnalyserClient'
+import { estimateBeatmapDifficulty, ManiaAnalysisError, type ManiaAnalysisEstimate } from '@/lib/maniaAnalyserClient'
 
 export type MapCategory = 'RC' | 'LN' | 'HB' | 'SV' | 'TB' | 'SPECIAL'
 
@@ -110,6 +110,8 @@ interface Props {
   getMapHistory?: (beatmapId: number | undefined, beatmapsetId: number | undefined) => MapHistorySummary | null
   enableEstimation?: boolean
   estimateSignal?: number
+  tournamentId?: string
+  roundId?: string
 }
 
 export function needsDualDifficulty(category: MapCategory): boolean {
@@ -166,12 +168,14 @@ function EstimateHint({
   field,
   onApply,
   onEstimate,
+  errorKey,
 }: {
   estimate: ManiaAnalysisEstimate | null
   status: 'idle' | 'loading' | 'ready' | 'error'
   field: 'rc' | 'ln'
   onApply: (value: number) => void
   onEstimate: () => void
+  errorKey?: MessageKey
 }) {
   const t = useT()
   if (status === 'idle') return (
@@ -180,12 +184,12 @@ function EstimateHint({
     </button>
   )
   if (status === 'loading') return <span className="text-[10px] text-gray-400 dark:text-neutral-500">{t('mapSlot.estimate.loading')}</span>
-  if (status === 'error') return <button type="button" onClick={onEstimate} className="text-[10px] text-gray-400 dark:text-neutral-500 hover:underline" title={t('mapSlot.estimate.unavailable')}>{t('mapSlot.estimate.unavailableShort')}</button>
+  if (status === 'error') return <button type="button" onClick={onEstimate} className="text-[10px] text-gray-400 dark:text-neutral-500 hover:underline" title={t(errorKey || 'mapSlot.estimate.unavailable')}>{t('mapSlot.estimate.unavailableShort')}</button>
   if (!estimate) return null
   const label = field === 'ln' ? estimate.lnLabel : estimate.rcLabel
   const parsed = field === 'ln' ? labelToNumeric(estimate.lnLabel) : (estimate.rcNumeric ?? labelToNumeric(estimate.rcLabel))
   return (
-    <span className="inline-flex items-center gap-1 text-[10px] text-emerald-700 dark:text-emerald-300 whitespace-nowrap" title={t('mapSlot.estimate.source')}>
+    <span className="inline-flex items-center gap-1 text-[10px] text-emerald-700 dark:text-emerald-300 whitespace-nowrap" title={`${t(estimate.source === 'r2' ? 'mapSlot.estimate.uploadedSource' : 'mapSlot.estimate.onlineSource')} ${t('mapSlot.estimate.source')}`}>
       <span>{t('mapSlot.estimate.prefix')} {label}{parsed != null ? ` (${parsed.toFixed(2)})` : ''}</span>
       {parsed != null && (
         <button
@@ -196,15 +200,18 @@ function EstimateHint({
           {t('mapSlot.estimate.apply')}
         </button>
       )}
+      <button type="button" onClick={onEstimate} className="hover:underline">{t('mapSlot.estimate.refresh')}</button>
     </span>
   )
 }
 
-export function MapSlotEditor({ map, onChange, onRemove, getMapHistory, enableEstimation = false, estimateSignal = 0 }: Props) {
+export function MapSlotEditor({ map, onChange, onRemove, getMapHistory, enableEstimation = false, estimateSignal = 0, tournamentId, roundId }: Props) {
   const t = useT()
   const [showHistory, setShowHistory] = useState(false)
   const [estimate, setEstimate] = useState<ManiaAnalysisEstimate | null>(null)
   const [estimateStatus, setEstimateStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle')
+  const [estimateErrorKey, setEstimateErrorKey] = useState<MessageKey>()
+  const estimateGeneration = useRef(0)
   const canonicalRealType = normalizeRealType(map.realType)
   const dual = needsDualDifficulty(map.category)
   const realTypeOptions = map.category === 'SPECIAL'
@@ -215,28 +222,41 @@ export function MapSlotEditor({ map, onChange, onRemove, getMapHistory, enableEs
 
   const history = getMapHistory ? getMapHistory(map.beatmapId, map.beatmapsetId) : null
 
-  const canEstimate = enableEstimation && !!map.beatmapId && map.category !== 'SV'
+  const canEstimate = enableEstimation && (!!map.beatmapId || !!(tournamentId && roundId && map.slot)) && map.category !== 'SV'
   const hasEnteredDifficulty = map.category === 'HB' || map.category === 'TB' || map.category === 'SPECIAL'
     ? (map.difficulty || 0) > 0 || (map.difficultyLn || 0) > 0
     : (map.difficulty || 0) > 0
   const runEstimate = useCallback((retry = false) => {
-    if (!canEstimate || !map.beatmapId || estimateStatus === 'loading') return
+    if (!canEstimate || estimateStatus === 'loading') return
+    const generation = ++estimateGeneration.current
+    setEstimateErrorKey(undefined)
     setEstimateStatus('loading')
-    estimateBeatmapDifficulty(map.beatmapId, retry)
+    estimateBeatmapDifficulty({ beatmapId: map.beatmapId, tournamentId, roundId, slot: map.slot }, retry)
       .then((value) => {
+        if (generation !== estimateGeneration.current) return
         setEstimate(value)
         setEstimateStatus('ready')
       })
-      .catch(() => {
+      .catch((error) => {
+        if (generation !== estimateGeneration.current) return
         setEstimate(null)
+        const status = error instanceof ManiaAnalysisError ? error.status : 0
+        setEstimateErrorKey(status === 401 ? 'mapSlot.estimate.sessionExpired'
+          : status === 429 ? 'mapSlot.estimate.rateLimited'
+            : status === 404 ? 'mapSlot.estimate.noFile'
+              : status === 422 ? 'mapSlot.estimate.invalidUpload'
+                : 'mapSlot.estimate.unavailable')
         setEstimateStatus('error')
       })
-  }, [canEstimate, estimateStatus, map.beatmapId])
+  }, [canEstimate, estimateStatus, map.beatmapId, map.slot, tournamentId, roundId])
 
   useEffect(() => {
     setEstimate(null)
     setEstimateStatus('idle')
-  }, [map.beatmapId, map.category])
+    setEstimateErrorKey(undefined)
+    // Late responses must not fill another slot after editing/removing a row.
+    return () => { estimateGeneration.current++ }
+  }, [map.beatmapId, map.category, map.slot, tournamentId, roundId])
 
   useEffect(() => {
     if (estimateSignal > 0) runEstimate(false)
@@ -481,6 +501,7 @@ export function MapSlotEditor({ map, onChange, onRemove, getMapHistory, enableEs
               <EstimateHint
                 estimate={estimate}
                 status={estimateStatus}
+                errorKey={estimateErrorKey}
                 field={map.category === 'LN' ? 'ln' : 'rc'}
                 onApply={(value) => updateField('difficulty', value)}
                 onEstimate={() => runEstimate(true)}
@@ -511,6 +532,7 @@ export function MapSlotEditor({ map, onChange, onRemove, getMapHistory, enableEs
                 <EstimateHint
                   estimate={estimate}
                   status={estimateStatus}
+                  errorKey={estimateErrorKey}
                   field="ln"
                   onApply={(value) => updateField('difficultyLn', value)}
                   onEstimate={() => runEstimate(true)}

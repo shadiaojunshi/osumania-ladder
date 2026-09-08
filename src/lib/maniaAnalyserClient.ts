@@ -6,6 +6,22 @@ export interface ManiaAnalysisEstimate {
   rcNumeric: number | null
   lnRatio: number
   columnCount: number
+  source?: 'r2' | 'proxy' | 'osu'
+}
+
+export interface ManiaAnalysisTarget {
+  beatmapId?: number
+  tournamentId?: string
+  roundId?: string
+  slot?: string
+}
+
+export class ManiaAnalysisError extends Error {
+  status: number
+  constructor(status: number) {
+    super(`estimation service HTTP ${status}`)
+    this.status = status
+  }
 }
 
 type MixedEstimatorModule = {
@@ -23,8 +39,8 @@ type QueueItem<T> = {
   reject: (reason?: unknown) => void
 }
 
-const analysisCache = new Map<number, ManiaAnalysisEstimate>()
-const analysisInFlight = new Map<number, Promise<ManiaAnalysisEstimate>>()
+const analysisCache = new Map<string, { etag: string | null; result: ManiaAnalysisEstimate }>()
+const analysisInFlight = new Map<string, Promise<ManiaAnalysisEstimate>>()
 const analysisQueue: QueueItem<ManiaAnalysisEstimate>[] = []
 let queueRunning = false
 let serviceUnavailableUntil = 0
@@ -108,11 +124,12 @@ function enqueue(run: () => Promise<ManiaAnalysisEstimate>): Promise<ManiaAnalys
   })
 }
 
-async function fetchEstimate(beatmapId: number): Promise<ManiaAnalysisEstimate> {
-  const cached = analysisCache.get(beatmapId)
-  if (cached) return cached
+async function fetchEstimate(target: ManiaAnalysisTarget, query: string, retry: boolean): Promise<ManiaAnalysisEstimate> {
+  const cached = retry ? undefined : analysisCache.get(query)
   let lastError: unknown = null
   let osuText = ''
+  let etag: string | null = null
+  let source: ManiaAnalysisEstimate['source']
 
   for (let attempt = 0; attempt <= MAX_SERVICE_RETRIES; attempt += 1) {
     await waitForRequestSlot()
@@ -120,24 +137,30 @@ async function fetchEstimate(beatmapId: number): Promise<ManiaAnalysisEstimate> 
     const timeout = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
     let response: Response
     try {
-      response = await fetch(`/api/osu/raw?id=${encodeURIComponent(beatmapId)}`, { signal: controller.signal, cache: 'no-store' })
+      response = await fetch(`/api/osu/raw?${query}`, {
+        signal: controller.signal,
+        cache: 'no-store',
+        headers: cached?.etag ? { 'If-None-Match': cached.etag } : {},
+      })
+      if (response.status === 304 && cached) return cached.result
+      if (response.ok) {
+        // Keep the timeout active until the response body has finished too.
+        osuText = await response.text()
+        etag = response.headers.get('ETag')
+        const header = response.headers.get('X-Beatmap-Source')
+        source = header === 'r2' || header === 'proxy' || header === 'osu' ? header : undefined
+        lastError = null
+        break
+      }
     } catch (error) {
       lastError = error
-      window.clearTimeout(timeout)
       if (!isLikelyServiceFailure(error) || attempt >= MAX_SERVICE_RETRIES) throw error
       const delay = retryAfterMs(null, attempt)
       serviceUnavailableUntil = Math.max(serviceUnavailableUntil, Date.now() + delay)
       continue
-    }
-    window.clearTimeout(timeout)
+    } finally { window.clearTimeout(timeout) }
 
-    if (response.ok) {
-      osuText = await response.text()
-      lastError = null
-      break
-    }
-
-    const error = new Error(`estimation service HTTP ${response.status}`)
+    const error = new ManiaAnalysisError(response.status)
     lastError = error
     if (!isRetryableStatus(response.status) || attempt >= MAX_SERVICE_RETRIES) {
       if (isRetryableStatus(response.status)) {
@@ -151,7 +174,8 @@ async function fetchEstimate(beatmapId: number): Promise<ManiaAnalysisEstimate> 
 
   if (!osuText) throw lastError || new Error('empty beatmap response')
   if (!estimatorModulePromise) {
-    estimatorModulePromise = import('../vendor/mania-analyser/estimator/mixedEstimator.js') as Promise<MixedEstimatorModule>
+    estimatorModulePromise = (import('../vendor/mania-analyser/estimator/mixedEstimator.js') as Promise<MixedEstimatorModule>)
+      .catch((error) => { estimatorModulePromise = null; throw error })
   }
   const { runMixedEstimatorFromText } = await estimatorModulePromise
   const data = runMixedEstimatorFromText(osuText, {
@@ -165,7 +189,8 @@ async function fetchEstimate(beatmapId: number): Promise<ManiaAnalysisEstimate> 
     ? null
     : Number(data.numericDifficulty)
   const result: ManiaAnalysisEstimate = {
-    beatmapId,
+    beatmapId: target.beatmapId || 0,
+    source,
     estDiff: String(data.estDiff || '-'),
     rcLabel: labels.rc,
     lnLabel: labels.ln,
@@ -173,21 +198,34 @@ async function fetchEstimate(beatmapId: number): Promise<ManiaAnalysisEstimate> 
     lnRatio: Number(data.lnRatio) || 0,
     columnCount: Number(data.columnCount) || 0,
   }
-  analysisCache.set(beatmapId, result)
+  analysisCache.delete(query)
+  analysisCache.set(query, { etag, result })
+  if (analysisCache.size > 300) analysisCache.delete(analysisCache.keys().next().value!)
   return result
 }
 
-export function estimateBeatmapDifficulty(beatmapId: number, retry = false): Promise<ManiaAnalysisEstimate> {
-  if (!Number.isFinite(beatmapId) || beatmapId <= 0) {
-    return Promise.reject(new Error('invalid beatmap ID'))
+export function estimateBeatmapDifficulty(input: number | ManiaAnalysisTarget, retry = false): Promise<ManiaAnalysisEstimate> {
+  const target = typeof input === 'number' ? { beatmapId: input } : { ...input }
+  const hasBid = Number.isSafeInteger(target.beatmapId) && target.beatmapId! > 0
+  const hasSlot = Boolean(target.tournamentId && target.roundId && target.slot)
+  if (!hasBid && !hasSlot) {
+    return Promise.reject(new Error('invalid beatmap ID or location'))
   }
-  const cached = analysisCache.get(beatmapId)
-  if (cached) return Promise.resolve(cached)
+  const params = new URLSearchParams()
+  if (hasBid) params.set('id', String(target.beatmapId))
+  if (hasSlot) {
+    params.set('tournamentId', target.tournamentId!)
+    params.set('roundId', target.roundId!)
+    params.set('slot', target.slot!)
+  }
+  const query = params.toString()
   if (retry) serviceUnavailableUntil = 0
-  const pending = analysisInFlight.get(beatmapId)
+  const pending = analysisInFlight.get(query)
   if (pending) return pending
-  const request = enqueue(() => fetchEstimate(beatmapId))
-    .finally(() => analysisInFlight.delete(beatmapId))
-  analysisInFlight.set(beatmapId, request)
+  // Revalidate the R2 object on every request, even if we already calculated it.
+  // Upload replacement changes its ETag; an unchanged object needs only a HEAD.
+  const request = enqueue(() => fetchEstimate(target, query, retry))
+    .finally(() => analysisInFlight.delete(query))
+  analysisInFlight.set(query, request)
   return request
 }

@@ -616,6 +616,7 @@ function RoundsStep({
           onRemove={() => removeRound(i)}
           getMapHistory={getMapHistory}
           siblingAbbrs={rounds.map((r) => r.abbreviation)}
+          tournamentId={editingTournamentId}
           enableEstimation={enableEstimation}
         />
       ))}

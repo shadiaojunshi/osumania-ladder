@@ -27,13 +27,14 @@ function getAllTypes(): string[] {
   return [...standard, ...custom]
 }
 
+const allTypes = getAllTypes()
+
 export function Header() {
   const { mode, setMode, activeFilter, setActiveFilter, searchQuery, setSearchQuery } = useViewStore()
-  const allTypes = getAllTypes()
   const t = useT()
 
   return (
-    <header className="border-b border-gray-200 dark:border-neutral-800 flex items-center px-2 sm:px-4 gap-2 sm:gap-4 shrink-0 flex-wrap xl:flex-nowrap min-h-14 py-1 xl:py-0 xl:h-14 bg-white dark:bg-neutral-950">
+    <header className="ladder-header border-b border-gray-200 dark:border-neutral-800 flex items-center px-2 sm:px-4 gap-2 sm:gap-4 shrink-0 flex-wrap xl:flex-nowrap min-h-14 py-1 xl:py-0 xl:h-14 bg-white dark:bg-neutral-950">
       <h1 className="text-base sm:text-lg font-bold whitespace-nowrap">
         <span className="text-purple-700 dark:text-purple-300">{t('header.brand')}</span><span className="hidden sm:inline">{t('header.titleFull')}</span><span className="sm:hidden">{t('header.titleCompact')}</span>
       </h1>
@@ -42,6 +43,7 @@ export function Header() {
         {VIEW_MODES.map((vm) => (
           <button
             key={vm.key}
+            aria-pressed={mode === vm.key}
             onClick={() => setMode(vm.key)}
             className={`px-2 sm:px-3 py-1.5 rounded text-xs sm:text-sm font-medium transition-colors ${
               mode === vm.key
@@ -56,6 +58,7 @@ export function Header() {
 
       <div className="flex items-center gap-1 sm:ml-4 flex-wrap">
         <button
+          aria-pressed={!activeFilter}
           onClick={() => setActiveFilter(null)}
           className={`px-2 sm:px-2.5 py-1 rounded text-xs sm:text-sm transition-colors ${
             !activeFilter
@@ -68,6 +71,7 @@ export function Header() {
         {allTypes.map((f) => (
           <button
             key={f}
+            aria-pressed={activeFilter === f}
             onClick={() => setActiveFilter(f)}
             className={`px-2 sm:px-2.5 py-1 rounded text-xs sm:text-sm transition-colors ${
               activeFilter === f
@@ -84,11 +88,12 @@ export function Header() {
 
       <div className="xl:ml-auto flex items-center gap-1 sm:gap-2 flex-wrap">
         <input
-          type="text"
+          type="search"
           placeholder={t('header.search.placeholder')}
+          aria-label={t('header.search.label')}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="px-2 sm:px-3 py-1 sm:py-1.5 border border-gray-300 dark:border-neutral-700 rounded text-xs sm:text-sm w-28 sm:w-48 focus:outline-none focus:border-purple-400 bg-white dark:bg-neutral-900 dark:text-neutral-100 dark:placeholder:text-neutral-500"
+          className="px-2 sm:px-3 py-1 sm:py-1.5 border border-gray-300 dark:border-neutral-700 rounded text-xs sm:text-sm w-44 sm:w-60 focus:outline-none focus:border-purple-400 bg-white dark:bg-neutral-900 dark:text-neutral-100 dark:placeholder:text-neutral-500"
         />
         <Link
           href="/download"

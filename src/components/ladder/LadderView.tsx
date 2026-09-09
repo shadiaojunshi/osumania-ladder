@@ -4,10 +4,14 @@ import { useViewStore } from '@/stores/viewStore'
 import { difficultyToY, getGradientForRange, getDifficultyColor } from '@/lib/difficulty'
 import type { Tournament, Round } from '@/lib/types'
 import { tournaments } from '@/generated/tournaments'
-import { useState, useRef, useCallback, useEffect } from 'react'
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react'
 import { HoverCard } from './HoverCard'
 import { RoundDetailModal } from './RoundDetailModal'
 import { normalizeRealType } from '@/lib/realType'
+import { createTournamentSearchIndex, searchTournaments } from '@/lib/tournamentSearch'
+import { LadderSearchResults } from './LadderSearchResults'
+
+const searchIndex = createTournamentSearchIndex(tournaments)
 
 const DIFFICULTY_RANGE = { min: 0.5, max: 16.5 }
 const BOX_HEIGHT_TYPE = 28
@@ -41,13 +45,11 @@ export function LadderView() {
   const diffRange = DIFFICULTY_RANGE.max - DIFFICULTY_RANGE.min
   const containerHeight = diffRange * rowHeight * zoom
 
-  const filteredTournaments = tournaments.filter((t) => {
-    if (yearFilter !== null && t.year !== yearFilter) return false
-    if (roundFilter && !t.rounds.some((r) => r.abbreviation === roundFilter)) return false
-    if (!searchQuery) return true
-    return t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      t.abbreviation.toLowerCase().includes(searchQuery.toLowerCase())
-  })
+  const searchResults = useMemo(() => searchTournaments(searchIndex, searchQuery).filter(({ tournament }) => {
+    if (yearFilter !== null && tournament.year !== yearFilter) return false
+    return !roundFilter || tournament.rounds.some((round) => round.abbreviation === roundFilter)
+  }), [searchQuery, yearFilter, roundFilter])
+  const filteredTournaments = useMemo(() => searchResults.map(({ tournament }) => tournament), [searchResults])
 
   const sortedTournaments = (() => {
     if (customOrder) {
@@ -101,65 +103,77 @@ export function LadderView() {
   }, [])
 
   return (
-    <div className="flex-1 flex overflow-hidden">
-      <LeftScaleInner ref={leftRef} containerHeight={containerHeight} />
-
-      <div
-        className="flex-1 overflow-auto"
-        ref={scrollContainerRef}
-        onScroll={handleScroll}
-      >
-        <div
-          className="relative flex gap-2 px-2 pt-2"
-          style={{
-            height: containerHeight,
-            minWidth: sortedTournaments.length * (columnWidth + 8),
-          }}
-        >
-          {sortedTournaments.map((tournament) => (
-            <TournamentColumn
-              key={tournament.id}
-              tournament={tournament}
-              mode={mode}
-              containerHeight={containerHeight}
-              columnWidth={columnWidth}
-              activeFilter={activeFilter}
-              rfLnOffset={rfLnOffset}
-              hideQualifiers={hideQualifiers}
-              roundFilter={roundFilter}
-              roundBorderAlways={roundBorderAlways}
-              onHover={(round, x, y, type) => showHover(round, tournament, x, y, type)}
-              onLeave={scheduleHide}
-            />
-          ))}
-        </div>
-      </div>
-
-      <RightRefInner ref={rightRef} containerHeight={containerHeight} />
-
-      {hoveredRound && (
-        <HoverCard
-          round={hoveredRound.round}
-          tournament={hoveredRound.tournament}
-          hoveredType={hoveredRound.type}
-          x={hoveredRound.x}
-          y={hoveredRound.y}
-          onMouseEnter={cancelHide}
-          onMouseLeave={() => setHoveredRound(null)}
-          onOpenDetail={() => {
-            setDetailRound({ round: hoveredRound.round, tournament: hoveredRound.tournament })
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+      {searchQuery.trim() && (
+        <LadderSearchResults
+          key={`${searchQuery}/${yearFilter}/${roundFilter}`}
+          results={searchResults}
+          onSelect={(tournament, round) => {
             setHoveredRound(null)
+            setDetailRound({ tournament, round })
           }}
         />
       )}
+      <div className="flex-1 flex overflow-hidden">
+        <LeftScaleInner ref={leftRef} containerHeight={containerHeight} />
 
-      {detailRound && (
-        <RoundDetailModal
-          round={detailRound.round}
-          tournament={detailRound.tournament}
-          onClose={() => setDetailRound(null)}
-        />
-      )}
+        <div
+          className="flex-1 overflow-auto"
+          ref={scrollContainerRef}
+          onScroll={handleScroll}
+        >
+          <div
+            className="relative flex gap-2 px-2 pt-2"
+            style={{
+              height: containerHeight,
+              minWidth: sortedTournaments.length * (columnWidth + 8),
+            }}
+          >
+            {sortedTournaments.map((tournament) => (
+              <TournamentColumn
+                key={tournament.id}
+                tournament={tournament}
+                mode={mode}
+                containerHeight={containerHeight}
+                columnWidth={columnWidth}
+                activeFilter={activeFilter}
+                rfLnOffset={rfLnOffset}
+                hideQualifiers={hideQualifiers}
+                roundFilter={roundFilter}
+                roundBorderAlways={roundBorderAlways}
+                onHover={(round, x, y, type) => showHover(round, tournament, x, y, type)}
+                onLeave={scheduleHide}
+              />
+            ))}
+          </div>
+        </div>
+
+        <RightRefInner ref={rightRef} containerHeight={containerHeight} />
+
+        {hoveredRound && (
+          <HoverCard
+            round={hoveredRound.round}
+            tournament={hoveredRound.tournament}
+            hoveredType={hoveredRound.type}
+            x={hoveredRound.x}
+            y={hoveredRound.y}
+            onMouseEnter={cancelHide}
+            onMouseLeave={() => setHoveredRound(null)}
+            onOpenDetail={() => {
+              setDetailRound({ round: hoveredRound.round, tournament: hoveredRound.tournament })
+              setHoveredRound(null)
+            }}
+          />
+        )}
+
+        {detailRound && (
+          <RoundDetailModal
+            round={detailRound.round}
+            tournament={detailRound.tournament}
+            onClose={() => setDetailRound(null)}
+          />
+        )}
+      </div>
     </div>
   )
 }

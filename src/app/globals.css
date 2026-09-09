@@ -73,3 +73,62 @@ body {
   color: transparent;
   text-shadow: none;
 }
+
+/* Animate interaction feedback without moving the ladder's difficulty coordinates. */
+.ladder-header button,
+.ladder-header a,
+.ladder-header input {
+  border-radius: 7px;
+  transition: background-color 180ms ease, border-color 180ms ease,
+    color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+}
+
+.ladder-header button[aria-pressed='true'] {
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 15%), 0 2px 5px rgb(0 0 0 / 10%);
+}
+
+.ladder-header input:focus-visible {
+  box-shadow: 0 0 0 3px rgb(168 85 247 / 15%);
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .ladder-header button:hover,
+  .ladder-header a:hover {
+    transform: translateY(-1px);
+  }
+  .ladder-header button:active,
+  .ladder-header a:active {
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .ladder-search-result {
+    animation: ladder-reveal 180ms ease-out both;
+  }
+  .ladder-detail-backdrop {
+    animation: ladder-fade-in 160ms ease-out both;
+  }
+  .ladder-detail-panel {
+    animation: ladder-reveal 240ms cubic-bezier(.22, 1, .36, 1) both;
+  }
+}
+
+@keyframes ladder-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes ladder-reveal {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ladder-header button,
+  .ladder-header a,
+  .ladder-header input,
+  .round-box {
+    transition: none;
+  }
+}

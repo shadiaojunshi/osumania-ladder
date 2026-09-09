@@ -105,7 +105,7 @@
       "order": 2,
       "difficulty": {
         "min": 6.67,
-        "max": 7.8,
+        "max": 8.7,
         "average": 7.59
       },
       "maps": [
@@ -123,7 +123,7 @@
           "type": "RC",
           "realType": "SA",
           "name": "DJ Sharpnel - LITTLE GOD CH@NNEL [Laevateinn Sword 1.15x (217bpm)]",
-          "difficulty": 7.48,
+          "difficulty": 8.7,
           "beatmapId": 4211268,
           "beatmapsetId": 2022076
         },
@@ -252,7 +252,7 @@
       "order": 3,
       "difficulty": {
         "min": 8.43,
-        "max": 9.08,
+        "max": 9.3,
         "average": 8.93
       },
       "maps": [
@@ -261,7 +261,7 @@
           "type": "RC",
           "realType": "SS",
           "name": "IV OF SPADES - Come Inside Of My Heart (Sped Up Ver.) [Boundaries 1.05x (158bpm)]",
-          "difficulty": 8.94,
+          "difficulty": 9.3,
           "beatmapId": 4242933,
           "beatmapsetId": 1943116
         },
@@ -270,7 +270,7 @@
           "type": "RC",
           "realType": "SA",
           "name": "Falcom Sound Team jdk - Infinity Rage [Nightmare]",
-          "difficulty": 8.94,
+          "difficulty": 9.2,
           "beatmapId": 3341549,
           "beatmapsetId": 1637362
         },
@@ -420,7 +420,7 @@
       "order": 4,
       "difficulty": {
         "min": 9.59,
-        "max": 10.1,
+        "max": 11,
         "average": 10.06
       },
       "maps": [
@@ -429,7 +429,7 @@
           "type": "RC",
           "realType": "SS",
           "name": "linear ring with RNAcid - Gypsophila [blossom 1.1x (166bpm)]",
-          "difficulty": 10.09,
+          "difficulty": 10.5,
           "beatmapId": 4283526,
           "beatmapsetId": 1805950
         },
@@ -438,7 +438,7 @@
           "type": "RC",
           "realType": "SA",
           "name": "seatrus - Cosmo Station [Orbis x1.1]",
-          "difficulty": 10.09,
+          "difficulty": 11,
           "beatmapId": 4272125,
           "beatmapsetId": 2046586
         },
@@ -589,8 +589,8 @@
       "order": 5,
       "difficulty": {
         "min": 10.6,
-        "max": 11.3,
-        "average": 11.03
+        "max": 11.8,
+        "average": 11.07
       },
       "maps": [
         {
@@ -598,7 +598,7 @@
           "type": "RC",
           "realType": "SS",
           "name": "MOMOIRO CLOVER Z - SARABA, Itoshiki Kanashimitachi yo [Nightmare x1.05]",
-          "difficulty": 11.3,
+          "difficulty": 11.8,
           "beatmapId": 4294646,
           "beatmapsetId": 2055295
         },
@@ -607,7 +607,7 @@
           "type": "RC",
           "realType": "JS",
           "name": "goreshit - thinking of you [eternity 1.2x (272bpm)]",
-          "difficulty": 11.3,
+          "difficulty": 11.4,
           "beatmapId": 3770381,
           "beatmapsetId": 1749736
         },
@@ -752,7 +752,7 @@
       ],
       "typeDifficulties": {
         "RC": {
-          "rf": 11.3
+          "rf": 11.4
         },
         "HB": {
           "rf": 10.6,
@@ -774,9 +774,9 @@
       "abbreviation": "F",
       "order": 6,
       "difficulty": {
-        "min": 11.68,
-        "max": 12.2,
-        "average": 12.05
+        "min": 11.8,
+        "max": 12.3,
+        "average": 12.17
       },
       "maps": [
         {
@@ -784,7 +784,7 @@
           "type": "RC",
           "realType": "SS",
           "name": "sasakure.UK - Bokura no 16bit Warz [1 0 0 0 0]",
-          "difficulty": 12.2,
+          "difficulty": 12.3,
           "beatmapId": 4149957,
           "beatmapsetId": 1996732
         },
@@ -793,7 +793,7 @@
           "type": "RC",
           "realType": "JS",
           "name": "katagiri - STRONG 280 [DESTRUCTION PUNCH]",
-          "difficulty": 12.2,
+          "difficulty": 12.3,
           "beatmapId": 3600992,
           "beatmapsetId": 1759474
         },
@@ -802,7 +802,7 @@
           "type": "RC",
           "realType": "SA",
           "name": "Falcom Sound Team jdk - Desert After Tears [Inferno x1.1]",
-          "difficulty": 12.2,
+          "difficulty": 12.3,
           "beatmapId": 3266500,
           "beatmapsetId": 1599384
         },
@@ -811,7 +811,7 @@
           "type": "RC",
           "realType": "CJ",
           "name": "siromaru + cranky - conflict [Prasueno]",
-          "difficulty": 12.2,
+          "difficulty": 12.3,
           "beatmapId": 4303024,
           "beatmapsetId": 2058788
         },
@@ -820,7 +820,7 @@
           "type": "RC",
           "realType": "ADP",
           "name": "Terminal 11 - Braindead [Metastasis 1.05x]",
-          "difficulty": 12.2,
+          "difficulty": 12.3,
           "beatmapId": 4303210,
           "beatmapsetId": 2058879
         },
@@ -829,7 +829,7 @@
           "type": "RC",
           "realType": "DP",
           "name": "MAXIMUM THE HORMONE - What's up, people?! (Cut Ver.) [Outburst]",
-          "difficulty": 12.2,
+          "difficulty": 12.3,
           "beatmapId": 4176510,
           "beatmapsetId": 2007678
         },
@@ -838,7 +838,7 @@
           "type": "RC",
           "realType": "WTC",
           "name": "Camellia - overcomplexification (\"Quaternion\" Long ver.) [convolution (cut) [0.95x Rate]]",
-          "difficulty": 12.2,
+          "difficulty": 12.3,
           "beatmapId": 4303205,
           "beatmapsetId": 2058875
         },
@@ -847,37 +847,37 @@
           "type": "HB",
           "realType": "HB1",
           "name": "MisoilePunch - Makear [Ar'alkthyn]",
-          "difficulty": 11.68,
+          "difficulty": 11.8,
           "beatmapId": 4303025,
           "beatmapsetId": 2058789,
-          "difficultyLn": 11.88
+          "difficultyLn": 12
         },
         {
           "slot": "HB2",
           "type": "HB",
           "realType": "HB2",
           "name": "VINCENT GANATCH - GENE ~A mix~ [Another x1.05]",
-          "difficulty": 11.68,
+          "difficulty": 11.8,
           "beatmapId": 4303097,
           "beatmapsetId": 2058822,
-          "difficultyLn": 11.88
+          "difficultyLn": 12
         },
         {
           "slot": "HB3",
           "type": "HB",
           "realType": "HB3",
           "name": "kanemiko - Cold Fusion [Catalyst (cut 1.05x)]",
-          "difficulty": 11.68,
+          "difficulty": 11.8,
           "beatmapId": 4303090,
           "beatmapsetId": 2058817,
-          "difficultyLn": 11.88
+          "difficultyLn": 12
         },
         {
           "slot": "LN1",
           "type": "LN",
           "realType": "CO",
           "name": "TUYU - Anoyo-iki no Bus ni Notte Saraba. [To the other side. 1.1x]",
-          "difficulty": 12.08,
+          "difficulty": 12.2,
           "beatmapId": 4303080,
           "beatmapsetId": 2058811
         },
@@ -886,7 +886,7 @@
           "type": "LN",
           "realType": "DE",
           "name": "Masayoshi Oishi - Kamiari Algorithm (katagiri Bootleg) [kami x1.10]",
-          "difficulty": 12.08,
+          "difficulty": 12.2,
           "beatmapId": 4303115,
           "beatmapsetId": 2058829
         },
@@ -895,7 +895,7 @@
           "type": "LN",
           "realType": "LNMX",
           "name": "CHUBAY - FataL EntanglemEnt [Acute]",
-          "difficulty": 12.08,
+          "difficulty": 12.2,
           "beatmapId": 4303094,
           "beatmapsetId": 2058819
         },
@@ -904,7 +904,7 @@
           "type": "LN",
           "realType": "JW",
           "name": "Kommisar - Clover [LN Master]",
-          "difficulty": 12.08,
+          "difficulty": 12.2,
           "beatmapId": 4303089,
           "beatmapsetId": 2058816
         },
@@ -931,27 +931,27 @@
           "type": "TB",
           "realType": "TB",
           "name": "D-D-Dice vs. siromaru - Catch the Glory [Grand Finale]",
-          "difficulty": 12.99,
+          "difficulty": 12.8,
           "beatmapId": 4303123,
           "beatmapsetId": 2058832,
-          "difficultyLn": 13.22
+          "difficultyLn": 13.3
         }
       ],
       "typeDifficulties": {
         "RC": {
-          "rf": 12.2
+          "rf": 12.3
         },
         "HB": {
-          "rf": 11.68,
-          "ln": 11.88
+          "rf": 11.8,
+          "ln": 12
         },
         "LN": {
-          "ln": 12.08
+          "ln": 12.2
         },
         "SV": {},
         "TB": {
-          "rf": 12.99,
-          "ln": 13.22
+          "rf": 13.1,
+          "ln": 13.3
         }
       }
     },
@@ -961,9 +961,9 @@
       "abbreviation": "GF",
       "order": 7,
       "difficulty": {
-        "min": 0,
-        "max": 0,
-        "average": 0
+        "min": 12.65,
+        "max": 13.15,
+        "average": 13.08
       },
       "maps": [
         {
@@ -971,7 +971,7 @@
           "type": "RC",
           "realType": "SS",
           "name": "beta - Blue-White Crazystars [twinkle (edit) x1.05]",
-          "difficulty": 0,
+          "difficulty": 13.15,
           "beatmapId": 4310954,
           "beatmapsetId": 2031745
         },
@@ -980,7 +980,7 @@
           "type": "RC",
           "realType": "JS",
           "name": "Falcom Sound Team jdk - Believe It!! [Eclipse x1.05]",
-          "difficulty": 0,
+          "difficulty": 13.15,
           "beatmapId": 3345153,
           "beatmapsetId": 1638926
         },
@@ -989,7 +989,7 @@
           "type": "RC",
           "realType": "SA",
           "name": "DJ SHARPNEL - SHINE!! [Sakurakou!! 1.35x (273bpm)]",
-          "difficulty": 0,
+          "difficulty": 13.15,
           "beatmapId": 2979765,
           "beatmapsetId": 1446657
         },
@@ -998,69 +998,72 @@
           "type": "RC",
           "realType": "CJ",
           "name": "Camellia - Shinsha / HgS [Techno Music Techno Music Techno Music Techno Music]",
-          "difficulty": 0,
+          "difficulty": 13.15,
           "beatmapId": 4311929,
           "beatmapsetId": 2062237
         },
         {
           "slot": "RC5",
           "type": "RC",
-          "realType": "DP",
+          "realType": "WTC",
           "name": "Frums - END OF SYSTEM [END OF PIZZA 1.05x (189bpm)]",
-          "difficulty": 0,
+          "difficulty": 13.15,
           "beatmapId": 4311169,
           "beatmapsetId": 2062001
         },
         {
           "slot": "RC6",
           "type": "RC",
-          "realType": "STC",
+          "realType": "DP",
           "name": "Shoji Meguro - Last Surprise [Ska's howing 1.05x (edit)]",
-          "difficulty": 0,
+          "difficulty": 13.15,
           "beatmapId": 4311930,
           "beatmapsetId": 2062238
         },
         {
           "slot": "RC7",
           "type": "RC",
-          "realType": "JTC",
+          "realType": "TC",
           "name": "Aquellex - Cortex Charger [Electrocution]",
-          "difficulty": 0,
+          "difficulty": 13.15,
           "beatmapId": 4311928,
           "beatmapsetId": 2062236
         },
         {
           "slot": "HB1",
           "type": "HB",
-          "realType": "HB1",
+          "realType": "HB4",
           "name": "xi - APOCALYPSE RAY [EXCEED]",
-          "difficulty": 0,
+          "difficulty": 12.65,
           "beatmapId": 4269128,
-          "beatmapsetId": 2045249
+          "beatmapsetId": 2045249,
+          "difficultyLn": 12.95
         },
         {
           "slot": "HB2",
           "type": "HB",
-          "realType": "HB2",
+          "realType": "HB3",
           "name": "",
-          "difficulty": 0,
-          "beatmapId": 4311937
+          "difficulty": 12.65,
+          "beatmapId": 4311937,
+          "difficultyLn": 12.95
         },
         {
           "slot": "HB3",
           "type": "HB",
           "realType": "HB3",
           "name": "BilliumMoto - LIGHT LEFT BEHIND [AND IN THE DARKNESS BIND THEM]",
-          "difficulty": 0,
+          "difficulty": 12.65,
           "beatmapId": 4311938,
-          "beatmapsetId": 2062241
+          "beatmapsetId": 2062241,
+          "difficultyLn": 12.95
         },
         {
           "slot": "LN1",
           "type": "LN",
-          "realType": "CO",
+          "realType": "TE",
           "name": "Yousei Teikoku - Kyuusei Argyros [purgatory o'clock (cut)]",
-          "difficulty": 0,
+          "difficulty": 13.15,
           "beatmapId": 4311953,
           "beatmapsetId": 2062249
         },
@@ -1069,25 +1072,25 @@
           "type": "LN",
           "realType": "DE",
           "name": "Lime - Selenadia [Finality 1.05x (238bpm)]",
-          "difficulty": 0,
+          "difficulty": 13.15,
           "beatmapId": 4311944,
           "beatmapsetId": 2062245
         },
         {
           "slot": "LN3",
           "type": "LN",
-          "realType": "JW",
+          "realType": "LNMX",
           "name": "wa. - Mugen houyou [Impermanence]",
-          "difficulty": 0,
+          "difficulty": 13.15,
           "beatmapId": 4138053,
           "beatmapsetId": 1991601
         },
         {
           "slot": "LN4",
           "type": "LN",
-          "realType": "SW",
+          "realType": "LNTC",
           "name": "lapix - Born 2 Lose [inhumanly;]",
-          "difficulty": 0,
+          "difficulty": 13.15,
           "beatmapId": 4311951,
           "beatmapsetId": 2062247
         },
@@ -1102,7 +1105,7 @@
         {
           "slot": "SV2",
           "type": "SV",
-          "realType": "SV2",
+          "realType": "ME",
           "name": "Kolaa x Mestie - Digibuprofen [Lauren]",
           "difficulty": 0,
           "beatmapId": 4311995,
@@ -1113,17 +1116,28 @@
           "type": "TB",
           "realType": "TB",
           "name": "Camellia - Parallel Universe Shifter [Quantum Field Disruption]",
-          "difficulty": 0,
+          "difficulty": 13.8,
           "beatmapId": 4312004,
-          "beatmapsetId": 2062263
+          "beatmapsetId": 2062263,
+          "difficultyLn": 14
         }
       ],
       "typeDifficulties": {
-        "RC": {},
-        "HB": {},
-        "LN": {},
+        "RC": {
+          "rf": 13.15
+        },
+        "HB": {
+          "rf": 12.65,
+          "ln": 12.95
+        },
+        "LN": {
+          "ln": 13.15
+        },
         "SV": {},
-        "TB": {}
+        "TB": {
+          "rf": 13.72,
+          "ln": 13.96
+        }
       }
     }
   ],

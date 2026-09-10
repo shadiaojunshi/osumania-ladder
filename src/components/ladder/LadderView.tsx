@@ -1,15 +1,19 @@
 'use client'
 
 import { useViewStore } from '@/stores/viewStore'
-import { difficultyToY, getGradientForRange, getDifficultyColor } from '@/lib/difficulty'
+import { getGradientForRange, getDifficultyColor } from '@/lib/difficulty'
 import type { Tournament, Round } from '@/lib/types'
 import { tournaments } from '@/generated/tournaments'
-import { useState, useRef, useCallback, useEffect, useMemo } from 'react'
+import { useState, useRef, useCallback, useEffect, useMemo, Fragment } from 'react'
 import { HoverCard } from './HoverCard'
 import { RoundDetailModal } from './RoundDetailModal'
 import { normalizeRealType } from '@/lib/realType'
 import { createTournamentSearchIndex, searchTournaments } from '@/lib/tournamentSearch'
 import { LadderSearchResults } from './LadderSearchResults'
+import { useT } from '@/lib/i18n'
+import { buildRoundLabelPlacements } from '@/lib/roundLabelLayout'
+import type { RoundLayout } from '@/lib/roundLabelLayout'
+import { ORIGIN_Y, yForDifficulty, computeRangeGeometry, computeScalarGeometry } from '@/lib/ladderGeometry'
 
 const searchIndex = createTournamentSearchIndex(tournaments)
 
@@ -44,7 +48,10 @@ export function LadderView() {
   const detailTriggerRef = useRef<HTMLElement | null>(null)
 
   const diffRange = DIFFICULTY_RANGE.max - DIFFICULTY_RANGE.min
-  const containerHeight = diffRange * rowHeight * zoom
+  // 任务 D 统一几何:比赛列头 32px + 顶部超界带 32px + 常规绘图区。
+  // 所有难度 y = ORIGIN_Y + 线性映射;三视图与左右标尺共用同一 contentHeight。
+  const plotHeight = diffRange * rowHeight * zoom
+  const contentHeight = ORIGIN_Y + plotHeight
 
   const searchResults = useMemo(() => searchTournaments(searchIndex, searchQuery).filter(({ tournament }) => {
     if (yearFilter !== null && tournament.year !== yearFilter) return false
@@ -143,7 +150,7 @@ export function LadderView() {
         />
       )}
       <div className="flex-1 flex overflow-hidden">
-        <LeftScaleInner ref={leftRef} containerHeight={containerHeight} />
+        <LeftScaleInner ref={leftRef} plotHeight={plotHeight} />
 
         <div
           className="flex-1 overflow-auto"
@@ -151,9 +158,9 @@ export function LadderView() {
           onScroll={handleScroll}
         >
           <div
-            className="relative flex gap-2 px-2 pt-2"
+            className="relative flex gap-2 px-2"
             style={{
-              height: containerHeight,
+              height: contentHeight,
               minWidth: sortedTournaments.length * (columnWidth + 8),
             }}
           >
@@ -162,7 +169,7 @@ export function LadderView() {
                 key={tournament.id}
                 tournament={tournament}
                 mode={mode}
-                containerHeight={containerHeight}
+                plotHeight={plotHeight}
                 columnWidth={columnWidth}
                 activeFilter={activeFilter}
                 rfLnOffset={rfLnOffset}
@@ -177,7 +184,7 @@ export function LadderView() {
           </div>
         </div>
 
-        <RightRefInner ref={rightRef} containerHeight={containerHeight} />
+        <RightRefInner ref={rightRef} plotHeight={plotHeight} />
 
         {hoveredRound && (
           <HoverCard
@@ -255,8 +262,8 @@ function useViewportTier(): ViewportTier {
   return tier
 }
 
-const LeftScaleInner = forwardRef<HTMLDivElement, { containerHeight: number }>(
-  function LeftScaleInner({ containerHeight }, ref) {
+const LeftScaleInner = forwardRef<HTMLDivElement, { plotHeight: number }>(
+  function LeftScaleInner({ plotHeight }, ref) {
     const { activeFilter, rfLnOffset } = useViewStore()
     const theme = usePrefsStore((s) => s.theme)
     const showOnlyLn = activeFilter === 'LN' || activeFilter === 'HB'
@@ -273,12 +280,15 @@ const LeftScaleInner = forwardRef<HTMLDivElement, { containerHeight: number }>(
       ? (showBoth ? 70 : 42)
       : (showBoth ? 110 : 70)
 
+    // 任务 D:与三视图共用同一原点。标尺顶部同样预留列头+超界带 64px。
+    const contentHeight = ORIGIN_Y + plotHeight
+
     return (
       <div className={`border-r border-gray-200 dark:border-neutral-800 overflow-hidden shrink-0`} style={{ width: totalWidth }} ref={ref}>
-        <div className="relative" style={{ height: containerHeight }}>
+        <div className="relative" style={{ height: contentHeight }}>
           {/* RF scale - show when not filtering LN/HB only */}
           {!showOnlyLn && reformLevels.map((level) => {
-            const y = d2y(level.numericValue, containerHeight, DIFFICULTY_RANGE)
+            const y = ORIGIN_Y + d2y(level.numericValue, plotHeight, DIFFICULTY_RANGE)
             const isMajor = MAJOR_RF.has(level.id)
             const labelW = tiny
               ? (showBoth ? 26 : 32)
@@ -310,7 +320,7 @@ const LeftScaleInner = forwardRef<HTMLDivElement, { containerHeight: number }>(
 
           {/* LN scale - show when not filtering RC/SV only */}
           {!showOnlyRf && lnLevels.map((level) => {
-            const lnY = d2y(level.numericValue - rfLnOffset, containerHeight, DIFFICULTY_RANGE)
+            const lnY = ORIGIN_Y + d2y(level.numericValue - rfLnOffset, plotHeight, DIFFICULTY_RANGE)
             const isMajor = MAJOR_LN.has(level.id)
             const labelW = tiny
               ? (showBoth ? 24 : 32)
@@ -355,15 +365,18 @@ interface RefPoint {
 
 const LABEL_HEIGHT = 16
 
-const RightRefInner = forwardRef<HTMLDivElement, { containerHeight: number }>(
-  function RightRefInner({ containerHeight }, ref) {
+const RightRefInner = forwardRef<HTMLDivElement, { plotHeight: number }>(
+  function RightRefInner({ plotHeight }, ref) {
     const { rfLnOffset } = useViewStore()
     const points = referencesData.points as RefPoint[]
+
+    // 任务 D:与三视图共用同一原点与内容高度。
+    const contentHeight = ORIGIN_Y + plotHeight
 
     const positioned = points
       .map((point) => {
         const adjustedDiff = point.type === 'ln' ? point.difficulty - rfLnOffset : point.difficulty
-        const y = d2y(adjustedDiff, containerHeight, DIFFICULTY_RANGE)
+        const y = ORIGIN_Y + d2y(adjustedDiff, plotHeight, DIFFICULTY_RANGE)
         return { ...point, rawY: y, displayY: y }
       })
       .sort((a, b) => a.rawY - b.rawY)
@@ -378,7 +391,7 @@ const RightRefInner = forwardRef<HTMLDivElement, { containerHeight: number }>(
 
     return (
       <div className="w-[88px] md:w-[160px] border-l border-gray-200 dark:border-neutral-800 overflow-hidden shrink-0" ref={ref}>
-        <div className="relative" style={{ height: containerHeight }}>
+        <div className="relative" style={{ height: contentHeight }}>
           {positioned.map((point, i) => (
             <div
               key={`${point.label}-${i}`}
@@ -395,10 +408,106 @@ const RightRefInner = forwardRef<HTMLDivElement, { containerHeight: number }>(
   }
 )
 
+// 超界带条目(任务 D):每列收集超出绘图区上界的项,渲染成暗红边界按钮。
+interface BandItem {
+  key: string
+  round: Round
+  type?: string
+  // 多 TB 拆框时的槽位显示名(如 SHOWTB);缺省回退到 type。
+  label?: string
+  // 排序用真实难度(降序);标量是 adjustedAvg,范围是 maxDifficulty。
+  sortValue: number
+  // 标量在按钮文本里显示数值;范围只显示轮次名。
+  displayValue: number | null
+  dimmed: boolean
+}
+
+// 任务 D:列顶超界带内容。单条 → 直接按钮;多条 → "↑ 超界 N" 集合按钮 + 降序列表。
+// 每一项点击都走 A 的统一详情入口;hover/focus 显示完整信息(悬浮卡),不只靠红色。
+function OverflowBand({ items, onHover, onLeave, onOpenDetail }: {
+  items: BandItem[]
+  onHover: (round: Round, x: number, y: number, type?: string) => void
+  onLeave: () => void
+  onOpenDetail: (round: Round, trigger?: HTMLElement | null) => void
+}) {
+  const t = useT()
+  const [open, setOpen] = useState(false)
+  if (items.length === 0) return null
+
+  const sorted = [...items].sort((a, b) => {
+    if (b.sortValue !== a.sortValue) return b.sortValue - a.sortValue
+    return a.key < b.key ? -1 : a.key > b.key ? 1 : 0
+  })
+  // 箭头由 JSX 的 .overflow-marker-arrow 元素提供(带闪烁动画);展开列表项用纯文本 "↑ "。
+  // 视觉文本不显示"超出标尺"(用户要求):标量项显示数值,范围项只显示轮次名;
+  // 完整语义保留在 aria-label 里。
+  const describe = (item: BandItem) =>
+    item.type
+      ? `${item.round.abbreviation} ${item.label ?? item.type} · ${item.sortValue.toFixed(2)}`
+      : item.round.abbreviation
+  const ariaOf = (item: BandItem) =>
+    `${item.round.name}${item.type ? ` ${item.label ?? item.type}` : ''} · ${t('ladder.overflow.beyond')}${
+      item.displayValue !== null ? ` (${item.displayValue.toFixed(2)})` : ''
+    }`
+  const activate = (item: BandItem, x: number, y: number) => onHover(item.round, x, y, item.type)
+
+  if (items.length === 1) {
+    const item = sorted[0]
+    return (
+      <button
+        type="button"
+        className={`overflow-marker pointer-events-auto absolute ${item.dimmed ? 'marker-dimmed' : ''}`}
+        style={{ left: 4, right: 4 }}
+        aria-label={ariaOf(item)}
+        onMouseEnter={(e) => activate(item, e.clientX, e.clientY)}
+        onMouseLeave={onLeave}
+        onFocus={(e) => {
+          const r = e.currentTarget.getBoundingClientRect()
+          activate(item, r.left + r.width / 2, r.bottom)
+        }}
+        onBlur={onLeave}
+        onClick={(e) => onOpenDetail(item.round, e.currentTarget)}
+      >
+        <span aria-hidden className="overflow-marker-arrow">↑</span>
+        {describe(item)}
+      </button>
+    )
+  }
+
+  return (
+    <>
+      <button
+        type="button"
+        className="overflow-marker overflow-marker-summary pointer-events-auto absolute"
+        style={{ left: 4 }}
+        aria-expanded={open}
+        onClick={() => setOpen(!open)}
+      >
+        <span aria-hidden className="overflow-marker-arrow">↑</span>
+        {t('ladder.overflow.count', { n: items.length })}
+      </button>
+      {open && (
+        <div className="pointer-events-auto absolute left-1 right-1 top-full mt-1 z-50 max-h-48 overflow-auto rounded-md border border-gray-200 bg-white shadow-lg dark:border-neutral-700 dark:bg-neutral-900">
+          {sorted.map((item) => (
+            <button
+              key={item.key}
+              type="button"
+              className="block w-full px-2 py-1.5 text-left text-[11px] text-gray-800 dark:text-neutral-200 hover:bg-gray-100 dark:hover:bg-neutral-800"
+              onClick={(e) => onOpenDetail(item.round, e.currentTarget)}
+            >
+              ↑ {describe(item)}
+            </button>
+          ))}
+        </div>
+      )}
+    </>
+  )
+}
+
 function TournamentColumn({
   tournament,
   mode,
-  containerHeight,
+  plotHeight,
   columnWidth,
   activeFilter,
   rfLnOffset,
@@ -411,7 +520,7 @@ function TournamentColumn({
 }: {
   tournament: Tournament
   mode: string
-  containerHeight: number
+  plotHeight: number
   columnWidth: number
   activeFilter: string | null
   rfLnOffset: number
@@ -422,9 +531,91 @@ function TournamentColumn({
   onLeave: () => void
   onOpenDetail: (round: Round, trigger?: HTMLElement | null) => void
 }) {
-  let visibleRounds = hideQualifiers ? tournament.rounds.filter((r) => !r.isQualifier) : tournament.rounds
-  if (roundFilter) visibleRounds = visibleRounds.filter((r) => r.abbreviation === roundFilter)
+  const t = useT()
+  const [activeLabelKey, setActiveLabelKey] = useState<string | null>(null)
+  const [roundsListOpen, setRoundsListOpen] = useState(false)
+
+  const visibleRounds = useMemo(() => {
+    let rs = hideQualifiers ? tournament.rounds.filter((r) => !r.isQualifier) : tournament.rounds
+    if (roundFilter) rs = rs.filter((r) => r.abbreviation === roundFilter)
+    return rs
+  }, [tournament, hideQualifiers, roundFilter])
+
+  // 任务 B/D:round 分支一次计算布局,框体层与标题层共用,禁止两套难度计算。
+  const roundLayouts = useMemo<RoundLayout[]>(() => {
+    if (mode !== 'round') return []
+    const layouts: RoundLayout[] = []
+    visibleRounds.forEach((round, idx) => {
+      // TB 不参与 round 框的高度/颜色/段位统计(仅红条另外画)。
+      // LN 系(含 HB)取 ln 值再减 rfLnOffset,统一投影到 rf 轴上。
+      const adjustedDiffs: number[] = []
+      for (const m of round.maps) {
+        if (m.type === 'TB') continue
+        if (isLnBased(m)) {
+          const d = getLnDiff(m) - rfLnOffset
+          if (d > 0) adjustedDiffs.push(d)
+        } else if (m.difficulty > 0) {
+          adjustedDiffs.push(m.difficulty)
+        }
+      }
+      const computedMin = adjustedDiffs.length > 0 ? Math.min(...adjustedDiffs) : Infinity
+      const computedMax = adjustedDiffs.length > 0 ? Math.max(...adjustedDiffs) : -Infinity
+      const allLn = round.maps.filter((m) => m.type !== 'TB').length > 0 &&
+        round.maps.filter((m) => m.type !== 'TB').every((m) => isLnBased(m))
+      const offsetForStored = allLn ? rfLnOffset : 0
+      const storedMin = round.difficulty.min > 0 ? round.difficulty.min - offsetForStored : Infinity
+      const storedMax = round.difficulty.max > 0 ? round.difficulty.max - offsetForStored : -Infinity
+      const storedAvg = round.difficulty.average > 0 ? round.difficulty.average - offsetForStored : null
+      // computed 有值就完全信任(逐图难度是权威),stored 只作 fallback。
+      // 避免 stored 存量脏数据(如把 round.difficulty.min 手工写成 8.5 后没重算)
+      // 反过来污染前端显示。
+      let minDiff = isFinite(computedMin) ? computedMin : storedMin
+      let maxDiff = isFinite(computedMax) ? computedMax : storedMax
+      // 用户只填平均、没填 min/max,也没逐图填难度时,用 average 撑出一个单点小框
+      if ((!isFinite(minDiff) || !isFinite(maxDiff)) && storedAvg !== null) {
+        minDiff = storedAvg
+        maxDiff = storedAvg
+      }
+      if (!isFinite(minDiff) || !isFinite(maxDiff)) return
+      // 只填平均 / 方差很小时框太窄不好看:跨度 <0.7 就以中心撑到 ±0.35。
+      // center 优先用 stored 平均,否则退到 (min+max)/2。纯视觉,不改数据。
+      if (maxDiff - minDiff < 0.7) {
+        const center = storedAvg !== null ? storedAvg : (minDiff + maxDiff) / 2
+        minDiff = Math.min(minDiff, center - 0.35)
+        maxDiff = Math.max(maxDiff, center + 0.35)
+      }
+      // 任务 D:不 clamp 真实难度,先判超界再裁切绘制区。
+      const geometry = computeRangeGeometry(maxDiff, minDiff, plotHeight, DIFFICULTY_RANGE)
+      if (!geometry) return
+      layouts.push({
+        key: `${round.id}-${idx}`,
+        round,
+        rawTop: geometry.rawTop,
+        rawBottom: geometry.rawBottom,
+        paintTop: geometry.paintTop,
+        paintHeight: geometry.paintBottom - geometry.paintTop,
+        minDifficulty: minDiff,
+        maxDifficulty: maxDiff,
+        dimmed: !!(activeFilter && !round.maps.some((m) => m.type === activeFilter)),
+      })
+    })
+    return layouts
+  }, [mode, visibleRounds, rfLnOffset, plotHeight, activeFilter])
+
+  // 任务 B:标题碰撞布局。只在数据/列宽/缩放/行高/筛选变化时重算,hover 不参与。
+  const { placements: labelPlacements, degraded: labelsDegraded } = useMemo(
+    () => buildRoundLabelPlacements(roundLayouts, ORIGIN_Y, ORIGIN_Y + plotHeight),
+    [roundLayouts, plotHeight]
+  )
+
   if (visibleRounds.length === 0) return null
+
+  // 每列共用:列头(z-40)+ 超界带(z-45,固定预留 32px)。
+  const columnHeader = (
+    <div className="text-xs text-center text-gray-500 dark:text-neutral-400 truncate font-medium sticky top-0 z-40 h-8 flex items-center justify-center bg-white dark:bg-neutral-950">
+      {tournament.abbreviation}
+    </div>
+  )
 
   if (mode === 'tournament') {
     const allDiffs = visibleRounds.flatMap((r) =>
@@ -443,112 +634,168 @@ function TournamentColumn({
     if (pool.length === 0) return null
     const minDiff = Math.min(...pool)
     const maxDiff = Math.max(...pool)
-    const top = difficultyToY(maxDiff, containerHeight, DIFFICULTY_RANGE)
-    const bottom = difficultyToY(minDiff, containerHeight, DIFFICULTY_RANGE)
-    const height = Math.max(bottom - top, 40)
+    // 任务 D:统一几何,去掉旧 `top + 20` 专用偏移;超界时裁切并给红边。
+    const geometry = computeRangeGeometry(maxDiff, minDiff, plotHeight, DIFFICULTY_RANGE)
+    if (!geometry) return null
+    const lastRound = visibleRounds[visibleRounds.length - 1]
+    const height = Math.max(geometry.paintBottom - geometry.paintTop, 40)
+    const bandItems: BandItem[] = geometry.above
+      ? [{ key: `${tournament.id}-band`, round: lastRound, sortValue: maxDiff, displayValue: null, dimmed: false }]
+      : []
 
     return (
       <div className="relative shrink-0" style={{ width: columnWidth }}>
-        <div className="text-xs text-center text-gray-500 dark:text-neutral-400 truncate mb-1 font-medium sticky top-0 bg-white dark:bg-neutral-950 z-20">
-          {tournament.abbreviation}
+        {columnHeader}
+        <div className="sticky top-8 h-8 bg-white dark:bg-neutral-950 pointer-events-none" style={{ zIndex: 45 }}>
+          <OverflowBand items={bandItems} onHover={onHover} onLeave={onLeave} onOpenDetail={onOpenDetail} />
         </div>
-        {/* tournament 分支保持现有语义:整场比赛一个框,左键打开最后一轮详情。 */}
-        <button
-          type="button"
-          className={`round-box absolute left-0 right-0 ${roundBorderAlways ? 'always-border' : ''}`}
-          style={{ top: top + 20, height, background: getGradientForRange(minDiff, maxDiff) }}
-          onMouseEnter={(e) => onHover(visibleRounds[visibleRounds.length - 1], e.clientX, e.clientY)}
-          onMouseLeave={onLeave}
-          onClick={(e) => onOpenDetail(visibleRounds[visibleRounds.length - 1], e.currentTarget)}
-        >
-          {tournament.abbreviation}
-        </button>
+        {/* 框体层:z-10 独立层叠上下文,hover 白边不会越过列头/超界带/标题层 */}
+        <div className="absolute inset-0" style={{ zIndex: 10 }}>
+          {geometry.paintBottom - geometry.paintTop >= 2 && (
+            <button
+              type="button"
+              className={`round-box absolute left-0 right-0 ${roundBorderAlways ? 'always-border' : ''}`}
+              style={{ top: geometry.paintTop, height, background: getGradientForRange(minDiff, maxDiff) }}
+              onMouseEnter={(e) => onHover(lastRound, e.clientX, e.clientY)}
+              onMouseLeave={onLeave}
+              onClick={(e) => onOpenDetail(lastRound, e.currentTarget)}
+            >
+              {tournament.abbreviation}
+              {geometry.above && <span aria-hidden className="overflow-edge-top" />}
+              {geometry.below && <span aria-hidden className="overflow-edge-bottom" />}
+            </button>
+          )}
+        </div>
       </div>
     )
   }
 
   if (mode === 'round') {
-    const totalRounds = visibleRounds.length
+    const layoutByKey = new Map(roundLayouts.map((l) => [l.key, l]))
+    const totalRounds = roundLayouts.length
+    // 任务 D:超界带条目 = 本列超出上界的轮(真实 maxDifficulty 保留,按钮只写"超出标尺")。
+    const bandItems: BandItem[] = roundLayouts
+      .filter((l) => l.maxDifficulty > DIFFICULTY_RANGE.max)
+      .map((l) => ({
+        key: `${l.key}-band`,
+        round: l.round,
+        sortValue: l.maxDifficulty,
+        displayValue: null,
+        dimmed: l.dimmed,
+      }))
+
     return (
       <div className="relative shrink-0" style={{ width: columnWidth }}>
-        <div className="text-xs text-center text-gray-500 dark:text-neutral-400 truncate mb-1 font-medium sticky top-0 bg-white dark:bg-neutral-950 z-20">
-          {tournament.abbreviation}
+        {columnHeader}
+        <div className="sticky top-8 h-8 bg-white dark:bg-neutral-950 pointer-events-none" style={{ zIndex: 45 }}>
+          <OverflowBand items={bandItems} onHover={onHover} onLeave={onLeave} onOpenDetail={onOpenDetail} />
         </div>
-        {visibleRounds.map((round, idx) => {
-          // TB 不参与 round 框的高度/颜色/段位统计(仅红条另外画)。
-          // LN 系(含 HB)取 ln 值再减 rfLnOffset,统一投影到 rf 轴上。
-          const adjustedDiffs: number[] = []
-          for (const m of round.maps) {
-            if (m.type === 'TB') continue
-            if (isLnBased(m)) {
-              const d = getLnDiff(m) - rfLnOffset
-              if (d > 0) adjustedDiffs.push(d)
-            } else if (m.difficulty > 0) {
-              adjustedDiffs.push(m.difficulty)
-            }
-          }
-          const computedMin = adjustedDiffs.length > 0 ? Math.min(...adjustedDiffs) : Infinity
-          const computedMax = adjustedDiffs.length > 0 ? Math.max(...adjustedDiffs) : -Infinity
-          const allLn = round.maps.filter((m) => m.type !== 'TB').length > 0 &&
-            round.maps.filter((m) => m.type !== 'TB').every((m) => isLnBased(m))
-          const offsetForStored = allLn ? rfLnOffset : 0
-          const storedMin = round.difficulty.min > 0 ? round.difficulty.min - offsetForStored : Infinity
-          const storedMax = round.difficulty.max > 0 ? round.difficulty.max - offsetForStored : -Infinity
-          const storedAvg = round.difficulty.average > 0 ? round.difficulty.average - offsetForStored : null
-          // computed 有值就完全信任(逐图难度是权威),stored 只作 fallback。
-          // 避免 stored 存量脏数据(如把 round.difficulty.min 手工写成 8.5 后没重算)
-          // 反过来污染前端显示。
-          let minDiff = isFinite(computedMin) ? computedMin : storedMin
-          let maxDiff = isFinite(computedMax) ? computedMax : storedMax
-          // 用户只填平均、没填 min/max,也没逐图填难度时,用 average 撑出一个单点小框
-          if ((!isFinite(minDiff) || !isFinite(maxDiff)) && storedAvg !== null) {
-            minDiff = storedAvg
-            maxDiff = storedAvg
-          }
-          if (!isFinite(minDiff) || !isFinite(maxDiff)) return null
-          // 只填平均 / 方差很小时框太窄不好看:跨度 <0.7 就以中心撑到 ±0.35。
-          // center 优先用 stored 平均,否则退到 (min+max)/2。纯视觉,不改数据。
-          if (maxDiff - minDiff < 0.7) {
-            const center = storedAvg !== null ? storedAvg : (minDiff + maxDiff) / 2
-            minDiff = Math.min(minDiff, center - 0.35)
-            maxDiff = Math.max(maxDiff, center + 0.35)
-          }
-          const top = difficultyToY(maxDiff, containerHeight, DIFFICULTY_RANGE)
-          const bottom = difficultyToY(minDiff, containerHeight, DIFFICULTY_RANGE)
-          const boxH = Math.max(bottom - top, 24)
-          const isDimmed = activeFilter && !round.maps.some((m) => m.type === activeFilter)
-          const isQualifier = round.isQualifier
-
-          return (
-            <button
-              type="button"
-              // Round ids are legacy data and are not guaranteed unique within a tournament
-              // (SSR SF/F both use round-8). Include the visible index so React and the
-              // overlap layout keep the two rounds separate.
-              key={`${round.id}-${idx}`}
-              className={`round-box absolute left-1 right-1 ${isDimmed ? 'dimmed' : ''} ${roundBorderAlways ? 'always-border' : ''}`}
-              style={{
-                top,
-                height: boxH,
-                background: getGradientForRange(minDiff, maxDiff),
-                zIndex: totalRounds - idx,
-              }}
-              onMouseEnter={(e) => onHover(round, e.clientX, e.clientY)}
-              onMouseLeave={onLeave}
-              onClick={(e) => onOpenDetail(round, e.currentTarget)}
-            >
-              <span className="truncate block w-full text-center">
-                {tournament.abbreviation} {round.abbreviation}
-              </span>
-            </button>
-          )
-        })}
+        {/* 框体层:z-10 独立层叠上下文。hover 白边被限制在本层内,不会重新压住标题。 */}
+        <div className="absolute inset-0" style={{ zIndex: 10 }}>
+          {roundLayouts.map((l, i) => {
+            // 完全在上界外:不渲染普通框体,只留超界带按钮(仍可 hover/点击)。
+            if (l.paintHeight < 2) return null
+            return (
+              <button
+                type="button"
+                key={l.key}
+                className={`round-box absolute left-1 right-1 ${l.dimmed ? 'dimmed' : ''} ${roundBorderAlways ? 'always-border' : ''} ${activeLabelKey === l.key ? 'label-highlight' : ''}`}
+                style={{
+                  top: l.paintTop,
+                  height: Math.max(l.paintHeight, 24),
+                  background: getGradientForRange(l.minDifficulty, l.maxDifficulty),
+                  zIndex: totalRounds - i,
+                }}
+                onMouseEnter={(e) => onHover(l.round, e.clientX, e.clientY)}
+                onMouseLeave={onLeave}
+                onClick={(e) => onOpenDetail(l.round, e.currentTarget)}
+              >
+                <span className="sr-only">{tournament.abbreviation} {l.round.abbreviation}</span>
+                {l.maxDifficulty > DIFFICULTY_RANGE.max && <span aria-hidden className="overflow-edge-top" />}
+                {l.minDifficulty < DIFFICULTY_RANGE.min && <span aria-hidden className="overflow-edge-bottom" />}
+              </button>
+            )
+          })}
+        </div>
+        {/* 标题层:z-30,容器不吃指针,标题按钮吃指针。锚点 paintTop+4,碰撞下移 24px。 */}
+        <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 30 }}>
+          {labelsDegraded ? (
+            <>
+              <button
+                type="button"
+                className="round-label pointer-events-auto absolute"
+                style={{ top: ORIGIN_Y + 4, left: 8 }}
+                aria-expanded={roundsListOpen}
+                onClick={() => setRoundsListOpen(!roundsListOpen)}
+              >
+                {t('ladder.rounds.button')} ({roundLayouts.length})
+              </button>
+              {roundsListOpen && (
+                <div className="pointer-events-auto absolute left-1 right-1 z-10 max-h-60 overflow-auto rounded-md border border-gray-200 bg-white shadow-lg dark:border-neutral-700 dark:bg-neutral-900" style={{ top: ORIGIN_Y + 28 }}>
+                  {roundLayouts.map((l) => (
+                    <button
+                      key={l.key}
+                      type="button"
+                      className="block w-full px-2 py-1.5 text-left text-xs text-gray-800 dark:text-neutral-200 hover:bg-gray-100 dark:hover:bg-neutral-800"
+                      onClick={(e) => onOpenDetail(l.round, e.currentTarget)}
+                    >
+                      {l.round.abbreviation} · {l.round.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </>
+          ) : (
+            labelPlacements.map((p) => {
+              const l = layoutByKey.get(p.key)
+              if (!l) return null
+              return (
+                <Fragment key={p.key}>
+                  {p.moved && p.labelY > l.paintTop && (
+                    <span
+                      aria-hidden
+                      className="round-label-link"
+                      style={{ left: 14, top: l.paintTop + 2, height: Math.max(p.labelY - l.paintTop - 2, 0) }}
+                    />
+                  )}
+                  <button
+                    type="button"
+                    className={`round-label pointer-events-auto absolute ${l.dimmed ? 'label-dimmed' : ''}`}
+                    style={{ top: p.labelY, left: 8, borderBottomColor: getDifficultyColor(l.maxDifficulty), borderLeftColor: getDifficultyColor(l.maxDifficulty) }}
+                    aria-label={`${tournament.abbreviation} ${l.round.name}`}
+                    onMouseEnter={(e) => {
+                      setActiveLabelKey(p.key)
+                      onHover(l.round, e.clientX, e.clientY)
+                    }}
+                    onMouseLeave={() => {
+                      setActiveLabelKey(null)
+                      onLeave()
+                    }}
+                    onFocus={(e) => {
+                      setActiveLabelKey(p.key)
+                      const r = e.currentTarget.getBoundingClientRect()
+                      onHover(l.round, r.left + r.width / 2, r.bottom)
+                    }}
+                    onBlur={() => {
+                      setActiveLabelKey(null)
+                      onLeave()
+                    }}
+                    onClick={(e) => onOpenDetail(l.round, e.currentTarget)}
+                  >
+                    {l.round.abbreviation}
+                  </button>
+                </Fragment>
+              )
+            })
+          )}
+        </div>
       </div>
     )
   }
 
   // mode === 'type'
-  const allTypeBoxes: { round: Round; type: string; adjustedAvg: number; roundKey: string }[] = []
+  // label 是框面显示名:多 TB 轮按 slot 拆框时为槽位名(SHOWTB 等),其余等于 type。
+  const allTypeBoxes: { round: Round; type: string; label: string; adjustedAvg: number; roundKey: string }[] = []
   for (const [roundIdx, round] of visibleRounds.entries()) {
     const roundKey = `${round.id}-${roundIdx}`
     const types = getUniqueTypes(round)
@@ -556,30 +803,55 @@ function TournamentColumn({
       const typeMaps = round.maps.filter((m) => m.type === type)
       // TB 特判:RF 用 difficulty,LN 用 difficultyLn(都减偏移),两侧平均得 adjustedAvg。
       // 缺 LN 值时退化到 RF only;站长填 typeDifficulties 时同理两侧平均。
+      // 一轮多张 TB 型图(如 TB + SHOWTB)时按 slot 各自成框,沿用同一加权(用户要求);
+      // 单张时保持聚合显示 "TB"。全部无有效值才退化到 typeDifficulties 单框。
       if (type === 'TB') {
-        const rfVals = typeMaps.map((m) => m.difficulty).filter((d) => d > 0)
-        const lnVals = typeMaps.map((m) => m.difficultyLn ?? 0).filter((d) => d > 0)
-        let rfAvg: number | null = null
-        let lnAvg: number | null = null
-        if (rfVals.length > 0) rfAvg = rfVals.reduce((s, d) => s + d, 0) / rfVals.length
-        if (lnVals.length > 0) lnAvg = lnVals.reduce((s, d) => s + d, 0) / lnVals.length
-        if (rfAvg === null && lnAvg === null) {
+        const weighted = (rfAvg: number | null, lnAvg: number | null): number | null => {
+          if (rfAvg !== null && lnAvg !== null) {
+            // 双值:偏 ln 2/3。rf + (ln - rf)*2/3,比简单平均更贴近实际手感。
+            const lnAdj = lnAvg - rfLnOffset
+            return rfAvg + (lnAdj - rfAvg) * (2 / 3)
+          }
+          if (rfAvg !== null) return rfAvg
+          if (lnAvg !== null) return lnAvg - rfLnOffset
+          return null
+        }
+        const avgOf = (maps: typeof typeMaps): number | null => {
+          const rfVals = maps.map((m) => m.difficulty).filter((d) => d > 0)
+          const lnVals = maps.map((m) => m.difficultyLn ?? 0).filter((d) => d > 0)
+          const rfAvg = rfVals.length > 0 ? rfVals.reduce((s, d) => s + d, 0) / rfVals.length : null
+          const lnAvg = lnVals.length > 0 ? lnVals.reduce((s, d) => s + d, 0) / lnVals.length : null
+          return weighted(rfAvg, lnAvg)
+        }
+        let pushed = 0
+        if (typeMaps.length > 1) {
+          const bySlot = new Map<string, typeof typeMaps>()
+          for (const m of typeMaps) {
+            const slot = m.slot || 'TB'
+            const arr = bySlot.get(slot)
+            if (arr) arr.push(m)
+            else bySlot.set(slot, [m])
+          }
+          for (const [slot, maps] of bySlot) {
+            const adjustedAvg = avgOf(maps)
+            if (adjustedAvg === null) continue
+            allTypeBoxes.push({ round, type, label: slot, adjustedAvg, roundKey })
+            pushed++
+          }
+        } else {
+          const adjustedAvg = avgOf(typeMaps)
+          if (adjustedAvg !== null) {
+            allTypeBoxes.push({ round, type, label: type, adjustedAvg, roundKey })
+            pushed++
+          }
+        }
+        if (pushed === 0) {
           const td = round.typeDifficulties?.[type]
-          if (td?.rf && td.rf > 0) rfAvg = td.rf
-          if (td?.ln && td.ln > 0) lnAvg = td.ln
+          const rfAvg = td?.rf && td.rf > 0 ? td.rf : null
+          const lnAvg = td?.ln && td.ln > 0 ? td.ln : null
+          const adjustedAvg = weighted(rfAvg, lnAvg)
+          if (adjustedAvg !== null) allTypeBoxes.push({ round, type, label: type, adjustedAvg, roundKey })
         }
-        let adjustedAvg: number | null = null
-        if (rfAvg !== null && lnAvg !== null) {
-          // 双值:偏 ln 2/3。rf + (ln - rf)*2/3,比简单平均更贴近实际手感。
-          const lnAdj = lnAvg - rfLnOffset
-          adjustedAvg = rfAvg + (lnAdj - rfAvg) * (2 / 3)
-        } else if (rfAvg !== null) {
-          adjustedAvg = rfAvg
-        } else if (lnAvg !== null) {
-          adjustedAvg = lnAvg - rfLnOffset
-        }
-        if (adjustedAvg === null) continue
-        allTypeBoxes.push({ round, type, adjustedAvg, roundKey })
         continue
       }
 
@@ -607,7 +879,7 @@ function TournamentColumn({
           adjustedAvg = lnAvg - rfLnOffset
         }
         if (adjustedAvg === null) continue
-        allTypeBoxes.push({ round, type, adjustedAvg, roundKey })
+        allTypeBoxes.push({ round, type, label: type, adjustedAvg, roundKey })
         continue
       }
 
@@ -624,7 +896,7 @@ function TournamentColumn({
       }
       if (typeAvg === null) continue
       const adjustedAvg = typeIsLn ? typeAvg - rfLnOffset : typeAvg
-      allTypeBoxes.push({ round, type, adjustedAvg, roundKey })
+      allTypeBoxes.push({ round, type, label: type, adjustedAvg, roundKey })
     }
   }
 
@@ -643,7 +915,7 @@ function TournamentColumn({
       const size = j - i
       if (size > 1) {
         for (let k = i; k < j; k++) {
-          const key = `${sorted[k].roundKey}-${sorted[k].type}`
+          const key = `${sorted[k].roundKey}-${sorted[k].label}`
           overlapInfo.set(key, { idx: k - i, size })
         }
       }
@@ -651,50 +923,77 @@ function TournamentColumn({
     }
   }
 
+  // 任务 D:type 标量先由现有算法得出 adjustedAvg,再判超界;不把真实难度 clamp 到 16.5。
+  const bandItems: BandItem[] = []
+  for (const b of allTypeBoxes) {
+    if (b.adjustedAvg > DIFFICULTY_RANGE.max) {
+      bandItems.push({
+        key: `${b.roundKey}-${b.label}-band`,
+        round: b.round,
+        type: b.type,
+        label: b.label,
+        sortValue: b.adjustedAvg,
+        displayValue: b.adjustedAvg,
+        dimmed: !!(activeFilter && activeFilter !== b.type),
+      })
+    }
+  }
+
   return (
     <div className="relative shrink-0" style={{ width: columnWidth }}>
-      <div className="text-xs text-center text-gray-500 dark:text-neutral-400 truncate mb-1 font-medium sticky top-0 bg-white dark:bg-neutral-950 z-20">
-        {tournament.abbreviation}
+      {columnHeader}
+      <div className="sticky top-8 h-8 bg-white dark:bg-neutral-950 pointer-events-none" style={{ zIndex: 45 }}>
+        <OverflowBand items={bandItems} onHover={onHover} onLeave={onLeave} onOpenDetail={onOpenDetail} />
       </div>
-      {allTypeBoxes.map(({ round, type, adjustedAvg, roundKey }) => {
-        const y = difficultyToY(adjustedAvg, containerHeight, DIFFICULTY_RANGE)
-        const boxH = BOX_HEIGHT_TYPE
-        const isDimmed = activeFilter && activeFilter !== type
-        const color = getDifficultyColor(adjustedAvg)
-        const key = `${roundKey}-${type}`
-        const info = overlapInfo.get(key)
-        // 重叠时把可用区间(cellWidth - 8px,两侧各留 4px)等分 N,box 变窄不撑总宽。
-        const left = info
-          ? `calc(4px + (100% - 8px) * ${info.idx / info.size})`
-          : '4px'
-        const right = info
-          ? `calc(4px + (100% - 8px) * ${(info.size - info.idx - 1) / info.size})`
-          : '4px'
+      {/* 框体层:z-10 独立层叠上下文。 */}
+      <div className="absolute inset-0" style={{ zIndex: 10 }}>
+        {allTypeBoxes.map(({ round, type, label, adjustedAvg, roundKey }) => {
+          const anchorY = yForDifficulty(adjustedAvg, plotHeight, DIFFICULTY_RANGE)
+          const boxH = BOX_HEIGHT_TYPE
+          const scalar = computeScalarGeometry(anchorY, boxH, plotHeight)
+          const isDimmed = activeFilter && activeFilter !== type
+          const color = getDifficultyColor(adjustedAvg)
+          const key = `${roundKey}-${label}`
+          const info = overlapInfo.get(key)
+          // 重叠时把可用区间(cellWidth - 8px,两侧各留 4px)等分 N,box 变窄不撑总宽。
+          const left = info
+            ? `calc(4px + (100% - 8px) * ${info.idx / info.size})`
+            : '4px'
+          const right = info
+            ? `calc(4px + (100% - 8px) * ${(info.size - info.idx - 1) / info.size})`
+            : '4px'
+          // 完全在绘图区外:不渲染普通框体,只留超界带按钮(above 时)。
+          if (scalar.fullyOutside) return null
+          const paintHeight = scalar.paintBottom - scalar.paintTop
 
-        return (
-          <button
-            type="button"
-            key={key}
-            className={`round-box absolute ${isDimmed ? 'dimmed' : ''} ${roundBorderAlways ? 'always-border' : ''}`}
-            style={{
-              top: y - boxH / 2,
-              height: boxH,
-              background: color,
-              fontSize: '10px',
-              left,
-              right,
-            }}
-            onMouseEnter={(e) => onHover(round, e.clientX, e.clientY, type)}
-            onMouseLeave={onLeave}
-            // type 分支左键打开该框所属轮次的详情(不改变原始数据)。
-            onClick={(e) => onOpenDetail(round, e.currentTarget)}
-          >
-            <span className="truncate block w-full text-center">
-              {tournament.abbreviation} {round.abbreviation} {type}
-            </span>
-          </button>
-        )
-      })}
+          return (
+            <button
+              type="button"
+              key={key}
+              className={`round-box absolute ${isDimmed ? 'dimmed' : ''} ${roundBorderAlways ? 'always-border' : ''}`}
+              style={{
+                top: scalar.paintTop,
+                // 最小点击高度只改绘制外观,不改变锚点。
+                height: Math.max(paintHeight, boxH),
+                background: color,
+                fontSize: '10px',
+                left,
+                right,
+              }}
+              onMouseEnter={(e) => onHover(round, e.clientX, e.clientY, type)}
+              onMouseLeave={onLeave}
+              // type 分支左键打开该框所属轮次的详情(不改变原始数据)。
+              onClick={(e) => onOpenDetail(round, e.currentTarget)}
+            >
+              <span className="truncate block w-full text-center">
+                {tournament.abbreviation} {round.abbreviation} {label}
+              </span>
+              {adjustedAvg > DIFFICULTY_RANGE.max && <span aria-hidden className="overflow-edge-top" />}
+              {adjustedAvg < DIFFICULTY_RANGE.min && <span aria-hidden className="overflow-edge-bottom" />}
+            </button>
+          )
+        })}
+      </div>
     </div>
   )
 }

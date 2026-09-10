@@ -99,6 +99,245 @@ button.round-box:focus-visible {
   text-shadow: none;
 }
 
+/* ---------- 任务 B:标题层 ---------- */
+/* 独立标题按钮(z-30 层,容器 pointer-events:none,按钮 auto)。
+   实色表面 + 1px 对应难度色细线(颜色由内联 borderBottomColor 提供),
+   叠在任何框上都可读;12px 字号,不随 viewport 缩放。 */
+.round-label {
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 8px;
+  border-radius: 5px;
+  border-bottom: 1px solid;
+  /* 左侧 2px 难度色侧条:颜色由内联 borderLeftColor 覆盖;降级按钮用中性灰默认值。 */
+  border-left: 2px solid;
+  border-left-color: #a3a3a3;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  background: #ffffff;
+  color: #262626;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+  cursor: pointer;
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+
+.dark .round-label {
+  background: #262626;
+  color: #f5f5f5;
+  border-left-color: #737373;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.round-label:focus-visible {
+  outline: 2px solid #a855f7;
+  outline-offset: 2px;
+}
+
+.round-label.label-dimmed {
+  opacity: 0.3;
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .round-label:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
+  }
+  .dark .round-label:hover {
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.55);
+  }
+}
+
+/* hover/focus 标题时强调对应框体:同样局限在框体层(z-10)的层叠上下文里。 */
+.round-box.label-highlight {
+  box-shadow: 0 0 0 2px white, 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+  z-index: 50 !important;
+}
+
+/* 标签位移时指回所属框顶部的 1px 短连接线;不响应指针。 */
+.round-label-link {
+  position: absolute;
+  width: 1px;
+  background: rgba(110, 110, 110, 0.55);
+  pointer-events: none;
+}
+
+.dark .round-label-link {
+  background: rgba(200, 200, 200, 0.45);
+}
+
+/* ---------- 任务 D:超界暗红边界(熔岩主题) ---------- */
+/* 红色只表示超出当前绘图区,不代表数据非法。动效全部限定在标记与边缘条内部,
+   不整屏渲染;prefers-reduced-motion 下全部静态(动画都在 no-preference 块内)。 */
+.overflow-marker {
+  /* 顶边平齐贴住超界带上缘(无圆角、无上边框),只保留下圆角;
+     血红色辉光向下散发,像从标尺顶端溢出的熔岩。 */
+  top: 0;
+  height: 32px;
+  max-height: 32px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 10px;
+  border-radius: 0 0 8px 8px;
+  border: 1px solid #dc2626;
+  border-top: none;
+  /* 双层背景:顶部高光 + 熔岩横纹(0deg 条带,瓦片 26px,动画向上漂移) */
+  background-image:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0) 45%),
+    repeating-linear-gradient(0deg, #7f1d1d 0 10px, #991b1b 10px 18px, #6b1512 18px 26px);
+  color: #fee2e2;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-shadow: 0 0 6px rgba(252, 165, 165, 0.65), 0 1px 2px rgba(0, 0, 0, 0.6);
+  box-shadow:
+    0 6px 16px rgba(220, 38, 38, 0.5),
+    0 2px 6px rgba(220, 38, 38, 0.35),
+    inset 0 -10px 16px rgba(220, 38, 38, 0.35);
+  cursor: pointer;
+  appearance: none;
+}
+
+.dark .overflow-marker {
+  color: #fecaca;
+}
+
+.overflow-marker-arrow {
+  display: inline-block;
+  font-weight: 800;
+}
+
+.overflow-marker:hover {
+  filter: brightness(1.18) saturate(1.1);
+}
+
+.overflow-marker:focus-visible {
+  outline: 2px solid #f87171;
+  outline-offset: 2px;
+}
+
+.overflow-marker.marker-dimmed {
+  opacity: 0.35;
+  animation: none !important;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .overflow-marker {
+    /* 红光呼吸 + 熔岩条带向上漂移(位移一个瓦片无缝循环) */
+    animation:
+      marker-breathe 2.4s ease-in-out infinite,
+      lava-pan 5s linear infinite;
+  }
+  .overflow-marker::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: -35%;
+    width: 35%;
+    background: linear-gradient(90deg, transparent, rgba(254, 226, 226, 0.4), transparent);
+    animation: ladder-sweep 3s ease-in-out infinite;
+    pointer-events: none;
+  }
+  .overflow-marker-arrow {
+    animation: arrow-flicker 1.4s ease-in-out infinite;
+  }
+}
+
+@keyframes marker-breathe {
+  /* 呼吸只加强向下散发的血红辉光与底部内发光,顶边保持平齐。 */
+  0%, 100% {
+    box-shadow:
+      0 4px 12px rgba(220, 38, 38, 0.45),
+      0 1px 4px rgba(220, 38, 38, 0.3),
+      inset 0 -8px 14px rgba(220, 38, 38, 0.3);
+  }
+  50% {
+    box-shadow:
+      0 10px 26px rgba(220, 38, 38, 0.75),
+      0 3px 10px rgba(239, 68, 68, 0.55),
+      inset 0 -12px 20px rgba(239, 68, 68, 0.5);
+  }
+}
+
+@keyframes lava-pan {
+  from { background-position: 0 0, 0 0; }
+  to { background-position: 0 0, 0 -26px; }
+}
+
+@keyframes arrow-flicker {
+  0%, 100% { opacity: 0.7; transform: translateY(0); }
+  50% { opacity: 1; transform: translateY(-1px); }
+}
+
+/* range 穿过绘图区边界:截断处熔岩边缘条。热纹流动 + 余烬滴落(均 no-preference)。 */
+.round-box .overflow-edge-top,
+.round-box .overflow-edge-bottom {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: #dc2626;
+  box-shadow:
+    0 0 8px 1px rgba(220, 38, 38, 0.5),
+    0 3px 10px rgba(220, 38, 38, 0.3);
+  pointer-events: none;
+}
+
+.round-box .overflow-edge-top {
+  top: 0;
+}
+
+.round-box .overflow-edge-bottom {
+  bottom: 0;
+}
+
+.round-box .overflow-edge-top::before,
+.round-box .overflow-edge-bottom::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(90deg, #dc2626 0 6px, #fca5a5 6px 10px, #ef4444 10px 18px, #7f1d1d 18px 30px);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .round-box .overflow-edge-top::before,
+  .round-box .overflow-edge-bottom::before {
+    animation: heat-pan 1.6s linear infinite;
+  }
+  /* 余烬从截断缘向框内滴落(三个错位小火点,seamless 循环) */
+  .round-box .overflow-edge-top::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 18px;
+    background-image:
+      radial-gradient(circle 1.5px at 18% 2px, rgba(254, 202, 202, 0.9) 99%, transparent),
+      radial-gradient(circle 1px at 46% 7px, rgba(248, 113, 113, 0.75) 99%, transparent),
+      radial-gradient(circle 1.5px at 74% 1px, rgba(252, 165, 165, 0.85) 99%, transparent);
+    background-repeat: no-repeat;
+    background-size: 100% 18px;
+    animation: ember-drip 1.7s linear infinite;
+  }
+}
+
+@keyframes heat-pan {
+  to { background-position: 30px 0; }
+}
+
+@keyframes ember-drip {
+  from { background-position: 0 0, 0 0, 0 0; }
+  to { background-position: 0 18px, 0 18px, 0 18px; }
+}
+
 /* Animate interaction feedback without moving the ladder's difficulty coordinates. */
 .ladder-header button,
 .ladder-header a,
@@ -180,11 +419,17 @@ button.round-box:focus-visible {
   to { opacity: 0; transform: translateY(6px); }
 }
 
+@keyframes ladder-sweep {
+  from { left: -30%; }
+  to { left: 100%; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .ladder-header button,
   .ladder-header a,
   .ladder-header input,
-  .round-box {
+  .round-box,
+  .round-label {
     transition: none;
   }
 }

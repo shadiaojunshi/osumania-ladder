@@ -850,7 +850,8 @@ function TournamentColumn({
   return (
     <div className="relative shrink-0" style={{ width: columnWidth }}>
       {columnHeader}
-      <div className="sticky top-8 h-8 bg-white dark:bg-neutral-950 pointer-events-none" style={{ zIndex: 45 }}>
+      {/* 超界带:与 tournament 分支一致——随内容滚动不 sticky,z-35 低于列头,滚过头被列头盖住。 */}
+      <div className="absolute top-8 left-0 right-0 h-8 pointer-events-none" style={{ zIndex: 35 }}>
         <OverflowBand items={bandItems} bordered={roundBorderAlways} onHover={onHover} onLeave={onLeave} onOpenDetail={onOpenDetail} />
       </div>
       {/* 框体层:z-10 独立层叠上下文。 */}

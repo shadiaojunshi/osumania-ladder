@@ -60,7 +60,32 @@ body {
 }
 
 .round-box.always-border {
-  box-shadow: 0 0 0 1.5px white, 0 1px 3px rgba(0, 0, 0, 0.15);
+  /* 浅色背景:白边 + 1px 中性外描边,避免白底上白边不可见。box-shadow 不占布局,
+     不会改变框的难度坐标。 */
+  box-shadow:
+    0 0 0 1.5px #ffffff,
+    0 0 0 2.5px rgba(82, 82, 82, 0.4),
+    0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.dark .round-box.always-border {
+  /* 深色背景保持纯白边。 */
+  box-shadow:
+    0 0 0 1.5px #ffffff,
+    0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+/* 可点击主体统一为 button.round-box:清除原生控件默认样式后套用 .round-box。 */
+button.round-box {
+  appearance: none;
+  border: none;
+  margin: 0;
+  font-family: inherit;
+}
+
+button.round-box:focus-visible {
+  outline: 2px solid #a855f7;
+  outline-offset: 2px;
 }
 
 .round-box.always-border:hover {
@@ -112,6 +137,27 @@ body {
   .ladder-detail-panel {
     animation: ladder-reveal 240ms cubic-bezier(.22, 1, .36, 1) both;
   }
+  /* 退场:140ms 统一时长,动画结束后由 onAnimationEnd 卸载(JS 侧另有 200ms 兜底)。 */
+  .ladder-detail-closing {
+    animation: ladder-fade-out 140ms ease-in both;
+  }
+  .ladder-detail-closing .ladder-detail-panel {
+    animation: ladder-dismiss 140ms ease-in both;
+  }
+}
+
+/* 详情面板尺寸:桌面 min(560px, 100vw-32px),移动端 100vw-24px;
+   最大高 85dvh,保留 85vh fallback。头部不滚动,列表区滚动。 */
+.ladder-detail-panel {
+  width: min(560px, calc(100vw - 32px));
+  max-height: 85vh;
+  max-height: 85dvh;
+}
+
+@media (max-width: 639px) {
+  .ladder-detail-panel {
+    width: calc(100vw - 24px);
+  }
 }
 
 @keyframes ladder-fade-in {
@@ -119,9 +165,19 @@ body {
   to { opacity: 1; }
 }
 
+@keyframes ladder-fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
 @keyframes ladder-reveal {
   from { opacity: 0; transform: translateY(5px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes ladder-dismiss {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(6px); }
 }
 
 @media (prefers-reduced-motion: reduce) {

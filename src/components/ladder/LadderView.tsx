@@ -41,6 +41,7 @@ export function LadderView() {
   const [hoveredRound, setHoveredRound] = useState<{ round: Round; tournament: Tournament; x: number; y: number; type?: string } | null>(null)
   const [detailRound, setDetailRound] = useState<{ round: Round; tournament: Tournament } | null>(null)
   const hideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const detailTriggerRef = useRef<HTMLElement | null>(null)
 
   const diffRange = DIFFICULTY_RANGE.max - DIFFICULTY_RANGE.min
   const containerHeight = diffRange * rowHeight * zoom
@@ -102,16 +103,43 @@ export function LadderView() {
     return () => { if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current) }
   }, [])
 
+  // 详情统一入口:框体左键、悬浮卡"详细信息"、搜索结果都走这里。
+  // 集中清理待执行的 hover 定时器、清除悬浮态、记录触发控件以便关闭后还原焦点。
+  const openRoundDetail = useCallback((tournament: Tournament, round: Round, trigger?: HTMLElement | null) => {
+    if (hideTimeoutRef.current) {
+      clearTimeout(hideTimeoutRef.current)
+      hideTimeoutRef.current = null
+    }
+    setHoveredRound(null)
+    if (trigger) {
+      detailTriggerRef.current = trigger
+    } else {
+      const active = typeof document !== 'undefined' ? document.activeElement : null
+      detailTriggerRef.current = active instanceof HTMLElement ? active : null
+    }
+    setDetailRound({ tournament, round })
+  }, [])
+
+  // 详情退场动画结束后由 RoundDetailModal 调用:卸载弹窗并还原触发控件焦点。
+  const closeDetailRound = useCallback(() => {
+    setDetailRound(null)
+    const trigger = detailTriggerRef.current
+    detailTriggerRef.current = null
+    if (trigger) {
+      // 等弹窗卸载提交完成再还原焦点。
+      requestAnimationFrame(() => {
+        if (trigger.isConnected) trigger.focus()
+      })
+    }
+  }, [])
+
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
       {searchQuery.trim() && (
         <LadderSearchResults
           key={`${searchQuery}/${yearFilter}/${roundFilter}`}
           results={searchResults}
-          onSelect={(tournament, round) => {
-            setHoveredRound(null)
-            setDetailRound({ tournament, round })
-          }}
+          onSelect={(tournament, round, trigger) => openRoundDetail(tournament, round, trigger)}
         />
       )}
       <div className="flex-1 flex overflow-hidden">
@@ -143,6 +171,7 @@ export function LadderView() {
                 roundBorderAlways={roundBorderAlways}
                 onHover={(round, x, y, type) => showHover(round, tournament, x, y, type)}
                 onLeave={scheduleHide}
+                onOpenDetail={(round, trigger) => openRoundDetail(tournament, round, trigger)}
               />
             ))}
           </div>
@@ -159,18 +188,19 @@ export function LadderView() {
             y={hoveredRound.y}
             onMouseEnter={cancelHide}
             onMouseLeave={() => setHoveredRound(null)}
-            onOpenDetail={() => {
-              setDetailRound({ round: hoveredRound.round, tournament: hoveredRound.tournament })
-              setHoveredRound(null)
+            onOpenDetail={(trigger) => {
+              if (hoveredRound) openRoundDetail(hoveredRound.tournament, hoveredRound.round, trigger)
             }}
           />
         )}
 
         {detailRound && (
           <RoundDetailModal
+            // 换轮重开时强制重新挂载:旧实例的退场计时器随卸载清理,不会误关新弹窗。
+            key={`${detailRound.tournament.id}/${detailRound.round.id}`}
             round={detailRound.round}
             tournament={detailRound.tournament}
-            onClose={() => setDetailRound(null)}
+            onClose={closeDetailRound}
           />
         )}
       </div>
@@ -377,6 +407,7 @@ function TournamentColumn({
   roundBorderAlways,
   onHover,
   onLeave,
+  onOpenDetail,
 }: {
   tournament: Tournament
   mode: string
@@ -389,6 +420,7 @@ function TournamentColumn({
   roundBorderAlways: boolean
   onHover: (round: Round, x: number, y: number, type?: string) => void
   onLeave: () => void
+  onOpenDetail: (round: Round, trigger?: HTMLElement | null) => void
 }) {
   let visibleRounds = hideQualifiers ? tournament.rounds.filter((r) => !r.isQualifier) : tournament.rounds
   if (roundFilter) visibleRounds = visibleRounds.filter((r) => r.abbreviation === roundFilter)
@@ -420,14 +452,17 @@ function TournamentColumn({
         <div className="text-xs text-center text-gray-500 dark:text-neutral-400 truncate mb-1 font-medium sticky top-0 bg-white dark:bg-neutral-950 z-20">
           {tournament.abbreviation}
         </div>
-        <div
-          className="round-box absolute left-0 right-0"
+        {/* tournament 分支保持现有语义:整场比赛一个框,左键打开最后一轮详情。 */}
+        <button
+          type="button"
+          className={`round-box absolute left-0 right-0 ${roundBorderAlways ? 'always-border' : ''}`}
           style={{ top: top + 20, height, background: getGradientForRange(minDiff, maxDiff) }}
           onMouseEnter={(e) => onHover(visibleRounds[visibleRounds.length - 1], e.clientX, e.clientY)}
           onMouseLeave={onLeave}
+          onClick={(e) => onOpenDetail(visibleRounds[visibleRounds.length - 1], e.currentTarget)}
         >
           {tournament.abbreviation}
-        </div>
+        </button>
       </div>
     )
   }
@@ -485,7 +520,8 @@ function TournamentColumn({
           const isQualifier = round.isQualifier
 
           return (
-            <div
+            <button
+              type="button"
               // Round ids are legacy data and are not guaranteed unique within a tournament
               // (SSR SF/F both use round-8). Include the visible index so React and the
               // overlap layout keep the two rounds separate.
@@ -499,11 +535,12 @@ function TournamentColumn({
               }}
               onMouseEnter={(e) => onHover(round, e.clientX, e.clientY)}
               onMouseLeave={onLeave}
+              onClick={(e) => onOpenDetail(round, e.currentTarget)}
             >
               <span className="truncate block w-full text-center">
                 {tournament.abbreviation} {round.abbreviation}
               </span>
-            </div>
+            </button>
           )
         })}
       </div>
@@ -635,9 +672,10 @@ function TournamentColumn({
           : '4px'
 
         return (
-          <div
+          <button
+            type="button"
             key={key}
-            className={`round-box absolute ${isDimmed ? 'dimmed' : ''}`}
+            className={`round-box absolute ${isDimmed ? 'dimmed' : ''} ${roundBorderAlways ? 'always-border' : ''}`}
             style={{
               top: y - boxH / 2,
               height: boxH,
@@ -648,11 +686,13 @@ function TournamentColumn({
             }}
             onMouseEnter={(e) => onHover(round, e.clientX, e.clientY, type)}
             onMouseLeave={onLeave}
+            // type 分支左键打开该框所属轮次的详情(不改变原始数据)。
+            onClick={(e) => onOpenDetail(round, e.currentTarget)}
           >
             <span className="truncate block w-full text-center">
               {tournament.abbreviation} {round.abbreviation} {type}
             </span>
-          </div>
+          </button>
         )
       })}
     </div>

@@ -27,7 +27,7 @@ export function HoverCard({
   y: number
   onMouseEnter: () => void
   onMouseLeave: () => void
-  onOpenDetail: () => void
+  onOpenDetail: (trigger?: HTMLElement | null) => void
 }) {
   const { activeFilter } = useViewStore()
   const t = useT()
@@ -64,7 +64,7 @@ export function HoverCard({
           {tournament.abbreviation} {round.abbreviation}{hoveredType ? ` ${hoveredType}` : ''}
         </span>
         <button
-          onClick={onOpenDetail}
+          onClick={(e) => onOpenDetail(e.currentTarget)}
           className="shrink-0 text-[11px] px-1.5 py-0.5 rounded bg-gray-100 hover:bg-gray-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-gray-600 dark:text-neutral-300"
         >
           {t('hover.detail')}

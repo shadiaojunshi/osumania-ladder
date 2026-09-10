@@ -7,7 +7,7 @@ import type { TournamentSearchResult } from '@/lib/tournamentSearch'
 
 export function LadderSearchResults({ results, onSelect }: {
   results: TournamentSearchResult[]
-  onSelect: (tournament: Tournament, round: Round) => void
+  onSelect: (tournament: Tournament, round: Round, trigger?: HTMLElement | null) => void
 }) {
   const t = useT()
   const [limit, setLimit] = useState(5)
@@ -24,7 +24,7 @@ export function LadderSearchResults({ results, onSelect }: {
             <li className="ladder-search-result" key={`${tournament.id}/${round.id}/${map.slot}/${i}`}>
               <button
                 type="button"
-                onClick={() => onSelect(tournament, round)}
+                onClick={(e) => onSelect(tournament, round, e.currentTarget)}
                 className="flex w-full flex-wrap items-baseline gap-x-3 gap-y-0.5 rounded px-2 py-2 text-left text-sm transition-colors hover:bg-purple-50 focus-visible:outline-2 focus-visible:outline-purple-500 dark:hover:bg-purple-950/40 motion-reduce:transition-none"
               >
                 <span className="shrink-0 font-medium text-purple-700 dark:text-purple-300">{tournament.abbreviation} · {round.abbreviation} · {map.slot}</span>

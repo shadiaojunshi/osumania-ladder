@@ -46,7 +46,8 @@ export const useViewStore = create<ViewStore>((set) => ({
   hideQualifiers: false,
   yearFilter: null,
   roundFilter: null,
-  roundBorderAlways: false,
+  // 默认白边;本轮不持久化,刷新回到默认,页面内手动开关仍有效。
+  roundBorderAlways: true,
 
   setMode: (mode) => set({ mode }),
   setZoom: (zoom) => set({ zoom }),

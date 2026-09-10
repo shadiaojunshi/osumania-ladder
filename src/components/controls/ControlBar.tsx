@@ -18,7 +18,6 @@ export function ControlBar() {
     hideQualifiers, setHideQualifiers,
     yearFilter, setYearFilter,
     roundFilter, setRoundFilter,
-    mode,
     roundBorderAlways, setRoundBorderAlways,
   } = useViewStore()
   const theme = usePrefsStore((s) => s.theme)
@@ -131,19 +130,18 @@ export function ControlBar() {
         {hideQualifiers ? t('control.qual.hide') : t('control.qual.show')}
       </button>
 
-      {mode === 'round' && (
-        <button
-          onClick={() => setRoundBorderAlways(!roundBorderAlways)}
-          className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
-            roundBorderAlways
-              ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-200'
-              : 'bg-gray-200 text-gray-600 hover:bg-gray-300 dark:bg-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-600'
-          }`}
-          title={t('control.borderAlways.title')}
-        >
-          {roundBorderAlways ? t('control.borderAlways.on') : t('control.borderAlways.off')}
-        </button>
-      )}
+      {/* 白边默认开启且作用于三种视图,开关全视图可见。 */}
+      <button
+        onClick={() => setRoundBorderAlways(!roundBorderAlways)}
+        className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
+          roundBorderAlways
+            ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-200'
+            : 'bg-gray-200 text-gray-600 hover:bg-gray-300 dark:bg-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-600'
+        }`}
+        title={t('control.borderAlways.title')}
+      >
+        {roundBorderAlways ? t('control.borderAlways.on') : t('control.borderAlways.off')}
+      </button>
 
       <div className="w-px h-6 bg-gray-300 dark:bg-neutral-700 hidden md:block" />
 

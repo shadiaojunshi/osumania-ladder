@@ -57,7 +57,6 @@ export const messagesEn: Record<keyof typeof messagesZh, string> = {
   'hover.detail': 'Details',
 
   // ---------- Ladder (tasks B/D) ----------
-  'ladder.rounds.button': 'Rounds',
   'ladder.overflow.beyond': 'Beyond scale',
   'ladder.overflow.count': 'Overflow {n}',
 

@@ -4,14 +4,13 @@ import { useViewStore } from '@/stores/viewStore'
 import { getGradientForRange, getDifficultyColor } from '@/lib/difficulty'
 import type { Tournament, Round } from '@/lib/types'
 import { tournaments } from '@/generated/tournaments'
-import { useState, useRef, useCallback, useEffect, useMemo, Fragment } from 'react'
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react'
 import { HoverCard } from './HoverCard'
 import { RoundDetailModal } from './RoundDetailModal'
 import { normalizeRealType } from '@/lib/realType'
 import { createTournamentSearchIndex, searchTournaments } from '@/lib/tournamentSearch'
 import { LadderSearchResults } from './LadderSearchResults'
 import { useT } from '@/lib/i18n'
-import { buildRoundLabelPlacements } from '@/lib/roundLabelLayout'
 import type { RoundLayout } from '@/lib/roundLabelLayout'
 import { ORIGIN_Y, yForDifficulty, computeRangeGeometry, computeScalarGeometry } from '@/lib/ladderGeometry'
 
@@ -424,8 +423,10 @@ interface BandItem {
 
 // 任务 D:列顶超界带内容。单条 → 直接按钮;多条 → "↑ 超界 N" 集合按钮 + 降序列表。
 // 每一项点击都走 A 的统一详情入口;hover/focus 显示完整信息(悬浮卡),不只靠红色。
-function OverflowBand({ items, onHover, onLeave, onOpenDetail }: {
+// bordered:跟随"框体常驻边框"开关,给熔岩牌同款白描边,保证与框体接缝白线连续。
+function OverflowBand({ items, bordered, onHover, onLeave, onOpenDetail }: {
   items: BandItem[]
+  bordered?: boolean
   onHover: (round: Round, x: number, y: number, type?: string) => void
   onLeave: () => void
   onOpenDetail: (round: Round, trigger?: HTMLElement | null) => void
@@ -456,7 +457,7 @@ function OverflowBand({ items, onHover, onLeave, onOpenDetail }: {
     return (
       <button
         type="button"
-        className={`overflow-marker pointer-events-auto absolute ${item.dimmed ? 'marker-dimmed' : ''}`}
+        className={`overflow-marker pointer-events-auto absolute ${bordered ? 'always-border' : ''} ${item.dimmed ? 'marker-dimmed' : ''}`}
         style={{ left: 4, right: 4 }}
         aria-label={ariaOf(item)}
         onMouseEnter={(e) => activate(item, e.clientX, e.clientY)}
@@ -478,7 +479,7 @@ function OverflowBand({ items, onHover, onLeave, onOpenDetail }: {
     <>
       <button
         type="button"
-        className="overflow-marker overflow-marker-summary pointer-events-auto absolute"
+        className={`overflow-marker overflow-marker-summary pointer-events-auto absolute ${bordered ? 'always-border' : ''}`}
         style={{ left: 4 }}
         aria-expanded={open}
         onClick={() => setOpen(!open)}
@@ -531,17 +532,14 @@ function TournamentColumn({
   onLeave: () => void
   onOpenDetail: (round: Round, trigger?: HTMLElement | null) => void
 }) {
-  const t = useT()
-  const [activeLabelKey, setActiveLabelKey] = useState<string | null>(null)
-  const [roundsListOpen, setRoundsListOpen] = useState(false)
-
   const visibleRounds = useMemo(() => {
     let rs = hideQualifiers ? tournament.rounds.filter((r) => !r.isQualifier) : tournament.rounds
     if (roundFilter) rs = rs.filter((r) => r.abbreviation === roundFilter)
     return rs
   }, [tournament, hideQualifiers, roundFilter])
 
-  // 任务 B/D:round 分支一次计算布局,框体层与标题层共用,禁止两套难度计算。
+  // round 分支一次算好几何(坐标取自 ladderGeometry 唯一权威),渲染直接读 rawTop/rawBottom,
+  // 避免出现第二处难度→y 映射。用户已拍板:本视图不做独立标题层。
   const roundLayouts = useMemo<RoundLayout[]>(() => {
     if (mode !== 'round') return []
     const layouts: RoundLayout[] = []
@@ -602,15 +600,9 @@ function TournamentColumn({
     return layouts
   }, [mode, visibleRounds, rfLnOffset, plotHeight, activeFilter])
 
-  // 任务 B:标题碰撞布局。只在数据/列宽/缩放/行高/筛选变化时重算,hover 不参与。
-  const { placements: labelPlacements, degraded: labelsDegraded } = useMemo(
-    () => buildRoundLabelPlacements(roundLayouts, ORIGIN_Y, ORIGIN_Y + plotHeight),
-    [roundLayouts, plotHeight]
-  )
-
   if (visibleRounds.length === 0) return null
 
-  // 每列共用:列头(z-40)+ 超界带(z-45,固定预留 32px)。
+  // 每列共用:列头 z-40(固定预留 32px)。超界带由各视图分支自行渲染,层级见各自分支。
   const columnHeader = (
     <div className="text-xs text-center text-gray-500 dark:text-neutral-400 truncate font-medium sticky top-0 z-40 h-8 flex items-center justify-center bg-white dark:bg-neutral-950">
       {tournament.abbreviation}
@@ -646,22 +638,22 @@ function TournamentColumn({
     return (
       <div className="relative shrink-0" style={{ width: columnWidth }}>
         {columnHeader}
-        <div className="sticky top-8 h-8 bg-white dark:bg-neutral-950 pointer-events-none" style={{ zIndex: 45 }}>
-          <OverflowBand items={bandItems} onHover={onHover} onLeave={onLeave} onOpenDetail={onOpenDetail} />
+        {/* 超界带:随内容滚动不 sticky——只滚回顶部附近可见;z-35 低于列头,滚过时被盖住 */}
+        <div className="absolute top-8 left-0 right-0 h-8 pointer-events-none" style={{ zIndex: 35 }}>
+          <OverflowBand items={bandItems} bordered={roundBorderAlways} onHover={onHover} onLeave={onLeave} onOpenDetail={onOpenDetail} />
         </div>
         {/* 框体层:z-10 独立层叠上下文,hover 白边不会越过列头/超界带/标题层 */}
         <div className="absolute inset-0" style={{ zIndex: 10 }}>
           {geometry.paintBottom - geometry.paintTop >= 2 && (
             <button
               type="button"
-              className={`round-box absolute left-0 right-0 ${roundBorderAlways ? 'always-border' : ''}`}
+              className={`round-box absolute ${geometry.above ? 'left-1 right-1 overflow-cropped-top' : 'left-0 right-0'} ${geometry.below ? 'overflow-cropped-bottom' : ''} ${roundBorderAlways ? 'always-border' : ''}`}
               style={{ top: geometry.paintTop, height, background: getGradientForRange(minDiff, maxDiff) }}
               onMouseEnter={(e) => onHover(lastRound, e.clientX, e.clientY)}
               onMouseLeave={onLeave}
               onClick={(e) => onOpenDetail(lastRound, e.currentTarget)}
             >
               {tournament.abbreviation}
-              {geometry.above && <span aria-hidden className="overflow-edge-top" />}
               {geometry.below && <span aria-hidden className="overflow-edge-bottom" />}
             </button>
           )}
@@ -671,38 +663,26 @@ function TournamentColumn({
   }
 
   if (mode === 'round') {
-    const layoutByKey = new Map(roundLayouts.map((l) => [l.key, l]))
     const totalRounds = roundLayouts.length
-    // 任务 D:超界带条目 = 本列超出上界的轮(真实 maxDifficulty 保留,按钮只写"超出标尺")。
-    const bandItems: BandItem[] = roundLayouts
-      .filter((l) => l.maxDifficulty > DIFFICULTY_RANGE.max)
-      .map((l) => ({
-        key: `${l.key}-band`,
-        round: l.round,
-        sortValue: l.maxDifficulty,
-        displayValue: null,
-        dimmed: l.dimmed,
-      }))
-
     return (
       <div className="relative shrink-0" style={{ width: columnWidth }}>
         {columnHeader}
-        <div className="sticky top-8 h-8 bg-white dark:bg-neutral-950 pointer-events-none" style={{ zIndex: 45 }}>
-          <OverflowBand items={bandItems} onHover={onHover} onLeave={onLeave} onOpenDetail={onOpenDetail} />
-        </div>
-        {/* 框体层:z-10 独立层叠上下文。hover 白边被限制在本层内,不会重新压住标题。 */}
+        {/* 框体层:z-10 独立层叠上下文(把 hover 白边限制在本层内)。
+            框内直接居中显示"比赛名 + 轮次缩写";超界框不裁切/不标红(与最初版本一致)。
+            注意:本分支不渲染超界带,而列头只有 32px、ORIGIN_Y=64,
+            所以框伸出顶部的部分只在 0~32px 被列头遮住,32~64px 这段仍然可见。 */}
         <div className="absolute inset-0" style={{ zIndex: 10 }}>
           {roundLayouts.map((l, i) => {
-            // 完全在上界外:不渲染普通框体,只留超界带按钮(仍可 hover/点击)。
-            if (l.paintHeight < 2) return null
             return (
               <button
                 type="button"
                 key={l.key}
-                className={`round-box absolute left-1 right-1 ${l.dimmed ? 'dimmed' : ''} ${roundBorderAlways ? 'always-border' : ''} ${activeLabelKey === l.key ? 'label-highlight' : ''}`}
+                className={`round-box absolute left-1 right-1 ${l.dimmed ? 'dimmed' : ''} ${roundBorderAlways ? 'always-border' : ''}`}
                 style={{
-                  top: l.paintTop,
-                  height: Math.max(l.paintHeight, 24),
+                  // 直接取 layout 里已算好的真实坐标;最小高度由 CSS 的
+                  // .round-box min-height 兜底,这里不再重复 clamp。
+                  top: l.rawTop,
+                  height: l.rawBottom - l.rawTop,
                   background: getGradientForRange(l.minDifficulty, l.maxDifficulty),
                   zIndex: totalRounds - i,
                 }}
@@ -710,84 +690,12 @@ function TournamentColumn({
                 onMouseLeave={onLeave}
                 onClick={(e) => onOpenDetail(l.round, e.currentTarget)}
               >
-                <span className="sr-only">{tournament.abbreviation} {l.round.abbreviation}</span>
-                {l.maxDifficulty > DIFFICULTY_RANGE.max && <span aria-hidden className="overflow-edge-top" />}
-                {l.minDifficulty < DIFFICULTY_RANGE.min && <span aria-hidden className="overflow-edge-bottom" />}
+                <span className="truncate block w-full text-center">
+                  {tournament.abbreviation} {l.round.abbreviation}
+                </span>
               </button>
             )
           })}
-        </div>
-        {/* 标题层:z-30,容器不吃指针,标题按钮吃指针。锚点 paintTop+4,碰撞下移 24px。 */}
-        <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 30 }}>
-          {labelsDegraded ? (
-            <>
-              <button
-                type="button"
-                className="round-label pointer-events-auto absolute"
-                style={{ top: ORIGIN_Y + 4, left: 8 }}
-                aria-expanded={roundsListOpen}
-                onClick={() => setRoundsListOpen(!roundsListOpen)}
-              >
-                {t('ladder.rounds.button')} ({roundLayouts.length})
-              </button>
-              {roundsListOpen && (
-                <div className="pointer-events-auto absolute left-1 right-1 z-10 max-h-60 overflow-auto rounded-md border border-gray-200 bg-white shadow-lg dark:border-neutral-700 dark:bg-neutral-900" style={{ top: ORIGIN_Y + 28 }}>
-                  {roundLayouts.map((l) => (
-                    <button
-                      key={l.key}
-                      type="button"
-                      className="block w-full px-2 py-1.5 text-left text-xs text-gray-800 dark:text-neutral-200 hover:bg-gray-100 dark:hover:bg-neutral-800"
-                      onClick={(e) => onOpenDetail(l.round, e.currentTarget)}
-                    >
-                      {l.round.abbreviation} · {l.round.name}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </>
-          ) : (
-            labelPlacements.map((p) => {
-              const l = layoutByKey.get(p.key)
-              if (!l) return null
-              return (
-                <Fragment key={p.key}>
-                  {p.moved && p.labelY > l.paintTop && (
-                    <span
-                      aria-hidden
-                      className="round-label-link"
-                      style={{ left: 14, top: l.paintTop + 2, height: Math.max(p.labelY - l.paintTop - 2, 0) }}
-                    />
-                  )}
-                  <button
-                    type="button"
-                    className={`round-label pointer-events-auto absolute ${l.dimmed ? 'label-dimmed' : ''}`}
-                    style={{ top: p.labelY, left: 8, borderBottomColor: getDifficultyColor(l.maxDifficulty), borderLeftColor: getDifficultyColor(l.maxDifficulty) }}
-                    aria-label={`${tournament.abbreviation} ${l.round.name}`}
-                    onMouseEnter={(e) => {
-                      setActiveLabelKey(p.key)
-                      onHover(l.round, e.clientX, e.clientY)
-                    }}
-                    onMouseLeave={() => {
-                      setActiveLabelKey(null)
-                      onLeave()
-                    }}
-                    onFocus={(e) => {
-                      setActiveLabelKey(p.key)
-                      const r = e.currentTarget.getBoundingClientRect()
-                      onHover(l.round, r.left + r.width / 2, r.bottom)
-                    }}
-                    onBlur={() => {
-                      setActiveLabelKey(null)
-                      onLeave()
-                    }}
-                    onClick={(e) => onOpenDetail(l.round, e.currentTarget)}
-                  >
-                    {l.round.abbreviation}
-                  </button>
-                </Fragment>
-              )
-            })
-          )}
         </div>
       </div>
     )
@@ -943,7 +851,7 @@ function TournamentColumn({
     <div className="relative shrink-0" style={{ width: columnWidth }}>
       {columnHeader}
       <div className="sticky top-8 h-8 bg-white dark:bg-neutral-950 pointer-events-none" style={{ zIndex: 45 }}>
-        <OverflowBand items={bandItems} onHover={onHover} onLeave={onLeave} onOpenDetail={onOpenDetail} />
+        <OverflowBand items={bandItems} bordered={roundBorderAlways} onHover={onHover} onLeave={onLeave} onOpenDetail={onOpenDetail} />
       </div>
       {/* 框体层:z-10 独立层叠上下文。 */}
       <div className="absolute inset-0" style={{ zIndex: 10 }}>
@@ -970,7 +878,7 @@ function TournamentColumn({
             <button
               type="button"
               key={key}
-              className={`round-box absolute ${isDimmed ? 'dimmed' : ''} ${roundBorderAlways ? 'always-border' : ''}`}
+              className={`round-box absolute ${isDimmed ? 'dimmed' : ''} ${roundBorderAlways ? 'always-border' : ''} ${adjustedAvg > DIFFICULTY_RANGE.max ? 'overflow-cropped-top' : ''} ${adjustedAvg < DIFFICULTY_RANGE.min ? 'overflow-cropped-bottom' : ''}`}
               style={{
                 top: scalar.paintTop,
                 // 最小点击高度只改绘制外观,不改变锚点。
@@ -988,7 +896,6 @@ function TournamentColumn({
               <span className="truncate block w-full text-center">
                 {tournament.abbreviation} {round.abbreviation} {label}
               </span>
-              {adjustedAvg > DIFFICULTY_RANGE.max && <span aria-hidden className="overflow-edge-top" />}
               {adjustedAvg < DIFFICULTY_RANGE.min && <span aria-hidden className="overflow-edge-bottom" />}
             </button>
           )

@@ -56,7 +56,6 @@ export const messagesZh = {
   'hover.detail': '详细信息',
 
   // ---------- Ladder (任务 B/D) ----------
-  'ladder.rounds.button': '轮次',
   'ladder.overflow.beyond': '超出标尺',
   'ladder.overflow.count': '超界 {n}',
 

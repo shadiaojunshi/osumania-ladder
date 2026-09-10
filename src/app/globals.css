@@ -99,81 +99,12 @@ button.round-box:focus-visible {
   text-shadow: none;
 }
 
-/* ---------- 任务 B:标题层 ---------- */
-/* 独立标题按钮(z-30 层,容器 pointer-events:none,按钮 auto)。
-   实色表面 + 1px 对应难度色细线(颜色由内联 borderBottomColor 提供),
-   叠在任何框上都可读;12px 字号,不随 viewport 缩放。 */
-.round-label {
-  height: 24px;
-  display: inline-flex;
-  align-items: center;
-  padding: 0 8px;
-  border-radius: 5px;
-  border-bottom: 1px solid;
-  /* 左侧 2px 难度色侧条:颜色由内联 borderLeftColor 覆盖;降级按钮用中性灰默认值。 */
-  border-left: 2px solid;
-  border-left-color: #a3a3a3;
-  font-size: 13px;
-  font-weight: 600;
-  line-height: 1;
-  white-space: nowrap;
-  background: #ffffff;
-  color: #262626;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
-  cursor: pointer;
-  transition: box-shadow 0.2s, transform 0.2s;
-}
-
-.dark .round-label {
-  background: #262626;
-  color: #f5f5f5;
-  border-left-color: #737373;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
-}
-
-.round-label:focus-visible {
-  outline: 2px solid #a855f7;
-  outline-offset: 2px;
-}
-
-.round-label.label-dimmed {
-  opacity: 0.3;
-}
-
-@media (hover: hover) and (prefers-reduced-motion: no-preference) {
-  .round-label:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
-  }
-  .dark .round-label:hover {
-    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.55);
-  }
-}
-
-/* hover/focus 标题时强调对应框体:同样局限在框体层(z-10)的层叠上下文里。 */
-.round-box.label-highlight {
-  box-shadow: 0 0 0 2px white, 0 4px 12px rgba(0, 0, 0, 0.3) !important;
-  z-index: 50 !important;
-}
-
-/* 标签位移时指回所属框顶部的 1px 短连接线;不响应指针。 */
-.round-label-link {
-  position: absolute;
-  width: 1px;
-  background: rgba(110, 110, 110, 0.55);
-  pointer-events: none;
-}
-
-.dark .round-label-link {
-  background: rgba(200, 200, 200, 0.45);
-}
-
 /* ---------- 任务 D:超界暗红边界(熔岩主题) ---------- */
 /* 红色只表示超出当前绘图区,不代表数据非法。动效全部限定在标记与边缘条内部,
    不整屏渲染;prefers-reduced-motion 下全部静态(动画都在 no-preference 块内)。 */
 .overflow-marker {
-  /* 顶边平齐贴住超界带上缘(无圆角、无上边框),只保留下圆角;
-     血红色辉光向下散发,像从标尺顶端溢出的熔岩。 */
+  /* 顶边平齐贴住超界带上缘,与被裁切框体直角衔接成一个框;
+     常驻边框开启时由 ::before 在内侧描 1.5px 白线(只画上/左/右,底边留给框体)。 */
   top: 0;
   height: 32px;
   max-height: 32px;
@@ -181,9 +112,8 @@ button.round-box:focus-visible {
   align-items: center;
   gap: 5px;
   padding: 0 10px;
-  border-radius: 0 0 8px 8px;
-  border: 1px solid #dc2626;
-  border-top: none;
+  border: none;
+  border-radius: 0;
   /* 双层背景:顶部高光 + 熔岩横纹(0deg 条带,瓦片 26px,动画向上漂移) */
   background-image:
     linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0) 45%),
@@ -202,6 +132,17 @@ button.round-box:focus-visible {
     inset 0 -10px 16px rgba(220, 38, 38, 0.35);
   cursor: pointer;
   appearance: none;
+}
+
+/* 常驻边框开启时:熔岩牌带白描边,但只画上/左/右——底边留给框体,
+   接缝处不出现横线;两半拼成围绕"熔岩头 + 框体"的一条连续白框。 */
+.overflow-marker.always-border::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 1.5px solid #ffffff;
+  border-bottom: none;
+  pointer-events: none;
 }
 
 .dark .overflow-marker {
@@ -251,7 +192,7 @@ button.round-box:focus-visible {
 }
 
 @keyframes marker-breathe {
-  /* 呼吸只加强向下散发的血红辉光与底部内发光,顶边保持平齐。 */
+  /* 呼吸只加强向下散发的血红辉光与底部内发光(白框由 ::before 单独绘制,不受动画影响)。 */
   0%, 100% {
     box-shadow:
       0 4px 12px rgba(220, 38, 38, 0.45),
@@ -276,13 +217,13 @@ button.round-box:focus-visible {
   50% { opacity: 1; transform: translateY(-1px); }
 }
 
-/* range 穿过绘图区边界:截断处熔岩边缘条。热纹流动 + 余烬滴落(均 no-preference)。 */
-.round-box .overflow-edge-top,
+/* range 低于绘图区下界:底缘熔岩边缘条(顶部截断由超界熔岩牌直角衔接承担,不再叠加红边)。 */
 .round-box .overflow-edge-bottom {
   position: absolute;
   left: 0;
   right: 0;
   height: 4px;
+  bottom: 0;
   background: #dc2626;
   box-shadow:
     0 0 8px 1px rgba(220, 38, 38, 0.5),
@@ -290,15 +231,6 @@ button.round-box:focus-visible {
   pointer-events: none;
 }
 
-.round-box .overflow-edge-top {
-  top: 0;
-}
-
-.round-box .overflow-edge-bottom {
-  bottom: 0;
-}
-
-.round-box .overflow-edge-top::before,
 .round-box .overflow-edge-bottom::before {
   content: '';
   position: absolute;
@@ -307,25 +239,8 @@ button.round-box:focus-visible {
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .round-box .overflow-edge-top::before,
   .round-box .overflow-edge-bottom::before {
     animation: heat-pan 1.6s linear infinite;
-  }
-  /* 余烬从截断缘向框内滴落(三个错位小火点,seamless 循环) */
-  .round-box .overflow-edge-top::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 18px;
-    background-image:
-      radial-gradient(circle 1.5px at 18% 2px, rgba(254, 202, 202, 0.9) 99%, transparent),
-      radial-gradient(circle 1px at 46% 7px, rgba(248, 113, 113, 0.75) 99%, transparent),
-      radial-gradient(circle 1.5px at 74% 1px, rgba(252, 165, 165, 0.85) 99%, transparent);
-    background-repeat: no-repeat;
-    background-size: 100% 18px;
-    animation: ember-drip 1.7s linear infinite;
   }
 }
 
@@ -333,9 +248,76 @@ button.round-box:focus-visible {
   to { background-position: 30px 0; }
 }
 
-@keyframes ember-drip {
-  from { background-position: 0 0, 0 0, 0 0; }
-  to { background-position: 0 18px, 0 18px, 0 18px; }
+/* 顶部/底部被裁切的框体:截断侧直角,与超界熔岩牌(顶)或框缘(底)无缝衔接成一个框。 */
+.round-box.overflow-cropped-top {
+  border-radius: 0 0 8px 8px;
+}
+
+.round-box.overflow-cropped-bottom {
+  border-radius: 8px 8px 0 0;
+}
+
+/* 顶部被裁切且开启常驻边框:白框只画左/右/下——顶边由熔岩牌闭合,
+   与熔岩牌的白框在接缝处首尾相接,不产生横线。
+   :not(:hover) 是必需的:本规则权重(0,4,0)高于 .round-box.always-border:hover(0,3,0),
+   不加它会让 hover 白圈失效,超界框看起来点不动。 */
+.round-box.overflow-cropped-top.always-border:not(.overflow-cropped-bottom):not(:hover) {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.dark .round-box.overflow-cropped-top.always-border:not(.overflow-cropped-bottom):not(:hover) {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.round-box.overflow-cropped-top.always-border:not(.overflow-cropped-bottom)::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 1.5px solid #ffffff;
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  pointer-events: none;
+}
+
+/* 接缝处红→透明的余温渐变:熔岩牌→框体不再硬突变,红色向框内自然消退。
+   ::before/::after 用负 z-index,靠 isolation 让框体自成层叠上下文,
+   从而夹在"框体难度渐变之上、框内文字之下"——红雾不会盖住文字。 */
+.round-box.overflow-cropped-top,
+.round-box.overflow-cropped-bottom {
+  isolation: isolate;
+}
+
+.round-box.overflow-cropped-top::before,
+.round-box.overflow-cropped-bottom::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 30px;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.round-box.overflow-cropped-top::before {
+  top: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(220, 38, 38, 0.85),
+    rgba(153, 27, 27, 0.5) 40%,
+    rgba(127, 29, 29, 0.18) 72%,
+    rgba(127, 29, 29, 0) 100%
+  );
+}
+
+.round-box.overflow-cropped-bottom::after {
+  bottom: 0;
+  background: linear-gradient(
+    0deg,
+    rgba(220, 38, 38, 0.85),
+    rgba(153, 27, 27, 0.5) 40%,
+    rgba(127, 29, 29, 0.18) 72%,
+    rgba(127, 29, 29, 0) 100%
+  );
 }
 
 /* Animate interaction feedback without moving the ladder's difficulty coordinates. */
@@ -428,8 +410,7 @@ button.round-box:focus-visible {
   .ladder-header button,
   .ladder-header a,
   .ladder-header input,
-  .round-box,
-  .round-label {
+  .round-box {
     transition: none;
   }
 }

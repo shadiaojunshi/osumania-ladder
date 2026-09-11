@@ -105,9 +105,9 @@
       "abbreviation": "Group I",
       "order": 2,
       "difficulty": {
-        "min": 6.9,
-        "max": 8.2,
-        "average": 7.97
+        "min": 6,
+        "max": 7,
+        "average": 7.23
       },
       "maps": [
         {
@@ -215,11 +215,11 @@
       ],
       "typeDifficulties": {
         "RC": {
-          "rf": 7.7
+          "rf": 6.7
         },
         "HB": {
-          "rf": 6.9,
-          "ln": 8.2
+          "rf": 6.3,
+          "ln": 7
         },
         "LN": {
           "ln": 8

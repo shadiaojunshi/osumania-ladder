@@ -1,6 +1,6 @@
 {
-  "id": "osu-mania-chinese-natrion-cup-4k-2026-rebirth",
-  "name": "osu! mania Chinese Natrion Cup 4K 2026: Rebirth",
+  "id": "osu-mania-chinese-national-cup-4k-2026-rebirth",
+  "name": "osu! mania Chinese National Cup 4K 2026: Rebirth",
   "abbreviation": "MCNC4K2026",
   "keyCount": 4,
   "year": 2026,
@@ -14,7 +14,7 @@
       "difficulty": {
         "min": 7,
         "max": 11,
-        "average": 9.58
+        "average": 9.9
       },
       "maps": [
         {

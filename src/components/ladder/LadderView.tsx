@@ -668,9 +668,8 @@ function TournamentColumn({
       <div className="relative shrink-0" style={{ width: columnWidth }}>
         {columnHeader}
         {/* 框体层:z-10 独立层叠上下文(把 hover 白边限制在本层内)。
-            框内直接居中显示"比赛名 + 轮次缩写";超界框不裁切/不标红(与最初版本一致)。
-            注意:本分支不渲染超界带,而列头只有 32px、ORIGIN_Y=64,
-            所以框伸出顶部的部分只在 0~32px 被列头遮住,32~64px 这段仍然可见。 */}
+            框内文字改 sr-only,可见标题由上面的 z-30 标题层绘制(不被其他框遮挡)。
+            超界框不裁切/不标红,伸出顶部的部分由 sticky 列头自然遮挡。 */}
         <div className="absolute inset-0" style={{ zIndex: 10 }}>
           {roundLayouts.map((l, i) => {
             return (
@@ -690,10 +689,27 @@ function TournamentColumn({
                 onMouseLeave={onLeave}
                 onClick={(e) => onOpenDetail(l.round, e.currentTarget)}
               >
-                <span className="truncate block w-full text-center">
-                  {tournament.abbreviation} {l.round.abbreviation}
-                </span>
+                <span className="sr-only">{tournament.abbreviation} {l.round.abbreviation}</span>
               </button>
+            )
+          })}
+        </div>
+        {/* 标题层:z-30,纯文本、不吃指针(点击/悬浮照常落到框体)。
+            位置取所属框的垂直中心(水平+垂直都严格居中),画在框体之上,
+            所以不会被任何轮次框盖住。仅当中心落进 32px 吸顶列头里(CET GF 这类超界框)时
+            才下压到列头下方,保证可见。 */}
+        <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 30 }}>
+          {roundLayouts.map((l) => {
+            if (l.dimmed) return null
+            const centerY = (l.rawTop + l.rawBottom) / 2
+            return (
+              <span
+                key={l.key}
+                className="round-box-text absolute left-1 right-1"
+                style={{ top: Math.max(centerY, 40), transform: 'translateY(-50%)' }}
+              >
+                {tournament.abbreviation} {l.round.abbreviation}
+              </span>
             )
           })}
         </div>
@@ -894,7 +910,9 @@ function TournamentColumn({
               // type 分支左键打开该框所属轮次的详情(不改变原始数据)。
               onClick={(e) => onOpenDetail(round, e.currentTarget)}
             >
-              <span className="truncate block w-full text-center">
+              {/* 顶部被裁切的框:可见部分只剩窄条,名称由上方熔岩头承担,
+                  框内文字改 sr-only,避免同一张图出现两个同名框(用户反馈)。 */}
+              <span className={adjustedAvg > DIFFICULTY_RANGE.max ? 'sr-only' : 'truncate block w-full text-center'}>
                 {tournament.abbreviation} {round.abbreviation} {label}
               </span>
               {adjustedAvg < DIFFICULTY_RANGE.min && <span aria-hidden className="overflow-edge-bottom" />}

@@ -320,6 +320,22 @@ button.round-box:focus-visible {
   );
 }
 
+/* round 视图的可见标题:独立层(z-30,画在框体 z-10 之上),所以永远不会被别的轮次框盖住。
+   样式与 .round-box 内文字一致(12px 白字 + 投影描边),不吃指针。 */
+.round-box-text {
+  display: block;
+  text-align: center;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.2;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
+
 /* Animate interaction feedback without moving the ladder's difficulty coordinates. */
 .ladder-header button,
 .ladder-header a,

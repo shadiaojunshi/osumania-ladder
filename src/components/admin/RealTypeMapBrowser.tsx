@@ -7,6 +7,7 @@ import { REAL_TYPES } from './MapSlotEditor'
 import type { MapCategory } from './MapSlotEditor'
 import { normalizeRealType } from '@/lib/realType'
 import { findDuplicateRoundMaps, mapIdentityKey } from '@/lib/tournamentDiagnostics'
+import { ManiaChartButton } from '@/components/chart/ManiaChartButton'
 
 const CATEGORY_ORDER = ['RC', 'LN', 'HB', 'SV', 'TB'] as const
 
@@ -205,7 +206,7 @@ export function RealTypeMapBrowser({ canStage = false, stagedCount = 0, onStageM
         </div>
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[860px] border-collapse text-left text-xs">
+          <table className="w-full min-w-[940px] border-collapse text-left text-xs">
             <thead className="bg-gray-50 text-gray-500 dark:bg-neutral-900/50 dark:text-neutral-400">
               <tr>
                 <th className="px-4 py-2 font-medium">{t('realTypeMaps.col.tournament')}</th>
@@ -214,6 +215,7 @@ export function RealTypeMapBrowser({ canStage = false, stagedCount = 0, onStageM
                 <th className="px-3 py-2 font-medium">{t('realTypeMaps.col.map')}</th>
                 <th className="px-3 py-2 font-medium">{t('realTypeMaps.col.difficulty')}</th>
                 <th className="px-4 py-2 text-right font-medium">{t('realTypeMaps.col.link')}</th>
+                <th className="px-4 py-2 text-right font-medium">{t('realTypeMaps.col.chart')}</th>
                 {canStage && <th className="px-4 py-2 font-medium">{t('realTypeMaps.col.convert')}</th>}
               </tr>
             </thead>
@@ -251,6 +253,18 @@ export function RealTypeMapBrowser({ canStage = false, stagedCount = 0, onStageM
                     ) : (
                       <span className="text-gray-300 dark:text-neutral-600">{t('realTypeMaps.noBid')}</span>
                     )}
+                  </td>
+                  <td className="px-4 py-2.5 text-right">
+                    <ManiaChartButton
+                      target={{
+                        beatmapId: row.beatmapId,
+                        tournamentId: row.tournamentId,
+                        roundId: row.roundId,
+                        slot: row.slot,
+                      }}
+                      heading={`${row.tournamentAbbr} ${row.roundAbbr} ${row.slot}`}
+                      className="whitespace-nowrap text-purple-600 dark:text-purple-300 hover:underline"
+                    />
                   </td>
                   {canStage && (
                     <td className="px-4 py-2.5">

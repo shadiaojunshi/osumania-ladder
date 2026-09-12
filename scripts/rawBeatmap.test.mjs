@@ -19,16 +19,25 @@ async function archive(text = chart(), compression = 'DEFLATE') {
   return zip.generateAsync({ type: 'uint8array', compression })
 }
 
-function bucket(bytes, etag = 'version-1') {
+// slot 的主文件是 `<slot>.osz`;SV/SPECIAL 类会存成 `<slot>.nsv.osz`,
+// 读端两种都要探一遍(见 functions/api/osu/raw.ts)。
+const MAIN_KEY = 'maps/test-cup/round-1/RC1.osz'
+const NSV_KEY = 'maps/test-cup/round-1/RC1.nsv.osz'
+
+function bucket(bytes, etag = 'version-1', storedKey = MAIN_KEY) {
   const reads = []
+  const heads = []
   return {
     reads,
+    heads,
     async head(key) {
-      assert.equal(key, 'maps/test-cup/round-1/RC1.osz')
+      assert.ok(key === MAIN_KEY || key === NSV_KEY, `unexpected R2 head key: ${key}`)
+      heads.push(key)
+      if (key !== storedKey) return null
       return bytes ? { size: bytes.length, etag } : null
     },
     async get(key, options) {
-      assert.equal(key, 'maps/test-cup/round-1/RC1.osz')
+      assert.equal(key, storedKey)
       assert.ok(options.range, 'must never download the whole archive')
       reads.push(options.range)
       const { offset, length } = options.range
@@ -123,8 +132,23 @@ test('a replacement during range reads retries storage without downloading anoth
 })
 
 test('a slot without either an uploaded file or BID returns a useful missing-file response', async () => {
-  const response = await onRequestGet({ request: request(scoped), env: { R2_BUCKET: bucket(null) } })
+  const r2 = bucket(null)
+  const response = await onRequestGet({ request: request(scoped), env: { R2_BUCKET: r2 } })
   assert.equal(response.status, 404)
+  // 主文件与 NSV 变体都探过,才算"确实没有上传版本"。
+  assert.deepEqual(r2.heads, [MAIN_KEY, NSV_KEY])
+})
+
+test('an SV slot uploaded as <slot>.nsv.osz is served from R2 instead of falling back online', async (t) => {
+  t.mock.method(globalThis, 'fetch', async () => assert.fail('NSV upload must not fall back to the online chart'))
+  const r2 = bucket(await archive(), 'nsv-1', NSV_KEY)
+  const response = await onRequestGet({ request: request(`${scoped}&id=123`), env: { R2_BUCKET: r2 } })
+  assert.equal(response.status, 200)
+  assert.equal(response.headers.get('X-Beatmap-Source'), 'r2')
+  assert.equal(await response.text(), chart())
+  assert.deepEqual(r2.heads, [MAIN_KEY, NSV_KEY])
+  // 读取走的是真正存在的那个 key。
+  assert.ok(r2.reads.length > 0)
 })
 
 test('the browser client revalidates each slot and recalculates after an upload replacement', async (t) => {

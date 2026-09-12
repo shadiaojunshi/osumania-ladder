@@ -9,6 +9,7 @@ import type { MapHistorySummary } from '@/hooks/useMapHistory'
 import { classifySetConflict } from '@/lib/mapConflictDetection'
 import { normalizeRealType } from '@/lib/realType'
 import { estimateBeatmapDifficulty, ManiaAnalysisError, type ManiaAnalysisEstimate } from '@/lib/maniaAnalyserClient'
+import { ManiaChartButton } from '@/components/chart/ManiaChartButton'
 
 export type MapCategory = 'RC' | 'LN' | 'HB' | 'SV' | 'TB' | 'SPECIAL'
 
@@ -19,6 +20,7 @@ export const REAL_TYPES: Record<string, { id: string; name: string }[]> = {
     { id: 'SA', name: 'Stamina (SA)' },
     { id: 'CJ', name: 'Chordjack (CJ)' },
     { id: 'SJ', name: 'Jackspeed (SJ)' },
+    { id: 'FCJ', name: 'Finger Control Jack (FCJ)' },
     { id: 'MX', name: 'Rcmix (MX)' },
     { id: 'DP', name: 'Dump (DP)' },
     { id: 'ADP', name: 'Accurate dump (ADP)' },
@@ -551,6 +553,12 @@ export function MapSlotEditor({ map, onChange, onRemove, getMapHistory, enableEs
               {t('mapSlot.clearDiff.short')}
             </button>
           )}
+
+          <ManiaChartButton
+            target={{ beatmapId: map.beatmapId, tournamentId, roundId, slot: map.slot }}
+            heading={`${map.slot}${map.name ? ` · ${map.name}` : ''}`}
+            className="px-1.5 py-1 text-[10px] border border-purple-200 dark:border-purple-900 rounded text-purple-600 dark:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-900/30"
+          />
         </div>
       </div>
 

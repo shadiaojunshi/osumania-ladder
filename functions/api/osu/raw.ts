@@ -50,34 +50,44 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env, data }) =
     // Never substitute an online chart when an uploaded competition version is
     // unreadable or mismatched. Only a genuinely absent object may fall back.
     if (!env.R2_BUCKET) return textResponse('R2 storage is not configured', 503)
+    // 上传端把 NSV(SV 类)谱面存成 `<slot>.nsv.osz`,普通谱面存成 `<slot>.osz`;
+    // 这里两种都找一遍,否则 SV 轮次的图池会永远读不到上传版本。
+    const baseKey = `maps/${tournamentId}/${roundId}/${slot}`
+    let key = `${baseKey}.osz`
+    let object: R2Object | null = null
     try {
-      const key = `maps/${tournamentId}/${roundId}/${slot}.osz`
-      const object = await env.R2_BUCKET.head(key)
-      if (object) {
-        const headers = { ...corsHeaders(), ETag: `"r2-${object.etag}"`, 'X-Beatmap-Source': 'r2' }
-        if (request.headers.get('If-None-Match') === headers.ETag) return new Response(null, { status: 304, headers })
-        const getRange = async (start: number, end: number) => {
-          try {
-            const part = await env.R2_BUCKET!.get(key, {
-              range: { offset: start, length: end - start },
-              onlyIf: { etagMatches: object.etag },
-            })
-            if (!part || !('body' in part)) throw new Error('uploaded file changed while reading')
-            return new Uint8Array(await part.arrayBuffer())
-          } catch {
-            throw new StorageReadError('uploaded file changed or storage is temporarily unavailable; retry')
-          }
-        }
-        try {
-          const { content } = await extractOsuFromOsz(object.size, getRange, id ? Number(id) : undefined)
-          return textResponse(content, 200, headers)
-        } catch (error) {
-          if (error instanceof StorageReadError) return textResponse(error.message, 503)
-          return textResponse(`uploaded beatmap cannot be read: ${error instanceof Error ? error.message : String(error)}`, 422)
+      for (const candidate of [`${baseKey}.osz`, `${baseKey}.nsv.osz`]) {
+        object = await env.R2_BUCKET.head(candidate)
+        if (object) {
+          key = candidate
+          break
         }
       }
     } catch {
       return textResponse('R2 storage is temporarily unavailable', 503)
+    }
+    if (object) {
+      const headers = { ...corsHeaders(), ETag: `"r2-${object.etag}"`, 'X-Beatmap-Source': 'r2' }
+      if (request.headers.get('If-None-Match') === headers.ETag) return new Response(null, { status: 304, headers })
+      const getRange = async (start: number, end: number) => {
+        try {
+          const part = await env.R2_BUCKET!.get(key, {
+            range: { offset: start, length: end - start },
+            onlyIf: { etagMatches: object!.etag },
+          })
+          if (!part || !('body' in part)) throw new Error('uploaded file changed while reading')
+          return new Uint8Array(await part.arrayBuffer())
+        } catch {
+          throw new StorageReadError('uploaded file changed or storage is temporarily unavailable; retry')
+        }
+      }
+      try {
+        const { content } = await extractOsuFromOsz(object.size, getRange, id ? Number(id) : undefined)
+        return textResponse(content, 200, headers)
+      } catch (error) {
+        if (error instanceof StorageReadError) return textResponse(error.message, 503)
+        return textResponse(`uploaded beatmap cannot be read: ${error instanceof Error ? error.message : String(error)}`, 422)
+      }
     }
   }
   if (!id) return textResponse('no uploaded beatmap; upload a file or provide a BID', 404)

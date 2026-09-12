@@ -8,11 +8,6 @@ const CLIENT_SECRET = process.env.GDRIVE_CLIENT_SECRET
 const REFRESH_TOKEN = process.env.GDRIVE_REFRESH_TOKEN
 const FOLDER_ID = process.env.GDRIVE_FOLDER_ID
 
-if (!CLIENT_ID || !CLIENT_SECRET || !REFRESH_TOKEN || !FOLDER_ID) {
-  console.error('Missing GDRIVE_* env vars')
-  process.exit(1)
-}
-
 // 合包在 CI 上不再落盘本地(output/ 只是 generate 阶段的临时缓冲,R2 上传后即删)。
 // Drive 上传优先从 R2 packs 桶拉流直传,避免 runner 磁盘再次被全量包撑爆(14GB);
 // 本地手动跑(没配 R2_* 但 output/ 里有包)时回退到读本地文件。
@@ -40,7 +35,7 @@ function isFatalAuthError(err) {
   return code === 401 || (typeof msg === 'string' && msg.includes('invalid_grant'))
 }
 
-async function withRetry(fn, { attempts = 3, baseDelayMs = 1500, label = 'op' } = {}) {
+async function withRetry(fn, { attempts = 3, baseDelayMs = 1500, label = 'op', delay = (ms) => new Promise((r) => setTimeout(r, ms)) } = {}) {
   let lastErr
   for (let i = 1; i <= attempts; i++) {
     try {
@@ -49,9 +44,9 @@ async function withRetry(fn, { attempts = 3, baseDelayMs = 1500, label = 'op' } 
       if (isFatalAuthError(err)) throw err // 认证失效重试也没用
       lastErr = err
       if (i < attempts) {
-        const delay = baseDelayMs * Math.pow(2, i - 1)
-        console.warn(`  ${label} 第 ${i}/${attempts} 次失败: ${err.message} —— ${delay}ms 后重试`)
-        await new Promise((r) => setTimeout(r, delay))
+        const wait = baseDelayMs * Math.pow(2, i - 1)
+        console.warn(`  ${label} 第 ${i}/${attempts} 次失败: ${err.message} —— ${wait}ms 后重试`)
+        await delay(wait)
       }
     }
   }
@@ -62,6 +57,48 @@ function getAuth() {
   const oauth2 = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET)
   oauth2.setCredentials({ refresh_token: REFRESH_TOKEN })
   return oauth2
+}
+
+// 目标 manifest 里所有仍被引用的 Drive fileId:gdriveFileId 字段 + googleDrive 链接。
+// 失败包会继承旧 manifest 的 fileId(见 generate-pack.js),因此这些旧对象仍在被引用,
+// 不能当作孤儿删除。
+function collectReferencedFileIds(packs) {
+  const ids = new Set()
+  for (const p of packs || []) {
+    if (p && p.gdriveFileId) ids.add(String(p.gdriveFileId))
+    const url = p && p.links && p.links.googleDrive
+    if (typeof url === 'string') {
+      const byQuery = url.match(/[?&]id=([^&]+)/)
+      const byPath = url.match(/\/file\/d\/([^/]+)/)
+      if (byQuery) ids.add(byQuery[1])
+      else if (byPath) ids.add(byPath[1])
+    }
+  }
+  return ids
+}
+
+// 孤儿 = 旧 manifest 里存在、但目标 manifest 已不再引用的 Drive 文件。去重;标注来源供日志。
+function computeOrphans(prevPacks, referencedIds) {
+  const seen = new Set()
+  const orphans = []
+  for (const old of prevPacks || []) {
+    const id = old && old.gdriveFileId
+    if (!id) continue
+    const key = String(id)
+    if (referencedIds.has(key) || seen.has(key)) continue
+    seen.add(key)
+    orphans.push({ id: key, label: `${old.realType}_${old.part || '?'}` })
+  }
+  return orphans
+}
+
+// 权限 API 的 400 只在"该文件已是 anyone 可读"时可接受,其余 400 视为失败。
+function isAlreadySharedError(err) {
+  if (!err || err.code !== 400) return false
+  const reason = err.errors && err.errors[0] && err.errors[0].reason
+  if (reason === 'alreadyExists') return true
+  const msg = typeof err.message === 'string' ? err.message : ''
+  return /already exists|alreadyExists/i.test(msg)
 }
 
 async function findExistingFileId(drive, name) {
@@ -75,13 +112,18 @@ async function findExistingFileId(drive, name) {
   return res.data.files && res.data.files[0] ? res.data.files[0].id : null
 }
 
-async function uploadOrUpdate(drive, body, fileName, knownFileId) {
-  const media = { mimeType: 'application/octet-stream', body }
+// getBody 是"每次调用都返回一条全新可读流"的工厂:update/create 各自消费一条,
+// 404 回退重传时也必须拿到新流(旧流已被上一次请求消费)。
+async function uploadOrUpdate(drive, getBody, fileName, knownFileId) {
   let fileId = knownFileId
 
   if (fileId) {
     try {
-      await drive.files.update({ fileId, media, supportsAllDrives: false })
+      await drive.files.update({
+        fileId,
+        media: { mimeType: 'application/octet-stream', body: await getBody() },
+        supportsAllDrives: false,
+      })
       console.log(`  Updated ${fileName} (id=${fileId})`)
     } catch (err) {
       const status = err && err.code
@@ -97,13 +139,17 @@ async function uploadOrUpdate(drive, body, fileName, knownFileId) {
   if (!fileId) {
     const existing = await findExistingFileId(drive, fileName)
     if (existing) {
-      await drive.files.update({ fileId: existing, media, supportsAllDrives: false })
+      await drive.files.update({
+        fileId: existing,
+        media: { mimeType: 'application/octet-stream', body: await getBody() },
+        supportsAllDrives: false,
+      })
       fileId = existing
       console.log(`  Updated existing ${fileName} (id=${fileId})`)
     } else {
       const created = await drive.files.create({
         requestBody: { name: fileName, parents: [FOLDER_ID] },
-        media,
+        media: { mimeType: 'application/octet-stream', body: await getBody() },
         fields: 'id',
       })
       fileId = created.data.id
@@ -111,23 +157,101 @@ async function uploadOrUpdate(drive, body, fileName, knownFileId) {
     }
   }
 
-  await drive.permissions.create({
-    fileId,
-    requestBody: { role: 'reader', type: 'anyone' },
-  }).catch(err => {
-    if (err && err.code !== 400) throw err
-  })
+  await ensureAnyoneReader(drive, fileId)
 
   return fileId
 }
 
+async function ensureAnyoneReader(drive, fileId) {
+  try {
+    await drive.permissions.create({
+      fileId,
+      requestBody: { role: 'reader', type: 'anyone' },
+    })
+  } catch (err) {
+    // 已经是公开可读 → 幂等可接受;其它 400/5xx 交给上层按失败处理。
+    if (isAlreadySharedError(err)) return
+    throw err
+  }
+}
+
+async function deleteOrphans(drive, orphans, log = console) {
+  if (!orphans.length) return
+  log.log(`Deleting ${orphans.length} orphan file(s) on Drive...`)
+  for (const o of orphans) {
+    try {
+      await drive.files.delete({ fileId: o.id })
+      log.log(`  Deleted ${o.label} (id=${o.id})`)
+    } catch (err) {
+      const code = err && err.code
+      if (code === 404) {
+        log.log(`  ${o.label} (id=${o.id}) already gone`)
+      } else {
+        throw err
+      }
+    }
+  }
+}
+
+// 上传所有 pack。返回 { failed, orphans }。
+// 只写内存中的 entry,不做任何删除——删除决定留给调用方,确保失败时不误删。
+async function runDriveSync({ drive, packs, prevPacks, makeBody, log = console, delay }) {
+  const failed = []
+  for (const entry of packs) {
+    // manifest 里每个 pack 的文件名统一是 <realType>_<part>.osz,与 R2 键一致
+    const fileName = `${entry.realType}_${entry.part}.osz`
+    const getBody = makeBody(fileName)
+    const knownFileId = entry.gdriveFileId || null
+
+    try {
+      const fileId = await withRetry(
+        async () => uploadOrUpdate(drive, getBody, fileName, knownFileId),
+        { label: `上传 ${fileName}`, delay },
+      )
+      entry.gdriveFileId = fileId
+      entry.links = entry.links || {}
+      entry.links.googleDrive = `https://drive.google.com/uc?id=${fileId}&export=download`
+    } catch (err) {
+      // 认证失效不可恢复,直接抛给 main 做 fail-fast。
+      if (isFatalAuthError(err)) throw err
+      failed.push({ fileName, message: err && err.message })
+      log.error(`  Failed ${fileName}: ${err && err.message}`)
+    }
+  }
+
+  const referencedIds = collectReferencedFileIds(packs)
+  // 任一失败 → 本次不做任何孤儿清理(保留旧文件,便于重跑恢复)。
+  const orphans = failed.length === 0 ? computeOrphans(prevPacks, referencedIds) : []
+  return { failed, referencedIds, orphans }
+}
+
+function assertDriveEnv() {
+  if (!CLIENT_ID || !CLIENT_SECRET || !REFRESH_TOKEN || !FOLDER_ID) {
+    console.error('Missing GDRIVE_* env vars')
+    process.exit(1)
+  }
+}
+
+// 空 manifest 绝不能继续往下走:孤儿判定是「上一版引用的 fileId − 本版引用的 fileId」,
+// 本版为空 = 上一版全部被判成孤儿,Drive 上所有包会被一次性删掉。
+// (manifest 为空的常见来源:generate-pack 没产出包、或 manifest 被半截写入。)
+function assertNonEmptyPacks(packs) {
+  if (!Array.isArray(packs) || packs.length === 0) {
+    throw new Error(
+      'packs-manifest.json 里没有任何包（packs 为空）——拒绝执行，避免把上一版全部当成孤儿删除。请先跑 generate-pack 产出包。'
+    )
+  }
+}
+
 async function main() {
+  assertDriveEnv()
   if (!fs.existsSync(MANIFEST_PATH)) {
     console.error('packs-manifest.json missing — generate-pack must run first')
     process.exit(1)
   }
   const manifest = JSON.parse(fs.readFileSync(MANIFEST_PATH, 'utf-8'))
   const packs = manifest.packs || []
+  assertNonEmptyPacks(packs)
 
   // 旧 manifest(generate-pack.js 在重建前转储到这)用来识别孤儿 fileId
   let prevManifest = { packs: [] }
@@ -154,62 +278,50 @@ async function main() {
 
   console.log(`Uploading ${packs.length} pack(s) to Google Drive (source: ${hasR2 ? 'R2' : 'local output/'})...`)
 
-  const uploadedFileIds = new Set()
-  for (const entry of packs) {
-    // manifest 里每个 pack 的文件名统一是 <realType>_<part>.osz,与 R2 键一致
-    const fileName = `${entry.realType}_${entry.part}.osz`
-    const getBody = makeBody(fileName)
-    const knownFileId = entry.gdriveFileId || null
-
-    try {
-      const fileId = await withRetry(
-        async () => uploadOrUpdate(drive, await getBody(), fileName, knownFileId),
-        { label: `上传 ${fileName}` },
-      )
-      entry.gdriveFileId = fileId
-      entry.links = entry.links || {}
-      entry.links.googleDrive = `https://drive.google.com/uc?id=${fileId}&export=download`
-      uploadedFileIds.add(fileId)
-    } catch (err) {
-      const code = err && err.code
-      const msg = err && err.message
-      if (code === 401 || (typeof msg === 'string' && msg.includes('invalid_grant'))) {
-        console.error(`FATAL: refresh_token invalid (${msg}). Re-do OAuth Playground step.`)
-        process.exit(2)
-      }
-      console.error(`  Failed ${fileName}: ${msg}`)
+  let result
+  try {
+    result = await runDriveSync({ drive, packs, prevPacks: prevManifest.packs, makeBody })
+  } catch (err) {
+    const msg = err && err.message
+    if (isFatalAuthError(err)) {
+      console.error(`FATAL: refresh_token invalid (${msg}). Re-do OAuth Playground step.`)
+      process.exit(2)
     }
+    throw err
   }
 
-  // 删孤儿:旧 manifest 里有 fileId 但本次没用到的(分包数缩了 / type 删了)
-  const orphanFileIds = []
-  for (const old of prevManifest.packs || []) {
-    if (old.gdriveFileId && !uploadedFileIds.has(old.gdriveFileId)) {
-      orphanFileIds.push({ id: old.gdriveFileId, label: `${old.realType}_${old.part || '?'}` })
-    }
-  }
-  if (orphanFileIds.length > 0) {
-    console.log(`Deleting ${orphanFileIds.length} orphan file(s) on Drive...`)
-    for (const o of orphanFileIds) {
-      try {
-        await drive.files.delete({ fileId: o.id })
-        console.log(`  Deleted ${o.label} (id=${o.id})`)
-      } catch (err) {
-        const code = err && err.code
-        if (code === 404) {
-          console.log(`  ${o.label} (id=${o.id}) already gone`)
-        } else {
-          console.warn(`  Failed to delete ${o.label}: ${err.message}`)
-        }
-      }
-    }
-  }
+  const { failed, orphans } = result
 
+  // 先落盘进度(失败包保留上一版的旧链接,manifest 不会指向坏对象),再决定是否清理。
   fs.writeFileSync(MANIFEST_PATH, JSON.stringify(manifest, null, 2) + '\n')
   console.log('Manifest updated with Google Drive links')
 
-  // .previous 是过程产物,清掉避免被 commit
+  if (failed.length > 0) {
+    console.error(`\n${failed.length} pack(s) failed to upload — orphan cleanup skipped, no Drive file was deleted.`)
+    for (const f of failed) console.error(`  - ${f.fileName}: ${f.message}`)
+    console.error('packs-manifest.previous.json kept; re-run this job to resume.')
+    process.exit(1)
+  }
+
+  await deleteOrphans(drive, orphans)
+
+  // .previous 是过程产物,全部成功后才清掉避免被 commit
   if (fs.existsSync(PREV_MANIFEST_PATH)) fs.unlinkSync(PREV_MANIFEST_PATH)
 }
 
-main().catch(err => { console.error(err); process.exit(1) })
+if (require.main === module) {
+  main().catch(err => { console.error(err); process.exit(1) })
+}
+
+module.exports = {
+  assertNonEmptyPacks,
+  isFatalAuthError,
+  withRetry,
+  collectReferencedFileIds,
+  computeOrphans,
+  isAlreadySharedError,
+  uploadOrUpdate,
+  ensureAnyoneReader,
+  deleteOrphans,
+  runDriveSync,
+}

@@ -176,39 +176,19 @@ export function RealTypeConflictChecker({ canSave }: { canSave: boolean }) {
   }, [saveableConflicts, choices])
 
   const handleSave = useCallback(async () => {
-    // 按 tournamentId 聚合出要写回的完整 JSON（深拷贝 bundle 数据后改 realType）
-    const affected = new Map<string, Tournament>()
-    const getDraft = (tid: string): Tournament | null => {
-      if (affected.has(tid)) return affected.get(tid)!
-      const src = allTournaments.find((x) => x.id === tid)
-      if (!src) return null
-      const draft = JSON.parse(JSON.stringify(src)) as Tournament
-      affected.set(tid, draft)
-      return draft
-    }
-
+    // 先按比赛聚合"要改哪些位置 + 改成什么"
+    const wanted = new Map<string, { usage: Usage; target: string }[]>()
     for (const c of saveableConflicts) {
       const target = choices[c.key]
       for (const u of c.usages) {
         if (u.realType === target) continue
-        const draft = getDraft(u.tournamentId)
-        if (!draft) continue
-        // IDs are normally unique, but older data can contain duplicate IDs
-        // (for example SSR SF/F both use round-8). Preserve the source index
-        // so a conflict from the later round cannot be written into the first.
-        const indexedRound = draft.rounds[u.roundIndex]
-        const round = indexedRound?.id === u.roundId
-          ? indexedRound
-          : draft.rounds.find((r) => r.id === u.roundId)
-        // 用 slot + 各 usage 自己的 beatmapId 定位（倍速变体每张 bid 不同）
-        const map = round?.maps.find(
-          (m) => m.slot === u.slot && (u.beatmapId ? m.beatmapId === u.beatmapId : m.name === u.name)
-        )
-        if (map) map.realType = normalizeRealType(target)
+        const list = wanted.get(u.tournamentId) || []
+        list.push({ usage: u, target: normalizeRealType(target) })
+        wanted.set(u.tournamentId, list)
       }
     }
 
-    if (affected.size === 0) {
+    if (wanted.size === 0) {
       setStatus({ type: 'error', message: t('rtConflict.nothingToSave') })
       return
     }
@@ -216,19 +196,53 @@ export function RealTypeConflictChecker({ canSave }: { canSave: boolean }) {
     setSaving(true)
     setStatus(null)
     try {
-      const changes: Record<string, Tournament> = {}
-      for (const [tid, draft] of affected) changes[tid] = draft
+      // 逐场读取**权威版本 + 当前 blob sha** 作为编辑基准，再在上面打补丁。
+      // 不能用构建时的数据包当基准：那是旧数据，会整体覆盖别人已保存的改动。
+      const items: { id: string; tournament: Tournament; baseSha: string }[] = []
+      for (const [tid, edits] of wanted) {
+        const res = await fetch(`/api/tournaments/${tid}`)
+        if (!res.ok) throw new Error(t('rtConflict.loadFailed', { id: tid }))
+        const loaded = (await res.json()) as { tournament?: Tournament; sha?: string }
+        if (!loaded.tournament || typeof loaded.sha !== 'string' || loaded.sha === '') {
+          throw new Error(t('rtConflict.loadFailed', { id: tid }))
+        }
+        const draft = JSON.parse(JSON.stringify(loaded.tournament)) as Tournament
+        for (const { usage: u, target } of edits) {
+          // IDs are normally unique, but older data can contain duplicate IDs
+          // (for example SSR SF/F both use round-8). Preserve the source index
+          // so a conflict from the later round cannot be written into the first.
+          const indexedRound = draft.rounds[u.roundIndex]
+          const round = indexedRound?.id === u.roundId
+            ? indexedRound
+            : draft.rounds.find((r) => r.id === u.roundId)
+          // 用 slot + 各 usage 自己的 beatmapId 定位（倍速变体每张 bid 不同）
+          const map = round?.maps.find(
+            (m) => m.slot === u.slot && (u.beatmapId ? m.beatmapId === u.beatmapId : m.name === u.name)
+          )
+          if (map) map.realType = target
+        }
+        items.push({ id: tid, tournament: draft, baseSha: loaded.sha })
+      }
+
       const res = await fetch('/api/tournaments/batch', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          changes,
-          summary: `Unify realType across ${affected.size} tournaments (${pendingCount} maps)`,
+          items,
+          summary: `Unify realType across ${items.length} tournaments (${pendingCount} maps)`,
         }),
       })
-      const dataRes = await res.json()
+      const dataRes = (await res.json().catch(() => ({}))) as {
+        error?: string
+        code?: string
+        conflicts?: { id: string }[]
+      }
+      if (res.status === 409) {
+        const ids = (dataRes.conflicts ?? []).map((c) => c.id).join(', ')
+        throw new Error(t('rtConflict.editConflict', { ids: ids || '?' }))
+      }
       if (!res.ok) throw new Error(dataRes.error || t('rtConflict.saveFailed'))
-      setStatus({ type: 'success', message: t('rtConflict.saved', { n: String(affected.size) }) })
+      setStatus({ type: 'success', message: t('rtConflict.saved', { n: String(items.length) }) })
     } catch (e) {
       setStatus({ type: 'error', message: (e as Error).message })
     } finally {

@@ -2,7 +2,14 @@
 
 import { useState } from 'react'
 import type { Tournament } from '@/lib/types'
-import { useT } from '@/lib/i18n'
+import { useT, type MessageKey } from '@/lib/i18n'
+
+interface EditConflict {
+  id: string
+  reason: string
+  expected: string | null
+  actual: string | null
+}
 
 interface Props {
   tournament: Tournament | null
@@ -16,6 +23,19 @@ interface Props {
   isEditing?: boolean
   stagedCount?: number
   currentStaged?: boolean
+  // 无编辑基准的旧草稿:只允许导出,不允许提交
+  legacyStagedIds?: string[]
+  // 批量保存被服务端拒绝时的冲突清单
+  conflicts?: EditConflict[]
+  onExportDraft?: (id: string) => void
+  onReloadLatest?: (id: string) => void
+}
+
+const CONFLICT_REASON_KEYS: Record<string, MessageKey> = {
+  modified: 'admin.stage.conflictReason.modified',
+  missing: 'admin.stage.conflictReason.missing',
+  exists: 'admin.stage.conflictReason.exists',
+  'head-moved': 'admin.stage.conflictReason.headMoved',
 }
 
 export function JsonPreview({
@@ -30,6 +50,10 @@ export function JsonPreview({
   isEditing,
   stagedCount = 0,
   currentStaged = false,
+  legacyStagedIds = [],
+  conflicts = [],
+  onExportDraft,
+  onReloadLatest,
 }: Props) {
   const t = useT()
   const [copied, setCopied] = useState(false)
@@ -48,6 +72,10 @@ export function JsonPreview({
           disabled={submitting || batchSubmitting}
           onSubmit={onSubmitStaged}
           onClear={onClearStaged}
+          legacyIds={legacyStagedIds}
+          conflicts={conflicts}
+          onExportDraft={onExportDraft}
+          onReloadLatest={onReloadLatest}
         />
       </div>
     )
@@ -135,6 +163,10 @@ export function JsonPreview({
           disabled={submitting || batchSubmitting}
           onSubmit={onSubmitStaged}
           onClear={onClearStaged}
+          legacyIds={legacyStagedIds}
+          conflicts={conflicts}
+          onExportDraft={onExportDraft}
+          onReloadLatest={onReloadLatest}
         />
       </div>
     </div>
@@ -157,15 +189,24 @@ function StagedActions({
   disabled,
   onSubmit,
   onClear,
+  legacyIds = [],
+  conflicts = [],
+  onExportDraft,
+  onReloadLatest,
 }: {
   count: number
   submitting?: boolean
   disabled?: boolean
   onSubmit?: () => void
   onClear?: () => void
+  legacyIds?: string[]
+  conflicts?: EditConflict[]
+  onExportDraft?: (id: string) => void
+  onReloadLatest?: (id: string) => void
 }) {
   const t = useT()
   if (count <= 0) return null
+  const blocked = legacyIds.length > 0
 
   return (
     <div className="border-t border-gray-200 dark:border-neutral-800 pt-3">
@@ -182,10 +223,61 @@ function StagedActions({
           {t('json.stagedClear')}
         </button>
       </div>
+
+      {blocked && (
+        <div className="mb-2 rounded border border-amber-200 bg-amber-50 px-2.5 py-2 text-[11px] leading-5 text-amber-800 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-200">
+          <div className="font-medium">{t('admin.stage.legacyBlocked', { ids: legacyIds.join(', ') })}</div>
+          <div className="mt-1 flex flex-wrap gap-2">
+            {legacyIds.map((id) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => onExportDraft?.(id)}
+                className="px-2 py-0.5 rounded border border-amber-300 text-amber-900 hover:bg-amber-100 dark:border-amber-700 dark:text-amber-100 dark:hover:bg-amber-900/40"
+              >
+                {t('admin.stage.exportDraft', { id })}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {conflicts.length > 0 && (
+        <div className="mb-2 rounded border border-red-200 bg-red-50 px-2.5 py-2 text-[11px] leading-5 text-red-800 dark:border-red-800 dark:bg-red-900/20 dark:text-red-200">
+          <div className="font-medium">{t('admin.stage.conflicts', { n: conflicts.length })}</div>
+          <ul className="mt-1 space-y-1">
+            {conflicts.map((conflict) => (
+              <li key={`${conflict.id}-${conflict.reason}`} className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
+                <span className="font-mono truncate" title={conflict.id}>{conflict.id}</span>
+                <span className="shrink-0">
+                  {t(CONFLICT_REASON_KEYS[conflict.reason] ?? 'admin.stage.conflictReason.unknown')}
+                </span>
+                <span className="flex shrink-0 gap-1">
+                  <button
+                    type="button"
+                    onClick={() => onExportDraft?.(conflict.id)}
+                    className="px-2 py-0.5 rounded border border-red-300 text-red-900 hover:bg-red-100 dark:border-red-700 dark:text-red-100 dark:hover:bg-red-900/40"
+                  >
+                    {t('admin.stage.exportDraftShort')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onReloadLatest?.(conflict.id)}
+                    className="px-2 py-0.5 rounded border border-red-300 text-red-900 hover:bg-red-100 dark:border-red-700 dark:text-red-100 dark:hover:bg-red-900/40"
+                  >
+                    {t('admin.stage.reloadLatest')}
+                  </button>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       <button
         type="button"
         onClick={onSubmit}
-        disabled={disabled}
+        disabled={disabled || blocked}
         className="w-full px-4 py-2.5 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {submitting ? t('json.stagedSubmitting') : t('json.stagedSubmit', { n: count })}

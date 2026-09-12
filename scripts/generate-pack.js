@@ -34,7 +34,7 @@ const s3 = new S3Client({
 
 const REAL_TYPE_NAMES = {
   SS: 'Single/Minijack Stream/Consistency', JS: 'Jumpstream', SA: 'Stamina', CJ: 'Chordjack',
-  SJ: 'Jackspeed', MX: 'Rcmix', DP: 'Dump', ADP: 'Accurate Dump', STC: 'Streamtech',
+  SJ: 'Jackspeed', FCJ: 'Finger Control Jack', MX: 'Rcmix', DP: 'Dump', ADP: 'Accurate Dump', STC: 'Streamtech',
   MTC: 'Minijacktech', SATC: 'Stamina tech', JTC: 'Jack-mained tech', WTC: 'Wild/Ultra Burst tech',
   TC: 'Tech', ORC: 'Otherrice', PDRC: 'Pending RC',
   HB1: 'Speed/Generic Hybrid', HB2: 'Mid-tempo/Jack/Shield Hybrid', HB3: 'Technical Hybrid',
@@ -59,7 +59,7 @@ const OD_FLOOR = {
   JS: 8.5, SA: 8.5, SJ: 8.5,
   JTC: 8.2,
   CJ: 9,
-  SS: 8, MX: 8, DP: 8, ADP: 8, STC: 8, MTC: 8, WTC: 8, TC: 8, ORC: 8, SATC: 8,
+  SS: 8, FCJ: 8.5, MX: 8, DP: 8, ADP: 8, STC: 8, MTC: 8, WTC: 8, TC: 8, ORC: 8, SATC: 8,
   // LN
   RE: 7.2, CO: 7.2, TE: 7.2,
   DE: 7.5, JW: 7.5, SW: 7.5, LNMX: 7.5, LNWC: 7.5, LNTC: 7.5, IN: 7.5, LNWL: 7.5, OLN: 7.5,
@@ -792,22 +792,28 @@ async function main() {
     // 失败,桶里旧文件仍是最后一版有效副本,不能当孤儿删。
     if (R2_PACKS_PUBLIC_URL) {
       const producedKeys = new Set(allResults.map(r => `${r.realType}_${r.part}.osz`))
-      try {
-        const cmd = new ListObjectsV2Command({ Bucket: R2_PACKS_BUCKET })
-        const res = await s3.send(cmd)
-        const orphans = (res.Contents || [])
-          .map(o => o.Key)
-          .filter(k => k && k.endsWith('.osz') && !producedKeys.has(k))
-        for (const k of orphans) {
-          try {
-            await s3.send(new DeleteObjectCommand({ Bucket: R2_PACKS_BUCKET, Key: k }))
-            console.log(`  Deleted orphan ${k}`)
-          } catch (err) {
-            console.warn(`  Failed to delete orphan ${k}: ${err.message}`)
+      if (allResults.length === 0) {
+        // 本趟一个包都没产出 → producedKeys 为空,桶里所有 .osz 都会被判成孤儿。
+        // 这种情况一律跳过清理(桶内容原样保留),由人工核对为什么没有产出。
+        console.warn('  本次没有任何产出，跳过 packs 孤儿清理（避免把桶里的包全部删除）。')
+      } else {
+        try {
+          const cmd = new ListObjectsV2Command({ Bucket: R2_PACKS_BUCKET })
+          const res = await s3.send(cmd)
+          const orphans = (res.Contents || [])
+            .map(o => o.Key)
+            .filter(k => k && k.endsWith('.osz') && !producedKeys.has(k))
+          for (const k of orphans) {
+            try {
+              await s3.send(new DeleteObjectCommand({ Bucket: R2_PACKS_BUCKET, Key: k }))
+              console.log(`  Deleted orphan ${k}`)
+            } catch (err) {
+              console.warn(`  Failed to delete orphan ${k}: ${err.message}`)
+            }
           }
+        } catch (err) {
+          console.warn(`Orphan cleanup skipped: ${err.message}`)
         }
-      } catch (err) {
-        console.warn(`Orphan cleanup skipped: ${err.message}`)
       }
     } else {
       console.log('\nR2_PACKS_PUBLIC_URL not set, skipping R2 packs upload')

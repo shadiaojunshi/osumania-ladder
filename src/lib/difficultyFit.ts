@@ -44,7 +44,12 @@ export interface DifficultyGapCalibration {
 export interface LinearFit {
   slope: number
   intercept: number
-  rSquared: number
+  /**
+   * 决定系数。样本 y 全相等(总方差为 0)时 R² 在数学上未定义,此时为 null
+   * (UI 显示 N/A)。不做 max(0, ·) 截断:负值代表该固定斜率比"直接用均值预测"更差,
+   * 是有意义的信号,应如实展示。
+   */
+  rSquared: number | null
   rmse: number
   sampleCount: number
   predict: (x: number) => number
@@ -187,7 +192,7 @@ export function linearRegression(points: FitPoint[]): LinearFit | null {
   return {
     slope,
     intercept,
-    rSquared: totalSum <= Number.EPSILON ? 1 : Math.max(0, 1 - residualSum / totalSum),
+    rSquared: totalSum <= Number.EPSILON ? null : 1 - residualSum / totalSum,
     rmse: Math.sqrt(residualSum / valid.length),
     sampleCount: valid.length,
     predict,
@@ -217,7 +222,7 @@ export function linearRegressionWithSlope(
   return {
     slope,
     intercept,
-    rSquared: totalSum <= Number.EPSILON ? 1 : 1 - residualSum / totalSum,
+    rSquared: totalSum <= Number.EPSILON ? null : 1 - residualSum / totalSum,
     rmse: Math.sqrt(residualSum / valid.length),
     sampleCount: valid.length,
     predict,

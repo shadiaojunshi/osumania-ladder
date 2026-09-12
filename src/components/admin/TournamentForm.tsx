@@ -16,6 +16,10 @@ interface Props {
   saveSignal?: number
   // 向上冒泡"有未保存修改",供 admin 页在切换其他栏时拦截提示
   onDirtyChange?: (dirty: boolean) => void
+  // 当前编辑对象的编辑基准(读取时的 blob sha)。本地草稿会连它一起存,
+  // 恢复旧草稿时用它当基准,绝不拿最新 SHA 去覆盖别人已保存的改动。
+  baseSha?: string | null
+  onBaseShaChange?: (sha: string | null) => void
 }
 
 const EMPTY_TOURNAMENT: Tournament = {
@@ -29,7 +33,7 @@ const EMPTY_TOURNAMENT: Tournament = {
   customTypes: [],
 }
 
-const TOURNAMENT_DRAFT_VERSION = 1
+const TOURNAMENT_DRAFT_VERSION = 2
 type TournamentDraft = {
   version: number
   mode: 'create' | 'edit'
@@ -38,9 +42,11 @@ type TournamentDraft = {
   tournament: Tournament
   rounds: RoundWithMeta[]
   step: number
+  // 写这份草稿时用到的编辑基准(null = 当时是新建)
+  baseSha?: string | null
 }
 
-export function TournamentForm({ onUpdate, initialData, saveSignal, onDirtyChange }: Props) {
+export function TournamentForm({ onUpdate, initialData, saveSignal, onDirtyChange, baseSha = null, onBaseShaChange }: Props) {
   const t = useT()
   const [step, setStep] = useState(0)
   const [tournament, setTournament] = useState<Tournament>(EMPTY_TOURNAMENT)
@@ -48,6 +54,12 @@ export function TournamentForm({ onUpdate, initialData, saveSignal, onDirtyChang
   const [isDirty, setIsDirty] = useState(false)
   const checkedDraftKeys = useRef(new Set<string>())
   const skipDraftCleanupSave = useRef(false)
+  // 用 ref 保存当前基准:草稿写入时读它,避免把 baseSha 塞进依赖导致 effect 反复重建
+  const baseShaRef = useRef<string | null>(baseSha)
+  baseShaRef.current = baseSha
+  // 回调也走 ref:恢复草稿时调用它不能触发这个 effect 重跑(否则刚恢复的内容会被重置掉)
+  const onBaseShaChangeRef = useRef(onBaseShaChange)
+  onBaseShaChangeRef.current = onBaseShaChange
   const draftKey = `osumania-ladder:tournament-draft:v${TOURNAMENT_DRAFT_VERSION}:${initialData ? `edit:${initialData.id}` : 'create'}`
 
   // dirty 变化时向上通知(用于跨栏切换拦截)
@@ -91,6 +103,12 @@ export function TournamentForm({ onUpdate, initialData, saveSignal, onDirtyChang
         window.localStorage.removeItem(draftKey)
         return
       }
+      // 草稿自带的编辑基准可能比刚读到的版本旧:保存时改用草稿自己的基准,
+      // 让服务端把它判成冲突,而不是拿最新 SHA 静默覆盖别人的改动。
+      const draftBase = typeof draft.baseSha === 'string' ? draft.baseSha : null
+      if (initialData && draftBase && draftBase !== baseShaRef.current) {
+        onBaseShaChangeRef.current?.(draftBase)
+      }
       setTournament(draft.tournament as Tournament)
       setRounds(draft.rounds as RoundWithMeta[])
       setStep(Number.isFinite(Number(draft.step)) ? Number(draft.step) : baseStep)
@@ -126,6 +144,7 @@ export function TournamentForm({ onUpdate, initialData, saveSignal, onDirtyChang
         tournament,
         rounds,
         step,
+        baseSha: baseShaRef.current,
       }
       try { window.localStorage.setItem(draftKey, JSON.stringify(draft)) } catch { /* quota/private mode */ }
     }

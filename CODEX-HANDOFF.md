@@ -59,9 +59,13 @@ d:/osumania ladder/              ← 注意路径带空格，bash 里用引号
 │   │   ├── admin/               ← TournamentForm / RoundEditor / MapSlotEditor / MapUploader /
 │   │   │                           BulkImporter / ReferencesEditor / RefLadderEditor /
 │   │   │                           DifficultyRefPicker / PackLinksEditor / RealTypeConflictChecker /
-│   │   │                           AdminsManager / TrashManager / AuditLog / JsonPreview
-│   │   └── ladder/              ← LadderView / HoverCard
-│   ├── lib/                     ← types.ts / i18n.ts / referenceData.ts / difficulty.ts / poolTemplates.ts
+│   │   │                           AdminsManager / TrashManager / AuditLog / JsonPreview /
+│   │   │                           RealTypeMapBrowser（键型谱面浏览器）
+│   │   ├── chart/               ← 谱面可视化（复刻雨沐 !v）：ManiaChartButton / ManiaChartModal /
+│   │   │                           ManiaChartSvg
+│   │   └── ladder/              ← LadderView / HoverCard / RoundDetailModal
+│   ├── lib/                     ← types.ts / i18n.ts / referenceData.ts / difficulty.ts / poolTemplates.ts /
+│   │                               maniaChart.ts（.osu 解析 + 分页几何）/ osuTextClient.ts（取谱面文本 + 缓存）
 │   ├── hooks/useMapHistory.ts   ← 谱面历史（同 beatmapId 在哪些比赛出现过，用于冲突提示）
 │   ├── generated/tournaments.ts ← build 时由 generate-tournaments.js 生成（.gitignore 排除）
 │   └── stores/                  ← prefsStore（语言/主题）/ viewStore（天梯视图状态）
@@ -163,7 +167,9 @@ d:/osumania ladder/              ← 注意路径带空格，bash 里用引号
 | `scripts/generate-pack.js` 的 `REAL_TYPE_NAMES` | 决定合包标题 `4K Tournament {名字} Pack {n}` |
 | `src/app/download/page.tsx` 的 `CATEGORIES` 数组 | 下载页分类分组显示 |
 
-大类映射（`MapCategory`）：RC（SS/JS/SA/CJ/SJ/MX/DP/ADP/STC/MTC/JTC/WTC/TC/ORC/SATC）、LN（RE/CO/TE/DE/SW/JW/IN/LNMX/LNTC/LNWL/OLN）、HB（HB1-HB5/RCmainHB/LNmainHB/MXHB/MNTB/OHB）、SV（SV1/SV2/SI/ME/SVMX/**GM**）、TB（TB）、SPECIAL（自定义自由文本）。
+大类映射（`MapCategory`）：RC（SS/JS/SA/CJ/SJ/FCJ/MX/DP/ADP/STC/MTC/JTC/WTC/TC/ORC/SATC）、LN（RE/CO/TE/DE/SW/JW/IN/LNMX/LNTC/LNWL/OLN）、HB（HB1-HB5/RCmainHB/LNmainHB/MXHB/MNTB/OHB）、SV（SV1/SV2/SI/ME/SVMX/**GM**）、TB（TB）、SPECIAL（自定义自由文本）。
+
+**2026-09-12 新加了 FCJ（Finger Control Jack，归 RC 类）**：三处已注册（`MapSlotEditor` 的 RC 下拉排在 SJ 之后、`download/page.tsx` 的 rice 分类、`generate-pack.js` 的 `REAL_TYPE_NAMES` 与 `OD_FLOOR=8.5`，跟 SJ/CJ 同属叠键族），中英文 `form.typeGuide.placeholder` 已补定义。`poolTemplates.ts` 未加（非常规池位，录入时手动选），当前无含 FCJ 的谱面数据。
 
 **2026-08-18 新加了 GM（Gimmick，归 SV 类）**：三处已注册，合包名 `Gimmick SV`。注意 poolTemplates.ts 未加 GM（非常规池位，录入时在 SV 下拉手动选），当前无含 GM 的谱面数据，暂无 GM 包。
 
@@ -188,6 +194,37 @@ d:/osumania ladder/              ← 注意路径带空格，bash 里用引号
 ### 5.4 osu! 成绩绑定机制（用户已拍板的结论，别再推导）
 
 **osu! 本地成绩绑 .osu 文件 md5 hash，不绑 set ID。** 所以改谱面任何字节（名称/OD/HP/sourcesLabel 括号）→ hash 变 → 玩家已下成绩断。`Version` 里 sourcesLabel 括号 n→n+1 也是一个固有断点。**已知悉、接受、三方案（A 冻结名/B 去掉来源/C 维持现状）用户"先不改"，搁置。**
+
+### 5.5 谱面可视化（复刻雨沐 `!v`，2026-09-13 上线）
+
+把 `.osu` 画成"下落式竖条图"，与雨沐机器人 `!v` 的成图规则对齐。**全部计算在本机（浏览器）完成**，后端只提供原始 `.osu` 文本。
+
+**代码位置**（均为纯逻辑，无 `@data` 依赖，可被 `node --test` 直接导入）：
+- `src/lib/maniaChart.ts` — 解析 `.osu` + 分页几何。导出 `parseManiaBeatmap` / `buildManiaChart` / `beatToY` / `svToX` / `getKeyOverlay` / `ManiaChartError` 及全部常量（`LANE_WIDTH=10` / `CHUNK_GAP=30` / `MAX_WIDTH=1920` / `BARS_PER_CHUNK=4` / `BEATS_PER_CHUNK=16` / `ROWS_PER_PAGE=5` / `ROW_HEIGHT=710` / `ROW_GAP=20`）。
+- `src/lib/osuTextClient.ts` — 取谱面文本 + 三级缓存。
+- `src/components/chart/ManiaChartSvg.tsx` — 单页 SVG 渲染（同类横线合并成一条 `path`，避免上万 `<line>`）。
+- `src/components/chart/ManiaChartModal.tsx` — 弹窗（翻页 / 适应宽度↔1920 原始尺寸 / 下载 PNG）。
+- `src/components/chart/ManiaChartButton.tsx` — 可复用按钮（自带弹窗状态）。
+
+**几何要点**（改之前先读 `maniaChart.ts` 顶部注释，别凭感觉调）：
+- `chunkWidth = CHUNK_GAP + LANE_WIDTH*keys`；`chunksPerRow = floor((1920-30)/chunkWidth)`（4K=27、7K=18）；`chunksPerPage = chunksPerRow * 5`；整行居中偏移 `chunkX = (1920 - (chunksPerRow*chunkWidth - CHUNK_GAP))/2`。
+- 每竖条 = 4 小节 × 4 拍 = 16 拍；**第 0 拍在底部**，越晚越靠上；竖条从左到右、一行行往下排。
+- 一页 = `chunksPerPage * 16` 拍（4K 即 2160 拍 ≈ 180BPM 下 12 分钟）→ **绝大多数谱面只有 1 页**，多页是长图/马拉松才出现。
+- **基准 BPM**：按时长加权取最长的红线 BPM，再 `normalizeBpm` 折进 120–300（×/÷2ⁿ）。
+- **基准速度 / SV 归一化**：`significantSpeed` = 时长最长的 `(自身 beatLength × sv)` 四舍五入到 10 的倍数；`standardSv = beatLength×sv / significantSpeed`。
+- **SV 曲线**：`std/mean > 0.25` 时画折线，否则画绿线。
+- 本站无 osu 默认皮肤素材，note 改用圆角矩形（白 `#FFFFFF` / 蓝 `#5C9EFF`）。
+- **与雨沐的唯一有意偏差**：雨沐把虚拟红线放在真实红线的负拍位（会画到竖条外），本站改放第一个物件拍位（beat=0，正好落在底边）。`ChartLine.ownBeatLength` 用来区分"参与速度计算的行"与纯装饰的小节线。
+
+**取谱面与额度**（`osuTextClient.ts`）：
+- 走既有 `GET /api/osu/raw`（见 §3 `functions/api/osu/raw.ts`）。带 slot 时若 401/403 且有 BID，**自动降级到 `?id=` 取线上版本**，并在弹窗里如实标注来源（`R2 比赛上传版本` / `osu! 线上版本`）。
+- slot 分支会依次探测 `<baseKey>.osz` 与 `<baseKey>.nsv.osz`（SV 类轮次谱面上传的是 `.nsv.osz`）。
+- 三级缓存：30 秒信任窗口（重复打开零请求）→ ETag 再校验（未变只花一次条件请求）→ 模型缓存（同 text 引用复用解析结果）。
+- **Cloudflare 免费额度**：Pages Functions/Workers 共享 100,000 请求/天（午夜 UTC 重置、静态资源不计、默认 fail-open）。一次可视化 ≈ 1 次 Function + 约 5 次 R2 Class B。按每天 1000 次查看估算 ≈ 日额度 1%、R2 月额度（1000 万次）1.5% —— **安全**，故首页也放了按钮。
+
+**按钮入口（3 处）**：管理端「编辑比赛」每张谱面（`MapSlotEditor.tsx`）、管理端「键型谱面」（`RealTypeMapBrowser.tsx` 的 `chart` 列）、首页详情弹窗每张谱面（`RoundDetailModal.tsx` 的 `MapRow`）。无 BID 且无 slot 时按钮返回 `null`。
+
+**测试**：`scripts/mania-chart.test.mjs` 锁定几何（4K `chunkWidth=70` / `chunksPerRow=27` / `chunkX=30`，7K `chunksPerRow=18`，`beatToY` / `svToX` / `getKeyOverlay` / 跨切片裁切 / 虚拟红线 / SV 阈值 / 分页夹取）。
 
 ---
 
@@ -307,6 +344,7 @@ Tabs（`src/app/admin/page.tsx` 的 `Tab` 类型）：
 - 合包流水线 Phase 1-3：生成 → R2 直链 + Drive 镜像 → manifest 写回 → 孤儿清理 → 下载页折叠展示。
 - 近期（2026-08）：GITHUB_TOKEN 修复；合包磁盘防爆（逐包传删 + Buffer）；命名 contest→tournament（含 55 处补空格）；新增 GM 键型；priority 字段；TB/HB 难度统计修复 + 全量 recalc；BID 回填脚本。
 - 2026-08-20：拟合 RF 段位跨度校准与手动斜率；4 个 Pending 键型及导入回退/合包规则；键型说明折叠占位；比赛本地暂存与单 commit 批量上传；SATC 排到 JTC/WTC 之前。
+- 2026-09-13：谱面可视化（复刻雨沐 `!v`），三处入口（admin 编辑比赛 / admin 键型谱面 / 首页详情弹窗），全前端计算 + 三级缓存 + 403 自动降级（见 §5.5）。
 
 ### 待办 / 搁置
 1. **全量合包待跑**：manifest 改名只是显示层，R2/Drive 上 `.osz` 内部仍是 `4K Contest…` + 旧 Creator，需下次跑全量合包（Actions → Generate Map Packs → realType 留空）才会写入新 Title/Creator。**注意会让已下载玩家的成绩断（hash 变），用户已知悉接受。**
@@ -336,6 +374,7 @@ Tabs（`src/app/admin/page.tsx` 的 `Tab` 类型）：
 | 备份 R2 | 自动每日；手动触发 Backup R2 workflow |
 | 回填无 BID 老图 | `node scripts/backfill-bid.js --apply`（本地，需 R2 凭证） |
 | 体检 realType 冲突 | admin → realType 体检，或 `node scripts/detect-type-conflicts.js` |
+| 改谱面可视化的画法/几何 | `src/lib/maniaChart.ts`（先跑 `node --test scripts/mania-chart.test.mjs`，几何断言会兜住手滑） |
 | 检查 manifest 合法性 | `node -e "const m=require('./data/packs-manifest.json'); console.log(m.packs.length)"` |
 | 本地起站 | `npm run dev`（纯前端）；后端测试用 `wrangler pages dev` |
 | 校验后端 TS | `npx tsc --noEmit -p functions/tsconfig.json` |

@@ -16,6 +16,7 @@ import {
 } from '@floating-ui/react'
 import type { BeatmapMeta, Round, Tournament } from '@/lib/types'
 import { useT } from '@/lib/i18n'
+import { ManiaChartButton } from '@/components/chart/ManiaChartButton'
 
 // 槽位排序:RC/SV 按数字, LN/HB 同理, TB/FS-TB 沉底。
 const TYPE_ORDER: Record<string, number> = { RC: 0, SV: 1, HB: 2, LN: 3, TB: 9 }
@@ -139,7 +140,13 @@ export function RoundDetailModal({
 
             <div className="overflow-y-auto px-4 py-2 divide-y divide-gray-100 dark:divide-neutral-800">
               {sortedMaps.map((m, i) => (
-                <MapRow key={`${m.slot}-${i}`} map={m} />
+                <MapRow
+                  key={`${m.slot}-${i}`}
+                  map={m}
+                  tournamentId={tournament.id}
+                  roundId={round.id}
+                  heading={`${tournament.abbreviation} ${round.abbreviation} ${m.slot}`}
+                />
               ))}
             </div>
           </div>
@@ -149,7 +156,17 @@ export function RoundDetailModal({
   )
 }
 
-function MapRow({ map }: { map: BeatmapMeta }) {
+function MapRow({
+  map,
+  tournamentId,
+  roundId,
+  heading,
+}: {
+  map: BeatmapMeta
+  tournamentId: string
+  roundId: string
+  heading: string
+}) {
   const t = useT()
   const label = map.name || map.slot
   // 只有有效正整数 BID 才渲染 osu! 链接;没有 BID 的是普通文本,不伪装成可点击。
@@ -162,12 +179,21 @@ function MapRow({ map }: { map: BeatmapMeta }) {
       {map.difficulty > 0 ? map.difficulty.toFixed(1) : ''}
     </span>
   )
+  // 按钮不能放进 <a> 里(交互元素嵌套),所以作为链接的兄弟节点摆在行尾。
+  const chartButton = (
+    <ManiaChartButton
+      target={{ beatmapId: map.beatmapId, tournamentId, roundId, slot: map.slot }}
+      heading={heading}
+      className="shrink-0 rounded px-1.5 py-0.5 text-[11px] bg-purple-50 text-purple-700 hover:bg-purple-100 dark:bg-purple-900/30 dark:text-purple-200 dark:hover:bg-purple-900/50"
+    />
+  )
   if (!hasBID) {
     return (
       <div className="py-1.5 flex items-center gap-2">
         {slot}
         <span className="min-w-0 flex-1 text-sm break-words line-clamp-2 text-gray-800 dark:text-neutral-200">{label}</span>
         {diff}
+        {chartButton}
       </div>
     )
   }
@@ -188,6 +214,7 @@ function MapRow({ map }: { map: BeatmapMeta }) {
         </span>
         {diff}
       </a>
+      {chartButton}
     </div>
   )
 }

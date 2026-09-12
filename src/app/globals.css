@@ -422,6 +422,37 @@ button.round-box:focus-visible {
   to { left: 100%; }
 }
 
+/* 谱面可视化弹窗:比轮次详情弹窗宽得多,自己一套尺寸与入场动画,
+   复用 ladder-fade-in / ladder-reveal / ladder-fade-out / ladder-dismiss 关键帧。 */
+.mania-chart-panel {
+  width: min(1500px, calc(100vw - 32px));
+  height: min(92vh, 1000px);
+  height: min(92dvh, 1000px);
+}
+
+@media (max-width: 639px) {
+  .mania-chart-panel {
+    width: calc(100vw - 16px);
+    height: calc(100vh - 16px);
+    height: calc(100dvh - 16px);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .mania-chart-backdrop {
+    animation: ladder-fade-in 160ms ease-out both;
+  }
+  .mania-chart-panel {
+    animation: ladder-reveal 240ms cubic-bezier(.22, 1, .36, 1) both;
+  }
+  .mania-chart-closing {
+    animation: ladder-fade-out 140ms ease-in both;
+  }
+  .mania-chart-closing .mania-chart-panel {
+    animation: ladder-dismiss 140ms ease-in both;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .ladder-header button,
   .ladder-header a,

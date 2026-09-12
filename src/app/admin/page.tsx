@@ -17,7 +17,6 @@ import { AuditLog } from '@/components/admin/AuditLog'
 import type { Tournament } from '@/lib/types'
 import { useT, type MessageKey } from '@/lib/i18n'
 import { findPendingMaps } from '@/lib/tournamentDiagnostics'
-import { tournaments as allKnownTournaments } from '@/generated/tournaments'
 
 type Role = 'readonly' | 'contributor' | 'admin' | 'owner'
 
@@ -42,7 +41,26 @@ interface TournamentListItem {
 
 type Tab = 'create' | 'manage' | 'references' | 'refLadder' | 'difficultyFit' | 'upload' | 'packs' | 'realTypeMaps' | 'rtConflict' | 'admins' | 'trash' | 'audit'
 
-const STAGED_TOURNAMENTS_KEY = 'osumania-ladder:staged-tournaments:v1'
+// 每份暂存草稿都要带「编辑基准」:读取该文件时的 blob sha。
+//   baseSha: string → 编辑既有文件,提交时用它做乐观锁
+//   baseSha: null   → 新建(预期服务器上不存在),撞名会被服务端拒绝
+//   legacy: true    → 从 v1 旧格式迁来的草稿,没有基准,只允许查看/导出,不允许提交
+interface StagedEntry {
+  data: Tournament
+  baseSha: string | null
+  baseline: Tournament | null
+  legacy?: boolean
+}
+
+interface EditConflict {
+  id: string
+  reason: string
+  expected: string | null
+  actual: string | null
+}
+
+const STAGED_TOURNAMENTS_KEY_V1 = 'osumania-ladder:staged-tournaments:v1'
+const STAGED_TOURNAMENTS_KEY = 'osumania-ladder:staged-tournaments:v2'
 
 export default function AdminPage() {
   const t = useT()
@@ -53,12 +71,17 @@ export default function AdminPage() {
   const [existingList, setExistingList] = useState<TournamentListItem[]>([])
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editingSha, setEditingSha] = useState<string | null>(null)
+  // 打开编辑时的权威内容:作为冲突对比的基准快照
+  const [editingBaseline, setEditingBaseline] = useState<Tournament | null>(null)
+  // 当前编辑对象来自「无基准的旧草稿」→ 只允许查看/导出,不允许保存
+  const [editingLegacy, setEditingLegacy] = useState(false)
   const [editInitialData, setEditInitialData] = useState<Tournament | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [batchSubmitting, setBatchSubmitting] = useState(false)
   const [submitStatus, setSubmitStatus] = useState<{ type: 'success' | 'error' | 'local'; message: string } | null>(null)
+  const [conflicts, setConflicts] = useState<EditConflict[]>([])
   const [saveSignal, setSaveSignal] = useState(0)
-  const [stagedChanges, setStagedChanges] = useState<Record<string, Tournament>>({})
+  const [stagedChanges, setStagedChanges] = useState<Record<string, StagedEntry>>({})
   const [stagedChangesLoaded, setStagedChangesLoaded] = useState(false)
   const [tab, setTab] = useState<Tab>('create')
   const [loadingList, setLoadingList] = useState(false)
@@ -68,14 +91,43 @@ export default function AdminPage() {
   const [uploadDirty, setUploadDirty] = useState(false)
 
   useEffect(() => {
+    const sanitize = (value: unknown, id: string): StagedEntry | null => {
+      if (!value || typeof value !== 'object') return null
+      const entry = value as Partial<StagedEntry>
+      const data = entry.data as Tournament | undefined
+      if (!data || data.id !== id) return null
+      return {
+        data,
+        baseSha: typeof entry.baseSha === 'string' ? entry.baseSha : null,
+        baseline: (entry.baseline as Tournament | undefined) ?? null,
+        legacy: !!entry.legacy,
+      }
+    }
+
     try {
-      const raw = window.localStorage.getItem(STAGED_TOURNAMENTS_KEY)
-      if (raw) {
-        const parsed = JSON.parse(raw) as Record<string, Tournament>
-        const valid = Object.fromEntries(
-          Object.entries(parsed).filter(([id, value]) => value && value.id === id),
-        )
+      const rawV2 = window.localStorage.getItem(STAGED_TOURNAMENTS_KEY)
+      if (rawV2) {
+        const parsed = JSON.parse(rawV2) as Record<string, unknown>
+        const valid: Record<string, StagedEntry> = {}
+        for (const [id, value] of Object.entries(parsed)) {
+          const entry = sanitize(value, id)
+          if (entry) valid[id] = entry
+        }
         setStagedChanges(valid)
+      } else {
+        // v1 旧格式只有整份 JSON、没有编辑基准。迁移为 legacy 草稿:
+        // 可以查看/导出,但不能直接提交(否则会静默覆盖别人已保存的改动)。
+        const rawV1 = window.localStorage.getItem(STAGED_TOURNAMENTS_KEY_V1)
+        if (rawV1) {
+          const parsed = JSON.parse(rawV1) as Record<string, Tournament>
+          const migrated: Record<string, StagedEntry> = {}
+          for (const [id, value] of Object.entries(parsed)) {
+            if (!value || value.id !== id) continue
+            migrated[id] = { data: value, baseSha: null, baseline: null, legacy: true }
+          }
+          setStagedChanges(migrated)
+          window.localStorage.removeItem(STAGED_TOURNAMENTS_KEY_V1)
+        }
       }
     } catch {
       window.localStorage.removeItem(STAGED_TOURNAMENTS_KEY)
@@ -153,6 +205,10 @@ export default function AdminPage() {
 
   const handleSubmit = async () => {
     if (!tournament) return
+    if (editingLegacy) {
+      setSubmitStatus({ type: 'error', message: t('admin.base.legacyBlocked') })
+      return
+    }
     if (!editingId && !confirmPendingMaps(tournament, t('admin.pending.action.submit'))) return
     setSubmitting(true)
     setSubmitStatus(null)
@@ -192,8 +248,23 @@ export default function AdminPage() {
 
   const handleStage = () => {
     if (!tournament) return
+    if (editingLegacy) {
+      setSubmitStatus({ type: 'error', message: t('admin.base.legacyBlocked') })
+      return
+    }
     if (!editingId && !confirmPendingMaps(tournament, t('admin.pending.action.stage'))) return
-    setStagedChanges((current) => ({ ...current, [tournament.id]: tournament }))
+    // 编辑既有文件却没有基准(例如刚被清过草稿) → 拒绝暂存,避免拿不确定的基准提交
+    if (editingId && !editingSha) {
+      setSubmitStatus({ type: 'error', message: t('admin.base.missing') })
+      return
+    }
+    const entry: StagedEntry = {
+      data: tournament,
+      baseSha: editingId ? editingSha : null,
+      baseline: editingId ? editingBaseline : null,
+      legacy: false,
+    }
+    setStagedChanges((current) => ({ ...current, [tournament.id]: entry }))
     setSubmitStatus({
       type: 'local',
       message: t('admin.stage.success', { id: tournament.id }),
@@ -212,23 +283,57 @@ export default function AdminPage() {
   }
 
   const handleSubmitStaged = async () => {
-    const count = Object.keys(stagedChanges).length
-    if (count === 0) return
+    const entries = Object.entries(stagedChanges)
+    if (entries.length === 0) return
+
+    // 无基准的旧草稿不能悄悄提交 —— 那正是"拿旧 JSON 配新 SHA 覆盖别人改动"的路径。
+    const legacyIds = entries.filter(([, entry]) => entry.legacy).map(([id]) => id)
+    if (legacyIds.length > 0) {
+      setSubmitStatus({ type: 'error', message: t('admin.stage.legacyBlocked', { ids: legacyIds.join(', ') }) })
+      return
+    }
+
+    const count = entries.length
+    // 提交快照:请求期间新加/改写的草稿不能被清掉
+    const snapshot = new Map(entries)
     setBatchSubmitting(true)
     setSubmitStatus(null)
+    setConflicts([])
     try {
       const res = await fetch('/api/tournaments/batch', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          changes: stagedChanges,
+          items: entries.map(([id, entry]) => ({
+            id,
+            tournament: entry.data,
+            baseSha: entry.baseSha,
+          })),
           summary: `Batch update tournaments (${count} files)`,
         }),
       })
-      if (!res.ok) {
-        throw new Error((await res.json().catch(() => ({}))).error || t('admin.stage.submitError'))
+      const payload = (await res.json().catch(() => ({}))) as {
+        error?: string
+        code?: string
+        conflicts?: EditConflict[]
       }
-      setStagedChanges({})
+
+      if (res.status === 409) {
+        // 整批未写入:保留全部草稿与当前编辑内容,只把冲突摊开给用户处理
+        setConflicts(payload.conflicts ?? [])
+        setSubmitStatus({ type: 'error', message: payload.error || t('admin.stage.submitError') })
+        return
+      }
+      if (!res.ok) throw new Error(payload.error || t('admin.stage.submitError'))
+
+      setStagedChanges((current) => {
+        const next = { ...current }
+        for (const [id, entry] of snapshot) {
+          if (next[id] === entry) delete next[id]
+        }
+        return next
+      })
+      setConflicts([])
       setSubmitStatus({ type: 'success', message: t('admin.stage.submitSuccess', { n: count }) })
       setSaveSignal((current) => current + 1)
       setFormDirty(false)
@@ -246,7 +351,20 @@ export default function AdminPage() {
     setSubmitStatus(null)
   }
 
-  const handleStageMapChange = (change: {
+  // 读取权威版本 + 它当前的 blob sha。编辑基准必须来自这里,不能用构建时的数据包。
+  const fetchAuthoritative = useCallback(async (id: string): Promise<{ tournament: Tournament; sha: string } | null> => {
+    try {
+      const res = await fetch(`/api/tournaments/${id}`)
+      if (!res.ok) return null
+      const data = (await res.json()) as { tournament?: Tournament; sha?: string }
+      if (!data.tournament || typeof data.sha !== 'string' || data.sha === '') return null
+      return { tournament: data.tournament, sha: data.sha }
+    } catch {
+      return null
+    }
+  }, [])
+
+  const handleStageMapChange = async (change: {
     tournamentId: string
     roundId: string
     roundIndex: number
@@ -254,11 +372,24 @@ export default function AdminPage() {
     beatmapId?: number
     realType: string
   }) => {
+    // 未暂存 → 先取权威版本 + 当时的 sha 作为基准(不能用构建时数据包:那是旧数据)。
+    let fetchedBase: StagedEntry | null = null
+    if (!stagedChanges[change.tournamentId]) {
+      const loaded = await fetchAuthoritative(change.tournamentId)
+      if (!loaded) {
+        setSubmitStatus({ type: 'error', message: t('realTypeMaps.stageFailed', { id: change.tournamentId }) })
+        return
+      }
+      fetchedBase = { data: loaded.tournament, baseSha: loaded.sha, baseline: loaded.tournament, legacy: false }
+    }
+
+    let stagedOk = false
     setStagedChanges((current) => {
-      const source = current[change.tournamentId]
-        || allKnownTournaments.find((item) => item.id === change.tournamentId)
-      if (!source) return current
-      const draft = JSON.parse(JSON.stringify(source)) as Tournament
+      // 补丁一律打在**最新的**暂存状态上:连续两次改动同一比赛、或先暂存再改动,
+      // 都不会出现后一次覆盖前一次补丁的问题。
+      const base = current[change.tournamentId] ?? fetchedBase
+      if (!base) return current
+      const draft = JSON.parse(JSON.stringify(base.data)) as Tournament
       // Legacy tournament files can reuse a round id (SSR SF/F both use round-8).
       // Prefer the browser-provided index, with the id as a compatibility fallback.
       const round = draft.rounds[change.roundIndex] || draft.rounds.find((item) => item.id === change.roundId)
@@ -267,9 +398,42 @@ export default function AdminPage() {
       )
       if (!map) return current
       map.realType = change.realType
-      return { ...current, [change.tournamentId]: draft }
+      stagedOk = true
+      return { ...current, [change.tournamentId]: { ...base, data: draft } }
     })
-    setSubmitStatus({ type: 'local', message: t('realTypeMaps.stagedOne') })
+    setSubmitStatus(stagedOk
+      ? { type: 'local', message: t('realTypeMaps.stagedOne') }
+      : { type: 'error', message: t('realTypeMaps.stageFailed', { id: change.tournamentId }) })
+  }
+
+  // 把某份草稿导出成 JSON 文件:冲突时先留一份,再决定载入最新版本。
+  const handleExportDraft = (id: string) => {
+    const entry = stagedChanges[id]
+    if (!entry) return
+    const url = URL.createObjectURL(new Blob([JSON.stringify(entry.data, null, 2)], { type: 'application/json' }))
+    const anchor = document.createElement('a')
+    anchor.href = url
+    anchor.download = `${id}.draft.json`
+    anchor.click()
+    URL.revokeObjectURL(url)
+    setSubmitStatus({ type: 'local', message: t('admin.stage.exported', { id }) })
+  }
+
+  // 载入最新版本 = 以权威内容为准重新开始(会先确认)。刻意不做"旧 JSON 配新 SHA 直接提交"。
+  const handleReloadLatest = async (id: string) => {
+    if (!window.confirm(t('admin.stage.reloadLatestConfirm', { id }))) return
+    const loaded = await fetchAuthoritative(id)
+    if (!loaded) {
+      setSubmitStatus({ type: 'error', message: t('admin.base.loadFailed', { id }) })
+      return
+    }
+    setStagedChanges((current) => {
+      const next = { ...current }
+      delete next[id]
+      return next
+    })
+    setConflicts((current) => current.filter((conflict) => conflict.id !== id))
+    setSubmitStatus({ type: 'local', message: t('admin.stage.reloaded', { id }) })
   }
 
   const handleTournamentUpdate = useCallback((value: Tournament | null) => {
@@ -278,17 +442,35 @@ export default function AdminPage() {
   }, [])
 
   const handleEdit = async (id: string) => {
-    try {
-      const res = await fetch(`/api/tournaments/${id}`)
-      if (!res.ok) throw new Error(t('admin.load.error'))
-      const { tournament: data, sha } = await res.json()
-      setEditingId(id)
-      setEditingSha(sha)
-      setEditInitialData(stagedChanges[id] || data)
-      setTab('create')
-    } catch {
+    const loaded = await fetchAuthoritative(id)
+    if (!loaded) {
       alert(t('admin.load.errorAlert'))
+      return
     }
+    const staged = stagedChanges[id]
+    setEditingId(id)
+    // 基准快照要和 baseSha 是同一份内容:打开已暂存草稿时优先用草稿自己的 baseline,
+    // 否则会出现 baseline=最新内容 / baseSha=旧版本 的不一致。
+    setEditingBaseline(staged?.baseline ?? loaded.tournament)
+    if (staged?.legacy) {
+      // 旧格式草稿没有编辑基准 → 打开仅供查看/导出,保存被拒。
+      setEditingSha(null)
+      setEditingLegacy(true)
+      setEditInitialData(staged.data)
+      setSubmitStatus({ type: 'local', message: t('admin.base.legacyNotice') })
+    } else if (staged) {
+      // 用草稿自己的基准,而不是刚取到的最新 SHA —— 否则就绕过了乐观锁。
+      setEditingSha(staged.baseSha)
+      setEditingLegacy(false)
+      setEditInitialData(staged.data)
+      setSubmitStatus(null)
+    } else {
+      setEditingSha(loaded.sha)
+      setEditingLegacy(false)
+      setEditInitialData(loaded.tournament)
+      setSubmitStatus(null)
+    }
+    setTab('create')
   }
 
   const handleDelete = async (id: string, sha: string) => {
@@ -310,6 +492,8 @@ export default function AdminPage() {
   const handleNewTournament = () => {
     setEditingId(null)
     setEditingSha(null)
+    setEditingBaseline(null)
+    setEditingLegacy(false)
     setEditInitialData(null)
     setTournament(null)
     setSubmitStatus(null)
@@ -456,6 +640,8 @@ export default function AdminPage() {
                 initialData={editInitialData}
                 saveSignal={saveSignal}
                 onDirtyChange={setFormDirty}
+                baseSha={editingSha}
+                onBaseShaChange={setEditingSha}
               />
               <JsonPreview
                 tournament={tournament}
@@ -468,6 +654,10 @@ export default function AdminPage() {
                 submitStatus={submitStatus}
                 isEditing={!!editingId}
                 stagedCount={Object.keys(stagedChanges).length}
+                legacyStagedIds={Object.entries(stagedChanges).filter(([, entry]) => entry.legacy).map(([id]) => id)}
+                conflicts={conflicts}
+                onExportDraft={handleExportDraft}
+                onReloadLatest={handleReloadLatest}
                 currentStaged={!!tournament && !!stagedChanges[tournament.id]}
               />
             </div>
@@ -495,6 +685,11 @@ export default function AdminPage() {
                       {stagedChanges[item.id] && (
                         <span className="shrink-0 px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-900/30 text-[10px] text-blue-700 dark:text-blue-200">
                           {t('json.stagedCurrent')}
+                        </span>
+                      )}
+                      {stagedChanges[item.id]?.legacy && (
+                        <span className="shrink-0 px-1.5 py-0.5 rounded bg-amber-50 dark:bg-amber-900/30 text-[10px] text-amber-800 dark:text-amber-200">
+                          {t('admin.stage.legacyBadge')}
                         </span>
                       )}
                     </div>

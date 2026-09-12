@@ -8,12 +8,25 @@
 //
 // 权限: contributor 及以上。该角色本来就能逐场增改；批量接口只把多次
 // commit 合成一次，减少 Pages 构建次数，不扩大可修改的数据范围。
+//
+// 编辑基准(R01):每项必须带 baseSha —— 读取该文件时的 blob sha;新建显式传 null。
+// 服务器读取**固定 HEAD** 的树,逐文件比对 blob sha,全部通过才建 commit;
+// 任一冲突返回 409 EDIT_CONFLICT + conflicts 列表,整批一个文件都不写。
+// 这样"A 从旧草稿提交、覆盖 B 已保存的改动"就不再可能。
 
 import { jsonResponse, noContent } from '../_lib/cors'
 import { hasRole, type AuthEnv, type SessionUser } from '../_lib/auth'
 import { writeAudit } from '../_lib/audit'
 import { isMatchingTournamentId } from '../_lib/tournamentId'
 import { findDuplicateRoundIds } from '../_lib/roundIds'
+import {
+  evaluateBatchConflicts,
+  headMovedConflicts,
+  parseBatchItems,
+  tournamentPath,
+  treeToShaMap,
+  type TreeEntry,
+} from '../_lib/batchConflicts'
 
 interface Env extends AuthEnv {
   GITHUB_TOKEN: string
@@ -35,6 +48,33 @@ async function gh(path: string, env: Env, options: RequestInit = {}) {
   })
 }
 
+// 取「固定 commit 的树」里的 path -> blob sha。
+// 递归树被 GitHub 截断(仓库变大时)或读取失败时,退回逐文件查 contents API:
+// 保证「查不到」只代表确实不存在,绝不把读取失败当成"文件不存在"
+// (否则新建会覆盖已有文件)。
+async function resolveTreeShas(
+  env: Env,
+  baseCommitSha: string,
+  baseTreeSha: string,
+  ids: string[],
+): Promise<Map<string, string>> {
+  const treeRes = await gh(`/git/trees/${baseTreeSha}?recursive=1`, env)
+  if (treeRes.ok) {
+    const treeJson = (await treeRes.json()) as { tree?: TreeEntry[]; truncated?: boolean }
+    if (!treeJson.truncated) return treeToShaMap(treeJson.tree)
+  }
+
+  const map = new Map<string, string>()
+  for (const id of ids) {
+    const res = await gh(`/contents/${tournamentPath(id)}?ref=${baseCommitSha}`, env)
+    if (res.status === 404) continue
+    if (!res.ok) throw new Error(`读取 ${id} 的基准 sha 失败: ${res.status}`)
+    const file = (await res.json()) as { sha?: unknown }
+    if (typeof file.sha === 'string') map.set(tournamentPath(id), file.sha)
+  }
+  return map
+}
+
 export const onRequestOptions: PagesFunction<Env> = async () => noContent()
 
 export const onRequestPost: PagesFunction<Env> = async ({ request, env, data }) => {
@@ -43,33 +83,38 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, data }) 
     return jsonResponse({ error: '需要 contributor 及以上权限', code: 'FORBIDDEN' }, 403)
   }
 
-  const { changes, summary } = (await request.json()) as {
-    changes: Record<string, unknown> // tournamentId -> 完整 tournament JSON
-    summary?: string
+  let payload: unknown
+  try {
+    payload = await request.json()
+  } catch {
+    return jsonResponse({ error: '请求体不是合法 JSON', code: 'INVALID_BATCH' }, 400)
   }
 
-  const ids = Object.keys(changes || {})
-  if (ids.length === 0) {
-    return jsonResponse({ error: '没有要保存的改动' }, 400)
+  const parsed = parseBatchItems(payload)
+  if (!parsed.items) {
+    return jsonResponse({ error: parsed.error, code: 'INVALID_BATCH' }, 400)
   }
-  const invalidId = ids.find((id) => {
-    const tournament = changes[id] as { id?: unknown } | null
-    return !isMatchingTournamentId(id, tournament)
-  })
+  const items = parsed.items
+  const ids = items.map((item) => item.id)
+  const summary = typeof (payload as { summary?: unknown }).summary === 'string'
+    ? (payload as { summary: string }).summary
+    : undefined
+
+  const invalidId = items.find((item) => !isMatchingTournamentId(item.id, item.tournament))
   if (invalidId) {
-    return jsonResponse({ error: `无效的比赛 ID 或数据不匹配: ${invalidId}` }, 400)
+    return jsonResponse({ error: `无效的比赛 ID 或数据不匹配: ${invalidId.id}`, code: 'INVALID_BATCH' }, 400)
   }
 
   // round id 必须在比赛内唯一:R2 key 是 maps/{tid}/{rid}/{slot}.osz,重复 id
   // 会让上传互相覆盖、补丁定位写串(SSR SF/F 事故)。
-  const dup = ids.find((id) => findDuplicateRoundIds(changes[id] as { rounds?: unknown[] }).length > 0)
+  const dup = items.find((item) => findDuplicateRoundIds(item.tournament as { rounds?: unknown[] }).length > 0)
   if (dup) {
-    const dups = findDuplicateRoundIds(changes[dup] as { rounds?: unknown[] })
-    return jsonResponse({ error: `${dup} 存在重复的 round id: ${dups.map((d) => d.roundId).join(', ')}。请把每轮改成唯一 id 后再保存。` }, 400)
+    const dups = findDuplicateRoundIds(dup.tournament as { rounds?: unknown[] })
+    return jsonResponse({ error: `${dup.id} 存在重复的 round id: ${dups.map((d) => d.roundId).join(', ')}。请把每轮改成唯一 id 后再保存。`, code: 'INVALID_BATCH' }, 400)
   }
 
   try {
-    // 1. 取分支当前 HEAD commit sha
+    // 1. 取分支当前 HEAD commit sha（整批共用同一个基准）
     const refRes = await gh(`/git/ref/heads/${BRANCH}`, env)
     if (!refRes.ok) throw new Error(`读取分支引用失败: ${refRes.status}`)
     const refJson = (await refRes.json()) as { object: { sha: string } }
@@ -81,25 +126,38 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, data }) 
     const commitJson = (await commitRes.json()) as { tree: { sha: string } }
     const baseTreeSha = commitJson.tree.sha
 
-    // 3. 每个文件创建一个 blob
+    // 3. 对照这棵固定树校验编辑基准。任一冲突 → 整批不写。
+    const currentTree = await resolveTreeShas(env, baseCommitSha, baseTreeSha, ids)
+    const conflicts = evaluateBatchConflicts(items, currentTree)
+    if (conflicts.length > 0) {
+      return jsonResponse({
+        error: '有文件在你编辑期间被他人改动，本次未保存任何文件。请载入最新版本后重新应用你的改动。',
+        code: 'EDIT_CONFLICT',
+        conflicts,
+      }, 409)
+    }
+
+    // 4. 每个文件创建一个 blob,并记录新 blob sha 返回给前端
+    const files: { id: string; sha: string }[] = []
     const treeItems: { path: string; mode: '100644'; type: 'blob'; sha: string }[] = []
-    for (const id of ids) {
-      const content = JSON.stringify(changes[id], null, 2) + '\n'
+    for (const item of items) {
+      const content = JSON.stringify(item.tournament, null, 2) + '\n'
       const blobRes = await gh('/git/blobs', env, {
         method: 'POST',
         body: JSON.stringify({ content, encoding: 'utf-8' }),
       })
-      if (!blobRes.ok) throw new Error(`创建 blob 失败 (${id}): ${blobRes.status}`)
+      if (!blobRes.ok) throw new Error(`创建 blob 失败 (${item.id}): ${blobRes.status}`)
       const blobJson = (await blobRes.json()) as { sha: string }
+      files.push({ id: item.id, sha: blobJson.sha })
       treeItems.push({
-        path: `data/tournaments/${id}.json`,
+        path: tournamentPath(item.id),
         mode: '100644',
         type: 'blob',
         sha: blobJson.sha,
       })
     }
 
-    // 4. 基于 base tree 创建新 tree
+    // 5. 基于 base tree 创建新 tree
     const treeRes = await gh('/git/trees', env, {
       method: 'POST',
       body: JSON.stringify({ base_tree: baseTreeSha, tree: treeItems }),
@@ -107,7 +165,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, data }) 
     if (!treeRes.ok) throw new Error(`创建 tree 失败: ${treeRes.status}`)
     const treeJson = (await treeRes.json()) as { sha: string }
 
-    // 5. 创建 commit
+    // 6. 创建 commit
     const message = summary || `Batch update tournaments (${ids.length} files)`
     const newCommitRes = await gh('/git/commits', env, {
       method: 'POST',
@@ -116,12 +174,20 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, data }) 
     if (!newCommitRes.ok) throw new Error(`创建 commit 失败: ${newCommitRes.status}`)
     const newCommitJson = (await newCommitRes.json()) as { sha: string }
 
-    // 6. 更新分支 ref 指向新 commit
+    // 7. 更新分支 ref 指向新 commit（非强制更新）
     const updateRes = await gh(`/git/refs/heads/${BRANCH}`, env, {
       method: 'PATCH',
       body: JSON.stringify({ sha: newCommitJson.sha, force: false }),
     })
     if (!updateRes.ok) {
+      // 在比对之后、更新之前有人推进了 HEAD。返回冲突,绝不"拿旧数据换新 SHA 重试"。
+      if (updateRes.status === 409 || updateRes.status === 422) {
+        return jsonResponse({
+          error: '分支在你保存期间被更新，本次未保存任何文件。请载入最新版本后重新应用你的改动。',
+          code: 'EDIT_CONFLICT',
+          conflicts: headMovedConflicts(items),
+        }, 409)
+      }
       const err = await updateRes.json().catch(() => ({}))
       throw new Error(`更新分支失败: ${updateRes.status} ${JSON.stringify(err)}`)
     }
@@ -135,7 +201,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, data }) 
       ip: request.headers.get('CF-Connecting-IP') ?? undefined,
     })
 
-    return jsonResponse({ success: true, count: ids.length, commit: newCommitJson.sha })
+    return jsonResponse({ success: true, count: ids.length, commit: newCommitJson.sha, files })
   } catch (e) {
     return jsonResponse({ error: (e as Error).message }, 500)
   }

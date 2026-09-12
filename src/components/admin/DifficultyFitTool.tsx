@@ -685,7 +685,8 @@ export function DifficultyFitTool() {
                   label={t(calibration ? 'difficultyFit.slopeCalibrated' : 'difficultyFit.slope')}
                   value={fit.slope.toFixed(3)}
                 />
-                <Metric label="R²" value={fit.rSquared.toFixed(3)} />
+                {/* 样本 y 全相等时 R² 未定义,显示 N/A 而不是假装 1.000 */}
+                <Metric label="R²" value={fit.rSquared === null ? 'N/A' : fit.rSquared.toFixed(3)} />
                 <Metric
                   label={t(calibration ? 'difficultyFit.rmseCalibrated' : 'difficultyFit.rmse')}
                   value={`±${fit.rmse.toFixed(2)}`}

@@ -134,7 +134,7 @@
         {
           "slot": "RC3",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "KOTOKO - Wing my Way [Moving On]",
           "difficulty": 4.4,
           "beatmapId": 5223914,
@@ -285,7 +285,7 @@
         {
           "slot": "RC3",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "D.D.D. - Ready? [OF-F4]",
           "difficulty": 5.08,
           "beatmapId": 5245965,
@@ -445,7 +445,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Phoenix Legend - Zui Xuan Min Zu Feng (Cut Ver.) [Kool]",
           "difficulty": 5.63,
           "beatmapId": 5718088,
@@ -624,7 +624,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "San-Z - Endless Loop [Thanatos (cut)]",
           "difficulty": 6.18,
           "beatmapId": 5111338,
@@ -801,7 +801,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Yuki Kajiura - Credens justitiam [Tiro Finale Revelation]",
           "difficulty": 7.38,
           "beatmapId": 5740880,
@@ -998,7 +998,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Rocket Girls 101 - Calorie [slender x1.1]",
           "difficulty": 8.74,
           "beatmapId": 5752276,

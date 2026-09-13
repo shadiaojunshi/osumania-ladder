@@ -574,7 +574,7 @@
         {
           "slot": "RC5",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Model/Actriz - Doves (Cut Ver.) [Apsinthos 1.05x]",
           "difficulty": 10.2,
           "beatmapId": 5766768,
@@ -734,7 +734,7 @@
         {
           "slot": "RC5",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "trapman - minefield outlaw [inescapable misery | 1.05x]",
           "difficulty": 11.3,
           "beatmapId": 5776279,
@@ -894,7 +894,7 @@
         {
           "slot": "RC5",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Jessica Jay - Can't Take My Eyes Off You (F.T. And Company Edit) (Nightcore Mix) (Cut Ver.) [0.95x]",
           "difficulty": 12.3,
           "beatmapId": 5790692,

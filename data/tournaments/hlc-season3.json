@@ -120,7 +120,7 @@
         {
           "slot": "RC2",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "SJ",
           "name": "Laura Shigihara - Graze the Roof (Cut Ver.) [Zombies]",
           "difficulty": 0,
           "beatmapId": 5201851,
@@ -367,7 +367,7 @@
         {
           "slot": "RC2",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "SJ",
           "name": "Redside - beachball! [Sunshine!]",
           "difficulty": 0,
           "beatmapId": 5223790,
@@ -504,7 +504,7 @@
         {
           "slot": "RC2",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Hanatan - Wave [IMA]",
           "difficulty": 0,
           "beatmapId": 5235830,

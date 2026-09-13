@@ -184,7 +184,7 @@
         {
           "slot": "RC1",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Taishi - Glint In The Dark(Original Mix)(cut) [G x1.1]",
           "difficulty": 0,
           "beatmapId": 5080506,
@@ -264,7 +264,7 @@
         {
           "slot": "RC1",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "The Quick Brown Fox - The Big Black (SAMString Remix) [I'm not afraid [1.05x Rate]]",
           "difficulty": 0,
           "beatmapId": 3453788,
@@ -364,7 +364,7 @@
         {
           "slot": "RC3",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "toby fox - Death by Glamour [Fear by Chordjack 1.0x]",
           "difficulty": 0,
           "beatmapId": 5026950,

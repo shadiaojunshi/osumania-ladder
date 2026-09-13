@@ -318,7 +318,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Studio \"Syrup Comfiture\" - Replica [So Exciting! 1.1x]",
           "difficulty": 12,
           "beatmapId": 5801870,
@@ -487,7 +487,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Falcom Sound Team jdk - OVER DRIVE [OVER JACK]",
           "difficulty": 12.75,
           "beatmapId": 5814539,
@@ -843,7 +843,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "403 - Southern Cross (Game Ver.) [Crux+]",
           "difficulty": 13.95,
           "beatmapId": 5840776,

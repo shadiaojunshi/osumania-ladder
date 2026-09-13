@@ -268,7 +268,7 @@
         {
           "slot": "RC3",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "The Prodigy - Everybody in the Place (Fairground Remix) [Cut Ver.] [(Let's Go!)]",
           "difficulty": 0,
           "beatmapId": 2964707,
@@ -569,7 +569,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "SJ",
           "name": "SAM Free Music - Up to you [Sora x1.1]",
           "difficulty": 8.2,
           "beatmapId": 4889811,
@@ -901,7 +901,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Yoko Shimomura - Unfinished Business [Imposing Iron Assault! [1.1x Rate]]",
           "difficulty": 0,
           "beatmapId": 4882030,

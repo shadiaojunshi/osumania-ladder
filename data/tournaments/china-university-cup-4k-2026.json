@@ -304,7 +304,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "cygnus - Bloody Mary [Vodka+Lime juice+Tomato+Black pepper+Hot sauce]",
           "difficulty": 7.7,
           "beatmapId": 5581897,
@@ -483,7 +483,7 @@
         {
           "slot": "RC3",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "SJ",
           "name": "Junk - Qualia [My Feeling]",
           "difficulty": 5.3,
           "beatmapId": 5560071,
@@ -655,7 +655,7 @@
         {
           "slot": "RC3",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Plutian - Until the Blue Moon Rises [Luna]",
           "difficulty": 6.6,
           "beatmapId": 5571354,
@@ -836,7 +836,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Jamie Christopherson - The Only Thing I Know For Real (Maniac Agenda Mix) [edit(CUC ver.)]",
           "difficulty": 8.95,
           "beatmapId": 5594459,

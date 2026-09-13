@@ -267,7 +267,7 @@
         {
           "slot": "RC6",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "SJ",
           "name": "Relect - Get Crunk [LET'S GO STUPID]",
           "difficulty": 8.15,
           "beatmapId": 5778015,

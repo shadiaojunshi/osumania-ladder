@@ -778,7 +778,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Yoko Shimomura - Unfinished Business [Imposing Iron Assault! [1.2x Rate]]",
           "difficulty": 12.3,
           "beatmapId": 4882032,
@@ -1152,7 +1152,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Diplo - Express Yourself (feat. Nicky Da B) [Saint Punk Remix] (Nightcore Mix) [Aporia]",
           "difficulty": 14.1,
           "beatmapId": 5828466,

@@ -102,7 +102,7 @@
         {
           "slot": "RC1",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Imagine Dragons - Bones [Insane]",
           "difficulty": 0,
           "beatmapId": 4494851,
@@ -184,7 +184,7 @@
         {
           "slot": "RC1",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "SJ",
           "name": "Mi Cha - Bete (Cut Ver.) [Toko's Hard]",
           "difficulty": 0,
           "beatmapId": 4726147,
@@ -266,7 +266,7 @@
         {
           "slot": "RC1",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Otokaze - SaiGetsu (Cut Ver.) [4K Vibrant Seasons]",
           "difficulty": 0,
           "beatmapId": 2894207,
@@ -430,7 +430,7 @@
         {
           "slot": "RC1",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Bbno$ x Diamond Pistols - help herself (with BENEE) [My Bad 1.2x]",
           "difficulty": 0,
           "beatmapId": 3685748,

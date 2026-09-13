@@ -313,7 +313,7 @@
         {
           "slot": "AC",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Boom Kitty - Cord Cutter [Chord Cutter]",
           "difficulty": 0,
           "beatmapId": 3822053,
@@ -450,7 +450,7 @@
         {
           "slot": "AC1",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Hardwell vs. Maddix vs. Luciana - ACID [H2222222 1.05x]",
           "difficulty": 0,
           "beatmapId": 5211884,
@@ -459,7 +459,7 @@
         {
           "slot": "AC2",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Taishi - Wareta Ringo (Taishi Bootleg) [I.Germination]",
           "difficulty": 0,
           "beatmapId": 5211878,
@@ -605,7 +605,7 @@
         {
           "slot": "AC1",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Olly Alexander - Dizzy [Spin [1.2x Rate]]",
           "difficulty": 0,
           "beatmapId": 4608578,
@@ -758,7 +758,7 @@
         {
           "slot": "AC1",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "METAROOM - PINK ORIGINS [COSMIC IMPLOSION]",
           "difficulty": 0,
           "beatmapId": 5234470,
@@ -803,7 +803,7 @@
         {
           "slot": "MX1",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Xceon feat. Mayumi Morinaga - Shakunetsu no Utopia [DJ Command Mix] [Dystopia 1.1x (176bpm)]",
           "difficulty": 0,
           "beatmapId": 5234402,
@@ -931,7 +931,7 @@
         {
           "slot": "AC1",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "7 Sequence x M2U - ArkLight [Radiation x1.07_P]",
           "difficulty": 0,
           "beatmapId": 5246489,

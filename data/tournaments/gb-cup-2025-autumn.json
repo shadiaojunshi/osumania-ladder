@@ -143,7 +143,7 @@
         {
           "slot": "RC3",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "SJ",
           "name": "cygnus - Sacred Connection [(4) = (7/10)(4/6)(5/10)(5/6)]",
           "difficulty": 6,
           "beatmapId": 5396461,
@@ -284,7 +284,7 @@
         {
           "slot": "RC3",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "LegoLee - Trajectory [paperplane]",
           "difficulty": 7.1,
           "beatmapId": 5406589,
@@ -434,7 +434,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "DJ Amane - Early Summer Rain (Cut Ver.) [Calm in the Storm 1.0x]",
           "difficulty": 8,
           "beatmapId": 5417001,
@@ -594,7 +594,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Utata-P feat. Yuzuki Yukari - Shiawase ni Nareru Kakushi Command ga Arurashii (Cut Ver.) [Real Master in maimai]",
           "difficulty": 9,
           "beatmapId": 5427610,
@@ -754,7 +754,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Creepy Nuts - Gouhouteki Tobikata No Susume [fall down 1.1x]",
           "difficulty": 10.1,
           "beatmapId": 5437519,
@@ -932,7 +932,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "NAKISO feat. Hatsune Miku - Retry Now [Jack Now 1.05x]",
           "difficulty": 11.2,
           "beatmapId": 5446174,

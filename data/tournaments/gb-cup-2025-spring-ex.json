@@ -47,7 +47,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "San-Z - Endless Loop [Thanatos (cut) 1.05x]",
           "difficulty": 9.4,
           "beatmapId": 4954370,
@@ -187,7 +187,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "SHK - Identity Part III [Superstar 1.0x]",
           "difficulty": 10.8,
           "beatmapId": 5124164,
@@ -491,7 +491,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Natsume Chiaki - Hikarakuyo [x1.05]",
           "difficulty": 12.7,
           "beatmapId": 4630307,

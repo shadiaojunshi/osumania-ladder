@@ -113,7 +113,7 @@
         {
           "slot": "RC2",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Kanata x Ayame x Lamy x AZKi - dokuzu [Kitori&Ran's Obey me<3]",
           "difficulty": 0,
           "beatmapId": 5756523,
@@ -241,7 +241,7 @@
         {
           "slot": "RC2",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Kirara Magic - Aim Tech [Aim Accuracy]",
           "difficulty": 0,
           "beatmapId": 5766467,
@@ -396,7 +396,7 @@
         {
           "slot": "RC3",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Kashii Moimi - Lovely Assassin (Covered by Aitsuki Nakuru) [The Wreckage of Nightcore Love]",
           "difficulty": 0,
           "beatmapId": 5442557,
@@ -569,7 +569,7 @@
         {
           "slot": "RC3",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Ado - Show [Listen Listen 1.05x (139bpm) OD8.2]",
           "difficulty": 0,
           "beatmapId": 5789509,

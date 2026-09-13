@@ -445,7 +445,7 @@
         {
           "slot": "RC3",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "EvOke - Edison [Challenge (Edit) 1.1x (146bpm)]",
           "difficulty": 10.09,
           "beatmapId": 4281865,
@@ -623,7 +623,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "",
           "difficulty": 11.3,
           "beatmapId": 4294670
@@ -809,7 +809,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "siromaru + cranky - conflict [Prasueno]",
           "difficulty": 12.3,
           "beatmapId": 4303024,
@@ -996,7 +996,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Camellia - Shinsha / HgS [Techno Music Techno Music Techno Music Techno Music]",
           "difficulty": 13.15,
           "beatmapId": 4311929,

@@ -122,7 +122,7 @@
         {
           "slot": "RC3",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "MEMODEMO - Extragalactic [HARD BRAIN]",
           "difficulty": 7.7,
           "beatmapId": 5825943,
@@ -273,7 +273,7 @@
         {
           "slot": "RC3",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Feryquitous - CydraL (Cut Ver.) [Tower of Sacrifice]",
           "difficulty": 9.6,
           "beatmapId": 5839986,
@@ -433,7 +433,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "yassu - before... [. . . . . (1.05x)]",
           "difficulty": 10.86,
           "beatmapId": 5853552,
@@ -602,7 +602,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Lycoris vs. Pied d'Alouette - Kaleidoscope [Warm, bright, indomitable.]",
           "difficulty": 11.6,
           "beatmapId": 5867970,

@@ -290,7 +290,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "RC5",
           "difficulty": 0.8
         }
@@ -351,7 +351,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "ePiaeon - FLOP ERA [Neru in 2025!]",
           "difficulty": 1.6,
           "beatmapId": 5398016,
@@ -493,7 +493,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Okabe Keiichi feat. Takamitsu Youko - Angel Dream [HD (1.05x)]",
           "difficulty": 2.8,
           "beatmapId": 5404586,
@@ -744,7 +744,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "RC6",
           "difficulty": 0
         }
@@ -798,7 +798,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "2hollis - poster boy [222222 222]",
           "difficulty": 0,
           "beatmapId": 5427793,
@@ -969,7 +969,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Triodust - FINALE [Extermination]",
           "difficulty": 0,
           "beatmapId": 5457027,

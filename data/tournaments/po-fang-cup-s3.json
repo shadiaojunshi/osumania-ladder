@@ -119,7 +119,7 @@
         {
           "slot": "RC3",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Nor - Rabbit of Caerbannog [anajoyo x1.1 (edit)]",
           "difficulty": 0,
           "beatmapId": 5198157,
@@ -246,7 +246,7 @@
         {
           "slot": "RC3",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "DJGenji - HajiMidnight City [PlatinumSplash's pang bao bao]",
           "difficulty": 0,
           "beatmapId": 5224128,
@@ -391,7 +391,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Creo - Crystallize [PlatinumSplash's Macabre]",
           "difficulty": 0,
           "beatmapId": 5243073,

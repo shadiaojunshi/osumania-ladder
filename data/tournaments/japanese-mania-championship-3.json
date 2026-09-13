@@ -241,7 +241,7 @@
         {
           "slot": "RC3",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Boom Kitty - Cord Cutter [Sharp Jacks]",
           "difficulty": 0,
           "beatmapId": 5405137,
@@ -376,7 +376,7 @@
         {
           "slot": "RC3",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Tanger - Tangier [Anchor Dance]",
           "difficulty": 0,
           "beatmapId": 5427334,
@@ -877,7 +877,7 @@
         {
           "slot": "RC3",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "-45 - ADDicTiON4500000 [EVERlaSTING1555555]",
           "difficulty": 0,
           "beatmapId": 5500827,

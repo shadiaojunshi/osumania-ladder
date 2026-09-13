@@ -140,7 +140,7 @@
         {
           "slot": "RC3",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Plum - Rainbow Chaser (2021 remake) [Starlight]",
           "difficulty": 0,
           "beatmapId": 5494821,
@@ -432,7 +432,7 @@
         {
           "slot": "RC3",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "2hollis - poster boy [expert]",
           "difficulty": 0,
           "beatmapId": 5598228,

@@ -131,7 +131,7 @@
         {
           "slot": "RC3",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "KikuoHana - Nobore! Susume! Takai Tou (Cut Ver.) [Tower of Babel]",
           "difficulty": 7.5,
           "beatmapId": 5267288,
@@ -280,7 +280,7 @@
         {
           "slot": "RC3",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Toby Fox - Black Knife [You couldn't find your hand]",
           "difficulty": 8.8,
           "beatmapId": 5209766,
@@ -438,7 +438,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Cranky - Danger & Danger (Cut Ver.) [WARNING!!!! 0.9x]",
           "difficulty": 10,
           "beatmapId": 5287878,
@@ -605,7 +605,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "-45 - Midorigo Queen Bee [Logic Error (cut)]",
           "difficulty": 11.5,
           "beatmapId": 5298308,
@@ -770,7 +770,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Susumu Hirasawa - BERSERK -Forces- (Cut Ver.) [Duality 1.3x (156bpm)]",
           "difficulty": 12,
           "beatmapId": 5308423,
@@ -956,7 +956,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "",
           "difficulty": 13.2
         },

@@ -285,7 +285,7 @@
         {
           "slot": "RC3",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "TREKKIE TRAX CREW & Nakamura Minami - Reiwa (Amenkensetsu Renovation) [Paradigm Shift (cut)]",
           "difficulty": 8.9,
           "beatmapId": 4757017,
@@ -448,7 +448,7 @@
         {
           "slot": "RC3",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "cygnus - Tree of Misery [Agony]",
           "difficulty": 9.9,
           "beatmapId": 4766759,
@@ -622,7 +622,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "trapman - minefield outlaw [unbounded 1.05x (152bpm)]",
           "difficulty": 10.9,
           "beatmapId": 4775913,
@@ -805,7 +805,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "STARSTREAK CHAOS-TL12 - VENUS INVADER [VERITAS 1.05x]",
           "difficulty": 12.5,
           "beatmapId": 4785209,
@@ -988,7 +988,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "LUZE - picking [Challenge (cut)]",
           "difficulty": 13.5,
           "beatmapId": 4793559,

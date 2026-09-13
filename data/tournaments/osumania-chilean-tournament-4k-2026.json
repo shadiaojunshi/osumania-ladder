@@ -103,7 +103,7 @@
         {
           "slot": "RC3",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Toby Fox - It's TV Time! [Coming Straight From YOUR House]",
           "difficulty": 0,
           "beatmapId": 5207227,
@@ -235,7 +235,7 @@
         {
           "slot": "RC3",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Dance with the Dead - Venom (Cut Ver.) [Corrupted (1.1x)]",
           "difficulty": 0,
           "beatmapId": 4605208,
@@ -389,7 +389,7 @@
         {
           "slot": "RC3",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Ani - DRG [BANG3R's Jacks (edit) 1.05x]",
           "difficulty": 0,
           "beatmapId": 5179052,
@@ -731,7 +731,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Yooh vs siromaru - Antagonism [Znow's Detestation]",
           "difficulty": 12.9,
           "beatmapId": 5551256,

@@ -291,7 +291,7 @@
         {
           "slot": "RC6",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Party Favor - Wiggle Wop (feat. Keno) [1.3x]",
           "difficulty": 8.87,
           "beatmapId": 5719335,
@@ -450,7 +450,7 @@
         {
           "slot": "RC6",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Complices - El Baile del Sapito [brinquitos (MMT edit.)]",
           "difficulty": 10.2,
           "beatmapId": 5732118,
@@ -609,7 +609,7 @@
         {
           "slot": "RC6",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Ninajirachi - CSIRAC (Cut Ver.) [>.<]",
           "difficulty": 11.08,
           "beatmapId": 5743521,
@@ -786,7 +786,7 @@
         {
           "slot": "RC6",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Camellia - Black Jack (Cut Ver.) [Multilateral Extortion]",
           "difficulty": 12,
           "beatmapId": 5279386,

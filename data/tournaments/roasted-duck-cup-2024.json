@@ -297,7 +297,7 @@
         {
           "slot": "A-RC3",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Reol & nqrse - Ooedo Ranvu [Madness]",
           "difficulty": 0,
           "beatmapId": 4735304,
@@ -369,7 +369,7 @@
         {
           "slot": "B-RC3",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "SJ",
           "name": "SOUND HOLIC feat. Nana Takahashi - 1001 -ESCAPE- [Escape from Endless Ducks]",
           "difficulty": 0,
           "beatmapId": 4733667,
@@ -471,7 +471,7 @@
         {
           "slot": "A-RC3",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "HaKoniwalily - Natsu, Toumei na Ao ni Hikarete. [Happy Summer 2024! x1.10]",
           "difficulty": 0,
           "beatmapId": 4750474,

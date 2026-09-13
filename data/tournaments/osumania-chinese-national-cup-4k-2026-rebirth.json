@@ -263,7 +263,7 @@
         {
           "slot": "RC3",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Falcom Sound Team jdk - DOOMSDAY TRANCE [Nameless One]",
           "difficulty": 9,
           "beatmapId": 5752690,
@@ -414,7 +414,7 @@
         {
           "slot": "RC3",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "TAG - Alstroemeria [Aspherical]",
           "difficulty": 10.2,
           "beatmapId": 5776123,
@@ -574,7 +574,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Neko Hacker feat. Nanahira - Shuwa*Shuwa Parfait (Cut Ver.) [Shuwa*Shuwa Fantasy]",
           "difficulty": 11.3,
           "beatmapId": 5800042,
@@ -743,7 +743,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "-45 - Corpse no Kokoro [Hard]",
           "difficulty": 12.3,
           "beatmapId": 5814469,
@@ -1099,7 +1099,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Camellia - GHOST-NOVA [THIS NIGHT MIGHT BE CRAZY x1.1_P]",
           "difficulty": 13.75,
           "beatmapId": 3927148,

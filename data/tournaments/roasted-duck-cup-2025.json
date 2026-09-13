@@ -268,7 +268,7 @@
         {
           "slot": "RC2",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "HyuN feat. Aerial - Exodus [Ember Trails (edit) 1.1x (154bpm) OD8]",
           "difficulty": 0,
           "beatmapId": 5246377,
@@ -368,7 +368,7 @@
         {
           "slot": "RC2",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Kenshi Yonezu - Shunrai(Sped Up & Cut ver.) [Shunran(RDC Edit)]",
           "difficulty": 0,
           "beatmapId": 5259777,
@@ -459,7 +459,7 @@
         {
           "slot": "RC2",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "YOASOBI - UNDEAD [DEAD Jacker]",
           "difficulty": 0,
           "beatmapId": 5259658,
@@ -559,7 +559,7 @@
         {
           "slot": "RC2",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "B-ka (CV: Kato Emiri) - Yasashii Obake Banashi [RDC Cut [1.05x Rate]]",
           "difficulty": 0,
           "beatmapId": 5271476,
@@ -659,7 +659,7 @@
         {
           "slot": "RC2",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "from PACA PACA PASSION SPECIAL - XL TECHNO -More Dance Remix- [WHATCUPYOUARE? SUPERBIGCUPJACK 0.87x (130bpm) OD8]",
           "difficulty": 0,
           "beatmapId": 5271499,

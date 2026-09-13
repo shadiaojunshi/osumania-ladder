@@ -102,7 +102,7 @@
         {
           "slot": "RC1",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "2TD x Milkoi - Lemon (Cut Ver.) [RC1 : Sparkling Sour]",
           "difficulty": 4,
           "beatmapId": 5212039,
@@ -261,7 +261,7 @@
         {
           "slot": "RC1",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "KOTOKO - Wing my Way [Moving On]",
           "difficulty": 0,
           "beatmapId": 5223914,
@@ -412,7 +412,7 @@
         {
           "slot": "RC1",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Natsume Itsuki - Fighting My Way [Aspiration]",
           "difficulty": 0,
           "beatmapId": 5234481,
@@ -581,7 +581,7 @@
         {
           "slot": "RC1",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Falcom Sound Team jdk - Falcon Strike [War of the Dragon's Nest (140bpm)]",
           "difficulty": 0,
           "beatmapId": 5246201,
@@ -946,7 +946,7 @@
         {
           "slot": "RC1",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Kotone - Konkai no Soudou ni Tsukimashite. [:middle_finger: (edit)]",
           "difficulty": 0,
           "beatmapId": 5268393,

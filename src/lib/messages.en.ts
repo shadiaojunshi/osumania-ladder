@@ -138,6 +138,8 @@ export const messagesEn: Record<keyof typeof messagesZh, string> = {
   'admin.update.error': 'Update failed',
   'admin.create.success': 'Submitted {id}; the site will rebuild in a few minutes',
   'admin.save.unsavedInput': 'Saved {id}, but edits you made while saving are still unsaved — click Save again.',
+  'admin.conflict.refreshBase': 'Continue with the latest version as base',
+  'admin.conflict.baseRefreshed': 'Edit base updated to the latest version; your edits are kept as-is. Click Save again — note this overwrites changes made elsewhere (e.g. metadata filled in by the uploader).',
   'admin.create.error': 'Submit failed',
   'admin.stage.success': 'Staged {id} in this browser; it has not been uploaded to the site',
   'admin.stage.submitSuccess': 'Uploaded {n} staged tournament(s) in one commit; the site will rebuild in a few minutes',

@@ -107,8 +107,28 @@ test('R02 PUT 的 GitHub 错误按原状态码透传', async () => {
     })
     assert.equal(res.status, 409)
     const payload = await res.json()
-    assert.equal(payload.error, 'Failed to update')
+    // 409 必须是可识别的冲突:前端靠 code 决定要不要给「以最新版本为基准继续」的按钮。
+    assert.equal(payload.code, 'EDIT_CONFLICT')
+    assert.match(payload.error, /编辑基准已过期/)
     assert.match(JSON.stringify(payload.details), /sha does not match/)
+  } finally {
+    fetch.restore()
+  }
+})
+
+test('R02 复审:非冲突的 GitHub 失败也带上原文,不再只剩一句 Failed to update', async () => {
+  const fetch = installFetch(() => jsonRes(500, { message: 'Server Error' }))
+  try {
+    const res = await updateTournament({
+      params: { id: 'cet-2026' },
+      request: makeRequest({ tournament: tournament('cet-2026'), sha: 'sha-1' }),
+      env: envFor(),
+      data: { user: user('admin') },
+    })
+    assert.equal(res.status, 500)
+    const payload = await res.json()
+    assert.equal(payload.code, 'UPDATE_FAILED')
+    assert.match(payload.error, /Server Error/, '应把 GitHub 的原文带给前端')
   } finally {
     fetch.restore()
   }

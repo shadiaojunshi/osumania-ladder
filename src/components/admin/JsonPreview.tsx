@@ -19,7 +19,8 @@ interface Props {
   onClearStaged?: () => void
   submitting?: boolean
   batchSubmitting?: boolean
-  submitStatus?: { type: 'success' | 'error' | 'local'; message: string } | null
+  // conflict:本次保存被服务端判成编辑基准过期(409),此时给一个「以最新版本为基准继续」的出路
+  submitStatus?: { type: 'success' | 'error' | 'local'; message: string; conflict?: boolean } | null
   isEditing?: boolean
   stagedCount?: number
   currentStaged?: boolean
@@ -29,6 +30,8 @@ interface Props {
   conflicts?: EditConflict[]
   onExportDraft?: (id: string) => void
   onReloadLatest?: (id: string) => void
+  // 冲突(409)后的出路:改用服务器最新版本作编辑基准,页面上未保存的编辑原样保留
+  onRefreshBase?: () => void
 }
 
 const CONFLICT_REASON_KEYS: Record<string, MessageKey> = {
@@ -54,6 +57,7 @@ export function JsonPreview({
   conflicts = [],
   onExportDraft,
   onReloadLatest,
+  onRefreshBase,
 }: Props) {
   const t = useT()
   const [copied, setCopied] = useState(false)
@@ -131,6 +135,15 @@ export function JsonPreview({
                 : 'bg-red-50 text-red-800 border border-red-200 dark:bg-red-900/30 dark:text-red-200 dark:border-red-800'
           }`}>
             {submitStatus.message}
+            {submitStatus.conflict && onRefreshBase && (
+              <button
+                type="button"
+                onClick={onRefreshBase}
+                className="mt-2 px-3 py-1.5 bg-red-600 text-white rounded text-xs font-medium hover:bg-red-700"
+              >
+                {t('admin.conflict.refreshBase')}
+              </button>
+            )}
           </div>
         )}
         <button

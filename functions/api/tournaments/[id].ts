@@ -132,8 +132,29 @@ export const onRequestPut: PagesFunction<Env> = async ({ params, request, env, d
   })
 
   if (!res.ok) {
-    const err = await res.json()
-    return jsonResponse({ error: 'Failed to update', details: err }, res.status)
+    const err = (await res.json().catch(() => ({}))) as { message?: string }
+    // 409 = 编辑基准过期:文件在编辑期间被别处(上传器回填、另一个标签页)更新过。
+    // GitHub 只回一句 "sha does not match",照抄给前端等于没说,这里翻译成人话。
+    // 前端据此给出「以最新版本为基准继续」的按钮(见 admin/page.tsx 的 handleRefreshBase)。
+    if (res.status === 409) {
+      return jsonResponse(
+        {
+          error: '这个文件在你编辑期间被更新过（编辑基准已过期），本次保存没有写入。',
+          code: 'EDIT_CONFLICT',
+          details: err,
+        },
+        409,
+      )
+    }
+    // 其余失败也带上 GitHub 的原文,别再让前端只看到一句 "Failed to update"。
+    return jsonResponse(
+      {
+        error: `保存失败：${err.message || `GitHub 返回 ${res.status}`}`,
+        code: 'UPDATE_FAILED',
+        details: err,
+      },
+      res.status,
+    )
   }
 
   // 把 GitHub 返回的新 blob sha 交给前端(R02):下一次保存必须用它,

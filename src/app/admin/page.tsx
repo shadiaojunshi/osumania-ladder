@@ -78,7 +78,7 @@ export default function AdminPage() {
   const [editInitialData, setEditInitialData] = useState<Tournament | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [batchSubmitting, setBatchSubmitting] = useState(false)
-  const [submitStatus, setSubmitStatus] = useState<{ type: 'success' | 'error' | 'local'; message: string } | null>(null)
+  const [submitStatus, setSubmitStatus] = useState<{ type: 'success' | 'error' | 'local'; message: string; conflict?: boolean } | null>(null)
   const [conflicts, setConflicts] = useState<EditConflict[]>([])
   const [saveSignal, setSaveSignal] = useState(0)
   const [stagedChanges, setStagedChanges] = useState<Record<string, StagedEntry>>({})
@@ -229,8 +229,9 @@ export default function AdminPage() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ tournament: submitted, sha: editingSha }),
         })
-        const payload = (await res.json().catch(() => ({}))) as { error?: string; sha?: string }
-        if (!res.ok) throw new Error(payload.error || t('admin.update.error'))
+        const payload = (await res.json().catch(() => ({}))) as { error?: string; sha?: string; code?: string }
+        // 带上 code:catch 里据此区分「编辑基准过期(409)」和其他失败,只有前者有"换基准继续"的出路。
+        if (!res.ok) throw Object.assign(new Error(payload.error || t('admin.update.error')), { code: payload.code })
         if (typeof payload.sha === 'string' && payload.sha) newSha = payload.sha
       } else {
         const res = await fetch('/api/tournaments', {
@@ -271,10 +272,24 @@ export default function AdminPage() {
       }
       fetchList()
     } catch (e) {
-      setSubmitStatus({ type: 'error', message: (e as Error).message })
+      const err = e as Error & { code?: string }
+      setSubmitStatus({ type: 'error', message: err.message, conflict: err.code === 'EDIT_CONFLICT' })
     } finally {
       setSubmitting(false)
     }
+  }
+
+  // 保存冲突(409)后的出路:把编辑基准换成服务器上的最新版本,页面上未保存的编辑原样保留。
+  // 刻意不自动保存 —— 用户得先能核对内容,再自己决定是否覆盖掉别人的改动。
+  const handleRefreshBase = async () => {
+    if (!editingId) return
+    const loaded = await fetchAuthoritative(editingId)
+    if (!loaded) {
+      setSubmitStatus({ type: 'error', message: t('admin.base.loadFailed', { id: editingId }) })
+      return
+    }
+    setEditingSha(loaded.sha)
+    setSubmitStatus({ type: 'local', message: t('admin.conflict.baseRefreshed') })
   }
 
   const handleStage = () => {
@@ -683,6 +698,7 @@ export default function AdminPage() {
                 submitting={submitting}
                 batchSubmitting={batchSubmitting}
                 submitStatus={submitStatus}
+                onRefreshBase={handleRefreshBase}
                 isEditing={!!editingId}
                 stagedCount={Object.keys(stagedChanges).length}
                 legacyStagedIds={Object.entries(stagedChanges).filter(([, entry]) => entry.legacy).map(([id]) => id)}

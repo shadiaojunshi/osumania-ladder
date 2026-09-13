@@ -137,6 +137,8 @@ export const messagesZh = {
   'admin.update.error': '更新失败',
   'admin.create.success': '已提交 {id}，网站将在几分钟内自动重建',
   'admin.save.unsavedInput': '已保存 {id}，但你在保存期间的新输入还没有保存：请再点一次保存。',
+  'admin.conflict.refreshBase': '以最新版本为基准继续',
+  'admin.conflict.baseRefreshed': '已把编辑基准更新到最新版本，你的编辑内容原样保留。请再点一次保存 —— 注意这会覆盖掉其他地方（例如上传器回填）写入的改动。',
   'admin.create.error': '提交失败',
   'admin.stage.success': '已在本浏览器暂存 {id}，尚未上传到网站',
   'admin.stage.submitSuccess': '已用一次提交上传 {n} 场暂存比赛，网站将在几分钟内自动重建',

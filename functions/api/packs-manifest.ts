@@ -1,6 +1,7 @@
 import { jsonResponse, noContent } from './_lib/cors'
 import { hasRole, type AuthEnv, type SessionUser } from './_lib/auth'
 import { writeAudit } from './_lib/audit'
+import { readJsonBody, validatePacksManifest } from './_lib/validation'
 
 interface Env extends AuthEnv {
   GITHUB_TOKEN: string
@@ -42,9 +43,26 @@ export const onRequestPut: PagesFunction<Env> = async ({ request, env, data }) =
     return jsonResponse({ error: '需要 contributor 及以上权限', code: 'FORBIDDEN' }, 403)
   }
 
-  const { manifest, sha } = (await request.json()) as { manifest: unknown; sha: string }
+  const body = await readJsonBody(request)
+  if (!body.ok) {
+    return jsonResponse({ error: body.error, code: 'INVALID_MANIFEST' }, 400)
+  }
+  const parsed = body.value
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    return jsonResponse({ error: '请求体必须是 JSON 对象', code: 'INVALID_MANIFEST' }, 400)
+  }
+  const { manifest, sha } = parsed as { manifest?: unknown; sha?: unknown }
+  if (typeof sha !== 'string' || sha.trim() === '') {
+    return jsonResponse({ error: '缺少编辑基准 sha', code: 'INVALID_MANIFEST' }, 400)
+  }
 
-  const content = btoa(unescape(encodeURIComponent(JSON.stringify(manifest, null, 2) + '\n')))
+  // 清单里的链接会直接出现在下载页:允许任意对象写进来等于允许写坏线上链接。
+  const validated = validatePacksManifest(manifest)
+  if (!validated.ok) {
+    return jsonResponse({ error: validated.error, code: 'INVALID_MANIFEST' }, 400)
+  }
+
+  const content = btoa(unescape(encodeURIComponent(JSON.stringify(validated.value, null, 2) + '\n')))
 
   const res = await githubFetch('/contents/data/packs-manifest.json', env, {
     method: 'PUT',

@@ -1,6 +1,7 @@
 import { jsonResponse, noContent } from '../_lib/cors'
 import { hasRole, type AuthEnv, type SessionUser } from '../_lib/auth'
 import { writeAudit } from '../_lib/audit'
+import { readJsonBody, validatePathId, validateTournament } from '../_lib/validation'
 
 interface Env extends AuthEnv {
   GITHUB_TOKEN: string
@@ -43,17 +44,41 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, data }) 
     return jsonResponse({ error: '需要 contributor 及以上权限', code: 'FORBIDDEN' }, 403)
   }
 
-  const tournament = (await request.json()) as { id: string; [key: string]: unknown }
-  if (!tournament.id) {
+  const body = await readJsonBody(request)
+  if (!body.ok) {
+    return jsonResponse({ error: body.error, code: 'INVALID_TOURNAMENT' }, 400)
+  }
+  if (!body.value || typeof body.value !== 'object' || Array.isArray(body.value)) {
+    return jsonResponse({ error: '请求体必须是 JSON 对象', code: 'INVALID_TOURNAMENT' }, 400)
+  }
+  const parsed = body.value as { id?: unknown }
+
+  // 保留原文案:既有客户端与测试都依赖它。
+  if (!parsed.id) {
     return jsonResponse({ error: 'Missing tournament id' }, 400)
   }
 
-  const path = `/contents/data/tournaments/${tournament.id}.json`
+  // 先限制 ID 再拼路径。否则 `../outside` 会被 fetch 规范化到
+  // data/outside.json,写到 tournaments 目录之外。
+  const idCheck = validatePathId(parsed.id)
+  if (!idCheck.ok) {
+    return jsonResponse({ error: idCheck.error, code: 'INVALID_TOURNAMENT' }, 400)
+  }
+
+  // create 过去只检查 id 是否存在,rounds 是字符串、slot 重复、难度是 NaN 都能写进仓库。
+  const validated = validateTournament(parsed)
+  if (!validated.ok) {
+    return jsonResponse({ error: validated.error, code: 'INVALID_TOURNAMENT' }, 400)
+  }
+  const tournament = validated.value
+  const id = idCheck.value
+
+  const path = `/contents/data/tournaments/${id}.json`
   const content = btoa(unescape(encodeURIComponent(JSON.stringify(tournament, null, 2))))
 
   const res = await githubFetch(path, env, {
     method: 'PUT',
-    body: JSON.stringify({ message: `Add tournament: ${tournament.id}`, content }),
+    body: JSON.stringify({ message: `Add tournament: ${id}`, content }),
   })
 
   if (!res.ok) {
@@ -61,13 +86,18 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, data }) 
     return jsonResponse({ error: 'Failed to create', details: err }, res.status)
   }
 
+  // 新建成功后把 blob sha 一并返回(R02):前端据此进入编辑模式,
+  // 后续保存走 PUT 而不是再 POST(否则撞名失败)。
+  const created = (await res.json().catch(() => ({}))) as { content?: { sha?: string } }
+  const newSha = typeof created.content?.sha === 'string' ? created.content.sha : null
+
   await writeAudit(env.LADDER_KV, {
     actorUid: user!.uid,
     actorName: user!.username,
     action: 'tournament.create',
-    target: tournament.id,
+    target: id,
     ip: request.headers.get('CF-Connecting-IP') ?? undefined,
   })
 
-  return jsonResponse({ success: true, id: tournament.id })
+  return jsonResponse({ success: true, id, sha: newSha })
 }

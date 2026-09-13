@@ -19,6 +19,7 @@ import { hasRole, type AuthEnv, type SessionUser } from '../_lib/auth'
 import { writeAudit } from '../_lib/audit'
 import { isMatchingTournamentId } from '../_lib/tournamentId'
 import { findDuplicateRoundIds } from '../_lib/roundIds'
+import { LIMITS, validateTournament } from '../_lib/validation'
 import {
   evaluateBatchConflicts,
   headMovedConflicts,
@@ -100,6 +101,13 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, data }) 
     ? (payload as { summary: string }).summary
     : undefined
 
+  if (items.length > LIMITS.maxBatchItems) {
+    return jsonResponse({ error: `一次最多提交 ${LIMITS.maxBatchItems} 个文件（当前 ${items.length}）`, code: 'INVALID_BATCH' }, 400)
+  }
+  if (summary !== undefined && summary.length > LIMITS.maxSummaryLength) {
+    return jsonResponse({ error: `summary 最多 ${LIMITS.maxSummaryLength} 字符（当前 ${summary.length}）`, code: 'INVALID_BATCH' }, 400)
+  }
+
   const invalidId = items.find((item) => !isMatchingTournamentId(item.id, item.tournament))
   if (invalidId) {
     return jsonResponse({ error: `无效的比赛 ID 或数据不匹配: ${invalidId.id}`, code: 'INVALID_BATCH' }, 400)
@@ -107,10 +115,21 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, data }) 
 
   // round id 必须在比赛内唯一:R2 key 是 maps/{tid}/{rid}/{slot}.osz,重复 id
   // 会让上传互相覆盖、补丁定位写串(SSR SF/F 事故)。
+  // 先跑这个检查是为了保留更具体的中文文案(既有调用方依赖它)。
   const dup = items.find((item) => findDuplicateRoundIds(item.tournament as { rounds?: unknown[] }).length > 0)
   if (dup) {
     const dups = findDuplicateRoundIds(dup.tournament as { rounds?: unknown[] })
     return jsonResponse({ error: `${dup.id} 存在重复的 round id: ${dups.map((d) => d.roundId).join(', ')}。请把每轮改成唯一 id 后再保存。`, code: 'INVALID_BATCH' }, 400)
+  }
+
+  // 运行时结构校验:batch 过去不是完整的 schema 校验(rounds 传字符串也能过),
+  // 于是坏形状会被一次性写进多个文件。
+  for (const item of items) {
+    const validated = validateTournament(item.tournament)
+    if (!validated.ok) {
+      return jsonResponse({ error: `${item.id}: ${validated.error}`, code: 'INVALID_BATCH' }, 400)
+    }
+    item.tournament = validated.value
   }
 
   try {

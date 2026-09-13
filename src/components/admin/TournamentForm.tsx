@@ -127,6 +127,17 @@ export function TournamentForm({ onUpdate, initialData, saveSignal, onDirtyChang
     }
   }, [saveSignal, draftKey])
 
+  // 新建成功后会从 "create" 草稿键切到 "edit:<id>" 键:清掉已过期的 create 草稿,
+  // 免得下一次新建时又弹出"恢复草稿"。
+  const prevDraftKeyRef = useRef(draftKey)
+  useEffect(() => {
+    const previous = prevDraftKeyRef.current
+    prevDraftKeyRef.current = draftKey
+    if (previous !== draftKey && previous.endsWith(':create') && !draftKey.endsWith(':create')) {
+      try { window.localStorage.removeItem(previous) } catch { /* storage may be disabled */ }
+    }
+  }, [draftKey])
+
   // Persist edits locally with a short debounce and a periodic safety write.
   // localStorage survives an Edge crash/restart, unlike React state or sessionStorage.
   useEffect(() => {

@@ -9,6 +9,14 @@ import type { MapHistorySummary } from '@/hooks/useMapHistory'
 import { classifySetConflict } from '@/lib/mapConflictDetection'
 import { normalizeRealType } from '@/lib/realType'
 import { estimateBeatmapDifficulty, ManiaAnalysisError, type ManiaAnalysisEstimate } from '@/lib/maniaAnalyserClient'
+import {
+  DIFFICULTY_MAX,
+  DIFFICULTY_WARN_ABOVE,
+  collectOutOfRange,
+  formatDifficulty,
+  formatOutOfRange,
+  shouldAcceptDifficultyInput,
+} from '@/lib/difficultyLimits'
 import { ManiaChartButton } from '@/components/chart/ManiaChartButton'
 
 export type MapCategory = 'RC' | 'LN' | 'HB' | 'SV' | 'TB' | 'SPECIAL'
@@ -213,6 +221,8 @@ export function MapSlotEditor({ map, onChange, onRemove, getMapHistory, enableEs
   const [estimate, setEstimate] = useState<ManiaAnalysisEstimate | null>(null)
   const [estimateStatus, setEstimateStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle')
   const [estimateErrorKey, setEstimateErrorKey] = useState<MessageKey>()
+  // 被拒绝的单图难度输入(超过上限)。保留原值是为了提示里能写清"你输入了多少"。
+  const [rejectedDifficulty, setRejectedDifficulty] = useState<number | null>(null)
   const estimateGeneration = useRef(0)
   const canonicalRealType = normalizeRealType(map.realType)
   const dual = needsDualDifficulty(map.category)
@@ -308,6 +318,28 @@ export function MapSlotEditor({ map, onChange, onRemove, getMapHistory, enableEs
   const updateField = <K extends keyof ExtendedMap>(key: K, value: ExtendedMap[K]) => {
     onChange({ ...map, [key]: value })
   }
+
+  // 单图难度输入:超过上限拒绝本次输入(不截断 —— 截断会把 190 这类明显笔误
+  // 变成"看起来合理"的 25),超过警告线只提示、值照存。
+  const setDifficultyField = (field: 'difficulty' | 'difficultyLn', raw: string) => {
+    if (!shouldAcceptDifficultyInput(raw)) {
+      setRejectedDifficulty(Number(raw))
+      return
+    }
+    const value = Number(raw)
+    setRejectedDifficulty(null)
+    if (field === 'difficulty') updateField('difficulty', value)
+    else updateField('difficultyLn', value || undefined)
+  }
+
+  // 本图的难度越界项。按当前 map 算而不是按输入事件算 —— 这样从导入的 JSON
+  // 或自动计算带上来的越界值同样会被提示。键用界面上的标注('rf'/'ln')。
+  const diffOutOfRange = collectOutOfRange({
+    [getDiffLabel(map.category)]: map.difficulty,
+    ...(dual ? { ln: map.difficultyLn } : {}),
+  })
+  const diffOver = diffOutOfRange.filter((item) => item.level === 'over')
+  const diffWarn = diffOutOfRange.filter((item) => item.level === 'warn')
 
   // 清空本图难度框(HB/TB/SPECIAL 同时清 rf+ln 两框)。清空后该 type 若未 lock
   // 会自动回落到平均难度,方便"直接用平均"。
@@ -486,9 +518,9 @@ export function MapSlotEditor({ map, onChange, onRemove, getMapHistory, enableEs
               type="number"
               step="any"
               min="0"
-              max="20"
+              max={DIFFICULTY_MAX}
               value={map.difficulty || ''}
-              onChange={(e) => updateField('difficulty', Number(e.target.value))}
+              onChange={(e) => setDifficultyField('difficulty', e.target.value)}
               placeholder={getDiffLabel(map.category)}
               className="w-16 px-1.5 py-1 border border-gray-200 dark:border-neutral-700 rounded text-xs text-center bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 placeholder:text-gray-400 dark:placeholder:text-neutral-500 focus:outline-none focus:border-purple-400"
             />
@@ -517,9 +549,9 @@ export function MapSlotEditor({ map, onChange, onRemove, getMapHistory, enableEs
                 type="number"
                 step="any"
                 min="0"
-                max="20"
+                max={DIFFICULTY_MAX}
                 value={map.difficultyLn || ''}
-                onChange={(e) => updateField('difficultyLn', Number(e.target.value) || undefined)}
+                onChange={(e) => setDifficultyField('difficultyLn', e.target.value)}
                 placeholder="ln"
                 className="w-16 px-1.5 py-1 border border-gray-200 dark:border-neutral-700 rounded text-xs text-center bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 placeholder:text-gray-400 dark:placeholder:text-neutral-500 focus:outline-none focus:border-purple-400"
               />
@@ -541,6 +573,22 @@ export function MapSlotEditor({ map, onChange, onRemove, getMapHistory, enableEs
                 />
               )}
             </div>
+          )}
+
+          {rejectedDifficulty !== null && (
+            <p className="text-xs text-red-600 dark:text-red-400">
+              {t('diff.limit.rejected', { max: DIFFICULTY_MAX, value: formatDifficulty(rejectedDifficulty) })}
+            </p>
+          )}
+          {diffOver.length > 0 && (
+            <p className="text-xs text-red-600 dark:text-red-400">
+              {t('diff.limit.overFields', { max: DIFFICULTY_MAX, fields: formatOutOfRange(diffOver) })}
+            </p>
+          )}
+          {diffWarn.length > 0 && (
+            <p className="text-xs text-amber-600 dark:text-amber-400">
+              {t('slot.diff.warn', { warn: DIFFICULTY_WARN_ABOVE, fields: formatOutOfRange(diffWarn) })}
+            </p>
           )}
 
           {hasDiff && (

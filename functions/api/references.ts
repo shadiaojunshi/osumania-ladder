@@ -1,6 +1,7 @@
 import { jsonResponse, noContent } from './_lib/cors'
 import { hasRole, type AuthEnv, type SessionUser } from './_lib/auth'
 import { writeAudit } from './_lib/audit'
+import { readJsonBody, validateReferences } from './_lib/validation'
 
 interface Env extends AuthEnv {
   GITHUB_TOKEN: string
@@ -42,9 +43,26 @@ export const onRequestPut: PagesFunction<Env> = async ({ request, env, data }) =
     return jsonResponse({ error: '需要 contributor 及以上权限', code: 'FORBIDDEN' }, 403)
   }
 
-  const { references, sha } = (await request.json()) as { references: unknown; sha: string }
+  const body = await readJsonBody(request)
+  if (!body.ok) {
+    return jsonResponse({ error: body.error, code: 'INVALID_REFERENCES' }, 400)
+  }
+  const parsed = body.value
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    return jsonResponse({ error: '请求体必须是 JSON 对象', code: 'INVALID_REFERENCES' }, 400)
+  }
+  const { references, sha } = parsed as { references?: unknown; sha?: unknown }
+  if (typeof sha !== 'string' || sha.trim() === '') {
+    return jsonResponse({ error: '缺少编辑基准 sha', code: 'INVALID_REFERENCES' }, 400)
+  }
 
-  const content = btoa(unescape(encodeURIComponent(JSON.stringify(references, null, 2) + '\n')))
+  // 参考点会被难度标尺/拟合工具直接消费,坏形状过去能被原样写进构建数据。
+  const validated = validateReferences(references)
+  if (!validated.ok) {
+    return jsonResponse({ error: validated.error, code: 'INVALID_REFERENCES' }, 400)
+  }
+
+  const content = btoa(unescape(encodeURIComponent(JSON.stringify(validated.value, null, 2) + '\n')))
 
   const res = await githubFetch('/contents/data/references.json', env, {
     method: 'PUT',

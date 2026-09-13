@@ -136,6 +136,7 @@ export const messagesZh = {
   'admin.update.success': '已更新 {id}，网站将在几分钟内自动重建',
   'admin.update.error': '更新失败',
   'admin.create.success': '已提交 {id}，网站将在几分钟内自动重建',
+  'admin.save.unsavedInput': '已保存 {id}，但你在保存期间的新输入还没有保存：请再点一次保存。',
   'admin.create.error': '提交失败',
   'admin.stage.success': '已在本浏览器暂存 {id}，尚未上传到网站',
   'admin.stage.submitSuccess': '已用一次提交上传 {n} 场暂存比赛，网站将在几分钟内自动重建',
@@ -518,6 +519,10 @@ export const messagesZh = {
   'round.custom.add': '+添加',
   'round.maps.empty': '点击上方按钮添加谱面槽位',
   'round.diff.range': '难度范围: {min} ~ {max} (平均 {avg})',
+  'diff.limit.rejected': '难度不能超过 {max}（你输入了 {value}），本次输入已忽略',
+  'diff.limit.overFields': '以下难度超过上限 {max}，保存会被服务端拒绝：{fields}',
+  'diff.limit.warnFields': '以下难度超过 {warn}，请确认是否多打了一位：{fields}',
+  'slot.diff.warn': '这个难度超过 {warn}，请确认是否多打了一位（当前 {fields}）',
 
   // ---------- BulkImporter ----------
   'bulk.title': '从主表格批量导入图池',

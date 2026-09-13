@@ -7,6 +7,14 @@ import { getTemplatesByBestOf, type PoolTemplate } from '@/lib/poolTemplates'
 import { useT } from '@/lib/i18n'
 import { DifficultyRefPicker } from './DifficultyRefPicker'
 import { RoundRefPicker, type RoundRefValues } from './RoundRefPicker'
+import {
+  DIFFICULTY_MAX,
+  DIFFICULTY_WARN_ABOVE,
+  classifyDifficulty,
+  collectOutOfRange,
+  formatDifficulty,
+  formatOutOfRange,
+} from '@/lib/difficultyLimits'
 import type { MapHistorySummary } from '@/hooks/useMapHistory'
 
 const ROUND_PRESETS: {
@@ -59,6 +67,8 @@ export function RoundEditor({ round, index, onChange, onRemove, getMapHistory, s
   const [expanded, setExpanded] = useState(true)
   const [customSlotName, setCustomSlotName] = useState('')
   const [estimateSignal, setEstimateSignal] = useState(0)
+  // 被拒绝的难度输入(超过上限)。存值而不是布尔:提示里要显示"你输入了多少"。
+  const [rejectedDifficulty, setRejectedDifficulty] = useState<number | null>(null)
 
   const updateField = <K extends keyof RoundWithMeta>(key: K, value: RoundWithMeta[K]) => {
     onChange({ ...round, [key]: value })
@@ -122,7 +132,19 @@ export function RoundEditor({ round, index, onChange, onRemove, getMapHistory, s
     (map) => map.difficulty > 0 || (needsDualDifficulty(map.category) && (map.difficultyLn || 0) > 0)
   )
 
+  // 难度越界汇总(>18 警告、>25 报错)。阈值见 src/lib/difficultyLimits.ts。
+  const outOfRange = collectOutOfRange(round._typeDiffs)
+  const overMax = outOfRange.filter((item) => item.level === 'over')
+  const overWarn = outOfRange.filter((item) => item.level === 'warn')
+
   const updateTypeDiff = (key: keyof RoundWithMeta['_typeDiffs'], value: number) => {
+    // 手填难度最容易多按一个 0(19 → 190)。超上限直接拒绝这次输入,而不是截断成上限 ——
+    // 截断会把一个明显的笔误变成"看起来合理"的错数据。
+    if (classifyDifficulty(value) === 'over') {
+      setRejectedDifficulty(value)
+      return
+    }
+    setRejectedDifficulty(null)
     const locked = { ...round._typeDiffsLocked, [key]: value > 0 }
     onChange({
       ...round,
@@ -138,6 +160,12 @@ export function RoundEditor({ round, index, onChange, onRemove, getMapHistory, s
   // 这样 autoCalc(图→summary) 反向也会让 summary 跟着谱面,两侧永远相等。
   // 仅当本轮恰好一张 TB 时启用直连(多 TB 保持"平均"语义,走普通 lock 路径)。
   const updateTbLinked = (field: 'rf' | 'ln', value: number) => {
+    // 这个入口会直连写穿到那张唯一 TB 谱面的 difficulty/difficultyLn,同样要过阈值。
+    if (classifyDifficulty(value) === 'over') {
+      setRejectedDifficulty(value)
+      return
+    }
+    setRejectedDifficulty(null)
     const tbIdxs = round._maps.map((m, i) => (m.type === 'TB' ? i : -1)).filter((i) => i >= 0)
     if (tbIdxs.length !== 1) {
       updateTypeDiff(field === 'rf' ? 'tbRf' : 'tbLn', value)
@@ -365,6 +393,22 @@ export function RoundEditor({ round, index, onChange, onRemove, getMapHistory, s
                 </button>
               </div>
             </div>
+
+            {rejectedDifficulty !== null && (
+              <p className="mb-2 text-xs text-red-600 dark:text-red-400">
+                {t('diff.limit.rejected', { max: DIFFICULTY_MAX, value: formatDifficulty(rejectedDifficulty) })}
+              </p>
+            )}
+            {overMax.length > 0 && (
+              <p className="mb-2 text-xs text-red-600 dark:text-red-400">
+                {t('diff.limit.overFields', { max: DIFFICULTY_MAX, fields: formatOutOfRange(overMax) })}
+              </p>
+            )}
+            {overMax.length === 0 && overWarn.length > 0 && (
+              <p className="mb-2 text-xs text-amber-600 dark:text-amber-400">
+                {t('diff.limit.warnFields', { warn: DIFFICULTY_WARN_ABOVE, fields: formatOutOfRange(overWarn) })}
+              </p>
+            )}
 
             {round._diffMode === 'summary' ? (
               <div className="space-y-2">

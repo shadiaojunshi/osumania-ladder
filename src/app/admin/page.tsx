@@ -210,34 +210,65 @@ export default function AdminPage() {
       return
     }
     if (!editingId && !confirmPendingMaps(tournament, t('admin.pending.action.submit'))) return
+
+    // 提交快照:请求期间可能还有新输入,不能被这次保存顺手抹掉。
+    const submitted = tournament
+    const submittedJson = JSON.stringify(submitted)
+    const submittedId = submitted.id
+    const stagedAtStart = stagedChanges[submittedId]
+    const wasEditing = !!(editingId && editingSha)
+
     setSubmitting(true)
     setSubmitStatus(null)
 
     try {
-      if (editingId && editingSha) {
+      let newSha: string | null = null
+      if (wasEditing) {
         const res = await fetch(`/api/tournaments/${editingId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ tournament, sha: editingSha }),
+          body: JSON.stringify({ tournament: submitted, sha: editingSha }),
         })
-        if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || t('admin.update.error'))
-        setSubmitStatus({ type: 'success', message: t('admin.update.success', { id: tournament.id }) })
+        const payload = (await res.json().catch(() => ({}))) as { error?: string; sha?: string }
+        if (!res.ok) throw new Error(payload.error || t('admin.update.error'))
+        if (typeof payload.sha === 'string' && payload.sha) newSha = payload.sha
       } else {
         const res = await fetch('/api/tournaments', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(tournament),
+          body: JSON.stringify(submitted),
         })
-        if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || t('admin.create.error'))
-        setSubmitStatus({ type: 'success', message: t('admin.create.success', { id: tournament.id }) })
+        const payload = (await res.json().catch(() => ({}))) as { error?: string; sha?: string }
+        if (!res.ok) throw new Error(payload.error || t('admin.create.error'))
+        if (typeof payload.sha === 'string' && payload.sha) newSha = payload.sha
       }
-      setStagedChanges((current) => {
-        const next = { ...current }
-        delete next[tournament.id]
-        return next
-      })
-      setSaveSignal((current) => current + 1)
-      setFormDirty(false)
+
+      // 保存成功后一律进入/保持编辑模式,并推进编辑基准 —— 否则连续保存还会带旧 SHA。
+      setEditingId(submittedId)
+      if (newSha) setEditingSha(newSha)
+      setEditingBaseline(submitted)
+      setEditingLegacy(false)
+
+      // 只有"提交期间没有新输入"时才能清草稿 / 清 dirty;否则保留为未保存状态。
+      const unchanged = JSON.stringify(tournament) === submittedJson
+      if (unchanged) {
+        setEditInitialData(submitted)
+        setStagedChanges((current) => {
+          // 期间新加的暂存草稿不动
+          if (current[submittedId] !== stagedAtStart) return current
+          const next = { ...current }
+          delete next[submittedId]
+          return next
+        })
+        setSaveSignal((current) => current + 1)
+        setFormDirty(false)
+        setSubmitStatus({
+          type: 'success',
+          message: t(wasEditing ? 'admin.update.success' : 'admin.create.success', { id: submittedId }),
+        })
+      } else {
+        setSubmitStatus({ type: 'local', message: t('admin.save.unsavedInput', { id: submittedId }) })
+      }
       fetchList()
     } catch (e) {
       setSubmitStatus({ type: 'error', message: (e as Error).message })

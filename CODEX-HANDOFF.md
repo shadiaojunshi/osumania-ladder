@@ -169,7 +169,7 @@ d:/osumania ladder/              ← 注意路径带空格，bash 里用引号
 
 大类映射（`MapCategory`）：RC（SS/JS/SA/CJ/SJ/FCJ/MX/DP/ADP/STC/MTC/JTC/WTC/TC/ORC/SATC）、LN（RE/CO/TE/DE/SW/JW/IN/LNMX/LNTC/LNWL/OLN）、HB（HB1-HB5/RCmainHB/LNmainHB/MXHB/MNTB/OHB）、SV（SV1/SV2/SI/ME/SVMX/**GM**）、TB（TB）、SPECIAL（自定义自由文本）。
 
-**2026-09-12 新加了 FCJ（Finger Control Jack，归 RC 类）**：三处已注册（`MapSlotEditor` 的 RC 下拉排在 SJ 之后、`download/page.tsx` 的 rice 分类、`generate-pack.js` 的 `REAL_TYPE_NAMES` 与 `OD_FLOOR=8.5`，跟 SJ/CJ 同属叠键族），中英文 `form.typeGuide.placeholder` 已补定义。`poolTemplates.ts` 未加（非常规池位，录入时手动选），当前无含 FCJ 的谱面数据。
+**2026-09-12 新加了 FCJ（Finger Control Jack，归 RC 类）**：三处已注册（`MapSlotEditor` 的 RC 下拉排在 SJ 之后、`download/page.tsx` 的 rice 分类、`generate-pack.js` 的 `REAL_TYPE_NAMES`，跟 SJ/CJ 同属叠键族），中英文 `form.typeGuide.placeholder` 已补定义。`poolTemplates.ts` 未加（非常规池位，录入时手动选），当前无含 FCJ 的谱面数据。（当时还在 `OD_FLOOR` 里加了 8.5，该表已于 2026-09-13 整体删除。）
 
 **2026-08-18 新加了 GM（Gimmick，归 SV 类）**：三处已注册，合包名 `Gimmick SV`。注意 poolTemplates.ts 未加 GM（非常规池位，录入时在 SV 下拉手动选），当前无含 GM 的谱面数据，暂无 GM 包。
 
@@ -181,13 +181,19 @@ d:/osumania ladder/              ← 注意路径带空格，bash 里用引号
 - `DifficultyRefPicker` 从**全局难度标尺**（`ref-ladder.json`）插值出参考值。标尺是手排的 `{tournamentId, roundId, step?}` 链，易→难，可跨比赛；`step` 默认 1（标准一轮），支持小数（半轮 0.5）。MWC 4K 2025 是基准比赛（`MWC_LADDER_TOURNAMENT_ID`），`mwc±N` 快捷偏移以此锚定。
 - `references.json` 是标尺上的显式数字锚点（如 "MWC 2025 GF RC": 13.3）。天梯渲染颜色用 `reform-dan.json` 段位表。
 - **TB 不参与轮的难度统计**（`recalcDifficulty` 里 `type === 'TB'` 跳过）；**HB 取 rf/ln 双侧平均**为一个数据点，单侧有取单侧。
+- **难度阈值（2026-09-13 用户要求）：上限 25，超过 18 警告。** 手填难度最容易多按一个 0（19 → 190）。
+  - `> 25`：**拒绝这次输入**，不截断 —— 截断会把明显的笔误变成"看起来合理"的 25，更危险。
+  - `> 18`：只警告、值照存（现有全库最大难度 17 / `difficultyLn` 17.2，所以正常数据不会触发）。
+  - 规则唯一实现 `src/lib/difficultyLimits.ts`（纯函数、无 `@data` 依赖，可被 `node --test` 导入）。接入点：`RoundEditor`（轮次汇总 `_typeDiffs` 全部字段 + 单 TB 直连写穿）与 `MapSlotEditor`（单图 `difficulty`/`difficultyLn`）。
+  - **两处常量必须同步**：`functions/api/_lib/validation.ts` 的 `LIMITS.maxDifficulty` 是服务端兜底（前后端不能互相 import，所以各存一份）。`scripts/difficulty-limits.test.mjs` 会断言两者相等 —— 改阈值时两边一起改，否则测试红。
+  - 不走 UI 的写入路径（手改 JSON、脚本直接调接口、导入的旧 JSON）由服务端那道 400 兜住。
 
 ### 5.3 合包规则（`scripts/generate-pack.js`）
 
 - 按 `realType` 聚合所有比赛谱面 → 去重 → 每包最多 **80 张**（`MAX_MAPS_PER_PACK`）。
 - **去重签名优先级**：`beatmapId` → 指纹 `Artist|Title|Creator|Version`（无 BID 老图）→ `r2Key` 兜底。NSV 变体单独成条目。多源复用同一谱面时合并，多个来源写进 osu! `Version` 字段的括号标签 `(MWC 2025 F HB3 & VNMC …)`。
 - **输出命名**：文件名 `<realType>_<part>.osz`（单包也带 `_1`，破坏性升级 `57904da`，勿回退）；osu! 内部 `Title = "4K Tournament {名字} Pack {n}"`、`Artist = "Various Artists"`、`Creator = "various mappers,compiled by the osu!mania Ladder Team"`、`BeatmapID=0`、`BeatmapSetID=-1`、`Source/Tags` 清空。
-- **OD/HP**：`OD_FLOOR` 列出的 realType 有 OD 下限（只抬不降）；**SV 类不列出 = 不改 OD**。HP 一律设 7。
+- **[Difficulty] 段整体不做干预 —— OD 与 HP 都跟随原谱，原谱是多少就是多少**（2026-09-13 用户先要求「取消所有的合包 OD 下限」，随后追加「HP 也跟随原谱」；旧的 `OD_FLOOR` 表、`getOdFloor()`、`rewriteOsu` 里的抬 OD 分支，以及固定写 7 的 `HP_TARGET` 已全部删除）。⚠️ 重新合包会让包内 .osu 字节与旧包不同（OD/HP 变了），玩家已下成绩会断 —— 与 §5.4 同一性质，别再单独推导。
 - **每包生成完立即上传 R2 公开桶并删本地副本**（磁盘防爆，`d6afbf7`/`8b6fd1c` 的修复）。上传 Body 必须用 **Buffer 而非流**（R2 不支持 chunked 上传）。R2 上传失败时保留本地副本。
 - **manifest 全量重建**：全量跑时旧 manifest 转储 `.previous.json` → 用本次输出重建 → `(realType, part)` 匹配找回旧 `links`/`gdriveFileId` → 清理 R2 桶孤儿（本次没产出的 `.osz`）→ Drive 孤儿同步删 → 清 `.previous.json`。
 
@@ -325,7 +331,7 @@ Tabs（`src/app/admin/page.tsx` 的 `Tab` 类型）：
 3. **合包命名带空格**（`4K Tournament Pattern SV Pack 1`）：之前做 contest→tournament 替换时误吞空格导致 55 处坏名。改模板字符串时留意空格。
 4. **不要回退"单包带 `_1` 后缀"** 和 **`TB1` 显示为 `TB`** 的约定（见 §5.3 / SECURITY-DEPLOY-STATUS）。
 5. **R2 上传 Body 用 Buffer 非流**；**逐包上传+删本地**防磁盘爆（runner 14GB）。
-6. **合包会改 .osz 内部 Title/Creator/OD/HP** → 玩家已下谱面的成绩会断（hash 变）。动合包逻辑前先想清楚这个代价。
+6. **合包会改 .osz 内部 Title/Creator/Version 等**（OD/HP 自 2026-09-13 起跟随原谱、不再被改）→ 玩家已下谱面的成绩会断（hash 变）。动合包逻辑前先想清楚这个代价。
 7. **改 Cloudflare 环境变量不会自动重部署**，要 Retry 或空 commit。
 8. **KV 绑定要在 Production + Preview 两个环境都加**，否则 preview 500。
 9. **osu 代理走 Deno**，`functions/api/_lib/osu.ts` 里保留 proxy 路径分支；改它要透传 `env`。

@@ -6,16 +6,11 @@
 import { jsonResponse, noContent } from './_lib/cors'
 import { hasRole, type AuthEnv, type SessionUser } from './_lib/auth'
 import { writeAudit } from './_lib/audit'
+import { readJsonBody, validateRefLadderEntries, type LadderEntry } from './_lib/validation'
 
 interface Env extends AuthEnv {
   GITHUB_TOKEN: string
   GITHUB_REPO: string
-}
-
-interface LadderEntry {
-  tournamentId: string
-  roundId: string
-  step?: number
 }
 
 const GITHUB_API = 'https://api.github.com'
@@ -55,44 +50,31 @@ export const onRequestPut: PagesFunction<Env> = async ({ request, env, data }) =
     return jsonResponse({ error: '需要 contributor 及以上权限', code: 'FORBIDDEN' }, 403)
   }
 
-  const body = (await request.json()) as { entries: unknown; sha: string | null }
-  if (!Array.isArray(body.entries)) {
-    return jsonResponse({ error: 'entries 必须是数组' }, 400)
+  const body = await readJsonBody(request)
+  if (!body.ok) {
+    return jsonResponse({ error: body.error, code: 'INVALID_LADDER' }, 400)
   }
-  const entries: LadderEntry[] = []
-  for (const e of body.entries) {
-    if (
-      e &&
-      typeof e === 'object' &&
-      typeof (e as LadderEntry).tournamentId === 'string' &&
-      typeof (e as LadderEntry).roundId === 'string'
-    ) {
-      const raw = e as LadderEntry
-      const step = raw.step
-      const entry: LadderEntry = {
-        tournamentId: raw.tournamentId,
-        roundId: raw.roundId,
-      }
-      // step 可选,有则校验:必须有限、正数、合理区间 [0.1, 10]
-      if (step !== undefined) {
-        if (typeof step === 'number' && Number.isFinite(step) && step >= 0.1 && step <= 10) {
-          entry.step = step
-        }
-        // 不合法则丢弃 step(等价于默认 1)
-      }
-      entries.push(entry)
-    }
-    if (entries.length >= 500) break
+  const parsed = body.value
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    return jsonResponse({ error: '请求体必须是 JSON 对象', code: 'INVALID_LADDER' }, 400)
+  }
+  const { entries, sha } = parsed as { entries?: unknown; sha?: unknown }
+
+  // 旧实现会把非法项直接丢掉、把第 500 项之后静默截断,然后返回成功。
+  // 用户以为存上了,实际链被改了 —— 现在改为明确 400 并指出第几项。
+  const validated = validateRefLadderEntries(entries)
+  if (!validated.ok) {
+    return jsonResponse({ error: validated.error, code: 'INVALID_LADDER' }, 400)
   }
 
-  const payload = { entries }
+  const payload = { entries: validated.value }
   const content = btoa(unescape(encodeURIComponent(JSON.stringify(payload, null, 2) + '\n')))
 
   const ghBody: Record<string, unknown> = {
     message: 'Update reference difficulty ladder',
     content,
   }
-  if (body.sha) ghBody.sha = body.sha
+  if (typeof sha === 'string' && sha) ghBody.sha = sha
 
   const res = await githubFetch(FILE_PATH, env, {
     method: 'PUT',

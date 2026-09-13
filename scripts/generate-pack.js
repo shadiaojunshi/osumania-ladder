@@ -52,31 +52,12 @@ const REAL_TYPE_NAMES = {
 // a usable catch-all pack.
 const PACK_EXCLUDED_REAL_TYPES = new Set(['PDRC', 'PDLN', 'PDHB'])
 
-// 各 realType 的 OD 下限:谱面 OD 低于此值就抬到此值,已高于则不动。
-// 未列出的(SV1/SV2/SI/ME/SVMX)= 不改 OD。HP 另行统一设 7(见 rewriteOsu)。
-const OD_FLOOR = {
-  // RC
-  JS: 8.5, SA: 8.5, SJ: 8.5,
-  JTC: 8.2,
-  CJ: 9,
-  SS: 8, FCJ: 8.5, MX: 8, DP: 8, ADP: 8, STC: 8, MTC: 8, WTC: 8, TC: 8, ORC: 8, SATC: 8,
-  // LN
-  RE: 7.2, CO: 7.2, TE: 7.2,
-  DE: 7.5, JW: 7.5, SW: 7.5, LNMX: 7.5, LNWC: 7.5, LNTC: 7.5, IN: 7.5, LNWL: 7.5, OLN: 7.5,
-  // HB (HB3 特例 7.2,其余含 RCmainHB/LNmainHB 一律 7.5)
-  HB3: 7.2,
-  HB1: 7.5, HB2: 7.5, HB4: 7.5, HB5: 7.5, RCmainHB: 7.5, LNmainHB: 7.5, MXHB: 7.5, MNTB: 7.5, OHB: 7.5,
-  // TB
-  TB: 7.5,
-}
-
-// 返回该 realType 的 OD 下限,SV 等未列出者返回 null(不改 OD)。
-function getOdFloor(realType) {
-  return Object.prototype.hasOwnProperty.call(OD_FLOOR, realType) ? OD_FLOOR[realType] : null
-}
-
-// HP 统一目标值(所有包)。
-const HP_TARGET = 7
+// [Difficulty] 段**整体不再干预**:OD 与 HP 都跟随原谱,原谱是多少就是多少。
+//   - OD:2026-09-13 用户要求取消全部 OD 下限,旧的 OD_FLOOR 表(按 realType 抬到 7.2~9)
+//     已删除。
+//   - HP:2026-09-13 用户要求「HP 也跟随原谱」,原先固定写 7 的 HP_TARGET 已删除。
+// 共同理由:改写会改 .osu 字节,而 osu! 本地成绩绑的是 .osu 文件 hash(见 CODEX-HANDOFF §5.4)。
+// 现在真正会被改写的只有 Metadata / General(音频行)与背景行。
 
 // 带指数退避的重试:网络抖动 / R2 偶发 5xx 时自动重试,避免整趟全量重传前功尽弃。
 async function withRetry(fn, { attempts = 3, baseDelayMs = 1000, label = 'op' } = {}) {
@@ -151,7 +132,7 @@ function parseOsu(content) {
   return meta
 }
 
-function rewriteOsu(content, { newTitle, newArtist, newCreator, newVersion, newAudioFilename, newBgFilename, odFloor }) {
+function rewriteOsu(content, { newTitle, newArtist, newCreator, newVersion, newAudioFilename, newBgFilename }) {
   let result = content
   const replaceLine = (section, key, value) => {
     const regex = new RegExp(`(\\[${section}\\][\\s\\S]*?)^${key}:.*$`, 'm')
@@ -170,18 +151,7 @@ function rewriteOsu(content, { newTitle, newArtist, newCreator, newVersion, newA
   replaceLine('Metadata', 'Source', '')
   replaceLine('Metadata', 'Tags', '')
 
-  // 统一 OD/HP。OD 只抬不降:读当前 [Difficulty] 的 OverallDifficulty,低于 odFloor
-  // 才抬到 odFloor(odFloor 为 null 表示该类型不动 OD,如 SV)。HP 一律设 HP_TARGET。
-  if (typeof odFloor === 'number') {
-    const odMatch = result.match(/(\[Difficulty\][\s\S]*?)^OverallDifficulty:\s*([0-9.]+)\s*$/m)
-    if (odMatch) {
-      const curOd = parseFloat(odMatch[2])
-      if (!isNaN(curOd) && curOd < odFloor) {
-        replaceLine('Difficulty', 'OverallDifficulty', String(odFloor))
-      }
-    }
-  }
-  replaceLine('Difficulty', 'HPDrainRate', String(HP_TARGET))
+  // [Difficulty] 段整体不碰:OD 与 HP 都跟随原谱(2026-09-13 两次确认)。
 
   if (newBgFilename) {
     // 改背景行,同样兼容带引号 / 不带引号两种格式。
@@ -306,7 +276,7 @@ async function generateMapFingerprint(oszBuffer) {
   }
 }
 
-async function prefetchMap(map, packName, odFloor) {
+async function prefetchMap(map, packName) {
   try {
     const oszBuffer = await downloadFromR2(map.r2Key)
     const zip = await JSZip.loadAsync(oszBuffer)
@@ -357,7 +327,6 @@ async function prefetchMap(map, packName, odFloor) {
       newVersion,
       newAudioFilename: newAudioName,
       newBgFilename: newBgName,
-      odFloor,
     })
 
     let audioBuf = null
@@ -424,7 +393,6 @@ async function generatePack(targetType) {
     console.log(`[${targetType}] Skipped: pending classification types are not downloadable packs`)
     return []
   }
-  const odFloor = getOdFloor(targetType) // 该键型的 OD 下限;SV 等为 null(不改 OD)
   const tournamentsDir = path.join(__dirname, '..', 'data', 'tournaments')
   const files = fs.readdirSync(tournamentsDir).filter(f => f.endsWith('.json'))
 
@@ -646,7 +614,7 @@ async function generatePack(targetType) {
     // 失败/缺 .osu 的返回 null,prefetch 内部已经 warn 过了。
     let prefetched
     try {
-      prefetched = await mapWithConcurrency(chunk, 4, (m) => prefetchMap(m, packName, odFloor))
+      prefetched = await mapWithConcurrency(chunk, 4, (m) => prefetchMap(m, packName))
     } catch (err) {
       console.warn(`  [Pack ${partNum}] prefetch error: ${err.message}`)
       prefetched = chunk.map(() => null)
@@ -824,4 +792,14 @@ async function main() {
   }
 }
 
-main().catch(err => { console.error(err); process.exit(1) })
+// 只在被当成脚本直接运行时才执行 —— 否则测试 require 它会直接把整趟合包跑起来
+// (还会覆盖 manifest、打 R2)。测试里用 dummy R2 凭据 require 本文件后只调纯函数。
+if (require.main === module) {
+  main().catch(err => { console.error(err); process.exit(1) })
+}
+
+module.exports = {
+  rewriteOsu,
+  normalizeRealType,
+  REAL_TYPE_NAMES,
+}

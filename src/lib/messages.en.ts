@@ -137,6 +137,7 @@ export const messagesEn: Record<keyof typeof messagesZh, string> = {
   'admin.update.success': 'Updated {id}; the site will rebuild in a few minutes',
   'admin.update.error': 'Update failed',
   'admin.create.success': 'Submitted {id}; the site will rebuild in a few minutes',
+  'admin.save.unsavedInput': 'Saved {id}, but edits you made while saving are still unsaved — click Save again.',
   'admin.create.error': 'Submit failed',
   'admin.stage.success': 'Staged {id} in this browser; it has not been uploaded to the site',
   'admin.stage.submitSuccess': 'Uploaded {n} staged tournament(s) in one commit; the site will rebuild in a few minutes',
@@ -519,6 +520,10 @@ export const messagesEn: Record<keyof typeof messagesZh, string> = {
   'round.custom.add': '+Add',
   'round.maps.empty': 'Click the buttons above to add map slots',
   'round.diff.range': 'Difficulty range: {min} ~ {max} (avg {avg})',
+  'diff.limit.rejected': 'Difficulty cannot exceed {max} (you entered {value}); this input was ignored',
+  'diff.limit.overFields': 'These difficulties exceed the {max} limit and will be rejected on save: {fields}',
+  'diff.limit.warnFields': 'These difficulties exceed {warn} — check for a mistyped digit: {fields}',
+  'slot.diff.warn': 'This difficulty exceeds {warn} — check for a mistyped digit ({fields})',
 
   // ---------- BulkImporter ----------
   'bulk.title': 'Bulk import map pool from main sheet',

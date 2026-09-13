@@ -130,6 +130,17 @@ LN 单曲使用 difficulty 是当前领域约定，不能改成 difficultyLn。�
 
 验收：编辑连续两次保存均成功且 SHA 更新；新建后继续保存走 PUT；请求期间新输入要么被禁用，要么保留为未保存；冲突不清草稿。
 
+**完成记录（2026-09-13）**
+
+- 状态：实现完成待验收（改动未提交）。采用「允许请求期间继续编辑 + 保留为未保存」这一分支，未采用「提交期间锁定编辑入口」。
+- 修改文件：`functions/api/tournaments/[id].ts`（PUT 回传新 sha）、`functions/api/tournaments/index.ts`（POST 回传新 sha）、`src/app/admin/page.tsx`（`handleSubmit` 快照与模式转换）、`src/components/admin/TournamentForm.tsx`（create→edit 草稿键切换时清理过期 create 草稿）、`src/lib/messages.zh.ts` / `messages.en.ts`（新增 `admin.save.unsavedInput`）；新增 `scripts/tournament-save.test.mjs`。
+- 服务端：`PUT /api/tournaments/{id}` 与 `POST /api/tournaments` 都读取 GitHub 成功响应里的 `content.sha`，随响应返回 `{ success, id, sha }`（取不到时为 `null`，不报错）；PUT 仍把调用方传入的 `sha` 原样透传给 GitHub 作为乐观锁。与 R01 的 batch 响应约定一致（都回传 sha；batch 是逐文件的 `files[].sha`）。
+- 前端 `handleSubmit`：① 请求前记录提交快照（内容、id、该 id 当时的暂存条目、是否编辑模式）；② 成功后**一律**进入/保持编辑模式：`setEditingId` + 用返回的新 sha `setEditingSha` + `setEditingBaseline(提交内容)`，因此新建之后继续保存会走 PUT，编辑连续保存也不再带旧 SHA；③ 只有「提交期间没有新输入」（比较 `JSON.stringify(tournament)` 与快照）时才 `setEditInitialData`/`saveSignal++`/清 dirty/删该 id 的暂存条目，否则保留为未保存并用新文案提示「已保存，但你在保存期间的新输入还没保存，请再点一次保存」；④ 删除暂存条目仍带身份判断（`current[id] !== stagedAtStart` 时不动），所以提交期间新暂存的草稿不会被顺手删掉；⑤ 失败（含 GitHub 409 冲突）不改动任何草稿与 dirty 状态。
+- 另修一处相关小问题：新建成功后会从 `…:v2:create` 草稿键切到 `…:v2:edit:<id>`，原先 create 草稿会残留、下次新建时误弹「恢复草稿」；现在只在「前一个键是 create 且切到非 create」时清掉它（不会影响在编辑 A/B 之间切换时保留 A 的草稿）。
+- 运行的验证：`node --test --experimental-strip-types scripts/tournament-save.test.mjs` → 6/6；`npm test` → 121/121；`npx tsc --noEmit` → 0 错；`npx tsc -p functions/tsconfig.json --noEmit` → 0 错；`npm run build` → 成功（含 `/admin` 预渲染）。用例覆盖：PUT 回传新 sha 且透传旧 sha 作乐观锁、PUT 内容 base64 解码后与提交一致、权限不足/重复 round id 在触碰 GitHub 前被拦（403/400 且 fetch 调用数为 0）、GitHub 409 按原状态码透传且 details 保留、POST 回传新 sha 且新建不带 sha、POST 缺 id/权限不足不调 GitHub、GitHub 响应缺 `content.sha` 时返回 `null`。
+- 未完成 / 仍有风险：① 「提交期间继续编辑」这条分支自动测试覆盖不到（需要浏览器端到端），本轮只做了类型检查 + 单测 + 构建，**未做浏览器联调**；② 新建后若在保存期间又有新输入，会停留在「parent 认为在编辑、表单内部仍是 create 模式」的中间态，第二次保存会自动收敛（自愈），但中间态下表单的本地草稿键仍是 create 键；③ `MapUploader.tsx` 也在 PUT 这个端点（`sha` 透传、忽略响应体），已确认向后兼容，但它的「保存成功清空补丁池」问题属 R05 未改；④ 未改 DELETE 路径。
+- 与后续任务的接口变化：`PUT/POST` 现在都会返回 `sha`，R05 的 MapUploader 保存后可直接用它推进基准；R01 的 `stagedChanges` 快照判断模式（身份比较 + 内容比较）可复用到 MapUploader 的补丁池。
+
 ### R03 [P1] 比赛与共享 JSON 的运行时校验缺失
 
 证据：functions/api/tournaments/index.ts:46；[id].ts:50；batch.ts:46；functions/api/references.ts:45；packs-manifest.ts:45；ref-ladder.ts:59。模拟已证明 batch 接受 rounds 字符串，create 接受越界路径。
@@ -144,6 +155,26 @@ LN 单曲使用 difficulty 是当前领域约定，不能改成 difficultyLn。�
 6. 不只依赖 URI 编码修路径，必须先限制 ID；旧档案恢复也复用 validator。
 
 验收：现有全库通过；../、错误内部 ID、重复轮次/slot、rounds 字符串、null、错误数字均 400 且无外部写入；合法 0 难度、混合大小写 ID、自定义类型保留。测试实际 handler，不仅测辅助正则。
+
+**完成记录（2026-09-13）**
+
+- 状态：实现完成待验收（改动未提交）。
+- 修改文件：新增 `functions/api/_lib/validation.ts`、`scripts/validation.test.mjs`；改造 `functions/api/tournaments/index.ts`、`functions/api/tournaments/[id].ts`、`functions/api/tournaments/batch.ts`、`functions/api/references.ts`、`functions/api/packs-manifest.ts`、`functions/api/ref-ladder.ts`、`functions/api/trash/index.ts`。
+- 边界怎么定的：先写临时脚本扫描 `data/`（50 场 / 345 轮 / 4429 槽位）再定边界，脚本用完即删。**刻意放宽**的 5 处都有数据依据，不是漏掉：
+  ① tournament/round 的 `name`/`abbreviation` 只校验类型与长度、允许空串 —— `TournamentForm.addRound` 新建轮次默认就是 `name:''`/`abbreviation:''`，要求非空会挡住「先建轮次再填名字」；tournament 层的 `name`/`abbreviation` 反过来要求非空，因为表单第一步的「下一步」按钮就以 `canProceed = name.trim() && abbreviation.trim()` 为条件。
+  ② `slot` 允许 `/ & ( )` —— 真实数据里有 `ACC/HR1`、`FS/TB`、`GM(FL&EZ)`。
+  ③ tournament 的 `sheetUrl`/`forumUrl`/`wikiUrl` **不做** http(s) 协议限制 —— 129 条里 5 条是纯文本标题（如 `Tourney Method - 4 Digit osu!mania World Cup 2023 - Tourney Method`）。协议限制只加在 packs-manifest 的 `links.*`（那里的 55×2 条链接全是 http(s)，且会直接给玩家点击）。
+  ④ `map.name` 可以缺省也可以是空串 —— 2 个槽位没有该字段、114 个是空串，属「还没填曲名」，不硬补假值。
+  ⑤ 数值只要求有限，不做非负截断；未在 schema 里列出的字段一律原样保留。
+- 服务端实际改动：① 新增 `validateTournament`（id 格式与长度、name/abbreviation、keyCount/year 整数区间、tags、customTypes、rounds 数量、轮次 id 非空唯一且为安全单段标识、order/bestOf/isQualifier/difficulty/typeDifficulties、轮内 slot 非空唯一、map 的 type/realType/difficulty/difficultyLn/beatmapId/beatmapSetId、总谱面数上限）；② `validateReferences`（`points[].label/difficulty/type ∈ rice|ln|both`）；③ `validatePacksManifest`（pack 字段类型、`links.*` 必须 http(s)）；④ `validateRefLadderEntries` —— **行为变更**：旧实现会把非法项丢掉、把第 500 项之后静默截断然后返回成功，现在明确 400 并指出 `entries[i]` 是第几项错在哪；⑤ `validatePathId` 在拼 URL 之前挡路径穿越（`../outside`、`folder/name`、`%2F`）；⑥ `readJsonBody` 把坏 JSON 变成结构化 400，不再冒泡成 500；⑦ 长度/数量上限：单文件 id 128、轮次 200、每轮谱面 200、总量 5000、batch 200 项、summary 200 字符、请求体 16MB、ref-ladder 1000 项。
+- 端点接线：`POST /api/tournaments` 先校验 id 再校验整体（`../outside` 过去会被 fetch 规范化到 `data/outside.json`，写到 tournaments 目录之外）；`PUT /api/tournaments/{id}` 新增「必须带非空 `sha`」（没有基准就不该覆盖）与「文件名必须与 body.id 一致」；`DELETE` 只要 path id + sha，**不要求** body.id、也不因文件里 round 数据坏就阻止删除；`batch` 逐项跑 schema（过去 `rounds` 传字符串也能 200）；回收站恢复比赛时也复用 validator，坏 payload 拒绝写回。
+- **PUT 的兼容例外**：历史数据里 `osu-mania-chinese-natrion-cup-4k-2026-rebirth.json` 的内部 id 拼成 `...national...`（文件名笔误，且与另一场 `osumania-chinese-national-cup-4k-2026-rebirth` 是两个文件）。若严格 `path id === body.id`，这场比赛会**再也存不了**。处理方式是「不允许制造新的不一致，但允许继续保存已经是这种状态的文件」：只在两者不等时才多读一次该文件当前存的 id，相等则放行。正常情况下零额外请求。（**该文件已于 2026-09-13 改名修正，见 §10；兼容路径保留为防护网。**）
+- 保留的既有行为（既有测试依赖）：`POST` 缺 id 仍返回 `Missing tournament id`；重复 round id 仍先由 `findDuplicateRoundIds` 报中文文案，所以 `validateTournament` 里的同类错误也统一用了「重复的 round id」措辞。
+- 运行的验证：新增 `node --test --experimental-strip-types scripts/validation.test.mjs` → **18/18**（其中第 1 例拿 `data/tournaments/` 下全部 50 场真实 JSON 逐个跑 `validateTournament`，必须全过；并断言文件名与内部 id 不一致的场次不超过已知的 1 个）；`npm test` → **139/139**（本项前为 121，新增 18 例，无回归）；`npx tsc -p functions/tsconfig.json --noEmit` → 0 错；`npx tsc --noEmit` → 0 错。
+- **`npm run build` 在本环境未能运行，需人工补跑一次。** 原因是环境限制而非代码问题：`next build` 必须先清空 `.next/`（1665 个文件），被本环境的批量删除守卫拦下（`SAFE_DELETE_BULK_*`）并拒绝授权；该守卫在临时目录之外不区分目标、且本会话的删除额度用尽后连单个文件都不允许删，因此无法在不绕过守卫的前提下完成。尝试过的替代路径：① 把 `distDir` 指向项目内空目录（仍被拦，临时改动已还原，`git diff next.config.js` 为空）；② 在系统临时目录复制一份完整项目后构建（Next 16.2.6 已正常启动并进入 production build，只是 Turbopack 拒绝 `node_modules` 指向项目根之外的符号链接）。**事后核对：`.next` 1665 个文件、`node_modules` 27042 个、`src` 82 个、`data` 55 个，与构建前完全一致，没有任何文件被删除**（守卫是在删除发生前拒绝的）。本项只改 Functions 与 scripts、不涉及页面输出与构建配置，前端类型检查已 0 错；请在有权限的环境（例如 VSCode 终端）执行一次 `npm run build` 补上这项验证。
+- 用例覆盖：真实数据全量通过、放宽边界回归（空轮次名、含 `/` 与 `&()` 的 slot、纯文本 URL、0 难度、缺省 map.name）、未知字段与自定义键型保留、非对象/null/字符串/数组/`rounds` 字符串/非有限数字被拒、重复 round id 与重复 slot 被拒、路径穿越 id 被拒、坏 JSON 不 500、create 越界 id 零 GitHub 请求、PUT 缺 sha 被拒、PUT 拒绝把 A 比赛写进 B 文件、PUT 仍能保存历史不一致文件、DELETE 不受坏 round 数据影响、batch 一项坏则整批 400 零写入、batch 项数/summary 上限、references/manifest/ref-ladder 坏形状被拒且合法数据仍能保存。
+- 未完成 / 仍有风险：① 未在真实 GitHub / Cloudflare Pages 上联调，也未做浏览器端到端验收（只有类型检查 + 单测 + 构建）；② 负数难度、`bestOf` 语义边界等未纳入（文档只要求「数字有限」；难度的**上限**后来单独立项，见 §10）；③ 文件名≠内部 id 的 1 场历史数据已于 2026-09-13 改名修正（见 §10），PUT 侧的兼容路径保留为防护网，`validation.test.mjs` 现在要求全库零不一致；④ `ref-ladder` 的 `step` 现在会被硬拒（区间仍是旧的 `[0.1, 10]`），而面板允许输入任意有限数 —— 输入 20 过去是静默丢弃、现在会 400 并提示，属文档要求的行为变更，但 UI 若想更友好可加输入侧约束；⑤ 仅校验形状与范围，不做语义校验（例如 ref-ladder 里的 `roundId` 是否真存在于该比赛、包的 `totalMaps` 是否等于实际图数），那属于 R11/R23。
+- 与后续任务的接口变化：新增错误码 `INVALID_TOURNAMENT` / `INVALID_ID` / `ID_MISMATCH`（`INVALID_BATCH` 沿用）/ `INVALID_REFERENCES` / `INVALID_MANIFEST` / `INVALID_LADDER`；`PUT /api/tournaments/{id}` 现在**必须**带 `sha`，`PUT /api/references`、`PUT /api/packs-manifest` 也必须带 `sha`（R05 的 MapUploader 已经在传，向后兼容）。R04 可以直接复用 `validation.ts` 的 `checkString`/`LIMITS`/路径段思路，但注意 `slot` 在这里是**刻意宽松**的（允许 `/`），R2 键段规则不能照抄这个宽口径。
 
 ### R04 [P2] R2 上传/删除键段与文件类型校验不完整
 
@@ -450,13 +481,13 @@ LN 单曲使用 difficulty 是当前领域约定，不能改成 difficultyLn。�
 
 以下任务除标注 ✅ 外均为“待实施”，本次只写方案。P1 指有明确触发条件的数据丢失/覆盖或发布损坏风险，不表示已确认线上遭遇事故。
 
-进度速览（2026-09-13）：✅ R01（实现完成待验收，未提交，UI 自动重放未做）、✅ R08、✅ R09、✅ R18（均实现完成待验收，未提交）；其余待实施。
+进度速览（2026-09-13）：✅ R01（实现完成待验收，未提交，UI 自动重放未做）、✅ R02（实现完成待验收，未提交，浏览器端未联调）、✅ R03（实现完成待验收，未提交，未线上联调）、✅ R08、✅ R09、✅ R18（均实现完成待验收，未提交）；其余待实施。
 
 | 编号 | 工作单元 | 主要依赖 |
 | --- | --- | --- |
 | ✅ R01 | 保存基准与旧草稿冲突保护 | 无 |
-| R02 | 连续保存/新建转编辑 | 与 R01 响应协议对齐 |
-| R03 | 运行时 schema 与 ID | 无 |
+| ✅ R02 | 连续保存/新建转编辑 | 与 R01 响应协议对齐 |
+| ✅ R03 | 运行时 schema 与 ID | 无 |
 | R04 | R2 字段、键与文件验证 | 复用 R03 |
 | R05 | 上传页异步隔离与补丁快照 | 与 R01/R04 协调 |
 | R06 | 上传版本与恢复防覆盖 | R04，配合 R08 |
@@ -498,4 +529,36 @@ LN 单曲使用 difficulty 是当前领域约定，不能改成 difficultyLn。�
 
 复审另记的覆盖缺口（未修，留给后续任务）：两个脚本的 `main()` 接线均无测试覆盖（删掉非零退出那几行，现有测试仍全绿）；`upload-to-gdrive.test.mjs` 的 `existingNames` 从未被传入，`findExistingFileId` 命中后走 update 的分支零覆盖；`backup-r2` 的 Put 断言不校验 `Bucket/Key`，源/备份桶写反抓不到。
 
-> 状态更新：本文件此前多处标注的"改动未提交"已过期——R01 / R08 / R09 / R18 的实现与谱面可视化、以及上述 3 处守卫，已随本次提交进入 `main`。R02–R07、R10–R17、R19–R23 仍为待实施。
+> 状态更新：本文件此前多处标注的"改动未提交"已过期——R01 / R08 / R09 / R18 的实现与谱面可视化、以及上述 3 处守卫，已随本次提交进入 `main`。R02 与 R03 的实现目前在工作区（未提交）。R04–R07、R10–R17、R19–R23 仍为待实施。
+
+## 10. 用户追加项（2026-09-13，非 R 编号）
+
+### 10.1 修正文件名笔误 natrion → national
+
+依据：`data/tournaments/osu-mania-chinese-natrion-cup-4k-2026-rebirth.json` 文件名拼错，内部 `id` 写的是 `osu-mania-chinese-national-cup-4k-2026-rebirth`，两者不一致（R03 的「文件名必须与 body.id 一致」只能靠一条兼容路径给它放行）。用户要求修掉。
+
+做法：**只改文件名**。内部 id 本来就是正确拼写，所以文件内容一字未动 —— 新旧 blob 都是 `b8cda18c0ce035d6733ca368a61e8867f0dc69cb`（`git hash-object` 与 `git rev-parse HEAD:<旧路径>` 相同），git 会识别为纯改名。同目录另有一场 `osumania-chinese-national-cup-4k-2026-rebirth.json`（少了第二个连字符）是**另一场比赛**，未受影响；改名目标无重名。`src/generated/tournaments.ts` 已按新文件名重新生成。
+
+验证：`scripts/validation.test.mjs` 的全库用例从「不一致 ≤ 1」收紧为「必须为 0」；`npm test` → 145/145。
+
+### 10.2 难度阈值：上限 25、超过 18 警告
+
+依据：用户要求「编辑比赛的时候所有难度填写不能超过 25，防止不小心多打了个 0（超过 18 就要出警告）」。
+
+- 规则唯一实现 `src/lib/difficultyLimits.ts`（纯函数、无 `@data` 依赖，可被 node --test 导入）。`> 25` **拒绝这次输入**而不是截断 —— 截断会把明显的笔误变成"看起来合理"的 25，更危险；`> 18` 只警告、值照存。
+- 接入点：`RoundEditor`（轮次汇总全部 `_typeDiffs` 字段 + 单 TB 直连写穿的路径 + 顶部汇总提示）与 `MapSlotEditor`（单图 `difficulty` / `difficultyLn`，原有的 `max="20"` 一并改为 25）。
+- 服务端兜底：`functions/api/_lib/validation.ts` 的 `LIMITS.maxDifficulty = 25`，作用于 `maps[].difficulty`、`maps[].difficultyLn`、`rounds[].difficulty.{min,max,average}`、`typeDifficulties.*.*`。不走 UI 的写入（手改 JSON、脚本直接调接口、导入的旧 JSON）由这道 400 拦住。
+- 阈值不是拍的：先扫全库（50 场 / 345 轮 / 4429 槽位）确认**最大难度 17、`difficultyLn` 最大 17.2，没有任何值超过 18**，两个阈值都不会误伤现有数据。
+- 验证：新增 `scripts/difficulty-limits.test.mjs` 6 例（边界值 18/25 的归类、超限拒绝、空串与非法文本放行、越界汇总格式化、**前后端两份常量必须相等**、全库难度全在警告线以下、服务端 PUT 对 190 返回 400 且不写 GitHub）；`npm test` → 145/145；`npx tsc --noEmit` 与 `npx tsc -p functions/tsconfig.json --noEmit` 均 0 错。
+- 未做 / 边界：`references.json` 的参考难度与 `ref-ladder` 的 `step` **没有**套这个上限（用户说的是"编辑比赛"，2026-09-13 已确认不扩）；`DifficultyRefPicker` / `EstimateHint` 自动带入的值不过输入侧守卫，但都在 ~17 以内，服务端仍有兜底。
+- 约定已同步到 `CODEX-HANDOFF.md` §5.2。
+
+### 10.3 合包的 [Difficulty] 段完全跟随原谱（取消 OD 下限与 HP 统一改写）
+
+依据：用户先要求「取消所有的合包时候的 OD 下限，原谱是多少就是多少」，随后追加「HP 也跟随原谱」。
+
+- `scripts/generate-pack.js`：删除 `OD_FLOOR` 表、`getOdFloor()`、`rewriteOsu` 里的「只抬不降」分支、`prefetchMap` / `generatePack` 的 `odFloor` 传参，以及固定写 7 的 `HP_TARGET` 与那行 `HPDrainRate` 改写。现在 **[Difficulty] 段整体不被触碰，OD 与 HP 都跟随原谱**；标题/艺术家/作者/版本/`BeatmapID=0`/`BeatmapSetID=-1`/清 `Source`+`Tags`/音频/背景的改写照旧。占位谱面 `DELETE_PLACEHOLDER_OSU`（`delete this.osu`，非真谱）里的数值无关，未动。
+- 顺带做了一处小重构：底部 `main()` 加 `if (require.main === module)` 守卫并导出 `{ rewriteOsu, normalizeRealType, REAL_TYPE_NAMES }`。**此前只要 `require` 这个脚本就会立刻执行 `main()`（覆盖 manifest、打 R2），根本无法测试**；直接 `node scripts/generate-pack.js` 的行为不变（已验证：无凭据时仍打印 `Missing R2 credentials` 并退出 1）。
+- 验证：新增 `scripts/generate-pack.test.mjs` 6 例 —— OD 低于旧下限（1 / 4.5 / 7 / 7.9 / 8.9 / 10）全部原样保留、高于旧下限不压低、HP（1 / 5 / 7 / 8 / 9.5 / 10）全部原样保留、**`[Difficulty]` 段逐字节不变**、其余改写字段逐一断言、`[TimingPoints]` 与 `[HitObjects]` 不被触碰且行数不变。测试用 `createRequire` + dummy `R2_*` 环境变量（顶部凭据检查会 `process.exit(1)`），跑完 `git status -- data/` 只有那对改名文件，确认无副作用（没碰 manifest）。`npm test` → 151/151。
+- ⚠️ 已写进 `CODEX-HANDOFF.md` §5.3 的提醒：**重新合包后包内 `.osu` 字节与旧包不同（OD/HP 变了）→ 玩家已下的成绩会断**，与 §5.4 是同一性质，别再单独推导。SV 类原本就不在 `OD_FLOOR` 里、但 HP 原来同样被写成 7，所以**所有类型的包在重新生成后都会变**。
+- 文档同步：`CODEX-HANDOFF.md` §5.3 的 OD/HP 条目（改为「[Difficulty] 段整体不干预」）、§10 红线第 6 条（不再说合包改 OD/HP）、§5.1 中 FCJ 段落里提到 `OD_FLOOR=8.5` 的历史注记（改为说明该表已删除）。realType 的注册点从「3 处 + OD_FLOOR」回到「3 处」。

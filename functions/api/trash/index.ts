@@ -2,6 +2,7 @@ import { jsonResponse, noContent } from '../_lib/cors'
 import { hasRole, type AuthEnv, type SessionUser } from '../_lib/auth'
 import { writeAudit } from '../_lib/audit'
 import { listTrash, getTrash, removeTrash } from '../_lib/trash'
+import { validatePathId, validateTournament, readJsonBody } from '../_lib/validation'
 
 interface Env extends AuthEnv {
   GITHUB_TOKEN: string
@@ -54,8 +55,12 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, data }) 
     return jsonResponse({ error: '需要 admin 及以上权限', code: 'FORBIDDEN' }, 403)
   }
 
-  const { id } = (await request.json()) as { id?: string }
-  if (!id) return jsonResponse({ error: '缺少 id' }, 400)
+  const body = await readJsonBody(request)
+  if (!body.ok) {
+    return jsonResponse({ error: body.error }, 400)
+  }
+  const { id } = (body.value ?? {}) as { id?: unknown }
+  if (typeof id !== 'string' || id.trim() === '') return jsonResponse({ error: '缺少 id' }, 400)
 
   const entry = await getTrash(env.LADDER_KV, id)
   if (!entry) {
@@ -66,7 +71,24 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, data }) 
     if (!entry.payload) {
       return jsonResponse({ error: '回收站条目缺少数据，无法恢复' }, 500)
     }
-    const tid = entry.label
+    // 旧档案恢复同样要过 validator:回收站里的 payload 可能是很早以前存的,
+    // 直接写回仓库等于让任意对象进入下次静态构建。
+    const tidCheck = validatePathId(entry.label)
+    if (!tidCheck.ok) {
+      return jsonResponse({ error: `回收站条目的比赛 ID 非法：${entry.label}`, code: 'INVALID_ID' }, 400)
+    }
+    const tid = tidCheck.value
+    let parsedPayload: unknown
+    try {
+      parsedPayload = JSON.parse(entry.payload)
+    } catch {
+      return jsonResponse({ error: '回收站条目里的数据不是合法 JSON，无法恢复' }, 400)
+    }
+    const validated = validateTournament(parsedPayload)
+    if (!validated.ok) {
+      return jsonResponse({ error: `回收站条目数据未通过校验，未恢复：${validated.error}`, code: 'INVALID_TOURNAMENT' }, 400)
+    }
+
     const path = `/contents/data/tournaments/${tid}.json`
 
     // 若已存在同名文件，需带上 sha 才能覆盖。
@@ -77,7 +99,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, data }) 
       sha = f.sha
     }
 
-    const content = btoa(unescape(encodeURIComponent(entry.payload)))
+    const content = btoa(unescape(encodeURIComponent(JSON.stringify(validated.value, null, 2) + '\n')))
     const res = await githubFetch(path, env, {
       method: 'PUT',
       body: JSON.stringify({ message: `Restore tournament: ${tid}`, content, ...(sha ? { sha } : {}) }),

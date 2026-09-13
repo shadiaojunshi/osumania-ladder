@@ -405,7 +405,7 @@
         {
           "slot": "RC1",
           "type": "RC",
-          "realType": "PDRC",
+          "realType": "SS",
           "name": "buelow - Revolver (Sped Up Ver.) [Femme Fatale 1.05x]",
           "difficulty": 10.2,
           "beatmapId": 5309392,

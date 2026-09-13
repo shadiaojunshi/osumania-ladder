@@ -442,7 +442,7 @@
         {
           "slot": "RC6",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "RC6",
           "difficulty": 9,
           "beatmapId": 3981008,

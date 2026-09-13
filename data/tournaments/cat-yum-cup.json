@@ -131,7 +131,7 @@
         {
           "slot": "RC3",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Kairiki Bear - Shippaisaku Shoujo [inabakumori Remix] [Loneliness]",
           "difficulty": 7.7,
           "beatmapId": 5754945,
@@ -281,7 +281,7 @@
         {
           "slot": "RC3",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Sad Keyboard Guy & Gardens - Nekovhparavh (Trance Edit) (Cut Ver.) [Synthetic Alteration]",
           "difficulty": 8.87,
           "beatmapId": 5766606,
@@ -431,7 +431,7 @@
         {
           "slot": "RC3",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "MYUKKE. - #AKKAN_BABY [#GO! GO! GO!]",
           "difficulty": 10.08,
           "beatmapId": 5776554,

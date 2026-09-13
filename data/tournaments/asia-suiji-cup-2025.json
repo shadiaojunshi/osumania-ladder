@@ -354,7 +354,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "RC4",
           "difficulty": 0
         },
@@ -486,7 +486,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "SJ",
           "name": "RC4",
           "difficulty": 0
         },

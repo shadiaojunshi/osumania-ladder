@@ -656,7 +656,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "SJ",
+          "realType": "FCJ",
           "name": "femtanyl - KATAMARI [Challenge]",
           "difficulty": 13.45,
           "beatmapId": 5827784,

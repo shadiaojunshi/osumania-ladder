@@ -379,7 +379,7 @@
         {
           "slot": "RC5",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Ling Yuan yousa - Gou Zhi Qi Shi [x1.10]",
           "difficulty": 3.2,
           "beatmapId": 4587516,
@@ -596,7 +596,7 @@
         {
           "slot": "RC5",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Chiyoko - Alice's Mad Tea Party [Trickster's Spell (TSC edit ver.)]",
           "difficulty": 3.8,
           "beatmapId": 4985001,
@@ -897,7 +897,7 @@
         {
           "slot": "RC5",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "zzoilo & Aitana - Mon Amour (Remix) [1.05x (122bpm)]",
           "difficulty": 5.8,
           "beatmapId": 4945018,
@@ -1057,7 +1057,7 @@
         {
           "slot": "RC5",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Rin - Moriya set 04 ReEdit ~ Unmei no Dark Side [Misfortune Goddess]",
           "difficulty": 6.29,
           "beatmapId": 5347292,

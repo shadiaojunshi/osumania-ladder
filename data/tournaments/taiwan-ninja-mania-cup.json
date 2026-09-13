@@ -659,7 +659,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Kashii Moimi - Lovely Assassin (Covered by Aitsuki Nakuru) [The Wreckage of Nightcore Love]",
           "difficulty": 7.28,
           "beatmapId": 5442557,
@@ -847,7 +847,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Video Game Remixes - Sweden (EDM Remix) [Creeper 1.1x (141bpm)]",
           "difficulty": 9.07,
           "beatmapId": 5583838,

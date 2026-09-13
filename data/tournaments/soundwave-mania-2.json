@@ -385,7 +385,7 @@
         {
           "slot": "RC3",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "KORDHELL - FATALITY [Fight!]",
           "difficulty": 7.7,
           "beatmapId": 4246912,
@@ -534,7 +534,7 @@
         {
           "slot": "RC3",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Frizk - ALL MY FELLAS [catJAM [1.0x]]",
           "difficulty": 9,
           "beatmapId": 4431212,
@@ -693,7 +693,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Sewerslvt - blissful overdose [existential extortion]",
           "difficulty": 11.3,
           "beatmapId": 4890790,
@@ -861,7 +861,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Remo-con - Matt Silver [Silver Jacks 1.1x (161bpm) OD8]",
           "difficulty": 12.3,
           "beatmapId": 4783709,
@@ -1029,7 +1029,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "SJ",
           "name": "Camellia - The Night Is On Fire (Cut Ver.) [Jack Is On Fire 1.05x]",
           "difficulty": 13,
           "beatmapId": 5159513,

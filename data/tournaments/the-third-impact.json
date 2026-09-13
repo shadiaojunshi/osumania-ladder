@@ -376,7 +376,7 @@
         {
           "slot": "RC5",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "ericdoa - dancinwithsomebawdy [Edit 1.05x]",
           "difficulty": 0,
           "beatmapId": 5594897,
@@ -512,7 +512,7 @@
         {
           "slot": "RC5",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "lapix - Submerge Serenade [Inundate]",
           "difficulty": 0,
           "beatmapId": 4554587,
@@ -648,7 +648,7 @@
         {
           "slot": "RC5",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "TIA feat. Le Thien Hieu - Ai Dua Em Ve (Cukak Remix) (Sped Up Ver.) (Cut Ver.) [:shushing_face:]",
           "difficulty": 0,
           "beatmapId": 5618203,
@@ -950,7 +950,7 @@
         {
           "slot": "RC5",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "RC5",
           "difficulty": 0
         },

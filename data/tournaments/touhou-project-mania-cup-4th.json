@@ -111,7 +111,7 @@
         {
           "slot": "RC2",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "SJ",
           "name": "Akiyama Uni - Azakeri no Yuugi [Joy]",
           "difficulty": 5,
           "beatmapId": 4953772,
@@ -269,7 +269,7 @@
         {
           "slot": "RC3",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "SJ",
           "name": "Chiyoko - Alice's Mad Tea Party [Trickster's Spell 1.25x]",
           "difficulty": 6.4,
           "beatmapId": 4985569,
@@ -573,7 +573,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Ganeme - See you again... [Immersion 1.0x]",
           "difficulty": 9.2,
           "beatmapId": 5007653,
@@ -737,7 +737,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "SmileDemon - Doomtempo [DoomLotus 150bpm edit]",
           "difficulty": 10.5,
           "beatmapId": 5017844,
@@ -903,7 +903,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "MONO - Fantasmagoria [Phangasm 1.05x (163bpm)]",
           "difficulty": 11.8,
           "beatmapId": 5027429,

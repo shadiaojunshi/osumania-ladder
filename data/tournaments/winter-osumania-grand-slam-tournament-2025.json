@@ -661,7 +661,7 @@
         {
           "slot": "RC5",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "qfeileadh - breathe [Exhale]",
           "difficulty": 0,
           "beatmapId": 4983746,
@@ -1007,7 +1007,7 @@
         {
           "slot": "RC7",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Shirobon - Take Me to Pleasure Island [PleasureLand]",
           "difficulty": 0,
           "beatmapId": 4034509,

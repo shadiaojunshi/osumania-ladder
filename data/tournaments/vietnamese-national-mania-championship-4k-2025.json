@@ -112,7 +112,7 @@
         {
           "slot": "RC3",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "DUSTCELL - Anemone [Delusional]",
           "difficulty": 0,
           "beatmapId": 4887458,
@@ -257,7 +257,7 @@
         {
           "slot": "RC3",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "MYUKKE. - The 90's Decision [boomer decision 1.1x (141bpm)]",
           "difficulty": 0,
           "beatmapId": 4590138,
@@ -773,7 +773,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "-45 - Kuroneko Yanagi [Neko No Magoku]",
           "difficulty": 0,
           "beatmapId": 5280887,
@@ -952,7 +952,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "-45 - G e n g a o z o [F o r e d o o m e d | 1 . 1 x]",
           "difficulty": 0,
           "beatmapId": 5291605,

@@ -21,7 +21,7 @@
         {
           "slot": "RC1",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "SJ",
           "name": "Kensuke Ushio - China [DnM's Hyper]",
           "difficulty": 0,
           "beatmapId": 3878522,
@@ -262,7 +262,7 @@
         {
           "slot": "RC1",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Ling Yuan yousa - Gou Zhi Qi Shi [x1.00]",
           "difficulty": 0,
           "beatmapId": 4587515,
@@ -519,7 +519,7 @@
         {
           "slot": "RC2",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "SJ",
           "name": "KORDHELL - MURDER PLOT [- Mission Acquired -]",
           "difficulty": 0,
           "beatmapId": 4571265,
@@ -705,7 +705,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Bambinton - Zaya [Northern Story.]",
           "difficulty": 0,
           "beatmapId": 4280375,
@@ -1098,7 +1098,7 @@
         {
           "slot": "RC1",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "SJ",
           "name": "AJURIKA - HARD BRAIN [Control]",
           "difficulty": 0,
           "beatmapId": 3064416,
@@ -1182,7 +1182,7 @@
         {
           "slot": "RC1",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Manabu Namiki - Kuruoshii Hodo Ni (Cut Ver.) [Jack in Dragons 1.0x]",
           "difficulty": 0,
           "beatmapId": 4570137,
@@ -1374,7 +1374,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Shan Bao - Ji Ming Yue [Extra]",
           "difficulty": 0,
           "beatmapId": 4436121,
@@ -1511,7 +1511,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "seleP - Remember Me [REMEMBER THE CHORDJACKS]",
           "difficulty": 0,
           "beatmapId": 2138692,
@@ -1799,7 +1799,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Kagetora. - Time to beat the odds [ChordJack Full on! 1.05x]",
           "difficulty": 0,
           "beatmapId": 4635655,

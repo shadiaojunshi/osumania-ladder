@@ -426,7 +426,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "YENA - NEMONEMO (Cut Ver.) [Micleak's DIPSY-DOODLING]",
           "difficulty": 9,
           "beatmapId": 5505339,

@@ -17,6 +17,7 @@ import { AuditLog } from '@/components/admin/AuditLog'
 import type { Tournament } from '@/lib/types'
 import { useT, type MessageKey } from '@/lib/i18n'
 import { findPendingMaps } from '@/lib/tournamentDiagnostics'
+import { planConflictRecovery, type FieldConflict, type FollowNote } from '@/lib/tournamentMerge'
 
 type Role = 'readonly' | 'contributor' | 'admin' | 'owner'
 
@@ -32,6 +33,14 @@ interface SessionUser {
   uid: string
   username: string
   role: Role
+}
+
+// 提示里最多列几处自动跟随服务器的字段:再多就用「…」收尾,免得一条状态栏塞不下。
+const MAX_FOLLOWED_IN_MESSAGE = 5
+
+const formatFollowed = (notes: FollowNote[]): string => {
+  const head = notes.slice(0, MAX_FOLLOWED_IN_MESSAGE).map((note) => note.path).join('、')
+  return notes.length > MAX_FOLLOWED_IN_MESSAGE ? `${head}…` : head
 }
 
 interface TournamentListItem {
@@ -78,7 +87,8 @@ export default function AdminPage() {
   const [editInitialData, setEditInitialData] = useState<Tournament | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [batchSubmitting, setBatchSubmitting] = useState(false)
-  const [submitStatus, setSubmitStatus] = useState<{ type: 'success' | 'error' | 'local'; message: string; conflict?: boolean } | null>(null)
+  // conflicts:自动合并时发现两边改了同一字段,列出来交给人裁决(空表示没有需要裁决的)
+  const [submitStatus, setSubmitStatus] = useState<{ type: 'success' | 'error' | 'local'; message: string; conflict?: boolean; conflicts?: FieldConflict[] } | null>(null)
   const [conflicts, setConflicts] = useState<EditConflict[]>([])
   const [saveSignal, setSaveSignal] = useState(0)
   const [stagedChanges, setStagedChanges] = useState<Record<string, StagedEntry>>({})
@@ -218,19 +228,54 @@ export default function AdminPage() {
     const stagedAtStart = stagedChanges[submittedId]
     const wasEditing = !!(editingId && editingSha)
 
+    // 最终写进服务器的内容。冲突自动合并后会与 submitted 不同 —— 推进基准、回写表单都得用
+    // 这个,否则页面上显示的和服务器的就对不上了。
+    let written = submitted
+    let followed: FollowNote[] = []
+
     setSubmitting(true)
     setSubmitStatus(null)
 
     try {
       let newSha: string | null = null
       if (wasEditing) {
-        const res = await fetch(`/api/tournaments/${editingId}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ tournament: submitted, sha: editingSha }),
-        })
-        const payload = (await res.json().catch(() => ({}))) as { error?: string; sha?: string; code?: string }
-        // 带上 code:catch 里据此区分「编辑基准过期(409)」和其他失败,只有前者有"换基准继续"的出路。
+        const editId = editingId as string
+        const baseSha = editingSha as string
+        const putOnce = (body: Tournament, sha: string) =>
+          fetch(`/api/tournaments/${editId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ tournament: body, sha }),
+          })
+
+        let res = await putOnce(submitted, baseSha)
+        let payload = (await res.json().catch(() => ({}))) as { error?: string; sha?: string; code?: string }
+
+        // 编辑基准过期(409)基本都是上传器回填元数据造成的:它保存前自己 GET 最新 sha,所以
+        // 它永远成功,却不通知本页。这里拉最新版本做三方合并,把别处的改动并进来再重试一次 ——
+        // 光换基准不合并的话,上传器刚写进去的曲名会被这份旧内容静默抹掉。
+        if (!res.ok && payload.code === 'EDIT_CONFLICT') {
+          const latest = await fetchAuthoritative(editId)
+          if (latest) {
+            const recovery = planConflictRecovery(editingBaseline, submitted, latest.tournament, latest.sha)
+            if (recovery.action === 'retry') {
+              // 只重试一次:再撞上说明这期间又有人写了,交给用户处理,不进循环。
+              res = await putOnce(recovery.tournament, recovery.sha)
+              payload = (await res.json().catch(() => ({}))) as typeof payload
+              if (res.ok) {
+                written = recovery.tournament
+                followed = recovery.followed
+              }
+            } else if (recovery.conflicts.length > 0) {
+              throw Object.assign(new Error(t('admin.merge.conflictError')), {
+                code: 'MERGE_CONFLICT',
+                conflicts: recovery.conflicts,
+              })
+            }
+          }
+        }
+
+        // 带上 code:catch 里据此区分各种失败,只有基准过期才有"换基准继续"的出路。
         if (!res.ok) throw Object.assign(new Error(payload.error || t('admin.update.error')), { code: payload.code })
         if (typeof payload.sha === 'string' && payload.sha) newSha = payload.sha
       } else {
@@ -247,13 +292,15 @@ export default function AdminPage() {
       // 保存成功后一律进入/保持编辑模式,并推进编辑基准 —— 否则连续保存还会带旧 SHA。
       setEditingId(submittedId)
       if (newSha) setEditingSha(newSha)
-      setEditingBaseline(submitted)
+      // 基准和表单都跟随「实际写进服务器的内容」:走过自动合并的话,服务器上现在是 merged。
+      setEditingBaseline(written)
       setEditingLegacy(false)
 
-      // 只有"提交期间没有新输入"时才能清草稿 / 清 dirty;否则保留为未保存状态。
+      // unchanged 判断的是「提交请求期间用户有没有新输入」,必须拿点保存那一刻的 submitted 比 ——
+      // 不能被合并结果污染,否则会把"合并了服务器改动"误判成"用户又输入了"。
       const unchanged = JSON.stringify(tournament) === submittedJson
       if (unchanged) {
-        setEditInitialData(submitted)
+        setEditInitialData(written)
         setStagedChanges((current) => {
           // 期间新加的暂存草稿不动
           if (current[submittedId] !== stagedAtStart) return current
@@ -263,17 +310,25 @@ export default function AdminPage() {
         })
         setSaveSignal((current) => current + 1)
         setFormDirty(false)
-        setSubmitStatus({
-          type: 'success',
-          message: t(wasEditing ? 'admin.update.success' : 'admin.create.success', { id: submittedId }),
-        })
+        setSubmitStatus(
+          followed.length > 0
+            ? { type: 'local', message: t('admin.merge.applied', { n: followed.length, list: formatFollowed(followed) }) }
+            : { type: 'success', message: t(wasEditing ? 'admin.update.success' : 'admin.create.success', { id: submittedId }) },
+        )
       } else {
         setSubmitStatus({ type: 'local', message: t('admin.save.unsavedInput', { id: submittedId }) })
       }
       fetchList()
     } catch (e) {
-      const err = e as Error & { code?: string }
-      setSubmitStatus({ type: 'error', message: err.message, conflict: err.code === 'EDIT_CONFLICT' })
+      const err = e as Error & { code?: string; conflicts?: FieldConflict[] }
+      setSubmitStatus({
+        type: 'error',
+        message: err.message,
+        // 两种冲突都给「以最新版本为基准继续」的出路:编辑基准过期,以及自动合并撞上真冲突
+        // (后者点它的含义是"我就用我这份覆盖服务器")。
+        conflict: err.code === 'EDIT_CONFLICT' || err.code === 'MERGE_CONFLICT',
+        conflicts: err.conflicts,
+      })
     } finally {
       setSubmitting(false)
     }
@@ -328,6 +383,35 @@ export default function AdminPage() {
     return window.confirm(t('admin.pending.confirm', { action, details }))
   }
 
+  // 批量保存撞上 409 之后的自动合并:只处理 reason='modified'(文件被别处改过)的项 ——
+  // 拉最新版本做三方合并,再整批带上新 sha 重投。
+  // batch 是原子的,所以只要有一项合不了(真冲突 / 没有基准 / 拉不到最新版)就整批返回 null,
+  // 绝不只重投一部分:那样用户看到的"哪个文件进了哪个没进"就和服务端对不上了。
+  const tryAutoMergeBatch = async (
+    entries: [string, StagedEntry][],
+    conflicts: EditConflict[],
+  ): Promise<{ items: { id: string; tournament: Tournament; baseSha: string }[]; followed: FollowNote[] } | null> => {
+    const modified = new Set(conflicts.filter((conflict) => conflict.reason === 'modified').map((conflict) => conflict.id))
+    if (modified.size === 0) return null
+
+    const items: { id: string; tournament: Tournament; baseSha: string }[] = []
+    const followed: FollowNote[] = []
+    for (const [id, entry] of entries) {
+      if (!modified.has(id)) {
+        if (!entry.baseSha) return null
+        items.push({ id, tournament: entry.data, baseSha: entry.baseSha })
+        continue
+      }
+      const latest = await fetchAuthoritative(id)
+      if (!latest) return null
+      const recovery = planConflictRecovery(entry.baseline, entry.data, latest.tournament, latest.sha)
+      if (recovery.action !== 'retry') return null
+      items.push({ id, tournament: recovery.tournament, baseSha: recovery.sha })
+      followed.push(...recovery.followed)
+    }
+    return { items, followed }
+  }
+
   const handleSubmitStaged = async () => {
     const entries = Object.entries(stagedChanges)
     if (entries.length === 0) return
@@ -346,22 +430,29 @@ export default function AdminPage() {
     setSubmitStatus(null)
     setConflicts([])
     try {
-      const res = await fetch('/api/tournaments/batch', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          items: entries.map(([id, entry]) => ({
-            id,
-            tournament: entry.data,
-            baseSha: entry.baseSha,
-          })),
-          summary: `Batch update tournaments (${count} files)`,
-        }),
-      })
-      const payload = (await res.json().catch(() => ({}))) as {
+      const submitBatch = (items: { id: string; tournament: Tournament; baseSha: string | null }[]) =>
+        fetch('/api/tournaments/batch', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ items, summary: `Batch update tournaments (${count} files)` }),
+        })
+
+      let res = await submitBatch(entries.map(([id, entry]) => ({ id, tournament: entry.data, baseSha: entry.baseSha })))
+      let payload = (await res.json().catch(() => ({}))) as {
         error?: string
         code?: string
         conflicts?: EditConflict[]
+      }
+      let followed: FollowNote[] = []
+
+      // 整批被挡下时,先试一次自动合并 —— 多半只是上传器往这些文件里回填过元数据。
+      if (res.status === 409) {
+        const mergeable = await tryAutoMergeBatch(entries, payload.conflicts ?? [])
+        if (mergeable) {
+          res = await submitBatch(mergeable.items)
+          payload = (await res.json().catch(() => ({}))) as typeof payload
+          if (res.ok) followed = mergeable.followed
+        }
       }
 
       if (res.status === 409) {
@@ -380,7 +471,11 @@ export default function AdminPage() {
         return next
       })
       setConflicts([])
-      setSubmitStatus({ type: 'success', message: t('admin.stage.submitSuccess', { n: count }) })
+      setSubmitStatus(
+        followed.length > 0
+          ? { type: 'local', message: t('admin.merge.appliedBatch', { n: count, m: followed.length, list: formatFollowed(followed) }) }
+          : { type: 'success', message: t('admin.stage.submitSuccess', { n: count }) },
+      )
       setSaveSignal((current) => current + 1)
       setFormDirty(false)
       fetchList()

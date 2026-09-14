@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import type { Tournament } from '@/lib/types'
 import { useT, type MessageKey } from '@/lib/i18n'
+import type { FieldConflict } from '@/lib/tournamentMerge'
 
 interface EditConflict {
   id: string
@@ -20,7 +21,8 @@ interface Props {
   submitting?: boolean
   batchSubmitting?: boolean
   // conflict:本次保存被服务端判成编辑基准过期(409),此时给一个「以最新版本为基准继续」的出路
-  submitStatus?: { type: 'success' | 'error' | 'local'; message: string; conflict?: boolean } | null
+  // conflicts:自动合并时发现两边改了同一字段,逐条列出来(你的值 vs 服务器值)
+  submitStatus?: { type: 'success' | 'error' | 'local'; message: string; conflict?: boolean; conflicts?: FieldConflict[] } | null
   isEditing?: boolean
   stagedCount?: number
   currentStaged?: boolean
@@ -32,6 +34,12 @@ interface Props {
   onReloadLatest?: (id: string) => void
   // 冲突(409)后的出路:改用服务器最新版本作编辑基准,页面上未保存的编辑原样保留
   onRefreshBase?: () => void
+}
+
+// 冲突清单里的值:可能是字符串、数字,也可能整个对象(整轮/整槽位)。截断,免得撑破状态栏。
+function formatValue(value: unknown): string {
+  const text = value === undefined ? '—' : typeof value === 'string' ? value : JSON.stringify(value)
+  return text.length > 80 ? `${text.slice(0, 80)}…` : text
 }
 
 const CONFLICT_REASON_KEYS: Record<string, MessageKey> = {
@@ -135,6 +143,20 @@ export function JsonPreview({
                 : 'bg-red-50 text-red-800 border border-red-200 dark:bg-red-900/30 dark:text-red-200 dark:border-red-800'
           }`}>
             {submitStatus.message}
+            {submitStatus.conflicts && submitStatus.conflicts.length > 0 && (
+              <div className="mt-2 text-left">
+                <div className="font-medium">{t('admin.merge.conflictHeader', { n: submitStatus.conflicts.length })}</div>
+                <ul className="mt-1 space-y-1.5">
+                  {submitStatus.conflicts.map((conflict) => (
+                    <li key={conflict.path}>
+                      <span className="font-mono">{conflict.path}</span>
+                      <div className="pl-2">{t('admin.merge.yours')}: {formatValue(conflict.mine)}</div>
+                      <div className="pl-2">{t('admin.merge.theirs')}: {formatValue(conflict.theirs)}</div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
             {submitStatus.conflict && onRefreshBase && (
               <button
                 type="button"

@@ -670,6 +670,7 @@ export const messagesEn: Record<keyof typeof messagesZh, string> = {
   'mapUpload.paste.start': 'Start →',
   'mapUpload.paste.skipMsg': 'No slot assigned, skipped',
   'mapUpload.paste.errMultiDiff': 'Multiple diffs, manual select needed',
+  'mapUpload.paste.errNetwork': 'Network dropped mid-transfer (auto-retry already failed; clicking run again usually works)',
   'mapUpload.paste.overrideMsg': 'Overwritten',
   'mapUpload.paste.progress': 'Progress {done}/{total}',
   'mapUpload.paste.progressErrs': '· {n} failed',
@@ -699,7 +700,12 @@ export const messagesEn: Record<keyof typeof messagesZh, string> = {
   'mapUpload.stage.saving': 'Saving...',
   'mapUpload.stage.saved': 'Saved metadata for {n} map(s); the site will rebuild in a few minutes',
   'mapUpload.stage.saveFailed': 'Save failed: {msg}',
-  'mapUpload.stage.saveNoMatch': 'Staged maps matched no slot in the tournament data; staging cleared',
+  'mapUpload.stage.saveNoMatch': 'These staged slots were not found in the tournament data, or the remote value already exists: nothing was written; the staging pool was kept — review it, retry, or clear it.',
+  'mapUpload.stage.skippedRemote': '{n} were skipped because the remote value already exists (no one else\'s edit was overwritten).',
+  'mapUpload.stage.unmatched': '{n} have no matching slot in the tournament data and stay in the staging pool.',
+  'mapUpload.stage.clear': 'Clear staged',
+  'mapUpload.stage.clearConfirm': 'Clear {n} unsaved metadata patch(es)? This cannot be undone.',
+  'mapUpload.stage.switchBusy': 'An upload / backfill / save is in progress — wait for it to finish before switching tournaments.',
   'mapUpload.stage.switchConfirm': 'This tournament has {n} staged, unsaved metadata map(s) that will be lost on switch. Switch anyway?',
 
   // ---------- PackLinksEditor ----------

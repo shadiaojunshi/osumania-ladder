@@ -1,8 +1,19 @@
 'use client'
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import JSZip from 'jszip'
 import { useT } from '@/lib/i18n'
+import { fetchWithNetworkRetry, isNetworkFailure, withNetworkRetry } from '@/lib/fetchRetry'
+import {
+  applyPatches,
+  applyStagedPatches,
+  entriesToClear,
+  mergeStagedPatch,
+  type MapPatch,
+  type PatchMap,
+  type PatchOrigin,
+  type StagedPatchMap,
+} from '@/lib/mapPatchCommit'
 
 interface MapInfo {
   slot: string
@@ -24,9 +35,8 @@ function isNsvEligible(type: string): boolean {
 
 const MAX_SIZE = 100 * 1024 * 1024
 
-// key = "roundId/slot"，value 字段缺席=不动，为 null=删除该字段。
-type MapPatch = { name?: string | null; beatmapId?: number | null; beatmapsetId?: number | null }
-type PatchMap = Map<string, MapPatch>
+// 补丁池的类型与纯逻辑在 @/lib/mapPatchCommit(可单测):
+// 池条目 = { patch, origin },origin 决定提交时能不能覆盖远端已有的值。
 
 // 从 .osu [Metadata] 解析出、可随上传一起回填的元数据子集。
 type UploadMeta = Pick<OsuDiffInfo, 'artist' | 'title' | 'version' | 'beatmapId' | 'beatmapsetId'>
@@ -50,9 +60,14 @@ export function MapUploader({ onDirtyChange }: { onDirtyChange?: (dirty: boolean
   const [status, setStatus] = useState<Record<string, 'success' | 'error'>>({})
   const [errorMsg, setErrorMsg] = useState<Record<string, string>>({})
   // 跨轮暂存的元数据补丁池:逐轮"暂存本轮"往这里攒,最后"保存全部"一次 PUT/一次重建。
-  const [pendingPatches, setPendingPatches] = useState<PatchMap>(new Map())
+  const [pendingPatches, setPendingPatches] = useState<StagedPatchMap>(new Map())
   const [savingMeta, setSavingMeta] = useState(false)
   const [saveMsg, setSaveMsg] = useState<{ kind: 'ok' | 'err'; text: string } | null>(null)
+  // 异步回调里用 ref 读"现在还在不在看同一场比赛",避免把 A 的结果写进 B。
+  const selectedTournamentRef = useRef(selectedTournament)
+  selectedTournamentRef.current = selectedTournament
+  // 切换比赛的请求令牌:只有令牌仍是最新那次切换,才允许写 UI 状态。
+  const loadTokenRef = useRef(0)
 
   useEffect(() => {
     fetch('/api/tournaments').then(r => r.json()).then(setTournaments).catch(() => {})
@@ -76,9 +91,26 @@ export function MapUploader({ onDirtyChange }: { onDirtyChange?: (dirty: boolean
     if (pendingPatches.size > 0 && id !== selectedTournament) {
       if (!confirm(t('mapUpload.stage.switchConfirm', { n: pendingPatches.size }))) return
     }
+    // 有写操作在飞时不允许换比赛:A 的完成回调会往 B 的状态里写。
+    const busy = savingMeta || backfillRunning || Object.values(uploading).some(Boolean)
+    if (id !== selectedTournament && busy) {
+      setSaveMsg({ kind: 'err', text: t('mapUpload.stage.switchBusy') })
+      return
+    }
+
+    // 每次切换换一个令牌,并清掉上一场的上传/勾选/错误/进度 —— 不把 A 的状态留在 B。
+    const token = loadTokenRef.current + 1
+    loadTokenRef.current = token
     setPendingPatches(new Map())
     setSaveMsg(null)
     setSelectedTournament(id)
+    setUploadedSlots(new Set())
+    setUploadedNsvSlots(new Set())
+    setStatus({})
+    setErrorMsg({})
+    setUploading({})
+    setBackfillSummary(null)
+    setBackfillProgress({ done: 0, total: 0 })
     if (!id) { setTournamentData(null); return }
     setLoading(true)
     try {
@@ -86,18 +118,25 @@ export function MapUploader({ onDirtyChange }: { onDirtyChange?: (dirty: boolean
         fetch(`/api/tournaments/${id}`),
         fetch(`/api/maps/status?tournamentId=${id}`),
       ])
+      // 期间又切过比赛 → 整体丢弃,一个 UI 字段都不写。
+      if (token !== loadTokenRef.current) return
       if (!tourRes.ok) throw new Error()
       const { tournament } = await tourRes.json()
       setTournamentData(tournament)
       if (statusRes.ok) {
         const { uploaded, uploadedNsv } = await statusRes.json()
+        if (token !== loadTokenRef.current) return
         setUploadedSlots(new Set((uploaded as string[]) || []))
         setUploadedNsvSlots(new Set((uploadedNsv as string[]) || []))
+      } else {
+        // 状态读不到就当"没有已上传":绝不能沿用上一场比赛的勾选。
+        setUploadedSlots(new Set())
+        setUploadedNsvSlots(new Set())
       }
     } catch {
-      setTournamentData(null)
+      if (token === loadTokenRef.current) setTournamentData(null)
     } finally {
-      setLoading(false)
+      if (token === loadTokenRef.current) setLoading(false)
     }
   }
 
@@ -109,7 +148,7 @@ export function MapUploader({ onDirtyChange }: { onDirtyChange?: (dirty: boolean
     setTournamentData((prev) => {
       if (!prev) return prev
       const rounds = prev.rounds.map((r) => ({ ...r, maps: r.maps.map((m) => ({ ...m })) as unknown as Record<string, unknown>[] }))
-      applyPatchesTo(rounds, patches)
+      applyPatches(rounds, patches)
       return {
         id: prev.id,
         rounds: rounds.map((r) => ({
@@ -124,11 +163,13 @@ export function MapUploader({ onDirtyChange }: { onDirtyChange?: (dirty: boolean
   }, [])
 
   // 暂存本轮:合进待提交池 + 本地回显。不触网、不重建。
-  const stagePatches = useCallback((patches: PatchMap) => {
+  // origin='fill'(默认)只补"原本缺失"的字段,提交时不会覆盖远端已有的值;
+  // 'explicit' 表示用户明确指定(如贴 BID 补传),照写。
+  const stagePatches = useCallback((patches: PatchMap, origin: PatchOrigin = 'fill') => {
     if (patches.size === 0) return
     setPendingPatches((prev) => {
       const next = new Map(prev)
-      for (const [k, v] of patches) next.set(k, { ...next.get(k), ...v })
+      for (const [k, v] of patches) next.set(k, mergeStagedPatch(next.get(k), v, origin))
       return next
     })
     applyPatchesLocal(patches)
@@ -157,6 +198,9 @@ export function MapUploader({ onDirtyChange }: { onDirtyChange?: (dirty: boolean
 
   const runBackfill = useCallback(async () => {
     if (backfillRunning || backfillCandidates.length === 0) return
+    // 绑定这次补全属于哪场比赛:切走后不再往界面/补丁池写结果。
+    const opTournament = selectedTournament
+    const stillCurrent = () => selectedTournamentRef.current === opTournament
     setBackfillRunning(true)
     setBackfillSummary(null)
     setBackfillProgress({ done: 0, total: backfillCandidates.length })
@@ -165,10 +209,11 @@ export function MapUploader({ onDirtyChange }: { onDirtyChange?: (dirty: boolean
     // 分批请求,单批 80 个 slot,给 R2 list/range 读留余量。
     const BATCH = 80
     for (let i = 0; i < backfillCandidates.length; i += BATCH) {
+      if (!stillCurrent()) break
       const batch: { roundId: string; slot: string }[] = backfillCandidates.slice(i, i + BATCH)
       const roundsParam = batch.map(c => `${c.roundId}:${c.slot}`).join('&')
       try {
-        const res = await fetch(`/api/maps/meta?tournamentId=${selectedTournament}&rounds=${encodeURIComponent(roundsParam)}`)
+        const res = await fetch(`/api/maps/meta?tournamentId=${opTournament}&rounds=${encodeURIComponent(roundsParam)}`)
         const body = await res.json().catch(() => ({})) as {
           results?: Record<string, { status: string; artist?: string; title?: string; version?: string; beatmapId?: number; beatmapsetId?: number; unsubmitted?: boolean; error?: string }>
           error?: string
@@ -196,18 +241,26 @@ export function MapUploader({ onDirtyChange }: { onDirtyChange?: (dirty: boolean
           patches.set(`${c.roundId}/${c.slot}`, patch)
           if (patch.beatmapId) summary.staged++; else summary.nameOnly++
         }
-        if (patches.size > 0) stagePatches(patches)
+        if (patches.size > 0 && stillCurrent()) stagePatches(patches, 'fill')
       } catch (err) {
-        summary.errors.push(err instanceof Error ? err.message : String(err))
+        if (stillCurrent()) summary.errors.push(err instanceof Error ? err.message : String(err))
       }
+      if (!stillCurrent()) break
       setBackfillProgress({ done: Math.min(i + BATCH, backfillCandidates.length), total: backfillCandidates.length })
     }
 
-    setBackfillSummary(summary)
+    // backfillRunning 是全局 UI 标志(不是某场比赛的数据):无论上下文有没有变都要关掉,
+    // 否则按钮会永久停在"补全中"、连比赛都切不了。
     setBackfillRunning(false)
+    if (!stillCurrent()) return
+    setBackfillSummary(summary)
   }, [backfillRunning, backfillCandidates, selectedTournament, tournamentData, stagePatches])
 
   const uploadFile = useCallback(async (roundId: string, slot: string, file: File, isNsv: boolean, meta?: UploadMeta) => {
+    // 记下这次操作属于哪场比赛:完成回调只在"这场比赛仍被选中"时才写 UI,
+    // 否则 A 的上传结果会污染 B 的勾选/错误/补丁池。
+    const opTournament = selectedTournament
+    const stillCurrent = () => selectedTournamentRef.current === opTournament
     const key = cellKey(roundId, slot, isNsv)
     setUploading(prev => ({ ...prev, [key]: true }))
     setStatus(prev => { const n = { ...prev }; delete n[key]; return n })
@@ -230,7 +283,7 @@ export function MapUploader({ onDirtyChange }: { onDirtyChange?: (dirty: boolean
       for (let attempt = 0; attempt < 3; attempt++) {
         // FormData/File stream 只能消费一次,每次重试都重建。
         const formData = new FormData()
-        formData.append('tournamentId', selectedTournament)
+        formData.append('tournamentId', opTournament)
         formData.append('roundId', roundId)
         formData.append('slot', slot)
         formData.append('file', file)
@@ -255,6 +308,8 @@ export function MapUploader({ onDirtyChange }: { onDirtyChange?: (dirty: boolean
       }
 
       if (!ok) throw new Error(lastErr || 'upload failed')
+      // 期间切了比赛 → 结果整体丢弃(文件已经传上去了,但不要写进 B 的界面状态)。
+      if (!stillCurrent()) return
 
       setStatus(prev => ({ ...prev, [key]: 'success' }))
       const setKey = `${roundId}/${slot}`
@@ -263,6 +318,7 @@ export function MapUploader({ onDirtyChange }: { onDirtyChange?: (dirty: boolean
 
       // 手动上传也回填元数据:从 .osu [Metadata] 解析出的 artist/title/version/BID。
       // 只补缺失字段,绝不覆盖 JSON 里已有的值;NSV 文件与主文件同曲,不重复暂存。
+      // origin='fill':提交时也不会覆盖远端刚填进去的值。
       if (!isNsv && meta && (meta.artist || meta.title || meta.beatmapId)) {
         const patch: MapPatch = {}
         const cur = tournamentData?.rounds.find(r => r.id === roundId)?.maps.find(m => m.slot === slot)
@@ -273,16 +329,18 @@ export function MapUploader({ onDirtyChange }: { onDirtyChange?: (dirty: boolean
         if (meta.beatmapId && !cur?.beatmapId) patch.beatmapId = meta.beatmapId
         if (meta.beatmapsetId && !cur?.beatmapsetId) patch.beatmapsetId = meta.beatmapsetId
         if (Object.keys(patch).length > 0) {
-          stagePatches(new Map([[`${roundId}/${slot}`, patch]]))
+          stagePatches(new Map([[`${roundId}/${slot}`, patch]]), 'fill')
         }
       }
     } catch (err) {
-      setStatus(prev => ({ ...prev, [key]: 'error' }))
-      setErrorMsg(prev => ({ ...prev, [key]: err instanceof Error ? err.message : String(err) }))
+      if (stillCurrent()) {
+        setStatus(prev => ({ ...prev, [key]: 'error' }))
+        setErrorMsg(prev => ({ ...prev, [key]: err instanceof Error ? err.message : String(err) }))
+      }
     } finally {
-      setUploading(prev => ({ ...prev, [key]: false }))
+      if (stillCurrent()) setUploading(prev => ({ ...prev, [key]: false }))
     }
-  }, [selectedTournament, tournamentData, stagePatches, t])
+  }, [tournamentData, stagePatches, t])
 
   const uploadThreeFiles = useCallback(async (roundId: string, slot: string, osuFile: File, audioFile: File, bgFile: File, isNsv: boolean) => {
     const totalSize = osuFile.size + audioFile.size + bgFile.size
@@ -301,47 +359,31 @@ export function MapUploader({ onDirtyChange }: { onDirtyChange?: (dirty: boolean
     await uploadFile(roundId, slot, oszFile, isNsv, meta)
   }, [uploadFile])
 
-  // 贴 BID 补传拿到新元数据后,把 name/beatmapId/beatmapsetId 一次性写回 tournament JSON。
-  // patches: key = "roundId/slot", value = { name?, beatmapId?, beatmapsetId? }
-  // 字段为 null 表示删除该字段(用于 osu API 失败清空场景);缺席表示不动。
-  // 成功后返回同步刷新的 tournamentData;失败抛错。
-  // 把补丁应用到一组 rounds(就地修改 map 对象),返回命中张数。GET 到的完整 JSON 和
-  // 前端精简 tournamentData 结构兼容(都有 rounds[].maps[].slot),故两处复用同一逻辑。
-  const applyPatchesTo = (rounds: { id: string; maps: Record<string, unknown>[] }[], patches: PatchMap): number => {
-    let applied = 0
-    for (const round of rounds) {
-      for (const map of round.maps) {
-        const p = patches.get(`${round.id}/${map.slot as string}`)
-        if (!p) continue
-        applied++
-        if ('name' in p) { if (p.name == null) delete map.name; else map.name = p.name }
-        if ('beatmapId' in p) { if (p.beatmapId == null) delete map.beatmapId; else map.beatmapId = p.beatmapId }
-        if ('beatmapsetId' in p) { if (p.beatmapsetId == null) delete map.beatmapsetId; else map.beatmapsetId = p.beatmapsetId }
-      }
-    }
-    return applied
-  }
-
-  // 统一保存:把整个待提交池一次 PUT(一次 commit / 一次重建),成功后清空池。
+  // 统一保存:把整个待提交池一次 PUT(一次 commit / 一次重建)。
+  // 补丁解析的纯逻辑在 @/lib/mapPatchCommit(可单测)。
   const commitPending = useCallback(async () => {
     if (savingMeta || pendingPatches.size === 0) return
     if (!selectedTournament) return
+    // 绑定这次保存属于哪场比赛;提交快照用于"只清掉本次真正写进去、且期间没被改写的条目"。
+    const opTournament = selectedTournament
+    const snapshot: StagedPatchMap = new Map(pendingPatches)
     setSavingMeta(true)
     setSaveMsg(null)
     try {
-      const getRes = await fetch(`/api/tournaments/${selectedTournament}`)
+      const getRes = await fetch(`/api/tournaments/${opTournament}`)
       if (!getRes.ok) throw new Error(`GET failed: ${getRes.status}`)
       const { tournament, sha } = await getRes.json() as { tournament: { id: string; rounds: { id: string; maps: Record<string, unknown>[] }[]; [k: string]: unknown }; sha: string }
 
-      const applied = applyPatchesTo(tournament.rounds, pendingPatches)
-      if (applied === 0) {
-        // 池里的 key 在 JSON 里一张都没命中(理论上不该发生)——清池并提示,不假装成功。
-        setPendingPatches(new Map())
+      // fill 补丁不会覆盖远端刚填进去的值;真正写入的 key 才允许从池里移除。
+      const result = applyStagedPatches(tournament.rounds, snapshot)
+      if (result.appliedKeys.length === 0) {
+        // 一条都没写进去(全部被远端已有值挡住,或 key 在数据里找不到):
+        // 保留暂存池让用户手动处理,绝不擅自清空。
         setSaveMsg({ kind: 'err', text: t('mapUpload.stage.saveNoMatch') })
         return
       }
 
-      const putRes = await fetch(`/api/tournaments/${selectedTournament}`, {
+      const putRes = await fetch(`/api/tournaments/${opTournament}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ tournament, sha }),
@@ -350,6 +392,9 @@ export function MapUploader({ onDirtyChange }: { onDirtyChange?: (dirty: boolean
         const body = await putRes.json().catch(() => ({})) as { error?: string }
         throw new Error(body.error || `PUT failed: ${putRes.status}`)
       }
+
+      // 期间切了比赛 → 不写界面状态(池已在切换时清过),只把结果落到返回值之外。
+      if (selectedTournamentRef.current !== opTournament) return
 
       // 用 GitHub 权威版刷新前端 state。
       setTournamentData({
@@ -366,33 +411,60 @@ export function MapUploader({ onDirtyChange }: { onDirtyChange?: (dirty: boolean
           })),
         })),
       })
-      setPendingPatches(new Map())
-      setSaveMsg({ kind: 'ok', text: t('mapUpload.stage.saved', { n: applied }) })
+      // 只移除"本次提交过 + 期间没被改写 + 真的写进去了"的条目:
+      // 提交期间新加/改写的补丁保留在池里。
+      setPendingPatches((current) => {
+        const clear = new Set(entriesToClear(snapshot, current, result.appliedKeys))
+        const next = new Map(current)
+        for (const key of clear) next.delete(key)
+        return next
+      })
+      const parts = [t('mapUpload.stage.saved', { n: result.appliedKeys.length })]
+      if (result.skippedRemote.length > 0) {
+        parts.push(t('mapUpload.stage.skippedRemote', { n: result.skippedRemote.length }))
+      }
+      if (result.unmatchedKeys.length > 0) {
+        parts.push(t('mapUpload.stage.unmatched', { n: result.unmatchedKeys.length }))
+      }
+      setSaveMsg({ kind: result.unmatchedKeys.length > 0 ? 'err' : 'ok', text: parts.join(' ') })
     } catch (err) {
-      setSaveMsg({ kind: 'err', text: t('mapUpload.stage.saveFailed', { msg: err instanceof Error ? err.message : String(err) }) })
+      if (selectedTournamentRef.current === opTournament) {
+        setSaveMsg({ kind: 'err', text: t('mapUpload.stage.saveFailed', { msg: err instanceof Error ? err.message : String(err) }) })
+      }
     } finally {
       setSavingMeta(false)
     }
   }, [savingMeta, pendingPatches, selectedTournament, t])
 
+  // 手动清空暂存池(未被写进去的补丁不会被自动丢掉,所以需要一个出口)。
+  const clearPending = useCallback(() => {
+    if (pendingPatches.size === 0) return
+    if (!confirm(t('mapUpload.stage.clearConfirm', { n: pendingPatches.size }))) return
+    setPendingPatches(new Map())
+    setSaveMsg(null)
+  }, [pendingPatches, t])
+
   const deleteFile = useCallback(async (roundId: string, slot: string, isNsv: boolean) => {
     const setKey = `${roundId}/${slot}`
     const cKey = cellKey(roundId, slot, isNsv)
     if (!confirm(t('mapUpload.confirm.delete', { slot, nsvSuffix: isNsv ? ' (NSV)' : '' }))) return
+    const opTournament = selectedTournament
+    const stillCurrent = () => selectedTournamentRef.current === opTournament
     try {
       const res = await fetch('/api/maps/delete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tournamentId: selectedTournament, roundId, slot, nsv: isNsv }),
+        body: JSON.stringify({ tournamentId: opTournament, roundId, slot, nsv: isNsv }),
       })
       if (!res.ok) throw new Error()
+      if (!stillCurrent()) return
       if (isNsv) setUploadedNsvSlots(prev => { const n = new Set(prev); n.delete(setKey); return n })
       else setUploadedSlots(prev => { const n = new Set(prev); n.delete(setKey); return n })
       setStatus(prev => { const n = { ...prev }; delete n[cKey]; return n })
     } catch {
-      alert(t('mapUpload.alert.deleteFailed'))
+      if (stillCurrent()) alert(t('mapUpload.alert.deleteFailed'))
     }
-  }, [selectedTournament])
+  }, [selectedTournament, t])
 
   const totalMaps = tournamentData?.rounds.reduce((s, r) => s + r.maps.length, 0) || 0
   const uploadedCount = uploadedSlots.size
@@ -488,6 +560,15 @@ export function MapUploader({ onDirtyChange }: { onDirtyChange?: (dirty: boolean
             {savingMeta && <span className="text-[11px] text-amber-700 dark:text-amber-300">{t('mapUpload.stage.saving')}</span>}
             {pendingPatches.size > 0 && (
               <button
+                onClick={clearPending}
+                disabled={savingMeta}
+                className="px-3 py-1.5 text-xs border border-gray-300 dark:border-neutral-600 text-gray-600 dark:text-neutral-300 rounded hover:bg-gray-100 dark:hover:bg-neutral-800 disabled:opacity-40"
+              >
+                {t('mapUpload.stage.clear')}
+              </button>
+            )}
+            {pendingPatches.size > 0 && (
+              <button
                 onClick={commitPending}
                 disabled={savingMeta}
                 className="px-3 py-1.5 text-xs bg-amber-600 text-white rounded hover:bg-amber-700 disabled:opacity-40 font-medium"
@@ -523,7 +604,7 @@ function RoundUploadSection({
   onUploadOsz: (roundId: string, slot: string, file: File, isNsv: boolean, meta?: UploadMeta) => Promise<void> | void
   onUploadThree: (roundId: string, slot: string, osu: File, audio: File, bg: File, isNsv: boolean) => void
   onDelete: (roundId: string, slot: string, isNsv: boolean) => void
-  onStagePatches: (patches: PatchMap) => void
+  onStagePatches: (patches: PatchMap, origin?: PatchOrigin) => void
 }) {
   const t = useT()
   const [expanded, setExpanded] = useState(false)
@@ -673,7 +754,7 @@ function PasteBidPanel({
   uploadedSlots: Set<string>
   onClose: () => void
   onUploadOsz: (roundId: string, slot: string, file: File, isNsv: boolean, meta?: UploadMeta) => Promise<void> | void
-  onStagePatches: (patches: PatchMap) => void
+  onStagePatches: (patches: PatchMap, origin?: PatchOrigin) => void
 }) {
   type RowState = 'pending' | 'fetching' | 'downloading' | 'uploading' | 'ok' | 'error' | 'skip'
   interface Row {
@@ -801,11 +882,14 @@ function PasteBidPanel({
       try {
         next[i] = { ...r, state: 'fetching' }
         setRows([...next])
-        const metaRes = await fetch(`/api/osu/beatmap?id=${r.rawMapId}`)
+        const metaRes = await fetchWithNetworkRetry(`/api/osu/beatmap?id=${r.rawMapId}`)
         if (!metaRes.ok) {
           const body = await metaRes.json().catch(() => ({}))
           // 标记 osu API 失败:完成阶段会用它决定是否弹"清空旧 BID"确认。
-          next[i] = { ...next[i], metaFailed: true }
+          // 只有确定的 4xx(不含 429 限流)才算"这个 BID 有问题" —— 限流/5xx 是暂时的,
+          // 让它们触发"清空旧 BID"会拿一次抖动换掉本来正确的 BID。
+          const conclusive = metaRes.status >= 400 && metaRes.status < 500 && metaRes.status !== 429
+          next[i] = { ...next[i], metaFailed: conclusive }
           throw new Error((body as { error?: string }).error || `HTTP ${metaRes.status}`)
         }
         const meta = (await metaRes.json()) as { beatmapId: string; beatmapsetId: string; version: string; artist: string; title: string }
@@ -835,7 +919,10 @@ function PasteBidPanel({
           next[i] = { ...next[i], state: 'ok', msg: wasUploaded ? t('mapUpload.paste.overrideMsg') : undefined }
         }
       } catch (err) {
-        next[i] = { ...next[i], state: 'error', msg: err instanceof Error ? err.message : String(err) }
+        const msg = isNetworkFailure(err)
+          ? t('mapUpload.paste.errNetwork')
+          : err instanceof Error ? err.message : String(err)
+        next[i] = { ...next[i], state: 'error', msg }
       }
       setRows([...next])
       await new Promise((res) => setTimeout(res, 300))
@@ -888,7 +975,7 @@ function PasteBidPanel({
     }
 
     setStaged(true)
-    if (patches.size > 0) onStagePatches(patches)
+    if (patches.size > 0) onStagePatches(patches, 'explicit')
     onClose()
   }
 
@@ -1232,12 +1319,17 @@ async function autoDownloadAndTrim(
   | { file: File; nsvFile?: File; meta: OsuDiffInfo; needsManualSelect: false }
   | { zip: JSZip; diffs: OsuDiffInfo[]; needsManualSelect: true }
 > {
-  const res = await fetch(`/api/osu/download?setId=${setId}`)
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}))
-    throw new Error((body as { error?: string }).error || t('mapUpload.err.downloadFailed', { status: res.status }))
-  }
-  const blob = await res.blob()
+  // 单个 set 几十 MB:fetch 只等到响应头,真正的传输在 res.blob() 里。
+  // 把两步一起重试,否则"流到一半断了"这种最常见的中断救不回来。
+  // HTTP 错误抛的是普通 Error(不是 TypeError),按 withNetworkRetry 的规则不会重试。
+  const blob = await withNetworkRetry(async () => {
+    const res = await fetch(`/api/osu/download?setId=${setId}`)
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}))
+      throw new Error((body as { error?: string }).error || t('mapUpload.err.downloadFailed', { status: res.status }))
+    }
+    return await res.blob()
+  })
   if (blob.size > MAX_SIZE) {
     throw new Error(t('mapUpload.err.setTooBig', { n: MAX_SIZE / 1024 / 1024 }))
   }

@@ -669,6 +669,7 @@ export const messagesZh = {
   'mapUpload.paste.start': '开始执行 →',
   'mapUpload.paste.skipMsg': '未指派 slot，跳过',
   'mapUpload.paste.errMultiDiff': '多难度匹配不上，需手动选',
+  'mapUpload.paste.errNetwork': '网络中断（已自动重试仍失败，直接再点一次通常就好）',
   'mapUpload.paste.overrideMsg': '已覆盖',
   'mapUpload.paste.progress': '进度 {done}/{total}',
   'mapUpload.paste.progressErrs': '· {n} 失败',
@@ -698,7 +699,12 @@ export const messagesZh = {
   'mapUpload.stage.saving': '保存中...',
   'mapUpload.stage.saved': '已保存 {n} 张图的元数据，网站将在几分钟内重建',
   'mapUpload.stage.saveFailed': '保存失败：{msg}',
-  'mapUpload.stage.saveNoMatch': '待保存的图在比赛数据里没找到对应 slot，已清空暂存',
+  'mapUpload.stage.saveNoMatch': '这些暂存的 slot 在比赛数据里没找到，或远端已经有值：本次没有写入，暂存已保留，可手动检查后重试或清空。',
+  'mapUpload.stage.skippedRemote': '其中 {n} 张因为远端已有值被跳过（没有覆盖别人的改动）。',
+  'mapUpload.stage.unmatched': '{n} 张在比赛数据里找不到对应 slot，已保留在暂存池。',
+  'mapUpload.stage.clear': '清空暂存',
+  'mapUpload.stage.clearConfirm': '清空 {n} 条未保存的元数据暂存？此操作不可撤销。',
+  'mapUpload.stage.switchBusy': '正在上传 / 补全 / 保存中，请等当前操作完成后再切换比赛。',
   'mapUpload.stage.switchConfirm': '当前比赛有 {n} 张暂存未保存的元数据，切换比赛会丢失。确定切换？',
 
   // ---------- PackLinksEditor ----------

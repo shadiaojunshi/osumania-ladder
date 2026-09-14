@@ -28,6 +28,11 @@ export interface TrashEntry {
   // map 专用：R2 中原始 key 与 trash key
   originalKey?: string
   restoreKey?: string
+  // map 专用：删除时的对象 etag。恢复时用来判断"目标已存在的那个东西是不是原来那份"
+  // （内容一致 → 说明之前恢复过；不一致 → 是别人放进去的，必须报冲突）。
+  originalEtag?: string
+  // map 专用：删除操作 id（同一对象的同一版本重试会得到同一个 id，见 addTrashIdempotent）
+  opId?: string
 }
 
 // 列表渲染只用得上这几个字段，写到 metadata 里。
@@ -71,6 +76,46 @@ export async function addTrash(
 export async function getTrash(kv: KVNamespace, id: string): Promise<TrashEntry | null> {
   const raw = (await kv.get(`${TRASH_PREFIX}${id}`, 'json')) as TrashEntry | null
   return raw ?? null
+}
+
+// ---------- 幂等写入（R07） ----------
+//
+// 软删除的中间步骤可能失败(副本写好了但记录没写成、或原对象没删掉),
+// 重试时不能又造一条新记录 / 一份新副本:
+//   - 操作 id 由「对象 key + 版本签名」决定,同一对象的同一版本重试得到同一个 id;
+//   - 副本键与回收站记录都用它派生,重试是覆盖而不是新增。
+// marker 键 `trashop:{opId}` 记住"这个操作已经建过哪条记录",前缀与 `trash:` 不重叠,
+// 因此不会混进回收站列表。
+
+const OP_MARKER_PREFIX = 'trashop:'
+
+function opMarkerKey(opId: string): string {
+  return `${OP_MARKER_PREFIX}${opId}`
+}
+
+export async function findTrashIdByOp(kv: KVNamespace, opId: string): Promise<string | null> {
+  const id = await kv.get(opMarkerKey(opId))
+  return typeof id === 'string' && id !== '' ? id : null
+}
+
+/**
+ * 建回收站记录,同一 opId 只建一次。
+ * 已存在(重试)时返回原记录并标记 reused,调用方据此避免重复劳动。
+ */
+export async function addTrashIdempotent(
+  kv: KVNamespace,
+  entry: Omit<TrashEntry, 'id' | 'deletedAt'>,
+  opId: string,
+): Promise<{ entry: TrashEntry; reused: boolean }> {
+  const existingId = await findTrashIdByOp(kv, opId)
+  if (existingId) {
+    const existing = await getTrash(kv, existingId)
+    if (existing) return { entry: existing, reused: true }
+  }
+  const created = await addTrash(kv, { ...entry, opId })
+  // marker 写失败只会让"下一次重试"多建一条记录(数据不丢),所以不阻塞主流程。
+  await kv.put(opMarkerKey(opId), created.id, { expirationTtl: RETENTION_SECONDS })
+  return { entry: created, reused: false }
 }
 
 export async function removeTrash(kv: KVNamespace, id: string): Promise<void> {

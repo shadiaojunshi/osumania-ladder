@@ -1,6 +1,7 @@
 import { extractOsuFromOsz } from '../_lib/osuArchive.ts'
 import { isValidTournamentId } from '../_lib/tournamentId.ts'
 import { hasRole, type SessionUser } from '../_lib/auth.ts'
+import { mapObjectKey, validateRoundId, validateSlot } from '../_lib/mapKeys.ts'
 
 interface Env {
   R2_BUCKET?: R2Bucket
@@ -37,10 +38,14 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env, data }) =
   const fields = ['tournamentId', 'roundId', 'slot'] as const
   const [tournamentId, roundId, slot] = fields.map((name) => url.searchParams.get(name) || '')
   const hasSlot = fields.some((name) => url.searchParams.has(name))
-  const validSegment = (value: string) => value.length > 0 && value.length <= 200 && value !== '.' && value !== '..' && !/[\/\\\x00-\x1f\x7f]/.test(value)
+  // R04:键段校验改用共享实现(_lib/mapKeys)。原先这里的局部规则把 `/` 也当成非法字符,
+  // 而现有数据里就有 `FS/TB`、`GM(HR/SD)` 这类槽位 —— 于是这些槽位读上传谱面会被 400 拒掉,
+  // 客户端又只在 401/403 时才降级到线上版本,等于图直接打不开。
+  const roundCheck = validateRoundId(roundId)
+  const slotCheck = validateSlot(slot)
   if (['id', ...fields].some((name) => url.searchParams.getAll(name).length > 1)
     || (id !== null && (!/^[1-9]\d*$/.test(id) || !Number.isSafeInteger(Number(id))))
-    || (hasSlot && (!isValidTournamentId(tournamentId) || !validSegment(roundId) || !validSegment(slot)))
+    || (hasSlot && (!isValidTournamentId(tournamentId) || !roundCheck.ok || !slotCheck.ok))
     || (!hasSlot && !id)) return textResponse('invalid beatmap location or id', 400)
 
   if (hasSlot) {
@@ -52,11 +57,15 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env, data }) =
     if (!env.R2_BUCKET) return textResponse('R2 storage is not configured', 503)
     // 上传端把 NSV(SV 类)谱面存成 `<slot>.nsv.osz`,普通谱面存成 `<slot>.osz`;
     // 这里两种都找一遍,否则 SV 轮次的图池会永远读不到上传版本。
-    const baseKey = `maps/${tournamentId}/${roundId}/${slot}`
-    let key = `${baseKey}.osz`
+    // 键由 _lib/mapKeys 构造,与上传/删除/状态端完全一致。
+    const candidates = [
+      mapObjectKey(tournamentId, roundId, slot, false),
+      mapObjectKey(tournamentId, roundId, slot, true),
+    ]
+    let key = candidates[0]
     let object: R2Object | null = null
     try {
-      for (const candidate of [`${baseKey}.osz`, `${baseKey}.nsv.osz`]) {
+      for (const candidate of candidates) {
         object = await env.R2_BUCKET.head(candidate)
         if (object) {
           key = candidate

@@ -192,6 +192,27 @@ LN 单曲使用 difficulty 是当前领域约定，不能改成 difficultyLn。�
 
 验收：file=文本、字段=File、错误键段、不存在槽位、重复标识均无写入；真实现有 slot 兼容；普通与 NSV 键不冲突；ReadableStream 上传继续工作。
 
+**完成记录（2026-09-14）**
+
+- 状态：实现完成待验收（改动未提交；未做真实 R2 / Pages 联调）。
+- 修改文件：新增 `functions/api/_lib/mapKeys.ts`（键规则唯一来源：键段校验、键构造/反解、nsv 解析、.osz 尾部检查、权威数据定位）、`scripts/map-keys.test.mjs`；改造 `functions/api/maps/upload.ts`、`maps/delete.ts`、`maps/status.ts`、`maps/meta.ts`。
+- 先扫数据再定规则（本项要求）：全库 51 个文件 / 4526 个槽位实测 —— **14 个 slot 含 `/`**（`FS/TB`、`GM(HR/SD)`、`GM(FL&EZ)`）、0 个 slot 以 `.nsv` 结尾、同比赛内 0 个重复 slot、0 个重复 round id、0 个键碰撞；max tournamentId 46 / roundId 9 / slot 9 字符。据此：**slot 与 roundId 允许 `/`、`&`、`()`、`.`**（收紧会挡住真实槽位，与 R03 的放宽清单一致），只拒绝空串、超长、`.`/`..`、空路径段、反斜杠与控制字符；NSV 后缀歧义规则可安全启用（现有 0 例）。
+- 键规则：所有端点统一走 `mapObjectKey/mapObjectPrefix/parseMapObjectKey`。`maps/{tid}/{rid}/{slot}[.nsv].osz`；**主图的 slot 以 `.nsv` 结尾 → 400 `SLOT_SUFFIX_CONFLICT`**（它的键会和「基础 slot 的 NSV」完全相同）。status/meta 的反解与列表前缀也换成共享实现。
+- 上传端点（`upload.ts`）现在按顺序校验，任一项不过都**不写任何对象**：content-type 是 multipart、formData 可解析 → tournamentId 合法 → roundId/slot 键段合法 → nsv 只认 1/true/0/false（含糊值 400，不猜）→ **file 必须是文件**（鸭子类型判 `size`/`name`/`stream`，不用 `instanceof File`：旧 compat date 下没有 File 全局，instanceof 会抛成 500）→ 非空、≤100MB → NSV 后缀歧义 → **.osz 有限成本检查**（只读尾部 66KB 的 EOCD：找签名、总条目数、中央目录边界，中央目录落在窗口内时逐条累计声明解压体积；不解压任何内容）→ 从 GitHub 读权威比赛 JSON 并确认 round/slot **存在且唯一**（重复时提示先修数据，绝不用数组下标糊过去）。错误码：`INVALID_CONTENT_TYPE/INVALID_FORM/INVALID_TOURNAMENT/INVALID_ROUND_ID/INVALID_SLOT/INVALID_NSV/INVALID_FILE/EMPTY_FILE/FILE_TOO_LARGE/SLOT_SUFFIX_CONFLICT/INVALID_ARCHIVE/TOURNAMENT_NOT_FOUND/UPSTREAM_ERROR/UNKNOWN_SLOT`。
+- 删除端点（`delete.ts`）：改用 `readJsonBody` + 同样的键段/nsv 校验，键由共享构造器生成（坏字段在拼键前被拒，slot 里塞 `../` 之类不可能指向别的对象）。**刻意不要求槽位存在于 JSON**：清理孤儿对象正是删除的用途。删除顺序未动（属 R07）。
+- meta 端点：`rounds=rid:slot` 分隔出的两段也走共享键段校验（坏段 400，不静默跳过）；键构造与列表前缀换成共享实现。
+- 运行的验证：`node --test --experimental-strip-types scripts/map-keys.test.mjs` → 12/12；`npm test` → 187/187；`npx tsc --noEmit` → 0 错；`npx tsc -p functions/tsconfig.json --noEmit` → 0 错；`npm run build` → 成功。用例覆盖：真实槽位（含 `FS/TB`、`GM(HR/SD)`、`GM(FL&EZ)`）通过而 `''`/`'.'`/`'..'`/`'a/../b'`/`'a//b'`/反斜杠/控制字符/超长被拒、nsv 只认明确真假、键构造与反解（含含 `/` 的槽位）、NSV 歧义、`locateMapSlot` 的存在/唯一/重复报错、真 zip 通过而垃圾/截断/条目数 0/中央目录越界/声明解压超限被拒、上传 handler 的 6 类拒绝（含 file=文本、坏键段、坏 nsv、非 zip、歧义槽、未知槽、重复槽、比赛不存在 404、上游 500 → 502）全部零写入、合法请求（主图与 NSV）写出正确键且上传体仍是 ReadableStream、删除 handler 坏键段不触达 R2 且合法请求走 trash 流程、**全库真实数据 4526 槽位全部通过新规则且无键碰撞**。
+- 未完成 / 仍有风险：① 每次上传现在多一次 GitHub Contents 请求（读权威 JSON）；批量上传 50 张就是 50 次调用（认证上限 5000/小时，够用，但没有做 isolate 级缓存 —— 故意不加，避免"刚保存的槽位被缓存挡住"）；② 未在真实 R2 / Cloudflare Pages 上联调，`.osz` 检查只覆盖"明显异常"，不做全量解压校验；③ `maps/meta` 的 `?ref=`/分页等别的细节未动（分页属 R13）；④ 上传/删除/读取三处的鉴权与 CORS 仍是各自实现（属 R21/R22）。
+- 与后续任务的接口变化：以后任何构造或解析 `maps/...` 键的地方都必须用 `_lib/mapKeys.ts`（`mapObjectKey`/`mapObjectPrefix`/`parseMapObjectKey`）；R06/R07 若引入 `versions/` 前缀，请在同一模块里加构造器，不要在端点里拼串。
+
+**复查追加修正（2026-09-14，本项第 1、5 点的收尾）**
+
+- 复查时发现 `functions/api/osu/raw.ts` 还留着一份**局部**键段校验（本项第 1 点原话就是"`osu/raw.ts:40` 提供局部 validSegment，但尚不是共享导出"，只改了别的端点会漏掉它）：它的规则把 `/` 也算非法字符，而现有数据里 14 个真实槽位含 `/`（`FS/TB`、`GM(HR/SD)`、`GM(FL&EZ)`）。后果是**这些槽位读上传谱面会被 400 拒掉**，而客户端（`src/lib/osuTextClient.ts`）只在 401/403 时才降级到线上版本 —— 等于图直接打不开（有 BID 也不会回退）。已改为使用共享的 `validateRoundId`/`validateSlot` 与 `mapObjectKey` 构造候选键（`.osz` 与 `.nsv.osz` 两种）。
+- 连带修一处加载问题：`_lib/mapKeys.ts` 原来用省略扩展名的 `'./validation'`，而 `validation.ts` 又省略了 `'./tournamentId'` —— 这条链让**别的**静态 import 测试（`scripts/rawBeatmap.test.mjs`）直接 `ERR_MODULE_NOT_FOUND`。两处改成显式 `*.ts`（与 `raw.ts` 的写法一致，`functions/tsconfig.json` 已开 `allowImportingTsExtensions`），现在这条链不需要任何 loader 就能加载。
+- 新增 `scripts/osu-raw-segments.test.mjs`：含 `/` 的真实槽位不论主图/NSV 都能读到上传版本（200 + `X-Beatmap-Source: r2`）、真正非法的键段仍然 400、匿名请求 403、对象确实不存在时 404（不偷偷换成线上版本）。
+- 复查后验证：`npm test` → 198/198（含对方 `rawBeatmap.test.mjs` 12/12 未受影响）；`npx tsc --noEmit` 0 错；`npx tsc -p functions/tsconfig.json --noEmit` 0 错。
+- 仍未做：脚本侧（`scripts/generate-pack.js`、`backfill-bid.js`、`test-merge-fix.js`）也用字符串拼 `maps/...` 键，但它们与端点用的是同一条拼接规则、行为一致，属 R22 的清账范围，本次不动。
+
 ### R05 [P1] 上传页面异步请求会把 A 的状态写进 B；保存可能清掉新增补丁
 
 证据：src/components/admin/MapUploader.tsx:74、:91、:109、:210、:326、:369、:408。
@@ -208,6 +229,17 @@ LN 单曲使用 difficulty 是当前领域约定，不能改成 difficultyLn。�
 
 验收：延迟 A、先完成 B 后再完成 A，界面始终显示 B；A 的上传完成不污染 B；保存中追加或改写补丁仍保留；status 请求失败不能显示上一比赛的勾选。
 
+**完成记录（2026-09-14）**
+
+- 状态：实现完成待验收（改动未提交；异步时序这一条的自动测试只覆盖纯逻辑，UI 部分未做浏览器联调）。
+- 修改文件：新增 `src/lib/mapPatchCommit.ts`（补丁池纯逻辑）、`scripts/map-patch-commit.test.mjs`；改造 `src/components/admin/MapUploader.tsx`；`src/lib/messages.zh.ts` / `messages.en.ts` 补文案。
+- 异步隔离：① `loadTournament` 每次切换递增请求令牌并重置 `uploadedSlots/uploadedNsvSlots/status/errorMsg/uploading/backfillSummary/backfillProgress`，只有令牌仍是最新那次切换才允许写 UI（`isCurrentRequest`）；期间又切换则整体丢弃。② `selectedTournamentRef` 让异步回调读到"现在在不在看同一场"：`uploadFile`（含 formData 的 tournamentId 改为操作开始时的 id）、`runBackfill`（URL 用绑定的 id）、`commitPending`、`deleteFile` 全部改为"完成后校验所属比赛"，不匹配就不写状态、不入补丁池——A 的上传完成不再污染 B。③ 上传/补全/保存进行中拒绝切换比赛（提示 `mapUpload.stage.switchBusy`），把"写操作飞在半路"的窗口直接关掉。④ `status` 请求失败时清空勾选集合，不再沿用上一场比赛的勾选。⑤ `backfillRunning` 这类全局 UI 标志无论上下文都复位，避免按钮永久停在"补全中"。
+- 补丁池快照：新增 `StagedPatchMap`（条目 = `{ patch, origin }`）。`commitPending` 先取快照，再用 `applyStagedPatches` 写入，最后 `entriesToClear(快照, 当前池, 真正写入的 key)` —— 只移除"本次提交过 + 期间没被改写（对象同一）+ 真的写进去了"的条目；提交期间新加/改写的补丁保留。`applied=0` 不再擅自清池（保留并提示），并新增「清空暂存」按钮作为出口。
+- 与 R01/R02 协议的结合（本项第 4 点）：`origin` 区分 `fill` / `explicit`。自动补全、上传回填产生的补丁是 `fill`，提交时**跳过远端已有值的字段**（不覆盖别人刚填的值）并回报数量；贴 BID 补传面板产生的补丁是 `explicit`（用户明确指定，含"清空旧 BID"的 null 删除），照写。`mergeStagedPatch` 保证 explicit 不会被后来的 fill 降级。
+- 运行的验证：`node --test --experimental-strip-types scripts/map-patch-commit.test.mjs` → 8/8；`npm test` → 176/176；`npx tsc --noEmit` → 0 错；`npm run build` → 成功。纯逻辑用例覆盖：字段级合并与 explicit 不被降级、本地回显（含 null 删除）、fill 只补缺不覆盖远端、explicit 覆盖与 null 删除、key 不在权威数据时记 unmatched、提交期间改写/新加的补丁不被清、只清"提交过且未被改写且真写入"的条目、请求令牌判定。
+- 未完成 / 仍有风险：① "延迟 A、先完成 B 后再完成 A 界面始终显示 B"这类**时序行为没有自动化测试**（需要浏览器可控延迟，本轮只做了实现 + 纯逻辑单测 + 类型检查）；② 未做浏览器端到端验收；③ `UPLOADING` 期间禁止切换比赛属于"用限制换安全"，若用户确实需要中途切换需另做按比赛隔离的状态模型；④ 保存时未把 R01 的 `baseSha` 一起带上（仍用 GET 到的当前 sha 做乐观锁），并发窗口比 R01 的 batch 略宽——因为这里每次保存前都会重新 GET，覆盖别人的概率低但仍存在；⑤ `maps/delete` 结束时的状态清理只写在"仍是当前比赛"分支里，切走后不做任何恢复（该比赛的勾选已在切换时重置，符合预期）。
+- 与后续任务的接口变化：`src/lib/mapPatchCommit.ts` 的 `applyStagedPatches/entriesToClear/mergeStagedPatch` 可被 R04 的键段校验或其它批量补丁场景复用；`MapUploader` 的 `onStagePatches(patches, origin?)` 多了一个可选参数，新增调用方请按语义选择 `fill`/`explicit`。
+
 ### R06 [P1] 上传/恢复会无条件覆盖现有 R2；恢复比赛也会覆盖新版本
 
 证据：functions/api/maps/upload.ts:44；functions/api/trash/index.ts:72、:103。恢复比赛会自动取得当前 SHA 以覆盖同名 JSON；恢复 map 会覆盖 originalKey，随后删掉 trash 副本。
@@ -222,6 +254,20 @@ LN 单曲使用 difficulty 是当前领域约定，不能改成 difficultyLn。�
 
 验收：A→B→恢复 A 可追溯；目标已有 B 时默认恢复不覆盖；并发重传只有一个成功；归档失败不覆盖；普通与 NSV 隔离；恢复后中途失败重试不丢数据。
 
+**完成记录（2026-09-14）**
+
+- 状态：实现完成待验收（改动未提交；未做真实 R2 / GitHub 联调）。解决方案第 1、3、4 点已实现，第 2 点（"替换当前版本"入口）**未实现**（默认不再覆盖，所以暂时不需要它），第 5 点见下。
+- 修改文件：`functions/api/_lib/mapKeys.ts`（`versions/` 键、条件写助手）、`functions/api/maps/upload.ts`（覆盖前归档 + 条件写）、`functions/api/trash/index.ts`（恢复默认不覆盖 + 清理顺序）、`functions/api/_lib/trash.ts`（记录新字段 `originalEtag`）、`functions/api/maps/delete.ts`（写入 `originalEtag`）；新增 `scripts/r2-version-safety.test.mjs`。
+- 用到的存储原语（查证过 Cloudflare Workers API 文档）：`put(key, body, { onlyIf })` 在条件不满足时**返回 `null` 且不存对象**；`R2Conditional` 支持 `etagMatches` / `etagDoesNotMatch` / `uploadedBefore` / `uploadedAfter`，也可以直接传 `Headers`（除 `If-Range` 外的条件头都支持）。因此"不覆盖/只有一个成功"是**存储层保证**的，不是 HEAD 与 write 之间的运气：新建用 `Headers{ If-None-Match: '*' }`，覆盖用 `{ etagMatches: 读到的 etag }`。
+- 上传（第 3 点）：写入前 `head` 目标；存在旧对象就先把旧对象连同 metadata 归档到 `versions/{key}.{opId}`（opId 复用 R07 的「key + 版本签名」派生，重传同一版本不会造出重复归档），**归档失败直接 502 `ARCHIVE_FAILED` 并且绝不覆盖目标**；随后用条件写落新对象，条件失败返回 409 `UPLOAD_CONFLICT`（提示旧版本已归档、刷新后重试）。响应新增 `archivedKey`。审计 detail 里标注是否归档了旧版本。
+- 恢复（第 1 点）：**默认只允许"目标不存在"**。
+  - 谱面：`head(originalKey)` 已存在 → 409 `RESTORE_CONFLICT`，回收站条目与副本都保留；随后用 `If-None-Match: '*'` 条件写，竞态下同样 409。判定"已经恢复过"时**用 etag 比对内容**（回收站记录新增 `originalEtag`）：占位者与副本内容一致 → 说明上次恢复成功、只是记录没清干净 → 清掉记录并返回 `alreadyRestored`；内容不同（别人重传过）→ 409 明确报冲突，不谎报成功。老记录没有 `originalEtag` 时保守按"已恢复"处理（否则用户会卡在一个回收站 UI 无法解决的 409 上）。
+  - 比赛：不再自动取当前 sha 覆盖同名 JSON，改为**不带 sha 创建**；GitHub 对已存在文件返回 422（或 409）→ 翻成 409 `RESTORE_CONFLICT` 并保留回收站条目。
+- 清理顺序（第 4 点）：恢复成功后**先清 KV 记录、再删 trash 副本**（反过来会出现"记录唯一指向已删除 restoreKey"的状态）；副本删不掉只留个孤儿，交给保留期清理兜底。删谱面的顺序在 R07 已改为"副本 → 记录 → 删原件"。
+- 运行的验证：`node --test --experimental-strip-types scripts/r2-version-safety.test.mjs` → 14/14；`npm test` → 212/212；`npx tsc --noEmit` 与 `npx tsc -p functions/tsconfig.json --noEmit` → 0 错（本项只改 Functions，未跑 build）。用例覆盖：首次上传用"不存在才写"、重传**先归档再 CAS 覆盖**（断言操作顺序与归档内容）、归档失败不覆盖、并发重传两边都拿到 409 且目标不变、恢复时目标已存在 → 409 且零写入、目标存在但副本已清理且内容一致 → `alreadyRestored`、目标被换过内容 → 409 不谎报、目标为空 → 条件写 + 先清记录再删副本、恢复竞态 → 409 保留副本与记录、副本真丢 → 404、比赛恢复不带 sha 且 422 → 409（冲突时保留条目、成功时清记录）、普通与 NSV 的归档键互不串。
+- 未完成 / 仍有风险：① **"替换当前版本"入口未实现**（第 2 点）—— 默认行为已经不覆盖，若之后要提供"用回收站版本替换现有版本"，必须先展示差异/版本信息并让用户确认，且先归档当前对象；② 未在真实 R2 / GitHub 上联调（条件写的真实返回、422 与 409 的具体表现都以文档与模拟为准）；③ 每次重传都会多一次 `head` + 一次流式归档写（大包会多跑一遍流量），版本保留策略仍未定（第 5 点：每日清理只清 `trash/`，**不会**自动删 `versions/`；R08 的备份脚本已经把 `versions/` 纳入镜像，见 R08 记录）；④ 回收站 UI 仍只有"恢复"一个动作，冲突时只能看到错误文案，不能查看差异或强制替换。
+- 与后续任务的接口变化：`versions/` 是本项新引入的前缀，之后任何需要"历史版本"的地方请用 `mapKeys.versionObjectKey/versionObjectPrefix` 一类的构造器（别在端点里拼串）；`functions/api/_lib/trash.ts` 的 `TrashEntry` 现在带 `originalEtag`（老记录可以缺省）。
+
 ### R07 [P1] 谱面软删除先删原对象再记回收站，失败时无法从 UI 恢复
 
 证据：functions/api/maps/delete.ts:41、:45、:47。R2 copy→delete→KV addTrash 的顺序成立。
@@ -234,6 +280,17 @@ LN 单曲使用 difficulty 是当前领域约定，不能改成 difficultyLn。�
 4. 比赛删除有 Git 历史兜底，但回收站失败也应在 UI 响应中可见；此项先修 R2 路径，避免扩大范围。
 
 验收：分别模拟 copy、KV put、delete 失败；至少保留原件或可通过 UI 找到的副本；重试幂等；并发删除/重传不误删新对象（若并发协调另拆，必须标明尚未验收）。
+
+**完成记录（2026-09-14）**
+
+- 状态：实现完成待验收（改动未提交；**并发删除/重传这一条尚未验收**，见下）。
+- 修改文件：`functions/api/maps/delete.ts`（重排顺序 + 结构化失败）、`functions/api/_lib/trash.ts`（新增幂等写入）、`functions/api/_lib/mapKeys.ts`（新增 opId 派生）；新增 `scripts/map-delete-order.test.mjs`。
+- 新的顺序：**① 读原对象 → ② 写可恢复副本到 `trash/{key}.{opId}` → ③ 写回收站 KV 记录 → ④ 才删原对象**。每一步失败的状态都可恢复：副本写失败（`TRASH_COPY_FAILED`，502）原对象完好、不写记录、不删任何东西；KV 写失败（`TRASH_RECORD_FAILED`，502）原对象完好，并尽力把刚写下的、没有记录指向的副本清掉；原对象删失败（`DELETE_FAILED`，502，`trashed:true` + `trashId`）副本与记录都在，UI 上找得到、可恢复。成功响应新增 `trashId`，便于提示与跳转。任何一步失败都写审计（含具体原因）。
+- 重试幂等：新增 `deleteOperationId(key, versionSignature)` —— 由「对象 key + etag/version」派生，**同一对象的同一版本重试得到同一个 id**；副本键 `trashObjectKey(key, opId)` 与回收站记录都由它派生。`addTrashIdempotent(kv, entry, opId)` 先用 marker 键 `trashop:{opId}` 查已有记录：查到就复用（`reused:true`），不再新建条目。marker 前缀与 `trash:` 不重叠，不会混进回收站列表；marker 写失败只会让下一次重试多建一条记录（数据不丢），不阻塞主流程。`TrashEntry` 增加可选 `opId` 字段（展示层不受影响）。
+- 兼容性确认：副本键命名由 `trash/{key}.{时间戳}` 改为 `trash/{key}.{opId}` —— 每日清理（`scripts/backup-r2.js`）按 `trash/` 前缀 + 对象年龄删除，与命名无关；恢复路径（`functions/api/trash/index.ts`）只用记录里的 `originalKey`/`restoreKey`，老条目照旧可用。比赛删除走 `addTrash`（未改动，属本项范围外）。
+- 运行的验证：`node --test --experimental-strip-types scripts/map-delete-order.test.mjs` → 7/7；`npm test` → 195/195；`npx tsc --noEmit` → 0 错；`npx tsc -p functions/tsconfig.json --noEmit` → 0 错（本项只改 Functions 与 scripts，未改前端，故未跑 build）。用例覆盖：成功路径的**操作顺序断言**（副本早于 KV 记录、删原对象是最后一步）、副本写失败（零删除、不写记录、原对象在）、KV 写失败（原对象在、孤儿副本被清、绝不删原对象）、原对象删失败（副本 + 记录都在、响应标 `trashed:true` 带 `trashId`）、**删除失败后重试不产生重复副本/重复条目且复用同一 `trashId`**、原对象不存在时零写入、opId 的稳定性（同版本相同、换版本不同、不同对象不同）。
+- 未完成 / 仍有风险：① **「并发删除与新重传不误删新对象」没有验收** —— 读原对象与删原对象之间仍有窗口，期间的重传可能被这次删除连带删掉。要根治得让上传/删除/恢复走同一套按对象串行的协调层（或用带条件的存储原语），本项按报告建议**不扩大范围**，仅在此标明；② 没有做真实 R2 联调；③ 删除成功后再次调用会返回 `trashed:false`（原对象已不在），语义上没错但 UI 无法区分"本来就没有"与"刚删过"，未改；④ 比赛删除路径的回收站失败仍只在审计里可见，响应里不体现（报告允许先只修 R2 路径）。
+- 与后续任务的接口变化：`_lib/trash.ts` 新增 `addTrashIdempotent` / `findTrashIdByOp`，R06（恢复防覆盖、versions/ 版本库）可直接复用同一 opId 思路；`_lib/mapKeys.ts` 新增 `deleteOperationId` / `trashObjectKey` / `objectVersionSignature`。
 
 ### R08 [P1] 备份部分失败仍成功退出，继续执行过期清理
 
@@ -345,6 +402,40 @@ LN 单曲使用 difficulty 是当前领域约定，不能改成 difficultyLn。�
 5. 问卷入口、GM 模板、难度精度、token 到期等旧待办重新对照源码和后台实际配置。2026-11 到期仅是旧文档记录，不是本次读取了 token 元数据。
 
 验收：清单、对象、包内内容三者对应同一可追溯版本；原图修复已验证；用户确认过需要发布的变更；失败可以继续使用上一版。
+
+## 5.1 实施期间新增发现（本站长 2026-09-14 反馈）
+
+### R24 [P2] 一键下载上传：网络层中断没有任何重试，且限流会被当成"BID 有问题"
+
+证据：`src/components/admin/MapUploader.tsx`；站长截图显示 `vietnamese-rewind-mania-championship` 一轮里 8 张图同时报 `Failed to fetch`，重跑一次全部成功。
+
+触发与定性：行内报错是浏览器原生的 `TypeError: Failed to fetch` —— 也就是 fetch 在**网络层**抛错（连接被重置 / 流被中途掐断 / DNS 失败），不是 HTTP 状态码。这条链路上每次搬运的是整个 beatmapset（几 MB~几十 MB），`/api/osu/download` 又是把上游流直接透传（上游中途断流时，服务端已经在发响应头，**无法**在服务端重试）；而客户端这条路径当时**完全没有重试**（对比：上传路径本来就有 3 次退避重试）。所以表现就是"一批行同一句报错，重跑又全好"。
+
+另一个连带问题：元数据查询失败时无条件写 `metaFailed: true`，而它会让完成阶段弹出"osu API 失败的行 → 是否清空旧 BID"。osu API 的 429（限流）与 5xx 也会落到这个分支 —— 一次限流抖动就可能诱导用户把本来正确的 BID 清掉。
+
+解决方法：
+
+1. 新增 `src/lib/fetchRetry.ts`：只对**网络层抛错**（`TypeError`）做退避重试，HTTP 状态码原样交回调用方（不猜、不掩盖）。下载 `.osz` 与元数据查询两处接入。
+2. 行内错误文案区分"网络中断"与真实错误，不再直接抛浏览器原文。
+3. `metaFailed` 只在**确定的 4xx（不含 429）**时置位；429/5xx 不触发"清空旧 BID"的确认。
+
+验收：网络抖动导致的失败会在行内自动重试并成功；仍失败时提示是网络问题而不是原始英文；限流/5xx 不会导致清除 BID 的提示。
+
+**完成记录（2026-09-14）**
+
+- 状态：实现完成待验收（改动未提交；未做浏览器端到端验收）。
+- 修改文件：新增 `src/lib/fetchRetry.ts`、`scripts/fetch-retry.test.mjs`；改 `src/components/admin/MapUploader.tsx`（两处 fetch 接入重试、`metaFailed` 条件收紧、网络错误文案）、`src/lib/messages.zh.ts` / `messages.en.ts`（新增 `mapUpload.paste.errNetwork`）。
+- 运行的验证：`node --test --experimental-strip-types scripts/fetch-retry.test.mjs` → 6/6；`npm test` → 218/218；`npx tsc --noEmit` → 0 错；`npm run build` → 成功。用例覆盖：网络抛错后成功（退避 600/1200ms）、连续网络失败按次数抛出、HTTP 500/404 **不**重试、非网络异常不重试、`attempts=1` 退化为单次、分类辅助函数。
+- 未完成 / 仍有风险：① 服务端透传上游流时的**中途断流无法重试**（响应头已发出）；② 仍没有"整批失败后自动补跑一遍"的机制 —— 站长手动重跑是有效的兜底，本轮只做到"单行内自动重试"，是否要加自动补跑待定；③ 未做浏览器端实机验收（本地无法复现真实的连接中断）。
+- 与后续任务的接口变化：任何"下载大文件 / 跨网请求"的前端调用可以直接复用 `fetchWithNetworkRetry`；`isTransientStatus` 可用于把 429/5xx 与确定性 4xx 分开处理。
+
+**复查追加修正（2026-09-14，把重试范围从"拿到响应头"扩到"读完响应体"）**
+
+- 复查时发现 `fetchWithNetworkRetry` 只包住了 `fetch` 本身，而 `fetch` 在**收到响应头**时就 resolve 了 —— 几十 MB 的 `.osz` 是之后在 `autoDownloadAndTrim` 的 `await res.blob()` 里才传完的。传输中途断流抛的是同一个 `TypeError`，却发生在重试范围之外：**只重试 fetch 等于漏掉大文件最常断的那一步**，站长遇到的"一批行同时报 Failed to fetch"很可能正是它（上面第 ① 条说的"服务端无法重试"只解释了服务端那一侧，客户端这一侧当时同样没兜住）。
+- 修法：`src/lib/fetchRetry.ts` 抽出通用的 `withNetworkRetry(operation, options)`（同一套退避、"只重试 TypeError"规则不变），`fetchWithNetworkRetry` 改为它的薄封装（既有调用方行为不变）；`autoDownloadAndTrim` 改为用 `withNetworkRetry` 把「发请求 + 读 blob」当成一个整体重试。HTTP 错误抛的是普通 `Error`，按规则照旧不重试，不会被反复重发。
+- `scripts/fetch-retry.test.mjs` 增加两条：读体阶段断流会**重新发请求**（模拟 fetch 成功但 `res.blob()` 抛，断言请求数 2、退避 600ms、最终拿到内容）、读体阶段的 404 不重试（断言只请求 1 次）。
+- 复查后验证：`node --test --experimental-strip-types scripts/fetch-retry.test.mjs` → 8/8；`npm test` → 220/220；`npx tsc --noEmit` 0 错；`npx tsc -p functions/tsconfig.json --noEmit` 0 错；`npm run build` 成功。
+- 仍受第 ① 条限制：**服务端**把上游流直接透传，它那一侧在响应头发出后仍无法重试；现在客户端会把整个请求重发一次，上游若持续失败仍会失败，这一层已经尽力。
 
 ## 6. 可靠性与局部修复任务
 
@@ -481,17 +572,17 @@ LN 单曲使用 difficulty 是当前领域约定，不能改成 difficultyLn。�
 
 以下任务除标注 ✅ 外均为“待实施”，本次只写方案。P1 指有明确触发条件的数据丢失/覆盖或发布损坏风险，不表示已确认线上遭遇事故。
 
-进度速览（2026-09-13）：✅ R01（实现完成待验收，未提交，UI 自动重放未做）、✅ R02（实现完成待验收，未提交，浏览器端未联调）、✅ R03（实现完成待验收，未提交，未线上联调）、✅ R08、✅ R09、✅ R18（均实现完成待验收，未提交）；其余待实施。
+进度速览（2026-09-14）：✅ R01（实现完成待验收，UI 自动重放未做）、✅ R02（实现完成待验收，浏览器端未联调）、✅ R03（已提交 `3634998`，未线上联调）、✅ R04（实现完成待验收，未提交，未线上联调）、✅ R05（实现完成待验收，未提交，时序行为无自动化测试）、✅ R06（实现完成待验收，未提交，**「替换当前版本」入口未做**、未线上联调）、✅ R07（实现完成待验收，未提交，并发删/重传未验收）、✅ R08、✅ R09、✅ R18、✅ R24（实施期间新增：下载路径网络重试，未提交）；其余待实施。
 
 | 编号 | 工作单元 | 主要依赖 |
 | --- | --- | --- |
 | ✅ R01 | 保存基准与旧草稿冲突保护 | 无 |
 | ✅ R02 | 连续保存/新建转编辑 | 与 R01 响应协议对齐 |
 | ✅ R03 | 运行时 schema 与 ID | 无 |
-| R04 | R2 字段、键与文件验证 | 复用 R03 |
-| R05 | 上传页异步隔离与补丁快照 | 与 R01/R04 协调 |
-| R06 | 上传版本与恢复防覆盖 | R04，配合 R08 |
-| R07 | 删除恢复记录与失败顺序 | R04，与 R06 同文件串行 |
+| ✅ R04 | R2 字段、键与文件验证 | 复用 R03 |
+| ✅ R05 | 上传页异步隔离与补丁快照 | 与 R01/R04 协调 |
+| ✅ R06 | 上传版本与恢复防覆盖 | R04，配合 R08 |
+| ✅ R07 | 删除恢复记录与失败顺序 | R04，与 R06 同文件串行 |
 | ✅ R08 | 备份失败策略 | 无；versions 支持接 R06 |
 | ✅ R09 | Drive 失败误删 | 无，建议首先修 |
 | R10 | 合包发布完整性 | R09，发布消费方一起改 |
@@ -508,6 +599,7 @@ LN 单曲使用 difficulty 是当前领域约定，不能改成 difficultyLn。�
 | R21 | 安全头/Origin | 先核实部署 |
 | R22 | 构建与死代码清账 | 最后做 |
 | R23 | 包内容/部署核实及发布验收 | 只读核实可先做，发布等合包修复 |
+| ✅ R24 | 下载路径网络重试（实施期间新增） | 无 |
 
 完成记录模板（由执行对应任务的 AI 填写在该任务末尾）：
 

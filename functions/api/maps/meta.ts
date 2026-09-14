@@ -2,6 +2,7 @@ import { extractOsuFromOsz, parseOsuMetadata } from '../_lib/osuArchive.ts'
 import { jsonResponse, noContent } from '../_lib/cors'
 import { hasRole, type AuthEnv, type SessionUser } from '../_lib/auth'
 import { isValidTournamentId } from '../_lib/tournamentId'
+import { mapObjectKey, mapObjectPrefix, validateRoundId, validateSlot } from '../_lib/mapKeys'
 
 interface Env extends AuthEnv {
   GITHUB_TOKEN: string
@@ -37,6 +38,11 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env, data }) =
     if (ci <= 0 || ci === group.length - 1) continue
     const roundId = group.slice(0, ci)
     const slot = group.slice(ci + 1)
+    // R04:分隔出来的两段也走共享键段校验 —— 坏段直接 400,不静默跳过。
+    const roundCheck = validateRoundId(roundId)
+    if (!roundCheck.ok) return jsonResponse({ error: roundCheck.error, code: 'INVALID_ROUND_ID' }, 400)
+    const slotCheck = validateSlot(slot)
+    if (!slotCheck.ok) return jsonResponse({ error: slotCheck.error, code: 'INVALID_SLOT' }, 400)
     const ck = `${roundId}:${slot}`
     if (seen.has(ck)) continue
     seen.add(ck)
@@ -45,12 +51,13 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env, data }) =
   if (wanted.length === 0) return jsonResponse({ error: 'no rounds specified' }, 400)
   if (wanted.length > 500) return jsonResponse({ error: 'too many slots (max 500)' }, 400)
 
-  const suffix = `${tournamentId}/`
+  // R04:键统一由 _lib/mapKeys 构造,和上传/删除/状态端同一套规则。
+  const listPrefix = mapObjectPrefix(tournamentId)
   // 第一轮分页 list 拿到已有 key 集合，避免为每个 slot 打一次 R2。
   const existing = new Map<string, number>() // key -> size
   let cursor: string | undefined
   do {
-    const page = await env.R2_BUCKET.list({ prefix: `maps/${suffix}`, cursor, limit: 1000 })
+    const page = await env.R2_BUCKET.list({ prefix: listPrefix, cursor, limit: 1000 })
     for (const o of page.objects) existing.set(o.key, o.size)
     cursor = page.truncated ? page.cursor : undefined
   } while (cursor)
@@ -63,7 +70,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env, data }) =
       const i = idx++
       const { roundId, slot } = wanted[i]
       const ck = `${roundId}:${slot}`
-      const key = `maps/${tournamentId}/${roundId}/${slot}.osz`
+      const key = mapObjectKey(tournamentId, roundId, slot, false)
       if (!existing.has(key)) {
         results[ck] = { status: 'no-file' }
         continue

@@ -20,7 +20,8 @@
 //
 // 校验失败一律返回结构化 400,不抛异常、不写任何外部存储。
 
-import { isValidTournamentId } from './tournamentId'
+// 显式带扩展名:raw.ts 等入口也用这种写法,顺便让 node --test 能直接加载这条链。
+import { isValidTournamentId } from './tournamentId.ts'
 
 export interface ValidationFailure {
   ok: false

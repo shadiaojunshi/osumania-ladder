@@ -1,3 +1,6 @@
+import { isValidTournamentId } from '../_lib/tournamentId'
+import { mapObjectPrefix, parseMapObjectKey } from '../_lib/mapKeys'
+
 interface Env {
   GITHUB_TOKEN: string
   GITHUB_REPO: string
@@ -30,19 +33,21 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   if (!tournamentId) {
     return jsonResponse({ error: 'Missing tournamentId parameter' }, 400)
   }
+  // R04:键规则对齐 —— id 与键解析都走共享实现,不再各拼一份字符串。
+  if (!isValidTournamentId(tournamentId)) {
+    return jsonResponse({ error: 'invalid tournamentId' }, 400)
+  }
 
-  const prefix = `maps/${tournamentId}/`
+  const prefix = mapObjectPrefix(tournamentId)
   const listed = await env.R2_BUCKET.list({ prefix })
 
   const uploaded: string[] = []
   const uploadedNsv: string[] = []
   for (const obj of listed.objects) {
-    const relative = obj.key.replace(prefix, '')
-    if (relative.endsWith('.nsv.osz')) {
-      uploadedNsv.push(relative.replace('.nsv.osz', ''))
-    } else if (relative.endsWith('.osz')) {
-      uploaded.push(relative.replace('.osz', ''))
-    }
+    const parsed = parseMapObjectKey(tournamentId, obj.key)
+    if (!parsed) continue
+    if (parsed.nsv) uploadedNsv.push(parsed.relative)
+    else uploaded.push(parsed.relative)
   }
 
   return jsonResponse({ uploaded, uploadedNsv })

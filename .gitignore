@@ -6,3 +6,11 @@ src/generated
 .wrangler
 output
 data/packs-manifest.previous.json
+
+# 工作区自带的第三方工具与外部工具的笔记目录:留在磁盘上,只是不纳入版本管理。
+# 依据 docs/design/2026-09-homepage-implementation.md:30 —— 不修改、不提交、不删除。
+# 加进来是为了别让它们每次刷屏 git status,也免得手滑 git add -A 把 osu-toolbox 里
+# 80M 的 launcher.exe 塞进仓库。想收编其中任何一个,删掉对应那一行即可。
+.workbuddy/
+osu-toolbox/
+ManiaMapAnalyser.by.Leo_Black/

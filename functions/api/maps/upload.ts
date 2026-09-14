@@ -11,12 +11,10 @@ import { isValidTournamentId } from '../_lib/tournamentId'
 import {
   ARCHIVE_LIMITS,
   MAX_UPLOAD_BYTES,
-  deleteOperationId,
   hasNsvSuffixAmbiguity,
   inspectOszTail,
   locateMapSlot,
   mapObjectKey,
-  objectVersionSignature,
   onlyIfAbsent,
   onlyIfEtagMatches,
   validateNsvFlag,
@@ -152,10 +150,11 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, data }) 
 
   // R06:覆盖旧对象之前先把它(连同 metadata)归档到 versions/。
   // 归档失败就**不覆盖** —— 宁可这次上传失败,也不能把旧版本弄丢。
+  // 每个槽位只留最近一版(归档键固定),所以重传是覆盖同一份,versions/ 不会越堆越多。
   const existing = await env.R2_BUCKET.head(key)
   let archivedKey: string | null = null
   if (existing) {
-    archivedKey = versionObjectKey(key, deleteOperationId(key, objectVersionSignature(existing)))
+    archivedKey = versionObjectKey(key)
     try {
       const previous = await env.R2_BUCKET.get(key)
       if (!previous) throw new Error('旧对象读取失败')

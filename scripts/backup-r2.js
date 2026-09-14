@@ -1,7 +1,7 @@
 // 每日 R2 备份 + 回收站清理脚本（由 GitHub Actions 定时调用）。
 //
 // 做两件事：
-//   1. 增量备份：把主 bucket 的对象同步到备份 bucket（maps/ + versions/）。
+//   1. 增量备份：把主 bucket 的对象同步到备份 bucket（maps/）。
 //      用 size + ETag 比对，只复制新增/变化的对象，省流量。
 //   2. 回收站清理：删除主 bucket 中 trash/ 前缀下、超过保留期的对象。
 //      （KV 里的回收站元数据靠 TTL 自动过期，但 R2 文件体需要这里主动删。）
@@ -10,8 +10,9 @@
 //   - 任何前缀「列举失败」或「复制失败」都算本次备份不完整 → 跳过全部 trash 清理并以非零退出。
 //     列举失败不会被当成"空 bucket"，权限/网络错误会明确报错。
 //   - 清理阶段自身的删除失败也计入非零退出。
-//   - 备份 bucket 用的是同键覆盖（镜像），不是版本历史；trash/ 不做独立镜像备份，
-//     因此本次删除的过期 trash 对象没有第二份副本。R06 的 versions/ 会随本脚本一起备份。
+//   - 备份 bucket 用的是同键覆盖（镜像），不是版本历史；trash/ 与 versions/ 都不镜像，
+//     因此本次删除的过期 trash 对象没有第二份副本。versions/（被覆盖的旧谱面）同样不镜像
+//     （2026-09-14 用户定：灾难恢复要的是当前数据，镜像历史版本只是白花一倍存储）。
 //
 // 复用已有的 R2 凭证 secret（与 generate-pack.js 相同）：
 //   R2_ACCOUNT_ID / R2_ACCESS_KEY / R2_SECRET_KEY / R2_BUCKET
@@ -34,8 +35,10 @@ const R2_BACKUP_BUCKET = process.env.R2_BACKUP_BUCKET || 'osumania-ladder-maps-b
 // 回收站保留天数，需与 functions/api/_lib/trash.ts 的 RETENTION 一致。
 const TRASH_RETENTION_DAYS = 30
 
-// 需要镜像的前缀。versions/ 由 R06 引入，不存在时列举结果为空，属正常情况。
-const BACKUP_PREFIXES = ['maps/', 'versions/']
+// 需要镜像的前缀。versions/（被覆盖的旧谱面）**不在这里**：每个槽位只留最近一版本身
+// 就已经有界，而灾难恢复要的是当前数据、不是历史版本，镜像它只是白花一倍存储。
+// 备份 bucket 里若残留着早先镜像过去的 versions/ 对象，没有任何流程会去删 —— 无害的残留。
+const BACKUP_PREFIXES = ['maps/']
 const TRASH_PREFIX = 'trash/'
 
 let s3 = null

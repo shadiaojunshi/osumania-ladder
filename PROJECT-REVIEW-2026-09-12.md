@@ -259,14 +259,15 @@ LN 单曲使用 difficulty 是当前领域约定，不能改成 difficultyLn。�
 - 状态：实现完成待验收（改动未提交；未做真实 R2 / GitHub 联调）。解决方案第 1、3、4 点已实现，第 2 点（"替换当前版本"入口）**未实现**（默认不再覆盖，所以暂时不需要它），第 5 点见下。
 - 修改文件：`functions/api/_lib/mapKeys.ts`（`versions/` 键、条件写助手）、`functions/api/maps/upload.ts`（覆盖前归档 + 条件写）、`functions/api/trash/index.ts`（恢复默认不覆盖 + 清理顺序）、`functions/api/_lib/trash.ts`（记录新字段 `originalEtag`）、`functions/api/maps/delete.ts`（写入 `originalEtag`）；新增 `scripts/r2-version-safety.test.mjs`。
 - 用到的存储原语（查证过 Cloudflare Workers API 文档）：`put(key, body, { onlyIf })` 在条件不满足时**返回 `null` 且不存对象**；`R2Conditional` 支持 `etagMatches` / `etagDoesNotMatch` / `uploadedBefore` / `uploadedAfter`，也可以直接传 `Headers`（除 `If-Range` 外的条件头都支持）。因此"不覆盖/只有一个成功"是**存储层保证**的，不是 HEAD 与 write 之间的运气：新建用 `Headers{ If-None-Match: '*' }`，覆盖用 `{ etagMatches: 读到的 etag }`。
-- 上传（第 3 点）：写入前 `head` 目标；存在旧对象就先把旧对象连同 metadata 归档到 `versions/{key}.{opId}`（opId 复用 R07 的「key + 版本签名」派生，重传同一版本不会造出重复归档），**归档失败直接 502 `ARCHIVE_FAILED` 并且绝不覆盖目标**；随后用条件写落新对象，条件失败返回 409 `UPLOAD_CONFLICT`（提示旧版本已归档、刷新后重试）。响应新增 `archivedKey`。审计 detail 里标注是否归档了旧版本。
+- 上传（第 3 点）：写入前 `head` 目标；存在旧对象就先把旧对象连同 metadata 归档到 `versions/{key}`（**归档键固定，不带版本后缀** —— 保留策略见下方"保留策略拍板"），**归档失败直接 502 `ARCHIVE_FAILED` 并且绝不覆盖目标**；随后用条件写落新对象，条件失败返回 409 `UPLOAD_CONFLICT`（提示旧版本已归档、刷新后重试）。响应新增 `archivedKey`。审计 detail 里标注是否归档了旧版本。
 - 恢复（第 1 点）：**默认只允许"目标不存在"**。
   - 谱面：`head(originalKey)` 已存在 → 409 `RESTORE_CONFLICT`，回收站条目与副本都保留；随后用 `If-None-Match: '*'` 条件写，竞态下同样 409。判定"已经恢复过"时**用 etag 比对内容**（回收站记录新增 `originalEtag`）：占位者与副本内容一致 → 说明上次恢复成功、只是记录没清干净 → 清掉记录并返回 `alreadyRestored`；内容不同（别人重传过）→ 409 明确报冲突，不谎报成功。老记录没有 `originalEtag` 时保守按"已恢复"处理（否则用户会卡在一个回收站 UI 无法解决的 409 上）。
   - 比赛：不再自动取当前 sha 覆盖同名 JSON，改为**不带 sha 创建**；GitHub 对已存在文件返回 422（或 409）→ 翻成 409 `RESTORE_CONFLICT` 并保留回收站条目。
 - 清理顺序（第 4 点）：恢复成功后**先清 KV 记录、再删 trash 副本**（反过来会出现"记录唯一指向已删除 restoreKey"的状态）；副本删不掉只留个孤儿，交给保留期清理兜底。删谱面的顺序在 R07 已改为"副本 → 记录 → 删原件"。
 - 运行的验证：`node --test --experimental-strip-types scripts/r2-version-safety.test.mjs` → 14/14；`npm test` → 212/212；`npx tsc --noEmit` 与 `npx tsc -p functions/tsconfig.json --noEmit` → 0 错（本项只改 Functions，未跑 build）。用例覆盖：首次上传用"不存在才写"、重传**先归档再 CAS 覆盖**（断言操作顺序与归档内容）、归档失败不覆盖、并发重传两边都拿到 409 且目标不变、恢复时目标已存在 → 409 且零写入、目标存在但副本已清理且内容一致 → `alreadyRestored`、目标被换过内容 → 409 不谎报、目标为空 → 条件写 + 先清记录再删副本、恢复竞态 → 409 保留副本与记录、副本真丢 → 404、比赛恢复不带 sha 且 422 → 409（冲突时保留条目、成功时清记录）、普通与 NSV 的归档键互不串。
-- 未完成 / 仍有风险：① **"替换当前版本"入口未实现**（第 2 点）—— 默认行为已经不覆盖，若之后要提供"用回收站版本替换现有版本"，必须先展示差异/版本信息并让用户确认，且先归档当前对象；② 未在真实 R2 / GitHub 上联调（条件写的真实返回、422 与 409 的具体表现都以文档与模拟为准）；③ 每次重传都会多一次 `head` + 一次流式归档写（大包会多跑一遍流量），版本保留策略仍未定（第 5 点：每日清理只清 `trash/`，**不会**自动删 `versions/`；R08 的备份脚本已经把 `versions/` 纳入镜像，见 R08 记录）；④ 回收站 UI 仍只有"恢复"一个动作，冲突时只能看到错误文案，不能查看差异或强制替换。
-- 与后续任务的接口变化：`versions/` 是本项新引入的前缀，之后任何需要"历史版本"的地方请用 `mapKeys.versionObjectKey/versionObjectPrefix` 一类的构造器（别在端点里拼串）；`functions/api/_lib/trash.ts` 的 `TrashEntry` 现在带 `originalEtag`（老记录可以缺省）。
+- 保留策略拍板（2026-09-14，用户决定）：**每个槽位只留最近一版**。归档键从 `versions/{key}.{opId}` 改成固定的 `versions/{key}`，重传就是覆盖同一份，于是 `versions/` 的体量上限 = 槽位数、**不随重传次数增长**，也**不需要任何清理任务**（每日清理只清 `trash/`，不碰 `versions/`）。代价是只保得住"上一版"，更早的找不回来 —— 旧包绝大多数能从 osu! 重下，只有"人工上传且线上已经没了"的图属于真正的损失。同一批决定：**备份脚本不再镜像 `versions/`**（`scripts/backup-r2.js` 的 `BACKUP_PREFIXES = ['maps/']`），理由是灾难恢复要的是当前数据、历史版本镜像过去只是白花一倍存储；备份 bucket 里若残留着早先镜像过去的 `versions/` 对象，没有任何流程会去删它，属无害残留。
+- 未完成 / 仍有风险：① **"替换当前版本"入口未实现**（第 2 点）—— 默认行为已经不覆盖，若之后要提供"用回收站版本替换现有版本"，必须先展示差异/版本信息并让用户确认，且先归档当前对象；② 未在真实 R2 / GitHub 上联调（条件写的真实返回、422 与 409 的具体表现都以文档与模拟为准）；③ 每次重传都会多一次 `head` + 一次流式归档写（大包会多跑一遍流量）；第 5 点的保留策略已由用户拍板（见上一节），代价是**找不回更早的旧包**；④ 回收站 UI 仍只有"恢复"一个动作，冲突时只能看到错误文案，不能查看差异或强制替换。
+- 与后续任务的接口变化：`versions/` 是本项新引入的前缀，之后任何需要"历史版本"的地方请用 `mapKeys.VERSIONS_PREFIX` / `versionObjectKey`（别在端点里拼串）；`functions/api/_lib/trash.ts` 的 `TrashEntry` 现在带 `originalEtag`（老记录可以缺省）。
 
 ### R07 [P1] 谱面软删除先删原对象再记回收站，失败时无法从 UI 恢复
 
@@ -312,7 +313,11 @@ LN 单曲使用 difficulty 是当前领域约定，不能改成 difficultyLn。�
 - 修改文件：`scripts/backup-r2.js`（重构出可测试的作业入口）；新增 `scripts/backup-r2.test.mjs`。
 - 实际改动：① 新增 `runBackupJob(client, opts)` 一次完成「备份 → 判定 → 清理」，只有全部前缀 `status === 'ok'` 才执行 trash 清理，返回 `{ backupResults, cleanup, exitCode }`；`cleanup === null` 即代表「没有发出任何 DeleteObject」；② 每个前缀独立返回 `status / listed / sourceCount / copied / skipped / failed / failures`，**列举失败标记 `listed:false`，不把源对象数当 0**（权限/网络错误不会被误当空 bucket）；③ 任一复制失败或列举失败 → 跳过全部清理并设 `process.exitCode = 1`；④ 清理阶段自身删除失败计入 `failed`，同样非零；⑤ `listAll` 遇到 `IsTruncated` 但缺续页 token 时抛错，不再静默漏对象；⑥ 复制保留 `ContentType`（缺省 `application/octet-stream`）与 `Metadata`/`CacheControl`/`ContentDisposition`/`ContentEncoding`/`ContentLanguage`；⑦ 备份前缀扩为 `['maps/', 'versions/']`（versions/ 由 R06 引入，不存在时列举为空属正常）；⑧ 显式禁止 `R2_BACKUP_BUCKET === R2_BUCKET`；⑨ 日志与异常统一经 `redactSecrets` 把凭据打码成 `[redacted]`；⑩ 文件头注记「备份 bucket 是同键覆盖镜像、不是版本历史；trash/ 不做独立镜像备份，本次删除的过期对象没有第二份副本」。
 - 运行的验证：`node --test --experimental-strip-types scripts/backup-r2.test.mjs` → 8/8；`npm test` → 83/83；`node --check scripts/backup-r2.js` 通过。用例覆盖：复制失败 → `cleanup === null` 且 DeleteObject 调用数为 0、`exitCode 1`；全部成功 → 只删超期对象、未超期与无 `LastModified` 的保留、`exitCode 0`；清理阶段删除失败 → `exitCode 1`；列举抛 `AccessDenied` → `status 'failed'` / `listed false` / `sourceCount 0` → 跳过清理；分页两页全量覆盖 + 截断缺 token 抛错；`size+etag` 一致时跳过（不发 Get/Put）；复制保留 `ContentType`/`Metadata`/`CacheControl`；`redactSecrets` 打码凭据。全部使用内存 fake client，不接触线上凭据。
-- 未验证或仍有风险：未在真实 R2 / GitHub Actions 上运行；`versions/` 的实际键布局要等 R06 落地后再确认前缀粒度；trash 仍按「不做独立备份 + 显式提示」处理（本项不改保留期语义）；备份 bucket 同键覆盖仍是镜像而非版本历史（属 R06 范围）。
+- 未验证或仍有风险：未在真实 R2 / GitHub Actions 上运行；trash 仍按「不做独立备份 + 显式提示」处理（本项不改保留期语义）；备份 bucket 同键覆盖仍是镜像而非版本历史（属 R06 范围）。`versions/` 的键布局与保留策略已随 R06 落地并由用户拍板（见下）。
+
+**后续修正（2026-09-14，随 R06 的保留策略）**
+
+用户拍板「每个槽位只留最近一版」之后，`versions/` 已经是有界的（上限 = 槽位数）、不再需要清理，因此**撤销上面第 ⑦ 项的 `versions/` 部分**：`BACKUP_PREFIXES` 回退为 `['maps/']`，只镜像当前数据。理由是灾难恢复要的是当前谱面、不是历史版本，镜像 `versions/` 等于白花一倍存储（每次重传还会连带把旧包整个再传一遍）。备份 bucket 里可能残留着 2026-09-12 ～ 09-14 之间镜像过去的 `versions/` 对象，没有任何流程会去删它们 —— 无害残留。`scripts/backup-r2.test.mjs` 同步去掉 `versions/` 的 fixture，并把 `backupResults` 的断言从 `['ok', 'ok']` 改成 `['ok']`（这条断言原本**隐式**要求恰好两个前缀，是回退时唯一会被绊到的地方）。
 - 与后续任务的接口变化：新增导出 `runBackupJob / backupPrefix / backupAll / shouldSkipCleanup / cleanupTrash / resolveExitCode / listAll / copyHeaders / redactSecrets`，R06 引入 versions/ 或调整 trash 语义时可直接复用扩展；`node scripts/backup-r2.js` 调用方式与退出码语义（0 全成功 / 1 备份或清理不完整）保持不变，workflow 无需改动。
 
 ## 5. 合包与发布任务

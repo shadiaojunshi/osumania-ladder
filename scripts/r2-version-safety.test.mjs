@@ -160,7 +160,7 @@ test('R06 重传:先把旧对象归档到 versions/,再用 etag CAS 覆盖', asy
     assert.equal(status, 200)
     assert.ok(payload.archivedKey, '响应里要给出归档键')
     assert.equal(payload.archivedKey.startsWith('versions/'), true)
-    assert.equal(payload.archivedKey, versionObjectKey(ORIGINAL, payload.archivedKey.split('.').pop()), '归档键由 key + opId 派生')
+    assert.equal(payload.archivedKey, versionObjectKey(ORIGINAL), '归档键固定:每个槽位只留最近一版')
 
     const archived = bucket.store.get(payload.archivedKey)
     assert.ok(archived, '旧版本必须已经落到 versions/ 下')
@@ -383,9 +383,34 @@ test('R06 恢复谱面:目标占位者与副本内容一致(就是原来那份) 
 })
 
 test('R06 普通与 NSV 的版本归档互不串键', () => {
-  const main = versionObjectKey('maps/t/r1/RC1.osz', 'op1')
-  const nsv = versionObjectKey('maps/t/r1/RC1.nsv.osz', 'op1')
+  const main = versionObjectKey('maps/t/r1/RC1.osz')
+  const nsv = versionObjectKey('maps/t/r1/RC1.nsv.osz')
   assert.notEqual(main, nsv, '归档键由完整对象键派生,普通与 NSV 天然隔离')
   assert.equal(main.startsWith('versions/'), true)
   assert.equal(nsv.startsWith('versions/'), true)
+})
+
+// 策略(2026-09-14 用户拍板):每个槽位只留最近一版。归档键固定,重传就是覆盖同一份,
+// 所以 versions/ 的体量上限 = 槽位数,不随重传次数增长 —— 这条锁住"上限",别退回累积。
+test('R06 每个槽位只留最近一版:连续重传不把 versions/ 堆起来', async () => {
+  const gh = installGithub({ t: tournamentFixture })
+  try {
+    const bucket = makeBucket({ entries: [[ORIGINAL, { bytes: 'V1', etag: 'e1', httpMetadata: {}, customMetadata: {} }]] })
+
+    // 第一次重传:V1 被归档,新版本上线。
+    const first = await callUpload(bucket)
+    assert.equal(first.status, 200)
+    assert.equal(bucket.store.get(versionObjectKey(ORIGINAL)).bytes, 'V1')
+
+    // 第二次重传:归档 V2 —— 盖在同一个键上,V1 就此消失(这是刻意的)。
+    const second = await callUpload(bucket)
+    assert.equal(second.status, 200)
+    assert.equal(second.payload.archivedKey, first.payload.archivedKey, '归档键固定,不随版本变化')
+
+    const archivedKeys = [...bucket.store.keys()].filter((k) => k.startsWith('versions/'))
+    assert.deepEqual(archivedKeys, [versionObjectKey(ORIGINAL)], '重传多少次都只占一份')
+    assert.notEqual(bucket.store.get(versionObjectKey(ORIGINAL)).bytes, 'V1', '留下的是"上一版",不是更早的')
+  } finally {
+    gh.restore()
+  }
 })

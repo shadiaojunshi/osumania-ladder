@@ -181,15 +181,15 @@ export function trashObjectKey(originalKey: string, opId: string): string {
 
 // 普通重传在覆盖旧对象之前,把旧对象连同 metadata 存进这个前缀。
 // 与 trash/ 分开:trash 是"删除后的恢复副本",versions 是"被覆盖的历史版本"。
-// 保留策略另定:每日清理 Action 只清 trash/,不会自动删 versions/。
+//
+// 每个槽位只留最近一版(2026-09-14 用户拍板):归档键不带版本后缀,重传就是覆盖同一份,
+// 所以 versions/ 的体量上限 = 槽位数,不随重传次数增长。代价是找不回"更早的版本" ——
+// 旧包绝大多数能从 osu! 重下,只有人工上传且线上没有的图例外。
+// 每日清理 Action 只清 trash/,不碰 versions/(它已经是有界的,不需要清理)。
 export const VERSIONS_PREFIX = 'versions/'
 
-export function versionObjectKey(originalKey: string, opId: string): string {
-  return `${VERSIONS_PREFIX}${originalKey}.${opId}`
-}
-
-export function isVersionKey(key: string): boolean {
-  return key.startsWith(VERSIONS_PREFIX)
+export function versionObjectKey(originalKey: string): string {
+  return `${VERSIONS_PREFIX}${originalKey}`
 }
 
 // 条件写:只在目标**不存在**时写入。R2 在条件不满足时 put 返回 null 且不存对象,

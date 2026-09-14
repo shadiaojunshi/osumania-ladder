@@ -73,8 +73,6 @@ test('R08 复制失败时作业非零退出且不执行任何清理', async () =
     pages: {
       'src|maps/': [[obj('maps/a.osz', 1, 'e1')]],
       'backup|maps/': [[]],
-      'src|versions/': [[]],
-      'backup|versions/': [[]],
       'src|trash/': [[obj('trash/old.osz', 1, 'e0', new Date(0))]],
     },
     failGet: new Set(['maps/a.osz']),
@@ -97,8 +95,6 @@ test('R08 全部成功才清理:超期对象删除、未超期对象保留', asy
     pages: {
       'src|maps/': [[obj('maps/a.osz', 1, 'e1')]],
       'backup|maps/': [[obj('maps/a.osz', 1, 'e1')]], // size+etag 一致 → 跳过
-      'src|versions/': [[]],
-      'backup|versions/': [[]],
       'src|trash/': [[
         obj('trash/expired.osz', 1, 'e0', new Date(now - 40 * DAY)),
         obj('trash/fresh.osz', 1, 'e0', new Date(now - 2 * DAY)),
@@ -110,7 +106,7 @@ test('R08 全部成功才清理:超期对象删除、未超期对象保留', asy
     sourceBucket: 'src', backupBucket: 'backup', now, log: silentLog,
   })
 
-  assert.deepEqual(job.backupResults.map((r) => r.status), ['ok', 'ok'])
+  assert.deepEqual(job.backupResults.map((r) => r.status), ['ok'], '只镜像 maps/ —— versions/ 与 trash/ 都不镜像')
   assert.equal(job.backupResults[0].skipped, 1)
   assert.deepEqual(job.cleanup, {
     prefix: 'trash/', listed: true, deleted: 1, kept: 1, failed: 0, failures: [],
@@ -125,8 +121,6 @@ test('R08 清理阶段删除失败也计入非零退出', async () => {
     pages: {
       'src|maps/': [[]],
       'backup|maps/': [[]],
-      'src|versions/': [[]],
-      'backup|versions/': [[]],
       'src|trash/': [[obj('trash/expired.osz', 1, 'e0', new Date(now - 40 * DAY))]],
     },
     failDelete: new Set(['trash/expired.osz']),

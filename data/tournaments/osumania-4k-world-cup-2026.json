@@ -729,6 +729,194 @@
           "ln": 12.98
         }
       }
+    },
+    {
+      "id": "round-6",
+      "name": "Finals",
+      "abbreviation": "F",
+      "order": 6,
+      "difficulty": {
+        "min": 12.07,
+        "max": 12.84,
+        "average": 12.46
+      },
+      "maps": [
+        {
+          "slot": "RC1",
+          "type": "RC",
+          "realType": "SS",
+          "name": "Chris Christodoulou - Yane no Mori (Cut Ver.) [Mercurian 1.05x (edit)]",
+          "difficulty": 12.57,
+          "beatmapId": 5880886,
+          "beatmapsetId": 2620271
+        },
+        {
+          "slot": "RC2",
+          "type": "RC",
+          "realType": "JS",
+          "name": "AKIAKANE - Hankyou no Barrier Seed [Reverberation (Cut ver.)]",
+          "difficulty": 12.8,
+          "beatmapId": 5880778,
+          "beatmapsetId": 2620224
+        },
+        {
+          "slot": "RC3",
+          "type": "RC",
+          "realType": "SA",
+          "name": "ELFENSJoN - Hexen Noir [Imminent Blossom]",
+          "difficulty": 12.73,
+          "beatmapId": 5880816,
+          "beatmapsetId": 2620237
+        },
+        {
+          "slot": "RC4",
+          "type": "RC",
+          "realType": "FCJ",
+          "name": "Blacklolita - SUPER BEAST GIGA (Cut Ver.) [3rd Climate Battery (cut) 1.05x (157bpm)]",
+          "difficulty": 12.36,
+          "beatmapId": 5880803,
+          "beatmapsetId": 2620229
+        },
+        {
+          "slot": "RC5",
+          "type": "RC",
+          "realType": "TC",
+          "name": "LeaF - Breakcore WTF!? [xD]",
+          "difficulty": 12.84,
+          "beatmapId": 5880806,
+          "beatmapsetId": 2620230
+        },
+        {
+          "slot": "RC6",
+          "type": "RC",
+          "realType": "DP",
+          "name": "Static Dress - sweet. [famous last line]",
+          "difficulty": 12.57,
+          "beatmapId": 5880809,
+          "beatmapsetId": 2620232
+        },
+        {
+          "slot": "RC7",
+          "type": "RC",
+          "realType": "JTC",
+          "name": "Lamberti phil - Nebura [Hard 1.05x]",
+          "difficulty": 12.3,
+          "beatmapId": 5881271,
+          "beatmapsetId": 2620380
+        },
+        {
+          "slot": "RC8",
+          "type": "RC",
+          "realType": "WTC",
+          "name": "Nanahoshi Kangengakudan - MAKE A LOSER (Instrumental Ver.) [Anacrusis]",
+          "difficulty": 12.7,
+          "beatmapId": 5880813,
+          "beatmapsetId": 2620235
+        },
+        {
+          "slot": "HB1",
+          "type": "HB",
+          "realType": "HB1",
+          "name": "celtix - Primordial Complex [Luminance]",
+          "difficulty": 12.07,
+          "beatmapId": 5880820,
+          "beatmapsetId": 2620240,
+          "difficultyLn": 12.3
+        },
+        {
+          "slot": "HB2",
+          "type": "HB",
+          "realType": "HB2",
+          "name": "Genesis - Omega ProtocoL [Digital SingularitY]",
+          "difficulty": 12.07,
+          "beatmapId": 5880712,
+          "beatmapsetId": 2620193,
+          "difficultyLn": 12.3
+        },
+        {
+          "slot": "HB3",
+          "type": "HB",
+          "realType": "HB3",
+          "name": "Rawtekk - Amber's Love Was Like A Marble (Billain Remix) (Cut Ver.) [Rolling in the Deep]",
+          "difficulty": 12.07,
+          "beatmapId": 5880882,
+          "beatmapsetId": 2620268,
+          "difficultyLn": 12.3
+        },
+        {
+          "slot": "HB4",
+          "type": "HB",
+          "realType": "HB3",
+          "name": "Grizzly Bear - Ready, Able [Gaze at the Pond]",
+          "difficulty": 12.07,
+          "beatmapId": 5880849,
+          "beatmapsetId": 2620252,
+          "difficultyLn": 12.3
+        },
+        {
+          "slot": "LN1",
+          "type": "LN",
+          "realType": "TE",
+          "name": "Adachi Kasuka feat. Chis-A - Yossha Uchuu, Ikou [let's get out of this place, shall we?]",
+          "difficulty": 12.5,
+          "beatmapId": 5880777,
+          "beatmapsetId": 2620223
+        },
+        {
+          "slot": "LN2",
+          "type": "LN",
+          "realType": "DE",
+          "name": "Umeboshi Chazuke - ICHIBANBOSHI*ROCKET [IN THE NIGHT SKY]",
+          "difficulty": 12.5,
+          "beatmapId": 5881221,
+          "beatmapsetId": 2620358
+        },
+        {
+          "slot": "LN3",
+          "type": "LN",
+          "realType": "LNWC",
+          "name": "BotchiBoromaru - TSUYOGARU GIRL feat. Mossa (NECRY TALKIE) [LOOK AT ME!!! 1.05x]",
+          "difficulty": 12.5,
+          "beatmapId": 5880862,
+          "beatmapsetId": 2620259
+        },
+        {
+          "slot": "LN4",
+          "type": "LN",
+          "realType": "LNTC",
+          "name": "Crywolf - Decensus Ad Nihilum [Do svidan'ya, do novykh vstrech.]",
+          "difficulty": 12.5,
+          "beatmapId": 5880867,
+          "beatmapsetId": 2620263
+        },
+        {
+          "slot": "TB",
+          "type": "TB",
+          "realType": "TB",
+          "name": "Gardens - Counting Breaths feat. eili [Fading Echoes]",
+          "difficulty": 13.29,
+          "beatmapId": 5880868,
+          "beatmapsetId": 2620264,
+          "difficultyLn": 13.51
+        }
+      ],
+      "typeDifficulties": {
+        "RC": {
+          "rf": 12.57
+        },
+        "HB": {
+          "rf": 12.07,
+          "ln": 12.3
+        },
+        "LN": {
+          "ln": 12.5
+        },
+        "SV": {},
+        "TB": {
+          "rf": 13.29,
+          "ln": 13.51
+        }
+      }
     }
   ],
   "customTypes": [],

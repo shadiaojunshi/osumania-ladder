@@ -14,7 +14,7 @@
       "difficulty": {
         "min": 11,
         "max": 12.6,
-        "average": 12.1
+        "average": 11.93
       },
       "maps": [
         {
@@ -66,14 +66,16 @@
           "type": "HB",
           "realType": "HB2",
           "name": "HB1",
-          "difficulty": 12.3
+          "difficulty": 12.3,
+          "difficultyLn": 12.3
         },
         {
           "slot": "HB2",
           "type": "HB",
           "realType": "HB1",
           "name": "HB2",
-          "difficulty": 12.3
+          "difficulty": 12.3,
+          "difficultyLn": 12.3
         }
       ],
       "isQualifier": true,
@@ -90,7 +92,8 @@
         },
         "SV": {
           "rf": 11
-        }
+        },
+        "TB": {}
       }
     },
     {
@@ -156,7 +159,8 @@
           "name": "MisoilePunch ~Takenoko Soe~ - Fin.ArcDeaR [ArcanA]",
           "difficulty": 9.8,
           "beatmapId": 4757037,
-          "beatmapsetId": 2238670
+          "beatmapsetId": 2238670,
+          "difficultyLn": 9.8
         },
         {
           "slot": "HB2",
@@ -165,7 +169,8 @@
           "name": "PSYQUI - Be There [Flip-Side]",
           "difficulty": 9.8,
           "beatmapId": 2727014,
-          "beatmapsetId": 1315993
+          "beatmapsetId": 1315993,
+          "difficultyLn": 9.8
         },
         {
           "slot": "LN1",
@@ -237,7 +242,8 @@
         },
         "SV": {
           "rf": 9.8
-        }
+        },
+        "TB": {}
       }
     },
     {
@@ -248,7 +254,7 @@
       "difficulty": {
         "min": 11,
         "max": 11.5,
-        "average": 11.2
+        "average": 11.28
       },
       "maps": [
         {
@@ -312,7 +318,8 @@
           "name": "Neighbour's Blueish Garden (NIWASHI+Aoi) - Deklowaz, the Allchemist [Phenomenon of everything]",
           "difficulty": 11.4,
           "beatmapId": 5207570,
-          "beatmapsetId": 2401448
+          "beatmapsetId": 2401448,
+          "difficultyLn": 11.4
         },
         {
           "slot": "HB2",
@@ -321,16 +328,18 @@
           "name": "Sephid et al. - MONONATI [Welcome home, my Queen.]",
           "difficulty": 11.4,
           "beatmapId": 5207635,
-          "beatmapsetId": 2401466
+          "beatmapsetId": 2401466,
+          "difficultyLn": 11.4
         },
         {
           "slot": "HB3",
           "type": "HB",
-          "realType": "HB1",
+          "realType": "HB4",
           "name": "katagiri - Youki Sanmyaku [Demon Lurk [w/ Blue_Potion]]",
           "difficulty": 11.4,
           "beatmapId": 5206862,
-          "beatmapsetId": 2401210
+          "beatmapsetId": 2401210,
+          "difficultyLn": 11.4
         },
         {
           "slot": "LN1",
@@ -402,6 +411,10 @@
         },
         "SV": {
           "rf": 11.5
+        },
+        "TB": {
+          "rf": 12,
+          "ln": 12.5
         }
       }
     },
@@ -412,8 +425,8 @@
       "order": 4,
       "difficulty": {
         "min": 13.3,
-        "max": 13.6,
-        "average": 13.5
+        "max": 13.8,
+        "average": 13.63
       },
       "maps": [
         {
@@ -486,7 +499,8 @@
           "name": "BEMANI SOUND TEAM \"TAG\" - Reboot [Voltenizer 1.1x]",
           "difficulty": 13.6,
           "beatmapId": 4104226,
-          "beatmapsetId": 1977077
+          "beatmapsetId": 1977077,
+          "difficultyLn": 13.8
         },
         {
           "slot": "HB2",
@@ -495,7 +509,8 @@
           "name": "Umeboshi Chazuke - Ao to Shiro no Hanataba wo [Journey]",
           "difficulty": 13.6,
           "beatmapId": 5207577,
-          "beatmapsetId": 2401454
+          "beatmapsetId": 2401454,
+          "difficultyLn": 13.8
         },
         {
           "slot": "HB3",
@@ -504,7 +519,8 @@
           "name": "Juggernaut. - Retaliation (VIP) [Destruction [1.05x Rate]]",
           "difficulty": 13.6,
           "beatmapId": 5207184,
-          "beatmapsetId": 2401316
+          "beatmapsetId": 2401316,
+          "difficultyLn": 13.8
         },
         {
           "slot": "LN1",
@@ -584,7 +600,8 @@
         },
         "SV": {
           "rf": 13.5
-        }
+        },
+        "TB": {}
       }
     }
   ],

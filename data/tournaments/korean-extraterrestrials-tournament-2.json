@@ -758,7 +758,7 @@
         {
           "slot": "LN3",
           "type": "LN",
-          "realType": "DE",
+          "realType": "LNWC",
           "name": "Essbee - Desperado [Chaotic Neutral]",
           "difficulty": 15,
           "beatmapId": 4985262,

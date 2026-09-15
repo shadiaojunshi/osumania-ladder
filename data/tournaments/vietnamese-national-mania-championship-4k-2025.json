@@ -176,7 +176,7 @@
         {
           "slot": "HB2",
           "type": "HB",
-          "realType": "HB1",
+          "realType": "HB3",
           "name": "KERO - Color Printer [CMYK]",
           "difficulty": 0,
           "beatmapId": 5101249,
@@ -185,7 +185,7 @@
         {
           "slot": "HB3",
           "type": "HB",
-          "realType": "HB1",
+          "realType": "HB4",
           "name": "Camellia - Clouds In The Blue (Livium's Lonely Wandering Remix) [Overshadow]",
           "difficulty": 0,
           "beatmapId": 4863876,

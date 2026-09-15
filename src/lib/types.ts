@@ -5,6 +5,9 @@ export interface BeatmapMeta {
   name: string
   difficulty: number
   difficultyLn?: number
+  // true = 这张图的难度不参与统计(本轮/该键型的平均值)也不进 ladder 框高。
+  // 默认不勾选(字段缺席即参与),判断统一走 src/lib/difficultyCount.ts。
+  excludeFromDifficulty?: boolean
   beatmapId?: number
   beatmapsetId?: number
   oszUrl?: string

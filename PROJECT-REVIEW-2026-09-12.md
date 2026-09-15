@@ -442,6 +442,58 @@ LN 单曲使用 difficulty 是当前领域约定，不能改成 difficultyLn。�
 - 复查后验证：`node --test --experimental-strip-types scripts/fetch-retry.test.mjs` → 8/8；`npm test` → 220/220；`npx tsc --noEmit` 0 错；`npx tsc -p functions/tsconfig.json --noEmit` 0 错；`npm run build` 成功。
 - 仍受第 ① 条限制：**服务端**把上游流直接透传，它那一侧在响应头发出后仍无法重试；现在客户端会把整个请求重发一次，上游若持续失败仍会失败，这一层已经尽力。
 
+### R25 [P2] 悬浮卡段位用的是汇总缓存，会和框高（现算值）不一致
+
+证据：`src/components/ladder/HoverCard.tsx` 的 `buildDifficultyLabel` 优先读 `round.typeDifficulties[type]`，而 `LadderView.tsx` 的框高（`adjustedAvg`）是从 `maps[].difficulty/difficultyLn` **现算**的（`typeDifficulties` 只作为"全部无有效值"时的兜底）。站长反馈：CET GF TB 显示 `~ε/ε+ / LN16+`。
+
+定性：该轮 `typeDifficulties.TB = { rf: 15.3, ln: 16.4 }`，而 TB 谱面实际是 `difficulty 16.2 / difficultyLn 17.2` —— 边界数据过期。于是框高按实际值画、悬浮卡按旧缓存报段位，看起来就是"段位偏低一档"。全库扫描显示这不是孤例（4-digit-world-cup GF、china-osumania RO24、university cup RO16、jack-house-cup 多轮、osumania-4k-world-cup F 等都有 TB 汇总与实际值不一致；gb-cup 几轮甚至是 `{}`）。
+
+解决方法：悬浮卡先按**图上现算**的值出段位（与框高同源），`typeDifficulties` 降级为兜底；取值口径与 LadderView 保持一致（RC/SV 用 difficulty、LN 用 difficulty、HB/TB 双段 rf+ln）。
+
+**完成记录（2026-09-14）**
+
+- 状态：实现完成待验收（改动未提交）。
+- 修改文件：`src/components/ladder/HoverCard.tsx`（新增 `liveLabelForType`，`buildDifficultyLabel` 改为现算优先）、`src/lib/messages.zh.ts`/`messages.en.ts`（版本号 → `v0.9.0`，见下）。
+- 运行的验证：`npm test` → 221/221；`npx tsc --noEmit` → 0 错；`npm run build` → 成功。**注意：段位映射逻辑（`danBand`/`getRfDanName`）目前内联在组件里，无法直接单测** —— 想锁住"悬浮卡必须与框高同源"这条回归，需要把它抽成 `src/lib/danNames.ts`（把段位表作为参数传入，避免 `@data` 别名在 node 下解析不了）。
+- 未完成 / 仍有风险：① 悬浮卡只拿到 `type`、**拿不到被悬浮的 slot**，所以多 TB 的轮次（如 TB + SHOWTB）悬浮卡只能按整型聚合显示，不能精确到那个框；② `typeDifficulties` 与实际值不一致的**数据**没有清理（站长约束"不改比赛 JSON"，需要时由后台重新保存一次即可回填）；③ 没有自动化测试（见上）。
+- 同类：本站长同期要求把右下角版本号从 v0.1 改为 **v0.9.0**（`control.version`，中英各一处）；`package.json` 随后也一并改为 0.9.0（见 R26 第 3 项）。
+
+### R26 [需求] 勾选部分谱面"不参与难度统计" + 整场比赛视图按指针高度选轮次 + 版本号 0.9.0
+
+来源：站长 2026-09-15 当面提出（三项一起）。
+
+1. **不参与难度统计**（新功能）：每轮编辑页的**每个槽位行**加一个勾选框（默认不勾）。勾上后该图难度
+   ① 不进"本轮 / 该键型"的难度平均值；② 不参与 ladder 框高。数据落在比赛 JSON 的 `map.excludeFromDifficulty`。
+2. **整场比赛视图的悬浮**：tournament 模式整场比赛只画一个框（最低→最高难度），原来 hover/click 固定绑 `visibleRounds` 的最后一轮，所以任何位置都显示决赛。站长选"保持轮次口径、按指针所在高度判断"。
+3. **版本号**：右下角显示 + `package.json` 一起改成 `0.9.0`（准备正式发布）。
+
+**完成记录（2026-09-15）**
+
+- 状态：实现完成待验收（改动未提交；未做浏览器实机验收）。
+- 修改文件：新增 `src/lib/difficultyCount.ts`（唯一判断处）、`scripts/difficulty-count.test.mjs`；`src/lib/types.ts`（`BeatmapMeta.excludeFromDifficulty?`）、`src/components/admin/MapSlotEditor.tsx`（槽位行勾选框）、`src/components/admin/RoundEditor.tsx`（`recalcDifficulty` / `autoCalcTypeDiffs` 排除）、`src/components/ladder/LadderView.tsx`（框高/范围/组内取数 + 指针高度选轮次）、`src/components/ladder/HoverCard.tsx`（7 处聚合取数）、`src/lib/messages.zh.ts` / `messages.en.ts`（勾选框文案 + 版本号）、`package.json`。
+- 实现要点：① 判断集中在 `countsForDifficulty/countableMaps`，口径是**默认参与、只有显式 `true` 才排除**，所以老数据零迁移、取消勾选写回 `undefined`（JSON 不落脏值）；② 后台 `recalcDifficulty`（本轮 min/max/average）与 `autoCalcTypeDiffs`（各键型平均值）+ 前端 ladder 三视图与悬浮卡**同一口径**，避免"框高排除了、数字没排除"这类各说各话；③ 勾选框沿用 `mapsToOutput` 的 `{ category, ...rest }` 展开，字段自动落盘（不需改序列化）；④ 整场比赛视图把指针 y 反解成难度（与 `ladderGeometry.plotOffsetY` 同一线性公式，包含顶部被裁切的情况），取难度区间离它最近的那一轮，**hover 与 click 同步**。
+- 运行的验证：`node --test --experimental-strip-types scripts/difficulty-count.test.mjs` → 3/3；`npm test` → 224/224；`npx tsc --noEmit` → 0 错；`npm run build` → 成功。用例覆盖：默认参与（缺席/false 都参与、只有 true 排除）、`countableMaps` 过滤保序且不改原数组、**扫全库 4526 张图确认当前没有任何图勾了这一项**（即功能不影响既有显示）。
+- 未完成 / 仍有风险：① 未做浏览器实机验收（勾选后框高变化、整场比赛视图各高度显示对应轮次这两条只有逻辑与类型保障）；② `round.difficulty`（本轮 min/max/average）是**存储值**：勾选后要由后台重新保存才会按新口径重算，前端只在"逐图值算不出来"时才回退到它 —— 存量数据不会自动变；③ 悬浮卡仍拿不到被悬浮的 slot（多 TB 轮次只能整型聚合）；④ 主页若还有别处单独展示单张图的难度，需另查（本轮改的是 ladder 与悬浮卡）。
+- 备注：站长解释了 `typeDifficulties` 漂移的机制 —— 后台改"TB 平均值"会写穿到实际数值，但改实际数值不会回写平均值（平均值被锁定），所以**实际数值才权威**；这与 R25 的修法一致。
+- 复审修正（2026-09-15，提交前审查）：`scripts/difficulty-count.test.mjs` 第三条原本断言「现有 4526 张图零命中」，那是一句**一次性上线核对** —— 留在套件里会让站长的正常使用（勾上第一张图）把 CI 弄红，且红得毫无信息量。已改成断言**字段形状**（只允许 `true` 或缺席；出现 `false` 或其它类型说明写回没清干净），全库扫描与"至少 4000 张"的覆盖检查保留，核对结论移进注释。
+
+### R27 [需求] 键型冲突工具改成"勾选才改" + 批量选择
+
+来源：站长 2026-09-15 —— 键型冲突很难一次性改完、有些地方一时不知道改成啥，所以要"勾选改动 + 批量选择（可以做成滑动的）"，**只有勾选了的比赛才会被改动**。
+
+**完成记录（2026-09-15）**
+
+- 状态：实现完成待验收（改动未提交；未做浏览器实机验收）。
+- 修改文件：`src/components/admin/RealTypeConflictChecker.tsx`、`src/lib/messages.zh.ts` / `messages.en.ts`（新增 5 条文案）。
+- 行为变化：以前"有差异的组一律写回"，现在**默认全不勾、只有勾上的组才会被写**：
+  ① 每行左侧加勾选框（`setReview` 那种纯提示行不给勾；组内已一致、没有可改内容的行勾选框禁用）；
+  ② 顶部工具条显示"已勾选 N / 有差异 M 组" + 操作提示 + 「全选（有差异的）」/「全部取消勾选」；批量选择是**在列表上拖拽框选**：在某行的方框上按住（用按下那一格的反向状态当"刷子"），纵向拖过若干行就整段刷成同一状态，**往上拖即取消这一段**，鼠标松开（含移出列表松开）结束；
+  ③ 保存按钮显示 `已选 / 有差异` 两个数字，没勾时禁用；一个都没勾点了会明确提示"只有勾上的组才会被写回"；
+  ④ 保存成功后把这些组**自动取消勾选**（冲突列表要等站点重建才刷新，避免下次重复写）；
+  ⑤ 勾选与目标选择**存 localStorage**（`osumania-ladder:realtime-conflict-selection:v1`），刷新/隔天回来还在，正好对应"分几次改完"；只存选择、不存比赛数据。
+- 运行的验证：`npx tsc --noEmit` → 0 错；`npm test` → 224/224；`npm run build` → 成功。（纯前端交互改动，没有可自动化的断言，实机操作是唯一验收方式。）
+- 未完成 / 仍有风险：① 拖拽框选只覆盖"当前列表顺序里连续的一段"（要选分散的多段就分几次拖）；② 存储里残留的键（某组已修掉）无害但不会自动清理；③ 未做浏览器实机验收。（交互按站长 2026-09-15 的更正改为"列表上拖拽框选"，此前的"前 N 组滑块"已移除。）
+
 ## 6. 可靠性与局部修复任务
 
 ### R13 [P2] 上传状态 API 忽略分页
@@ -577,7 +629,7 @@ LN 单曲使用 difficulty 是当前领域约定，不能改成 difficultyLn。�
 
 以下任务除标注 ✅ 外均为“待实施”，本次只写方案。P1 指有明确触发条件的数据丢失/覆盖或发布损坏风险，不表示已确认线上遭遇事故。
 
-进度速览（2026-09-14）：✅ R01（实现完成待验收，UI 自动重放未做）、✅ R02（实现完成待验收，浏览器端未联调）、✅ R03（已提交 `3634998`，未线上联调）、✅ R04（实现完成待验收，未提交，未线上联调）、✅ R05（实现完成待验收，未提交，时序行为无自动化测试）、✅ R06（实现完成待验收，未提交，**「替换当前版本」入口未做**、未线上联调）、✅ R07（实现完成待验收，未提交，并发删/重传未验收）、✅ R08、✅ R09、✅ R18、✅ R24（实施期间新增：下载路径网络重试，未提交）；其余待实施。
+进度速览（2026-09-14）：✅ R01（实现完成待验收，UI 自动重放未做）、✅ R02（实现完成待验收，浏览器端未联调）、✅ R03（已提交 `3634998`，未线上联调）、✅ R04（实现完成待验收，未提交，未线上联调）、✅ R05（实现完成待验收，未提交，时序行为无自动化测试）、✅ R06（实现完成待验收，未提交，**「替换当前版本」入口未做**、未线上联调）、✅ R07（实现完成待验收，未提交，并发删/重传未验收）、✅ R08、✅ R09、✅ R18、✅ R24（实施期间新增：下载路径网络重试，未提交）、✅ R25（悬浮卡段位与框高同源，未提交）、✅ R26（不参与难度统计 + 整场视图按指针选轮次 + 版本 0.9.0，未提交）、✅ R27（键型冲突改“勾选才改”+批量选择，未提交）；其余待实施。
 
 | 编号 | 工作单元 | 主要依赖 |
 | --- | --- | --- |
@@ -605,6 +657,9 @@ LN 单曲使用 difficulty 是当前领域约定，不能改成 difficultyLn。�
 | R22 | 构建与死代码清账 | 最后做 |
 | R23 | 包内容/部署核实及发布验收 | 只读核实可先做，发布等合包修复 |
 | ✅ R24 | 下载路径网络重试（实施期间新增） | 无 |
+| ✅ R25 | 悬浮卡段位改用现算值（实施期间新增） | 无 |
+| ✅ R26 | 谱面"不参与难度统计" + 整场视图悬浮（站长需求） | 无 |
+| ✅ R27 | 键型冲突“勾选才改”+批量选择（站长需求） | 无 |
 
 完成记录模板（由执行对应任务的 AI 填写在该任务末尾）：
 

@@ -8,6 +8,7 @@ import { useState, useRef, useCallback, useEffect, useMemo } from 'react'
 import { HoverCard } from './HoverCard'
 import { RoundDetailModal } from './RoundDetailModal'
 import { normalizeRealType } from '@/lib/realType'
+import { countableMaps } from '@/lib/difficultyCount'
 import { createTournamentSearchIndex, searchTournaments } from '@/lib/tournamentSearch'
 import { LadderSearchResults } from './LadderSearchResults'
 import { useT } from '@/lib/i18n'
@@ -68,7 +69,7 @@ export function LadderView() {
     }
     if (sortMode === 'default') return filteredTournaments
     const getAvg = (t: Tournament) => {
-      const allDiffs = t.rounds.flatMap((r) => r.maps.filter((m) => m.type !== 'TB').map((m) => m.difficulty))
+      const allDiffs = t.rounds.flatMap((r) => countableMaps(r.maps).filter((m) => m.type !== 'TB').map((m) => m.difficulty))
       return allDiffs.length > 0 ? allDiffs.reduce((s, d) => s + d, 0) / allDiffs.length : 0
     }
     return [...filteredTournaments].sort((a, b) =>
@@ -547,7 +548,8 @@ function TournamentColumn({
       // TB 不参与 round 框的高度/颜色/段位统计(仅红条另外画)。
       // LN 系(含 HB)取 ln 值再减 rfLnOffset,统一投影到 rf 轴上。
       const adjustedDiffs: number[] = []
-      for (const m of round.maps) {
+      // 勾了"不参与难度统计"的图不进框高/颜色(与后台平均值同一口径)。
+      for (const m of countableMaps(round.maps)) {
         if (m.type === 'TB') continue
         if (isLnBased(m)) {
           const d = getLnDiff(m) - rfLnOffset
@@ -558,8 +560,8 @@ function TournamentColumn({
       }
       const computedMin = adjustedDiffs.length > 0 ? Math.min(...adjustedDiffs) : Infinity
       const computedMax = adjustedDiffs.length > 0 ? Math.max(...adjustedDiffs) : -Infinity
-      const allLn = round.maps.filter((m) => m.type !== 'TB').length > 0 &&
-        round.maps.filter((m) => m.type !== 'TB').every((m) => isLnBased(m))
+      const allLn = countableMaps(round.maps).filter((m) => m.type !== 'TB').length > 0 &&
+        countableMaps(round.maps).filter((m) => m.type !== 'TB').every((m) => isLnBased(m))
       const offsetForStored = allLn ? rfLnOffset : 0
       const storedMin = round.difficulty.min > 0 ? round.difficulty.min - offsetForStored : Infinity
       const storedMax = round.difficulty.max > 0 ? round.difficulty.max - offsetForStored : -Infinity
@@ -611,14 +613,14 @@ function TournamentColumn({
 
   if (mode === 'tournament') {
     const allDiffs = visibleRounds.flatMap((r) =>
-      r.maps.filter((m) => m.type !== 'TB').map((m) => isLnBased(m) ? getLnDiff(m) - rfLnOffset : m.difficulty)
+      countableMaps(r.maps).filter((m) => m.type !== 'TB').map((m) => isLnBased(m) ? getLnDiff(m) - rfLnOffset : m.difficulty)
     ).filter((d) => d > 0)
     // maps 都是 0 时 fallback 到每轮 difficulty.average
     const fallbackAvgs = visibleRounds
       .map((r) => {
         if (r.difficulty.average <= 0) return null
-        const allLn = r.maps.filter((m) => m.type !== 'TB').length > 0 &&
-          r.maps.filter((m) => m.type !== 'TB').every((m) => isLnBased(m))
+        const allLn = countableMaps(r.maps).filter((m) => m.type !== 'TB').length > 0 &&
+          countableMaps(r.maps).filter((m) => m.type !== 'TB').every((m) => isLnBased(m))
         return r.difficulty.average - (allLn ? rfLnOffset : 0)
       })
       .filter((v): v is number => v !== null)
@@ -631,6 +633,41 @@ function TournamentColumn({
     if (!geometry) return null
     const lastRound = visibleRounds[visibleRounds.length - 1]
     const height = Math.max(geometry.paintBottom - geometry.paintTop, 40)
+    // 悬浮/点击按"指针所在高度"决定指哪一轮:整个比赛只有一个框(最低→最高),
+    // 固定绑最后一轮会让任何位置都显示决赛(站长反馈)。这里把指针 y 反解成难度,
+    // 再取难度区间离它最近的那一轮。
+    // plotHeight 是整段难度区间的高度,perUnit = 每 1 点难度多少像素
+    const perUnit = plotHeight / (DIFFICULTY_RANGE.max - DIFFICULTY_RANGE.min)
+    const roundRanges = visibleRounds.map((round) => {
+      const diffs = countableMaps(round.maps)
+        .filter((m) => m.type !== 'TB')
+        .map((m) => (isLnBased(m) ? getLnDiff(m) - rfLnOffset : m.difficulty))
+        .filter((d) => d > 0)
+      return diffs.length > 0
+        ? { round, min: Math.min(...diffs), max: Math.max(...diffs) }
+        : { round, min: null, max: null }
+    })
+    const pickRoundAtPointer = (clientY: number, rectTop: number, rectHeight: number) => {
+      if (perUnit <= 0) return lastRound
+      const ratio = rectHeight > 0 ? (clientY - rectTop) / rectHeight : 0
+      const yContent = geometry.paintTop + ratio * height
+      const diff = Math.min(
+        DIFFICULTY_RANGE.max,
+        Math.max(DIFFICULTY_RANGE.min, DIFFICULTY_RANGE.max - (yContent - ORIGIN_Y) / perUnit),
+      )
+      let best: { round: Round; min: number | null; max: number | null } | null = null
+      let bestDistance = Infinity
+      for (const entry of roundRanges) {
+        if (entry.min === null || entry.max === null) continue
+        const distance = diff < entry.min ? entry.min - diff : diff > entry.max ? diff - entry.max : 0
+        if (distance < bestDistance) {
+          bestDistance = distance
+          best = entry
+        }
+      }
+      return best ? best.round : lastRound
+    }
+
     const bandItems: BandItem[] = geometry.above
       ? [{ key: `${tournament.id}-band`, round: lastRound, sortValue: maxDiff, displayValue: null, dimmed: false }]
       : []
@@ -649,9 +686,15 @@ function TournamentColumn({
               type="button"
               className={`round-box absolute ${geometry.above ? 'left-1 right-1 overflow-cropped-top' : 'left-0 right-0'} ${geometry.below ? 'overflow-cropped-bottom' : ''} ${roundBorderAlways ? 'always-border' : ''}`}
               style={{ top: geometry.paintTop, height, background: getGradientForRange(minDiff, maxDiff) }}
-              onMouseEnter={(e) => onHover(lastRound, e.clientX, e.clientY)}
+              onMouseEnter={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect()
+                onHover(pickRoundAtPointer(e.clientY, rect.top, rect.height), e.clientX, e.clientY)
+              }}
               onMouseLeave={onLeave}
-              onClick={(e) => onOpenDetail(lastRound, e.currentTarget)}
+              onClick={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect()
+                onOpenDetail(pickRoundAtPointer(e.clientY, rect.top, rect.height), e.currentTarget)
+              }}
             >
               {tournament.abbreviation}
               {geometry.below && <span aria-hidden className="overflow-edge-bottom" />}
@@ -724,7 +767,7 @@ function TournamentColumn({
     const roundKey = `${round.id}-${roundIdx}`
     const types = getUniqueTypes(round)
     for (const type of types) {
-      const typeMaps = round.maps.filter((m) => m.type === type)
+      const typeMaps = countableMaps(round.maps).filter((m) => m.type === type)
       // TB 特判:RF 用 difficulty,LN 用 difficultyLn(都减偏移),两侧平均得 adjustedAvg。
       // 缺 LN 值时退化到 RF only;站长填 typeDifficulties 时同理两侧平均。
       // 一轮多张 TB 型图(如 TB + SHOWTB)时按 slot 各自成框,沿用同一加权(用户要求);

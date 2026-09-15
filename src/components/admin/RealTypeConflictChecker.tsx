@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react'
 import { useT } from '@/lib/i18n'
 import { tournaments as allTournaments } from '@/generated/tournaments'
 import type { Tournament } from '@/lib/types'
@@ -34,6 +34,36 @@ interface Conflict {
   realTypes: string[]
   mostCommon: string
   usages: Usage[]
+}
+
+// 勾选与目标选择存本地:站长常常分几次改,刷新后不该丢。
+// 只存"选择",不存任何比赛数据;键里带版本号,以后结构变了直接换键。
+const SELECTION_STORAGE_KEY = 'osumania-ladder:realtime-conflict-selection:v1'
+
+interface StoredSelection {
+  choices: Record<string, string>
+  selected: Record<string, boolean>
+}
+
+function readStoredSelection(): Partial<StoredSelection> | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const raw = window.localStorage.getItem(SELECTION_STORAGE_KEY)
+    if (!raw) return null
+    const parsed = JSON.parse(raw) as Partial<StoredSelection>
+    return parsed && typeof parsed === 'object' ? parsed : null
+  } catch {
+    return null
+  }
+}
+
+function writeStoredSelection(value: StoredSelection): void {
+  if (typeof window === 'undefined') return
+  try {
+    window.localStorage.setItem(SELECTION_STORAGE_KEY, JSON.stringify(value))
+  } catch {
+    // 存储被禁用/超限时静默失败:这只影响"下次还记得选择",不影响保存流程。
+  }
 }
 
 function majority(realTypes: string[]): string {
@@ -160,25 +190,79 @@ export function RealTypeConflictChecker({ canSave }: { canSave: boolean }) {
   const [choices, setChoices] = useState<Record<string, string>>(() => {
     const init: Record<string, string> = {}
     for (const c of saveableConflicts) init[c.key] = c.mostCommon
+    const stored = readStoredSelection()
+    // 存过的选择优先(站长常常分几次改,选项别丢);没存过的仍按多数派预选。
+    for (const c of saveableConflicts) if (stored?.choices?.[c.key]) init[c.key] = stored.choices[c.key]
     return init
   })
+
+  // conflict.key -> 本次是否要改。**默认全不勾**:只有勾了的组才会被写回(站长要求)。
+  const [selected, setSelected] = useState<Record<string, boolean>>(() => readStoredSelection()?.selected ?? {})
+
+  // 拖拽框选:在勾选框上按下(用按下那一格的反向状态作为"刷子"),纵向拖过若干行就整段刷成
+  // 同一个状态 —— 往上拖可以取消一整段。鼠标松开(含在列表外松开)结束。
+  const dragRef = useRef<{ anchor: number; value: boolean } | null>(null)
+  const selectableKeys = useMemo(
+    () => conflicts.filter((c) => c.kind !== 'setReview').map((c) => c.key),
+    [conflicts],
+  )
+
+  useEffect(() => {
+    const stopDrag = () => { dragRef.current = null }
+    window.addEventListener('mouseup', stopDrag)
+    return () => window.removeEventListener('mouseup', stopDrag)
+  }, [])
+
+  const applyRange = (fromIndex: number, toIndex: number, value: boolean) => {
+    const from = Math.min(fromIndex, toIndex)
+    const to = Math.max(fromIndex, toIndex)
+    setSelected((prev) => {
+      const next = { ...prev }
+      for (const key of selectableKeys.slice(from, to + 1)) next[key] = value
+      return next
+    })
+  }
+
+  const beginDragSelect = (key: string, checked: boolean, disabled: boolean) => {
+    if (disabled) return
+    const index = selectableKeys.indexOf(key)
+    if (index < 0) return
+    const value = !checked
+    dragRef.current = { anchor: index, value }
+    setSelected((prev) => ({ ...prev, [key]: value }))
+  }
+
+  const extendDragSelect = (key: string) => {
+    const drag = dragRef.current
+    if (!drag) return
+    const index = selectableKeys.indexOf(key)
+    if (index < 0) return
+    applyRange(drag.anchor, index, drag.value)
+  }
+
+  useEffect(() => {
+    writeStoredSelection({ choices, selected })
+  }, [choices, selected])
   const [saving, setSaving] = useState(false)
   const [status, setStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
 
-  // 有多少组被用户实际选择了（与 mostCommon 无关，只要有目标就算待应用）
-  const pendingCount = useMemo(() => {
-    let n = 0
-    for (const c of saveableConflicts) {
-      // 若该组内已有 usage 的 realType 不等于选定目标，就需要改
-      if (c.usages.some((u) => u.realType !== choices[c.key])) n++
-    }
-    return n
-  }, [saveableConflicts, choices])
+  // 有差异的组(选了目标、且组里确实有不一致的用法)——这才有可改的东西
+  const pendingConflicts = useMemo(
+    () => saveableConflicts.filter((c) => c.usages.some((u) => u.realType !== choices[c.key])),
+    [saveableConflicts, choices],
+  )
+  // 真正会被写回的:既勾了、又有差异。
+  const selectedConflicts = useMemo(
+    () => pendingConflicts.filter((c) => selected[c.key] === true),
+    [pendingConflicts, selected],
+  )
+  const pendingCount = pendingConflicts.length
 
   const handleSave = useCallback(async () => {
     // 先按比赛聚合"要改哪些位置 + 改成什么"
     const wanted = new Map<string, { usage: Usage; target: string }[]>()
-    for (const c of saveableConflicts) {
+    // 只处理勾选了的组:没勾的保持原样(用户还没想好该改成什么)。
+    for (const c of selectedConflicts) {
       const target = choices[c.key]
       for (const u of c.usages) {
         if (u.realType === target) continue
@@ -189,7 +273,7 @@ export function RealTypeConflictChecker({ canSave }: { canSave: boolean }) {
     }
 
     if (wanted.size === 0) {
-      setStatus({ type: 'error', message: t('rtConflict.nothingToSave') })
+      setStatus({ type: 'error', message: t('rtConflict.nothingSelected') })
       return
     }
 
@@ -243,12 +327,18 @@ export function RealTypeConflictChecker({ canSave }: { canSave: boolean }) {
       }
       if (!res.ok) throw new Error(dataRes.error || t('rtConflict.saveFailed'))
       setStatus({ type: 'success', message: t('rtConflict.saved', { n: String(items.length) }) })
+      // 写过的组取消勾选:列表要等站点重建才会刷新,别让它们下次又被写一遍。
+      setSelected((prev) => {
+        const next = { ...prev }
+        for (const c of selectedConflicts) delete next[c.key]
+        return next
+      })
     } catch (e) {
       setStatus({ type: 'error', message: (e as Error).message })
     } finally {
       setSaving(false)
     }
-  }, [saveableConflicts, choices, pendingCount, t])
+  }, [selectedConflicts, choices, pendingCount, t])
 
   return (
     <div className="bg-white dark:bg-neutral-900 rounded-lg border border-gray-200 dark:border-neutral-800 shadow-sm">
@@ -260,10 +350,12 @@ export function RealTypeConflictChecker({ canSave }: { canSave: boolean }) {
         {canSave && saveableConflicts.length > 0 && (
           <button
             onClick={handleSave}
-            disabled={saving || pendingCount === 0}
+            disabled={saving || selectedConflicts.length === 0}
             className="px-3 py-1.5 text-xs font-medium bg-purple-600 text-white rounded hover:bg-purple-700 disabled:opacity-50 shrink-0"
           >
-            {saving ? t('rtConflict.saving') : t('rtConflict.saveAndRebuild', { n: String(pendingCount) })}
+            {saving
+              ? t('rtConflict.saving')
+              : t('rtConflict.saveAndRebuild', { n: `${selectedConflicts.length} / ${pendingCount}` })}
           </button>
         )}
       </div>
@@ -289,13 +381,62 @@ export function RealTypeConflictChecker({ canSave }: { canSave: boolean }) {
         <div className="p-8 text-center text-gray-400 dark:text-neutral-500 text-sm">{t('rtConflict.none')}</div>
       )}
 
+      {canSave && pendingCount > 0 && (
+        <div className="mx-4 mt-3 flex items-center gap-3 flex-wrap rounded border border-purple-200 dark:border-purple-900 bg-purple-50/50 dark:bg-purple-900/20 px-3 py-2">
+          <span className="text-xs text-purple-800 dark:text-purple-200">
+            {t('rtConflict.select.selectedCount', { n: `${selectedConflicts.length} / ${pendingCount}` })}
+          </span>
+          <span className="text-xs text-purple-700/80 dark:text-purple-300/80">{t('rtConflict.select.dragHint')}</span>
+          <button
+            type="button"
+            onClick={() => {
+              const next: Record<string, boolean> = {}
+              for (const c of pendingConflicts) next[c.key] = true
+              setSelected(next)
+            }}
+            className="text-xs text-purple-700 dark:text-purple-300 underline"
+          >
+            {t('rtConflict.select.all')}
+          </button>
+          <button
+            type="button"
+            onClick={() => setSelected({})}
+            className="text-xs text-purple-700 dark:text-purple-300 underline"
+          >
+            {t('rtConflict.select.clear')}
+          </button>
+        </div>
+      )}
+
       {conflicts.length > 0 && (
         <div className="divide-y divide-gray-100 dark:divide-neutral-800">
           {conflicts.map((c) => (
-            <div key={c.key} className="px-4 py-3">
+            <div key={c.key} className="px-4 py-3" onMouseEnter={() => extendDragSelect(c.key)}>
               <div className="flex items-center justify-between gap-3 flex-wrap">
                 <div className="min-w-0">
                   <div className="flex items-center gap-1.5">
+                    {c.kind !== 'setReview' && (
+                      <input
+                        type="checkbox"
+                        readOnly
+                        checked={selected[c.key] === true}
+                        disabled={!c.usages.some((u) => u.realType !== choices[c.key])}
+                        onMouseDown={(e) => {
+                          // 挡住原生切换:状态由 beginDragSelect 自己改,保证一次只切一次。
+                          e.preventDefault()
+                          beginDragSelect(c.key, selected[c.key] === true, !c.usages.some((u) => u.realType !== choices[c.key]))
+                        }}
+                        onKeyDown={(e) => {
+                          // 键盘也能单独勾:空格/回车切换这一行(拖拽只解决批量)。
+                          if (e.key === ' ' || e.key === 'Enter') {
+                            e.preventDefault()
+                            setSelected((prev) => ({ ...prev, [c.key]: !prev[c.key] }))
+                          }
+                        }}
+                        title={t('rtConflict.select.tip')}
+                        className="accent-purple-600 shrink-0 disabled:opacity-30 cursor-pointer"
+                      />
+                    )}
                     {c.kind === 'rateSet' && (
                       <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-200 shrink-0">
                         {t('rtConflict.rateBadge')}

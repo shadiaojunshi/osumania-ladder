@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import type { Round, BeatmapMeta } from '@/lib/types'
 import { MapSlotEditor, needsDualDifficulty, type ExtendedMap, type MapCategory, REAL_TYPES } from './MapSlotEditor'
+import { countableMaps } from '@/lib/difficultyCount'
 import { getTemplatesByBestOf, type PoolTemplate } from '@/lib/poolTemplates'
 import { useT } from '@/lib/i18n'
 import { DifficultyRefPicker } from './DifficultyRefPicker'
@@ -616,7 +617,8 @@ function mapsToOutput(maps: ExtendedMap[]): BeatmapMeta[] {
 function recalcDifficulty(maps: ExtendedMap[]): Round['difficulty'] {
   if (maps.length === 0) return { min: 0, max: 0, average: 0 }
   const points: number[] = []
-  for (const m of maps) {
+  // 勾了"不参与难度统计"的图不进本轮 min/max/average(与前端取数同一口径)。
+  for (const m of countableMaps(maps)) {
     if (m.type === 'TB') continue
     if (m.type === 'HB') {
       const rf = m.difficulty > 0 ? m.difficulty : 0
@@ -644,7 +646,7 @@ function autoCalcTypeDiffs(
 ): RoundWithMeta['_typeDiffs'] {
   const result = { ...current }
   const avg = (type: string, field: 'difficulty' | 'difficultyLn' = 'difficulty') => {
-    const diffs = maps.filter((m) => m.type === type).map((m) => m[field] || 0).filter((d) => d > 0)
+    const diffs = countableMaps(maps).filter((m) => m.type === type).map((m) => m[field] || 0).filter((d) => d > 0)
     return diffs.length > 0 ? +(diffs.reduce((s, d) => s + d, 0) / diffs.length).toFixed(2) : 0
   }
   if (!locked.rc) result.rc = avg('RC')

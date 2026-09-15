@@ -575,6 +575,20 @@ export function MapSlotEditor({ map, onChange, onRemove, getMapHistory, enableEs
             </div>
           )}
 
+          {/* 不参与难度统计:勾上后这张图的难度不进"本轮/该键型"的平均值,也从 ladder 框高里排除。 */}
+          <label
+            className="flex items-center gap-1 text-xs text-gray-500 dark:text-neutral-400 cursor-pointer select-none"
+            title={t('map.exclude.tip')}
+          >
+            <input
+              type="checkbox"
+              checked={map.excludeFromDifficulty === true}
+              onChange={(e) => onChange({ ...map, excludeFromDifficulty: e.target.checked ? true : undefined })}
+              className="accent-purple-500"
+            />
+            {t('map.exclude.label')}
+          </label>
+
           {rejectedDifficulty !== null && (
             <p className="text-xs text-red-600 dark:text-red-400">
               {t('diff.limit.rejected', { max: DIFFICULTY_MAX, value: formatDifficulty(rejectedDifficulty) })}

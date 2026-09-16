@@ -3,7 +3,7 @@
 import { useMemo, useState, useRef } from 'react'
 import type { RoundWithMeta } from './RoundEditor'
 import type { ExtendedMap, MapCategory } from './MapSlotEditor'
-import { PENDING_REAL_TYPE_BY_CATEGORY, REAL_TYPES } from './MapSlotEditor'
+import { defaultRealTypeFor } from '@/lib/realTypeCatalog'
 import { findMatchingTemplate, applyTemplateRealTypes } from '@/lib/poolTemplates'
 import { useT, type MessageKey } from '@/lib/i18n'
 import { tournaments as allTournaments } from '@/generated/tournaments'
@@ -341,6 +341,18 @@ export function BulkImporter({ onImport, onClose, existingRoundCount, currentTou
   const allAbbrFilled = groupMetas.every((m, i) => groupSizes[i] === 0 || m.abbreviation.trim())
   const canImport = importableRows.length > 0 && allAbbrFilled && !running
 
+  // 结构命中标准池的轮次:只做提示,不自动填键型 —— 站长要求默认一律 Pending,
+  // 具体键型由填写者在编辑页手动选(编辑页每个轮次都有一排蓝色模板按钮可一键套用)。
+  const templateHints = groupedAll
+    .map((groupRows, gi) => {
+      if (!groupRows || groupRows.length === 0) return null
+      const categories = groupRows.map((r) => detectCategory(r.slot))
+      const template = findMatchingTemplate(categories, !!groupMetas[gi]?.isQualifier)
+      if (!template) return null
+      return { gi, label: template.label, expected: applyTemplateRealTypes(categories, template).filter(Boolean) }
+    })
+    .filter((hint): hint is { gi: number; label: string; expected: string[] } => hint !== null)
+
   const doImport = () => {
     const rounds: RoundWithMeta[] = []
     let orderCursor = existingRoundCount
@@ -350,10 +362,9 @@ export function BulkImporter({ onImport, onClose, existingRoundCount, currentTou
       const meta = groupMetas[gi]
       orderCursor++
 
-      // 优先尝试按"张数 + 各 type 计数"匹配预设模板;命中就按出现顺序对位填 realType
+      // 结构命中标准池时**不再自动填 realType**(站长要求:默认一律 Pending)。
+      // 确认页会提示"结构匹配标准池 X,导入后可在编辑页点蓝色模板按钮一键套用"。
       const categories = groupRows.map((r) => detectCategory(r.slot))
-      const template = findMatchingTemplate(categories, meta.isQualifier)
-      const matchedRealTypes = template ? applyTemplateRealTypes(categories, template) : null
 
       // 如果本轮只有一张 TB 且 slot 写成了 TB1,统一改成 TB(单张约定);
       // 跟 RoundEditor.addMap 和 generate-pack.js 显示规则对齐。
@@ -362,10 +373,9 @@ export function BulkImporter({ onImport, onClose, existingRoundCount, currentTou
       const maps: ExtendedMap[] = groupRows.map((r, ri) => {
         const m = r.meta
         const category = categories[ri]
-        const realTypes = REAL_TYPES[category] || []
-        const fallbackRealType = PENDING_REAL_TYPE_BY_CATEGORY[category]
-          || (realTypes.length > 0 ? realTypes[0].id : '')
-        const realType = matchedRealTypes?.[ri] || fallbackRealType
+        // 默认键型 = 该大类的 Pending(RC→PDRC / LN→PDLN / HB→PDHB / SV→PDSV / 特殊→PDEX),
+        // 由填写者手动改成具体键型。以前是"命中模板就自动填",于是没复核的轮次看起来已经分好类了。
+        const realType = defaultRealTypeFor(category)
         const type = category === 'SPECIAL' ? r.slot.replace(/\d+$/, '') : category
         const slot = tbCount === 1 && /^TB1?$/i.test(r.slot) ? 'TB' : r.slot
         // 识别成功:写 name + beatmapId + beatmapsetId。
@@ -509,6 +519,24 @@ export function BulkImporter({ onImport, onClose, existingRoundCount, currentTou
               <div className="text-xs text-gray-400 dark:text-neutral-500">
                 {t('bulk.summary', { total: String(rows.length), valid: String(rows.filter((r) => r.mapId).length) })}
               </div>
+
+              {/* 命中标准池的提示:键型不自动填(默认 Pending),这里告诉填写者去哪一键套用。 */}
+              {templateHints.length > 0 && (
+                <div className="space-y-1">
+                  {templateHints.map((hint) => (
+                    <div
+                      key={hint.gi}
+                      className="rounded border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20 px-3 py-2 text-xs text-blue-800 dark:text-blue-200"
+                      title={hint.expected.join(' / ')}
+                    >
+                      {t('bulk.template.hint', {
+                        round: groupMetas[hint.gi]?.abbreviation || String(hint.gi + 1),
+                        template: hint.label,
+                      })}
+                    </div>
+                  ))}
+                </div>
+              )}
 
               {hasImportWarnings && (
                 <div className="space-y-2">

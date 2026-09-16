@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import type { Round, BeatmapMeta } from '@/lib/types'
 import { MapSlotEditor, needsDualDifficulty, type ExtendedMap, type MapCategory, REAL_TYPES } from './MapSlotEditor'
+import { defaultRealTypeFor } from '@/lib/realTypeCatalog'
 import { countableMaps } from '@/lib/difficultyCount'
 import { getTemplatesByBestOf, type PoolTemplate } from '@/lib/poolTemplates'
 import { useT } from '@/lib/i18n'
@@ -82,13 +83,14 @@ export function RoundEditor({ round, index, onChange, onRemove, getMapHistory, s
     // TB 习惯上单张就叫 TB,只在出现第二张时才编号 TB2/TB3...。
     // 跟 generate-pack.js 的 TB1→TB 显示规则保持一致。
     const slot = prefix === 'TB' && slotNum === 1 ? 'TB' : `${prefix}${slotNum}`
-    const realTypes = REAL_TYPES[category] || []
-    const firstRealType = realTypes.length > 0 ? realTypes[0].id : ''
+    // 新谱面默认挂该大类的 Pending 键型(PDEX 表示特殊),而不是 SS/HB1/RE ——
+    // 默认成具体键型会让"忘了改"的图看起来像已分类,是历史误标的根源。
+    const realType = defaultRealTypeFor(category)
 
     const newMap: ExtendedMap = {
       slot,
       type: category === 'SPECIAL' ? prefix : category,
-      realType: firstRealType,
+      realType,
       name: slot,
       difficulty: 0,
       category,
@@ -253,6 +255,8 @@ export function RoundEditor({ round, index, onChange, onRemove, getMapHistory, s
   }
 
   const applyPoolTemplate = (tpl: PoolTemplate) => {
+    // 蓝色模板按钮是**手动**入口:点了才按标准池填具体键型。
+    // 不点的话,新建/导入的谱面一律是 Pending 键型(见 addMap 与 realTypeCatalog)。
     // 先统计每种 type 在模板里出现几次,用来决定 TB 是叫 TB 还是 TB1。
     // 单张 TB → "TB",多张才编号(TB1/TB2...);跟 addMap 的规则对齐。
     const totalPerType: Record<string, number> = {}
@@ -360,6 +364,7 @@ export function RoundEditor({ round, index, onChange, onRemove, getMapHistory, s
                 <button
                   key={i}
                   onClick={() => applyPoolTemplate(tpl)}
+                  title={t('round.template.tip', { tpl: tpl.label })}
                   className="px-2 py-0.5 text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-200 rounded hover:bg-blue-100 dark:hover:bg-blue-900/50 border border-blue-200 dark:border-blue-800"
                 >
                   {tpl.label}

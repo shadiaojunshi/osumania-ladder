@@ -44,13 +44,15 @@ const REAL_TYPE_NAMES = {
   RE: 'Release', CO: 'Coordination', TE: 'Timinghell', DE: 'Density',
   JW: 'Jacky Wildcard LN', SW: 'Speedy Wildcard LN', LNMX: 'LN Mixed', LNWC: 'LN Wildcard', LNTC: 'Technical LN', IN: 'Inverse', LNWL: 'LNwall', OLN: 'Other LN', PDLN: 'Pending LN',
   SV1: 'Pattern SV', SV2: 'Rhythm SV', SI: 'Sightread SV', ME: 'Memorization SV', SVMX: 'Mix SV', GM: 'Gimmick SV', PDSV: 'Pending SV',
+  PDEX: 'Pending Special',
   TB: 'Tiebreaker',
 }
 
-// Pending RC/LN/HB are classification queues, not downloadable pattern packs.
+// Pending RC/LN/HB/特殊 are classification queues, not downloadable pattern packs.
 // Pending SV is intentionally downloadable because unresolved SV maps still need
 // a usable catch-all pack.
-const PACK_EXCLUDED_REAL_TYPES = new Set(['PDRC', 'PDLN', 'PDHB'])
+// PDEX(待分类的特殊槽位)同属分类队列,不进合包(2026-09-15 站长要求)。
+const PACK_EXCLUDED_REAL_TYPES = new Set(['PDRC', 'PDLN', 'PDHB', 'PDEX'])
 
 // [Difficulty] 段**整体不再干预**:OD 与 HP 都跟随原谱,原谱是多少就是多少。
 //   - OD:2026-09-13 用户要求取消全部 OD 下限,旧的 OD_FLOOR 表(按 realType 抬到 7.2~9)
@@ -802,4 +804,5 @@ module.exports = {
   rewriteOsu,
   normalizeRealType,
   REAL_TYPE_NAMES,
+  PACK_EXCLUDED_REAL_TYPES,
 }

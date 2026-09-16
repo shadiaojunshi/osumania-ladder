@@ -1,8 +1,11 @@
 import type { Tournament } from './types'
 import { normalizeRealType } from './realType.ts'
 
-export const PENDING_REAL_TYPES = new Set(['PDRC', 'PDLN', 'PDHB', 'PDSV'])
-export const NON_SV_PENDING_REAL_TYPES = new Set(['PDRC', 'PDLN', 'PDHB'])
+// PDEX = 特殊槽位(跨大类,如 HB&SV)的"待分类",2026-09-15 加。
+// 它和 PDSV 不同:PDEX 只当分类队列,不进合包(见 scripts/generate-pack.js),
+// 所以它在"排除 SV 待分类"的集合里也要保留。
+export const PENDING_REAL_TYPES = new Set(['PDRC', 'PDLN', 'PDHB', 'PDSV', 'PDEX'])
+export const NON_SV_PENDING_REAL_TYPES = new Set(['PDRC', 'PDLN', 'PDHB', 'PDEX'])
 
 export interface PendingMapLocation {
   tournamentId: string

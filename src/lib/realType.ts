@@ -12,5 +12,6 @@ export function normalizeRealType(realType: string | undefined | null): string {
 }
 
 export function isPendingRealType(realType: string | undefined | null): boolean {
-  return ['PDRC', 'PDLN', 'PDHB', 'PDSV'].includes(normalizeRealType(realType))
+  // PDEX = 特殊槽位的"待分类"(2026-09-15 新增)。
+  return ['PDRC', 'PDLN', 'PDHB', 'PDSV', 'PDEX'].includes(normalizeRealType(realType))
 }

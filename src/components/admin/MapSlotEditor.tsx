@@ -8,6 +8,7 @@ import type { RefType } from '@/lib/referenceData'
 import type { MapHistorySummary } from '@/hooks/useMapHistory'
 import { classifySetConflict } from '@/lib/mapConflictDetection'
 import { normalizeRealType } from '@/lib/realType'
+import { CATEGORY_COLORS, defaultRealTypeFor, realTypeOptionsFor, type MapCategory } from '@/lib/realTypeCatalog'
 import { estimateBeatmapDifficulty, ManiaAnalysisError, type ManiaAnalysisEstimate } from '@/lib/maniaAnalyserClient'
 import {
   DIFFICULTY_MAX,
@@ -19,86 +20,11 @@ import {
 } from '@/lib/difficultyLimits'
 import { ManiaChartButton } from '@/components/chart/ManiaChartButton'
 
-export type MapCategory = 'RC' | 'LN' | 'HB' | 'SV' | 'TB' | 'SPECIAL'
-
-export const REAL_TYPES: Record<string, { id: string; name: string }[]> = {
-  RC: [
-    { id: 'SS', name: 'Stream (SS)' },
-    { id: 'JS', name: 'Jumpstream (JS)' },
-    { id: 'SA', name: 'Stamina (SA)' },
-    { id: 'CJ', name: 'Chordjack (CJ)' },
-    { id: 'SJ', name: 'Jackspeed (SJ)' },
-    { id: 'FCJ', name: 'Finger Control Jack (FCJ)' },
-    { id: 'MX', name: 'Rcmix (MX)' },
-    { id: 'DP', name: 'Dump (DP)' },
-    { id: 'ADP', name: 'Accurate dump (ADP)' },
-    { id: 'STC', name: 'Streamtech (STC)' },
-    { id: 'MTC', name: 'Minijacktech (MTC)' },
-    { id: 'SATC', name: 'Stamina tech (SATC)' },
-    { id: 'JTC', name: 'Jackmained tech (JTC)' },
-    { id: 'WTC', name: 'Wild tech (WTC)' },
-    { id: 'TC', name: 'Tech (TC)' },
-    { id: 'ORC', name: 'Otherrice (ORC)' },
-    { id: 'PDRC', name: 'Pending RC (PDRC)' },
-  ],
-  HB: [
-    { id: 'HB1', name: 'Speed/Generic (HB1)' },
-    { id: 'HB2', name: 'Mid-tempo/Jack/Shield (HB2)' },
-    { id: 'HB3', name: 'Technical (HB3)' },
-    { id: 'HB4', name: 'Wildcard (HB4)' },
-    { id: 'HB5', name: 'Old-school (HB5)' },
-    { id: 'RCmainHB', name: 'RC-main Hybrid (RCmainHB)' },
-    { id: 'LNmainHB', name: 'LN-main Hybrid (LNmainHB)' },
-    { id: 'MXHB', name: 'Mixed HB (MXHB)' },
-    { id: 'MNTB', name: 'Mini Tiebreaker (MNTB)' },
-    { id: 'OHB', name: 'OtherHybrid (OHB)' },
-    { id: 'PDHB', name: 'Pending HB (PDHB)' },
-  ],
-  LN: [
-    { id: 'RE', name: 'Release (RE)' },
-    { id: 'CO', name: 'Coordination (CO)' },
-    { id: 'TE', name: 'Timinghell (TE)' },
-    { id: 'DE', name: 'Density (DE)' },
-    { id: 'JW', name: 'Jacky Wildcard LN (JW)' },
-    { id: 'SW', name: 'Speedy Wildcard LN (SW)' },
-    { id: 'LNMX', name: 'LN Mixed (LNMX)' },
-    { id: 'LNWC', name: 'LN Wildcard (LNWC)' },
-    { id: 'LNTC', name: 'Technical LN (LNTC)' },
-    { id: 'IN', name: 'Inverse (IN)' },
-    { id: 'LNWL', name: 'LNwall (LNWL)' },
-    { id: 'OLN', name: 'Other LN (OLN)' },
-    { id: 'PDLN', name: 'Pending LN (PDLN)' },
-  ],
-  SV: [
-    { id: 'SV1', name: 'Pattern (SV1)' },
-    { id: 'SV2', name: 'Rhythm (SV2)' },
-    { id: 'SI', name: 'Sightread (SI)' },
-    { id: 'ME', name: 'Memorization (ME)' },
-    { id: 'SVMX', name: 'SVMix (SVMX)' },
-    { id: 'GM', name: 'Gimmick (GM)' },
-    { id: 'PDSV', name: 'Pending SV (PDSV)' },
-  ],
-  TB: [
-    { id: 'TB', name: 'Tiebreaker' },
-  ],
-  SPECIAL: [],
-}
-
-export const PENDING_REAL_TYPE_BY_CATEGORY: Partial<Record<MapCategory, string>> = {
-  RC: 'PDRC',
-  LN: 'PDLN',
-  HB: 'PDHB',
-  SV: 'PDSV',
-}
-
-const CATEGORY_COLORS: Record<string, string> = {
-  RC: '#3b82f6',
-  HB: '#8b5cf6',
-  LN: '#6366f1',
-  SV: '#f59e0b',
-  TB: '#ef4444',
-  SPECIAL: '#10b981',
-}
+// 键型目录(REAL_TYPES / 默认键型 / 颜色)已抽到 src/lib/realTypeCatalog.ts —— 那是纯数据模块,
+// 可以被 node --test 直接导入锁住"默认键型必须是 Pending"这类规则。
+// 这里继续 re-export,免得散落各处的 `from './MapSlotEditor'` 全都要改。
+export { REAL_TYPES, PENDING_REAL_TYPE_BY_CATEGORY, CATEGORY_COLORS } from '@/lib/realTypeCatalog'
+export type { MapCategory } from '@/lib/realTypeCatalog'
 
 const CATEGORIES: { id: MapCategory; label: string; labelKey?: MessageKey }[] = [
   { id: 'RC', label: 'RC' },
@@ -226,11 +152,8 @@ export function MapSlotEditor({ map, onChange, onRemove, getMapHistory, enableEs
   const estimateGeneration = useRef(0)
   const canonicalRealType = normalizeRealType(map.realType)
   const dual = needsDualDifficulty(map.category)
-  const realTypeOptions = map.category === 'SPECIAL'
-    ? Object.entries(REAL_TYPES).flatMap(([cat, types]) =>
-        cat === 'SPECIAL' ? [] : types.map((t) => ({ ...t, group: cat }))
-      )
-    : (REAL_TYPES[map.category] || [])
+  // 特殊槽位跨大类(列全部键型,含 PDEX);普通大类只看自己的列表。规则在 realTypeCatalog。
+  const realTypeOptions = realTypeOptionsFor(map.category)
 
   const history = getMapHistory ? getMapHistory(map.beatmapId, map.beatmapsetId) : null
 
@@ -349,13 +272,13 @@ export function MapSlotEditor({ map, onChange, onRemove, getMapHistory, enableEs
   const hasDiff = (map.difficulty || 0) > 0 || (dual && (map.difficultyLn || 0) > 0)
 
   const handleCategoryChange = (category: MapCategory) => {
-    const newRealTypes = REAL_TYPES[category] || []
-    const firstRealType = newRealTypes.length > 0 ? newRealTypes[0].id : map.realType
     onChange({
       ...map,
       category,
       type: category === 'SPECIAL' ? map.type : category,
-      realType: firstRealType,
+      // 改大类后默认回到该大类的 Pending 键型(以前是列表第一个:SS/HB1/RE/SV1,
+      // 于是没手动改的图全被记成第一个键型 —— 站长反馈的误标来源)。
+      realType: defaultRealTypeFor(category, map.realType),
       difficultyLn: needsDualDifficulty(category) ? (map.difficultyLn || undefined) : undefined,
     })
   }
@@ -495,6 +418,12 @@ export function MapSlotEditor({ map, onChange, onRemove, getMapHistory, enableEs
               onChange={(e) => updateField('realType', normalizeRealType(e.target.value))}
               className="px-1.5 py-1 border border-gray-200 dark:border-neutral-700 rounded text-xs flex-1 min-w-0 bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 focus:outline-none focus:border-purple-400"
             >
+              {/* 当前值不在列表里时,浏览器会**显示第一个选项**(看起来就像"默认是 SS")。
+                  这里显式给出占位项,别让空值/自定义值假装成了某个具体键型。 */}
+              {!canonicalRealType && <option value="">{t('mapSlot.realType.unset')}</option>}
+              {canonicalRealType && !realTypeOptions.some((rt) => rt.id === canonicalRealType) && (
+                <option value={canonicalRealType}>{`${canonicalRealType} (${t('mapSlot.realType.notListed')})`}</option>
+              )}
               {realTypeOptions.map((rt) => (
                 <option key={rt.id} value={rt.id}>{rt.name}</option>
               ))}

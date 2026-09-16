@@ -255,7 +255,7 @@
         {
           "slot": "LN1",
           "type": "LN",
-          "realType": "PDLN",
+          "realType": "RE",
           "name": "Dokuro-chan (CV: Saeko Chiba) - Bokusatsu Tenshi Dokuro-chan 2007 (TV Size) [Hyper Weapon]",
           "difficulty": 2.68,
           "beatmapId": 5289112,
@@ -264,7 +264,7 @@
         {
           "slot": "LN2",
           "type": "LN",
-          "realType": "PDLN",
+          "realType": "LNMX",
           "name": "Usada Pekora - PEKORANDOMBRAIN! [A-Ru-Mon-Do]",
           "difficulty": 2.68,
           "beatmapId": 5289236,
@@ -504,7 +504,7 @@
         {
           "slot": "RC3",
           "type": "RC",
-          "realType": "PDRC",
+          "realType": "MX",
           "name": "BEMANI Sound Team \"Captain Sonic\" - DISPARATE [Stage 3: Desperation]",
           "difficulty": 0,
           "beatmapId": 5309399,
@@ -756,7 +756,7 @@
         {
           "slot": "LN1",
           "type": "LN",
-          "realType": "PDLN",
+          "realType": "RE",
           "name": "",
           "difficulty": 5,
           "beatmapId": 5324003

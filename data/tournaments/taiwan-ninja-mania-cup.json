@@ -301,7 +301,7 @@
         {
           "slot": "RC2",
           "type": "RC",
-          "realType": "PDRC",
+          "realType": "DP",
           "name": "YuzeTang - All the world's a stage [Film]",
           "difficulty": 5.18,
           "beatmapId": 5398712,
@@ -328,7 +328,7 @@
         {
           "slot": "LN2",
           "type": "LN",
-          "realType": "PDLN",
+          "realType": "DE",
           "name": "Shaman Cure-All - Tuk Tuk Boshi [\\:D/]",
           "difficulty": 5.6,
           "beatmapId": 5550306,

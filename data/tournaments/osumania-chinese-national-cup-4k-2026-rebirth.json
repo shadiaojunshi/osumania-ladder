@@ -105,8 +105,8 @@
       "abbreviation": "Group I",
       "order": 2,
       "difficulty": {
-        "min": 6,
-        "max": 7,
+        "min": 6.9,
+        "max": 8.2,
         "average": 7.23
       },
       "maps": [
@@ -1126,7 +1126,7 @@
         {
           "slot": "RC7",
           "type": "RC",
-          "realType": "JTC",
+          "realType": "TC",
           "name": "Hoshimachi Suisei - BIBBIDIBA (dtn bootleg) [Spotlight]",
           "difficulty": 13.75,
           "beatmapId": 5842867,

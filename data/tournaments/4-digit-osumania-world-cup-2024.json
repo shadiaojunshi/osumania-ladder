@@ -1176,7 +1176,7 @@
         {
           "slot": "LN6",
           "type": "LN",
-          "realType": "PDLN",
+          "realType": "LNTC",
           "name": "JAKAZiD - Slaughta [chalLeNge x1.1]",
           "difficulty": 9.6,
           "beatmapId": 3575493,

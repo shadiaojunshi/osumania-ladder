@@ -860,7 +860,7 @@
         {
           "slot": "LN2",
           "type": "LN",
-          "realType": "PDLN",
+          "realType": "DE",
           "name": "seatrus - Cosmo Station [Cosmo (cut)]",
           "difficulty": 11,
           "beatmapId": 5527583,

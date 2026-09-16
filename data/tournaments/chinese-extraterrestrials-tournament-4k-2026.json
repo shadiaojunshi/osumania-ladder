@@ -997,7 +997,7 @@
       "difficulty": {
         "min": 14.5,
         "max": 17,
-        "average": 15.38
+        "average": 15.57
       },
       "maps": [
         {
@@ -1068,7 +1068,7 @@
           "type": "RC",
           "realType": "MX",
           "name": "Daisuke Anayama - Konton wo Koeshi Warera ga Shinseinaru Chouritsunushi wo Tataeyo [Annihilation]",
-          "difficulty": 14.75,
+          "difficulty": 15.11,
           "beatmapId": 5866950,
           "beatmapsetId": 2616183
         },
@@ -1086,24 +1086,24 @@
           "type": "RC",
           "realType": "WTC",
           "name": "M2U - Lobelia [Saturnine]",
-          "difficulty": 14.75,
+          "difficulty": 15.33,
           "beatmapId": 5866951,
           "beatmapsetId": 2616184
         },
         {
           "slot": "HB1",
           "type": "HB",
-          "realType": "PDHB",
+          "realType": "HB1",
           "name": "Kobaryo - Heaven's Gateway [feat. Persian Groovies] [Exit From Mortality (edit)]",
           "difficulty": 14.6,
           "beatmapId": 5866944,
           "beatmapsetId": 2616180,
-          "difficultyLn": 15
+          "difficultyLn": 16
         },
         {
           "slot": "HB2",
           "type": "HB",
-          "realType": "PDHB",
+          "realType": "HB2",
           "name": "Camellia - Z:iRNiTRA [Epic Catastrophe (cut)]",
           "difficulty": 14.5,
           "beatmapId": 5867076,
@@ -1113,7 +1113,7 @@
         {
           "slot": "HB3",
           "type": "HB",
-          "realType": "PDHB",
+          "realType": "HB3",
           "name": "Sta - The Ricochet [The Terminal of 3.15th Line / 1.05]",
           "difficulty": 14.8,
           "beatmapId": 4732656,
@@ -1123,7 +1123,7 @@
         {
           "slot": "HBX",
           "type": "HB",
-          "realType": "PDHB",
+          "realType": "MNTB",
           "name": "Camellia - /// Under Construxion /// [I wanna give u a punch!!!]",
           "difficulty": 15.4,
           "beatmapId": 5867083,
@@ -1160,7 +1160,7 @@
         {
           "slot": "LNX",
           "type": "LN",
-          "realType": "PDLN",
+          "realType": "LNMX",
           "name": "katagiri - STRONG 280 [EVEN STRONGER [1.1x Rate]]",
           "difficulty": 17,
           "beatmapId": 3730142,
@@ -1171,22 +1171,22 @@
           "type": "TB",
           "realType": "TB",
           "name": "takehirotei - Celestial Extraterrestrial Theory [Cosmic Epoch Threshold]",
-          "difficulty": 16.2,
+          "difficulty": 16.4,
           "beatmapId": 5867193,
           "beatmapsetId": 2616242,
-          "difficultyLn": 17.2
+          "difficultyLn": 17.5
         }
       ],
       "typeDifficulties": {
         "RC": {
-          "rf": 14.75
+          "rf": 14.8
         },
         "HB": {
           "rf": 14.5,
-          "ln": 15.3
+          "ln": 15.7
         },
         "LN": {
-          "ln": 16.1
+          "ln": 16.2
         },
         "SV": {},
         "TB": {

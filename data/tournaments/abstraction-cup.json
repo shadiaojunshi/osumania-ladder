@@ -158,7 +158,7 @@
         {
           "slot": "HB1",
           "type": "HB",
-          "realType": "HB1",
+          "realType": "HB4",
           "name": "Virtual Riot - Don't Worry [Mutation.]",
           "difficulty": 0,
           "beatmapId": 3917229,
@@ -742,7 +742,7 @@
         {
           "slot": "HB2",
           "type": "HB",
-          "realType": "HB3",
+          "realType": "HB4",
           "name": "(un)familiar. - robot jesus vampire (ft. slphr) [I'm Late for my Back, Sack and Crack! (edit)]",
           "difficulty": 0,
           "beatmapId": 5528157,

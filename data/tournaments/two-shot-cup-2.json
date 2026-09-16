@@ -283,7 +283,7 @@
         {
           "slot": "HB2",
           "type": "HB",
-          "realType": "PDHB",
+          "realType": "HB4",
           "name": "Wednesday Campanella - Shakushain [Hard]",
           "difficulty": 2.5,
           "beatmapId": 2959811,

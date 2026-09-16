@@ -420,7 +420,7 @@
         {
           "slot": "RC6",
           "type": "RC",
-          "realType": "TC",
+          "realType": "DP",
           "name": "Haraguchi Sasuke - Hito mania [osu mania 1.05x (158bpm) OD8]",
           "difficulty": 0,
           "beatmapId": 4359444,
@@ -582,7 +582,7 @@
         {
           "slot": "RC7",
           "type": "RC",
-          "realType": "ADP",
+          "realType": "MTC",
           "name": "Dev/Null - Rage Template [Fury]",
           "difficulty": 0,
           "beatmapId": 4925322,

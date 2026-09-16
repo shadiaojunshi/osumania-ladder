@@ -845,7 +845,7 @@
         {
           "slot": "RC5",
           "type": "RC",
-          "realType": "MX",
+          "realType": "TC",
           "name": "mayumusi, SHAKABOOZ, FUNKYHIGEHANK - Magicrash Ice [Easy]",
           "difficulty": 8.61,
           "beatmapId": 4476515,

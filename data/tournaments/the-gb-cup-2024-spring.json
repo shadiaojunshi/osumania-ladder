@@ -723,7 +723,7 @@
         {
           "slot": "LN",
           "type": "LN",
-          "realType": "LNMX",
+          "realType": "LNTC",
           "name": "OSTER project - piano x forte [Concerto]",
           "difficulty": 0,
           "beatmapId": 3825324,
@@ -1392,7 +1392,7 @@
         {
           "slot": "RC6",
           "type": "RC",
-          "realType": "TC",
+          "realType": "DP",
           "name": "Haraguchi Sasuke - Hito mania [osu mania 1.05x (158bpm) OD8]",
           "difficulty": 0,
           "beatmapId": 4359444,
@@ -1563,7 +1563,7 @@
         {
           "slot": "LN1",
           "type": "LN",
-          "realType": "CO",
+          "realType": "TE",
           "name": "Trouble Maker - Trouble Maker [Trouble Coordinator]",
           "difficulty": 0,
           "beatmapId": 4275303,

@@ -194,7 +194,7 @@
         {
           "slot": "SV1",
           "type": "SV",
-          "realType": "SV2",
+          "realType": "SI",
           "name": "Kakeru - Progress (cut ver.) [wokrs (sv)]",
           "difficulty": 0,
           "beatmapId": 3970874,

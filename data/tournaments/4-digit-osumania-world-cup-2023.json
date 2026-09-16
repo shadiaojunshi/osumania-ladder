@@ -330,7 +330,7 @@
         {
           "slot": "LN1",
           "type": "LN",
-          "realType": "CO",
+          "realType": "RE",
           "name": "LN1",
           "difficulty": 6.25,
           "beatmapId": 3978783,
@@ -1014,7 +1014,7 @@
         {
           "slot": "LN3",
           "type": "LN",
-          "realType": "LNTC",
+          "realType": "LNMX",
           "name": "LN3",
           "difficulty": 10.5,
           "beatmapId": 4099552,

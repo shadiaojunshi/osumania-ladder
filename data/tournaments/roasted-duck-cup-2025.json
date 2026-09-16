@@ -177,7 +177,7 @@
         {
           "slot": "RC2",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "D.D.D. - Ready? [OF-F4]",
           "difficulty": 0,
           "beatmapId": 5245965,

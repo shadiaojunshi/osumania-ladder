@@ -807,7 +807,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "TC",
+          "realType": "ADP",
           "name": "Yumeji Ayumu - Somnidiscotheque [Another]",
           "difficulty": 0,
           "beatmapId": 4994457,

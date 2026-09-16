@@ -285,7 +285,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "ADP",
+          "realType": "DP",
           "name": "Ichiko Aoba - Luciferine (Cut Ver.) [Luminescence]",
           "difficulty": 7.7,
           "beatmapId": 5234631,
@@ -888,7 +888,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "MTC",
+          "realType": "WTC",
           "name": "Culprate - Beast (Vorso Remix) [Avidity (cut+edit)]",
           "difficulty": 12.3,
           "beatmapId": 5279297,

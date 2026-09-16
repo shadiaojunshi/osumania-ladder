@@ -351,7 +351,7 @@
         {
           "slot": "LN2",
           "type": "LN",
-          "realType": "SW",
+          "realType": "DE",
           "name": "Prim - Haochi~ kung-fu musume no tekken full course!! [Yummy / 1.05]",
           "difficulty": 5.52,
           "beatmapId": 4368038,
@@ -529,7 +529,7 @@
         {
           "slot": "EX1",
           "type": "RC",
-          "realType": "MX",
+          "realType": "TC",
           "name": "nitro - qualia -ideaesthesia- [Nullify]",
           "difficulty": 6.7,
           "beatmapId": 4686022,

@@ -849,7 +849,7 @@
         {
           "slot": "LN3",
           "type": "LN",
-          "realType": "LNTC",
+          "realType": "LNWC",
           "name": "Kairiki Bear feat. Hatsune Miku - Down Timer [= 0]",
           "difficulty": 11.12,
           "beatmapId": 4926408,

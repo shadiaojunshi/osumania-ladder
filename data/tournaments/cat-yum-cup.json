@@ -609,7 +609,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "TC",
+          "realType": "ADP",
           "name": "matryoshka - Hallucinatory Halo (arai tasuku Remix) [lesion]",
           "difficulty": 11.24,
           "beatmapId": 4499082,

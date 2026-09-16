@@ -396,7 +396,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "CJ",
+          "realType": "FCJ",
           "name": "Ani - DRG [BANG3R's Jacks (edit) 1.05x]",
           "difficulty": 0,
           "beatmapId": 5179052,

@@ -357,7 +357,7 @@
         {
           "slot": "RC2",
           "type": "RC",
-          "realType": "TC",
+          "realType": "ADP",
           "name": "The Flashbulb - Mellann [Introspection 1.1x (116bpm)]",
           "difficulty": 0,
           "beatmapId": 3725685,

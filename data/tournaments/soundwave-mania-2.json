@@ -394,7 +394,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "TC",
+          "realType": "ADP",
           "name": "Aphex Twin - Bucephalus Bouncing Ball (Cut Ver.) [Conundrum]",
           "difficulty": 7.7,
           "beatmapId": 4651348,
@@ -785,7 +785,7 @@
         {
           "slot": "SV2",
           "type": "SV",
-          "realType": "PDSV",
+          "realType": "SVMX",
           "name": "sakuraburst - sha (Cut Ver.) [Stage 1: blake]",
           "difficulty": 0,
           "beatmapId": 4253502,

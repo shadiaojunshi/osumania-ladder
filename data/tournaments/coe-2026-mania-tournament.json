@@ -222,7 +222,7 @@
         {
           "slot": "RC1",
           "type": "RC",
-          "realType": "TC",
+          "realType": "ADP",
           "name": "Billain - Specialist [Theory]",
           "difficulty": 7.3,
           "beatmapId": 3439520,

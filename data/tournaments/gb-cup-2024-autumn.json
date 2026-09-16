@@ -569,7 +569,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "SJ",
+          "realType": "FCJ",
           "name": "SAM Free Music - Up to you [Sora x1.1]",
           "difficulty": 8.2,
           "beatmapId": 4889811,
@@ -982,7 +982,7 @@
         {
           "slot": "LN3",
           "type": "LN",
-          "realType": "LNMX",
+          "realType": "LNWC",
           "name": "Fall Out Boy - Dance, Dance [tragic;]",
           "difficulty": 11.4,
           "beatmapId": 4702795,

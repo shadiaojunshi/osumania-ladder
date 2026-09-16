@@ -149,7 +149,7 @@
         {
           "slot": "HB1",
           "type": "HB",
-          "realType": "MXHB",
+          "realType": "MNTB",
           "name": "Schwank - Deimos [Insane]",
           "difficulty": 3.96,
           "beatmapId": 4022929,
@@ -159,7 +159,7 @@
         {
           "slot": "HB2",
           "type": "HB",
-          "realType": "MXHB",
+          "realType": "HB3",
           "name": "Blacklolita - CyberConnect [Expert]",
           "difficulty": 3.96,
           "beatmapId": 3417228,

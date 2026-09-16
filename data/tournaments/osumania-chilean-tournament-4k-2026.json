@@ -749,7 +749,7 @@
         {
           "slot": "RC6",
           "type": "RC",
-          "realType": "ADP",
+          "realType": "WTC",
           "name": "Terminal 11 - Staple On Smile [Edit V2]",
           "difficulty": 12.9,
           "beatmapId": 5246577,

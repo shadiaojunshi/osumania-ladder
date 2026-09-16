@@ -360,7 +360,7 @@
         {
           "slot": "LN3",
           "type": "LN",
-          "realType": "LNMX",
+          "realType": "LNWC",
           "name": "Toromaru - Deorbit [Asynchrony]",
           "difficulty": 9.08,
           "beatmapId": 4276082,
@@ -378,7 +378,7 @@
         {
           "slot": "SV2",
           "type": "SV",
-          "realType": "SV2",
+          "realType": "SVMX",
           "name": "Yunosuke feat. Sennzai - Komplexe [Kurohime's Counterattack]",
           "difficulty": 0,
           "beatmapId": 4275989,
@@ -978,7 +978,7 @@
         {
           "slot": "RC2",
           "type": "RC",
-          "realType": "JS",
+          "realType": "SA",
           "name": "Falcom Sound Team jdk - Believe It!! [Eclipse x1.05]",
           "difficulty": 13.15,
           "beatmapId": 3345153,

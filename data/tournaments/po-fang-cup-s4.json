@@ -313,7 +313,7 @@
         {
           "slot": "HB1",
           "type": "HB",
-          "realType": "HB1",
+          "realType": "RCmainHB",
           "name": "Akiri - Void Of Altair [Alptraum's Insane]",
           "difficulty": 0,
           "beatmapId": 4822719,
@@ -641,7 +641,7 @@
         {
           "slot": "HB2",
           "type": "HB",
-          "realType": "HB2",
+          "realType": "LNmainHB",
           "name": "Mameyudoufu - I HATE MY PUTER (ALL MY ENEMIES ARE INSIDE IT) [e.printStackTrace()]",
           "difficulty": 0,
           "beatmapId": 4919586,

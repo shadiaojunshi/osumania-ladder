@@ -866,7 +866,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "DP",
+          "realType": "MX",
           "name": "STEAKA feat. Hatsune Miku - Sanity Krush [Insane 1.05x 176bpm]",
           "difficulty": 12.74,
           "beatmapId": 5347208,
@@ -902,7 +902,7 @@
         {
           "slot": "LN1",
           "type": "LN",
-          "realType": "CO",
+          "realType": "RE",
           "name": "Kordhell - Live Another Day [Alive [1.15x Rate]]",
           "difficulty": 12,
           "beatmapId": 4386542,
@@ -948,7 +948,7 @@
         {
           "slot": "HB2",
           "type": "HB",
-          "realType": "HB3",
+          "realType": "HB4",
           "name": "Salty Salt - Hologram of Sakura [Ycloki's 'phony projection' (edit)]",
           "difficulty": 11.8,
           "beatmapId": 5289903,

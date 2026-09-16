@@ -261,7 +261,7 @@
         {
           "slot": "RC1",
           "type": "RC",
-          "realType": "SS",
+          "realType": "STC",
           "name": "Idlewild - A Modern Way of Letting Go [Expiation]",
           "difficulty": 8.8,
           "beatmapId": 4313607,

@@ -412,7 +412,7 @@
         {
           "slot": "HB1",
           "type": "HB",
-          "realType": "RCmainHB",
+          "realType": "HB1",
           "name": "MisoilePunch - Mesheer [Stellarius]",
           "difficulty": 0,
           "beatmapId": 5427343,

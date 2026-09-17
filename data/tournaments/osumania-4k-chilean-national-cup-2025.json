@@ -582,7 +582,7 @@
         {
           "slot": "RC7",
           "type": "RC",
-          "realType": "MTC",
+          "realType": "ADP",
           "name": "Dev/Null - Rage Template [Fury]",
           "difficulty": 0,
           "beatmapId": 4925322,
@@ -749,7 +749,7 @@
         {
           "slot": "RC6",
           "type": "RC",
-          "realType": "ADP",
+          "realType": "WTC",
           "name": "Terminal 11 - The Ever Increasing Death Toll of Birds In My Life [Extreme]",
           "difficulty": 0,
           "beatmapId": 3697102,

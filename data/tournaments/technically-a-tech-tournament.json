@@ -848,7 +848,7 @@
         {
           "slot": "RC2",
           "type": "RC",
-          "realType": "MTC",
+          "realType": "ADP",
           "name": "Dev/Null - Rage Template [Fury [1.1x Rate]]",
           "difficulty": 12.74,
           "beatmapId": 4925320,

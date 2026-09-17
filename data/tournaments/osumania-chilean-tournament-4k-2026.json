@@ -121,7 +121,7 @@
         {
           "slot": "RC5",
           "type": "RC",
-          "realType": "ADP",
+          "realType": "MTC",
           "name": "Nightmare - Epileptic Crisis [Paralysis]",
           "difficulty": 0,
           "beatmapId": 3555245,

@@ -29,7 +29,7 @@
         {
           "slot": "RC1",
           "type": "RC",
-          "realType": "TC",
+          "realType": "ADP",
           "name": "Aphex Twin - Bucephalus Bouncing Ball (Cut Ver.) [Conundrum]",
           "difficulty": 6.6,
           "beatmapId": 4651348,
@@ -450,7 +450,7 @@
         {
           "slot": "RC5",
           "type": "RC",
-          "realType": "MTC",
+          "realType": "TC",
           "name": "sasakure.UK - Atropos (Short Edit) [Inevitable]",
           "difficulty": 7.7,
           "beatmapId": 4681243,
@@ -1055,7 +1055,7 @@
         {
           "slot": "LN4",
           "type": "LN",
-          "realType": "LNTC",
+          "realType": "SW",
           "name": "Sta feat. Ice - Cathedral [Exposure to a downpour of sunlight and a thousand chords held in]",
           "difficulty": 11.84,
           "beatmapId": 3838235,

@@ -312,7 +312,7 @@
         {
           "slot": "HB1",
           "type": "HB",
-          "realType": "HB1",
+          "realType": "RCmainHB",
           "name": "Official HIGE DANdism - Bad for me (Dz'Xa's Amenpunk) [Bittersweet (edit 1.1x)]",
           "difficulty": 8.43,
           "beatmapId": 4267194,
@@ -724,7 +724,7 @@
         {
           "slot": "SV1",
           "type": "SV",
-          "realType": "SV1",
+          "realType": "ME",
           "name": "ZxNX as \"Delaina\" - End Me [CHOKE]",
           "difficulty": 0,
           "beatmapId": 4294644,

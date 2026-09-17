@@ -39,7 +39,7 @@
         {
           "slot": "LN1",
           "type": "LN",
-          "realType": "JW",
+          "realType": "LNWC",
           "name": "*wakadori - NightTheater [Club]",
           "difficulty": 6.6,
           "beatmapId": 4681240,
@@ -814,7 +814,7 @@
         {
           "slot": "RC6",
           "type": "RC",
-          "realType": "STC",
+          "realType": "TC",
           "name": "katagiri x Frums - siren's eye [Prophet]",
           "difficulty": 11.4,
           "beatmapId": 4925677,

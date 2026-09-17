@@ -1014,7 +1014,7 @@
         {
           "slot": "RC1",
           "type": "RC",
-          "realType": "TC",
+          "realType": "DP",
           "name": "siqlo - Me & U [One Way Street 1.1x (165bpm)]",
           "difficulty": 0,
           "beatmapId": 3982181,
@@ -1880,7 +1880,7 @@
         {
           "slot": "LN3",
           "type": "LN",
-          "realType": "LNMX",
+          "realType": "JW",
           "name": "KAZE.o2SE - Earth Quake [Shindo 6+]",
           "difficulty": 0,
           "beatmapId": 4618146,

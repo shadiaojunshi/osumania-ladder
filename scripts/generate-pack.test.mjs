@@ -17,7 +17,7 @@ process.env.R2_ACCESS_KEY = 'test-key'
 process.env.R2_SECRET_KEY = 'test-secret'
 
 const require = createRequire(import.meta.url)
-const { rewriteOsu } = require('./generate-pack.js')
+const { rewriteOsu, packCountFor, packSizeFor } = require('./generate-pack.js')
 
 const sampleOsu = (od, hp = 5) => [
   'osu file format v14',
@@ -116,4 +116,46 @@ test('谱面音符与时间轴不被触碰(只改目标行)', () => {
     before.split('\n').length,
     '改写不应增删行数',
   )
+})
+
+// 2026-09-17：rewriteOsu 原来用**字符串**做 replacement，值里若含 $'、$&、$$、$1 会被
+// 当成特殊模式展开 —— $' 会把匹配点之后的整份文件内容注入到那一行（实测把谱面撑坏）。
+// 已改成函数式 replacement，这里锁住。
+test('值里的 $ 序列不会破坏谱面(不再注入/吞掉内容)', () => {
+  const before = sampleOsu('8')
+  const after = rewriteOsu(sampleOsu('8'), {
+    newTitle: 'New Title',
+    newArtist: 'Various Artists',
+    newCreator: 'various mappers',
+    newVersion: "(MCNC 4K 2026) Ke$ha - A$&B [m$1p] (v$`)",
+    newAudioFilename: 'audio.mp3',
+    newBgFilename: 'bg.jpg',
+  })
+  assert.equal(after.split('\n').length, before.split('\n').length, '行数不能变（$\' 会把整份文件塞回该行）')
+  const versionLine = after.split('\n').find((line) => line.startsWith('Version:'))
+  assert.equal(versionLine, "Version:(MCNC 4K 2026) Ke$ha - A$&B [m$1p] (v$`)", '值要原样写入')
+  assert.equal((after.match(/\[HitObjects\]/g) || []).length, 1, '[HitObjects] 只能出现一次')
+})
+
+// 2026-09-17 站长定的分包规则：≤120 → 1 包；>120 → 2 包；从 3 包起，>90×(n-1) 分 n 包。
+test('分包份数遵循站长规则(120/180/270/360 为界)', () => {
+  // 2026-09-17 修订:3 包阈值由 180 抬到 200(刚过阈值不再出现 61/60/60 这种谷)
+  const cases = [[1, 1], [93, 1], [120, 1], [121, 2], [180, 2], [200, 2], [201, 3], [270, 3], [271, 4], [360, 4], [361, 5], [451, 6]]
+  for (const [total, parts] of cases) {
+    assert.equal(packCountFor(total), parts, `${total} 张应分 ${parts} 包`)
+    const sizes = Array.from({ length: parts }, (_, i) => packSizeFor(total, i, parts))
+    assert.equal(sizes.reduce((a, b) => a + b, 0), total, `${total}: 各包之和须等于总数`)
+    assert.ok(Math.max(...sizes) - Math.min(...sizes) <= 1, `${total}: 各包最多只差 1 张`)
+  }
+})
+
+test('实测规模下的分包(不再出现十几张的小尾包)', () => {
+  const actual = [[93, '93'], [105, '105'], [121, '61/60'], [151, '76/75'], [191, '96/95'], [202, '68/67/67'], [222, '74/74/74']]
+  for (const [total, expected] of actual) {
+    const parts = packCountFor(total)
+    const sizes = Array.from({ length: parts }, (_, i) => packSizeFor(total, i, parts))
+    assert.equal(sizes.join('/'), expected, `${total} 张`)
+    assert.ok(Math.min(...sizes) >= 60, `${total}: 最小包不应小于 60 张`)
+    assert.ok(Math.max(...sizes) <= 120, `${total}: 最大包不应超过 120 张`)
+  }
 })

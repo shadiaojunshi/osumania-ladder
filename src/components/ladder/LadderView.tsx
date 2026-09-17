@@ -42,7 +42,8 @@ export function LadderView() {
   const leftRef = useRef<HTMLDivElement>(null)
   const rightRef = useRef<HTMLDivElement>(null)
 
-  const [hoveredRound, setHoveredRound] = useState<{ round: Round; tournament: Tournament; x: number; y: number; type?: string } | null>(null)
+  // slot = 被悬浮的那个框的槽位名(多 TB/HB 拆框时才有);有它才能按"那张图的实际难度"出段位。
+  const [hoveredRound, setHoveredRound] = useState<{ round: Round; tournament: Tournament; x: number; y: number; type?: string; slot?: string } | null>(null)
   const [detailRound, setDetailRound] = useState<{ round: Round; tournament: Tournament } | null>(null)
   const hideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const detailTriggerRef = useRef<HTMLElement | null>(null)
@@ -85,12 +86,12 @@ export function LadderView() {
     if (rightRef.current) rightRef.current.scrollTop = scrollTop
   }, [])
 
-  const showHover = useCallback((round: Round, tournament: Tournament, x: number, y: number, type?: string) => {
+  const showHover = useCallback((round: Round, tournament: Tournament, x: number, y: number, type?: string, slot?: string) => {
     if (hideTimeoutRef.current) {
       clearTimeout(hideTimeoutRef.current)
       hideTimeoutRef.current = null
     }
-    setHoveredRound({ round, tournament, x, y, type })
+    setHoveredRound({ round, tournament, x, y, type, slot })
   }, [])
 
   const scheduleHide = useCallback(() => {
@@ -176,7 +177,7 @@ export function LadderView() {
                 hideQualifiers={hideQualifiers}
                 roundFilter={roundFilter}
                 roundBorderAlways={roundBorderAlways}
-                onHover={(round, x, y, type) => showHover(round, tournament, x, y, type)}
+                onHover={(round, x, y, type, slot) => showHover(round, tournament, x, y, type, slot)}
                 onLeave={scheduleHide}
                 onOpenDetail={(round, trigger) => openRoundDetail(tournament, round, trigger)}
               />
@@ -191,6 +192,7 @@ export function LadderView() {
             round={hoveredRound.round}
             tournament={hoveredRound.tournament}
             hoveredType={hoveredRound.type}
+            hoveredSlot={hoveredRound.slot}
             x={hoveredRound.x}
             y={hoveredRound.y}
             onMouseEnter={cancelHide}
@@ -428,7 +430,7 @@ interface BandItem {
 function OverflowBand({ items, bordered, onHover, onLeave, onOpenDetail }: {
   items: BandItem[]
   bordered?: boolean
-  onHover: (round: Round, x: number, y: number, type?: string) => void
+  onHover: (round: Round, x: number, y: number, type?: string, slot?: string) => void
   onLeave: () => void
   onOpenDetail: (round: Round, trigger?: HTMLElement | null) => void
 }) {
@@ -451,7 +453,7 @@ function OverflowBand({ items, bordered, onHover, onLeave, onOpenDetail }: {
     `${item.round.name}${item.type ? ` ${item.label ?? item.type}` : ''} · ${t('ladder.overflow.beyond')}${
       item.displayValue !== null ? ` (${item.displayValue.toFixed(2)})` : ''
     }`
-  const activate = (item: BandItem, x: number, y: number) => onHover(item.round, x, y, item.type)
+  const activate = (item: BandItem, x: number, y: number) => onHover(item.round, x, y, item.type, item.label && item.label !== item.type ? item.label : undefined)
 
   if (items.length === 1) {
     const item = sorted[0]
@@ -529,7 +531,7 @@ function TournamentColumn({
   hideQualifiers: boolean
   roundFilter: string | null
   roundBorderAlways: boolean
-  onHover: (round: Round, x: number, y: number, type?: string) => void
+  onHover: (round: Round, x: number, y: number, type?: string, slot?: string) => void
   onLeave: () => void
   onOpenDetail: (round: Round, trigger?: HTMLElement | null) => void
 }) {
@@ -948,7 +950,7 @@ function TournamentColumn({
                 left,
                 right,
               }}
-              onMouseEnter={(e) => onHover(round, e.clientX, e.clientY, type)}
+              onMouseEnter={(e) => onHover(round, e.clientX, e.clientY, type, label && label !== type ? label : undefined)}
               onMouseLeave={onLeave}
               // type 分支左键打开该框所属轮次的详情(不改变原始数据)。
               onClick={(e) => onOpenDetail(round, e.currentTarget)}

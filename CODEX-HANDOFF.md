@@ -10,7 +10,7 @@
 一个 **osu!mania 4K 比赛谱面收录 + 难度天梯 + 合包下载**的网站。
 
 - **公开站**（首页天梯、下载页）：展示历年 osu!mania 4K 比赛（MWC/MCNC/LN 杯等 33 个）的图池，把每张谱面按难度标注在"天梯"上，支持按比赛 / 轮次 / 键型三种视图浏览。纯静态站，零后端 API 调用。
-- **合包下载**：按"真实键型"（realType，如 Stream/Jack/Release/SV…共 38 种）把散落在各比赛的谱面聚合打包成 `.osz`（每包最多 80 张），上传到 Cloudflare R2 + Google Drive，下载页提供直链。
+- **合包下载**：按"真实键型"（realType，如 Stream/Jack/Release/SV…共 38 种）把散落在各比赛的谱面聚合打包成 `.osz`（按张数阈值分包后均分，见 §5.3），上传到 Cloudflare R2 + Google Drive，下载页提供直链。
 - **管理后台**（`/admin`）：站长录入 / 编辑比赛、批量导入图池、自动下载并上传谱面、维护难度标尺、填下载链接、体检 realType 冲突、管理回收站 / 成员 / 审计日志。需 osu! OAuth 登录 + 四级权限。
 
 一句话工作流：**录入比赛 → 上传谱面到 R2 → GitHub Actions 跑合包 → 包上传 R2/Drive → manifest 写回 → 下载页直链生效 → git push 自动部署站点。**
@@ -190,7 +190,9 @@ d:/osumania ladder/              ← 注意路径带空格，bash 里用引号
 
 ### 5.3 合包规则（`scripts/generate-pack.js`）
 
-- 按 `realType` 聚合所有比赛谱面 → 去重 → 每包最多 **80 张**（`MAX_MAPS_PER_PACK`）。
+- 按 `realType` 聚合所有比赛谱面 → 去重 → 分包。**分包规则（2026-09-17 站长定，`packCountFor()` / `packSizeFor()`）**：≤120 张 1 包、≤200 张 2 包、≤270 张 3 包、≤360 张 4 包，再往上按 90 步进（451→6 包）；份数定了之后**均分**，各包只差 ≤1 张。旧的"固定 80 张切块"（`MAX_MAPS_PER_PACK`）已删除 —— 尾包会小到十几张（DP 只剩 13、CO 25、TB 31）。⚠️ 改分包会改变包内 `.osu` 的 `Title`（=包名）→ 玩家已下成绩会断，与 §5.4 同性质。
+- **改写 `.osu` 一律用函数式 replacement**：`String.replace` 的**字符串** replacement 会把值里的 `$'` / `$&` / `$1` 当特殊模式展开（实测 `$'` 把 Title 行之后整份文件注入该行，谱面直接坏掉）。值来自曲名/作者/版本，`sanitizeFileName` 并不清 `$`。
+- **NSV 变体缺音频/曲绘时借用同槽主图**：`.nsv.osz`（NSV 变体）常常只带 `.osu`，直接打包会让这个难度在游戏里**没声音**。现在发现音频/曲绘缺失且是 NSV 时，回退去读同槽的 `<slot>.osz` 借同一首歌的音频/曲绘；每个包的日志里会打印体检行 `音频:借用主图 x 张;仍缺 y 张 → <keys>`（"仍缺"的那些要人补传）。
 - **去重签名优先级**：`beatmapId` → 指纹 `Artist|Title|Creator|Version`（无 BID 老图）→ `r2Key` 兜底。NSV 变体单独成条目。多源复用同一谱面时合并，多个来源写进 osu! `Version` 字段的括号标签 `(MWC 2025 F HB3 & VNMC …)`。
 - **输出命名**：文件名 `<realType>_<part>.osz`（单包也带 `_1`，破坏性升级 `57904da`，勿回退）；osu! 内部 `Title = "4K Tournament {名字} Pack {n}"`、`Artist = "Various Artists"`、`Creator = "various mappers,compiled by the osu!mania Ladder Team"`、`BeatmapID=0`、`BeatmapSetID=-1`、`Source/Tags` 清空。
 - **[Difficulty] 段整体不做干预 —— OD 与 HP 都跟随原谱，原谱是多少就是多少**（2026-09-13 用户先要求「取消所有的合包 OD 下限」，随后追加「HP 也跟随原谱」；旧的 `OD_FLOOR` 表、`getOdFloor()`、`rewriteOsu` 里的抬 OD 分支，以及固定写 7 的 `HP_TARGET` 已全部删除）。⚠️ 重新合包会让包内 .osu 字节与旧包不同（OD/HP 变了），玩家已下成绩会断 —— 与 §5.4 同一性质，别再单独推导。

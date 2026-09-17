@@ -136,9 +136,12 @@ function parseOsu(content) {
 
 function rewriteOsu(content, { newTitle, newArtist, newCreator, newVersion, newAudioFilename, newBgFilename }) {
   let result = content
+  // 用**函数式** replacement:值里可能带 $'、$&、$$、$1 这类序列(来自曲名/作者/版本),
+  // 字符串形式的 replacement 会把它们当特殊模式展开 —— $' 会把匹配点之后的整份文件内容
+  // 注入到这一行(实测:Title 行之后的内容被复制一份,谱面直接坏掉)。函数式不会展开。
   const replaceLine = (section, key, value) => {
     const regex = new RegExp(`(\\[${section}\\][\\s\\S]*?)^${key}:.*$`, 'm')
-    result = result.replace(regex, `$1${key}:${value}`)
+    result = result.replace(regex, (...args) => `${args[1]}${key}:${value}`)
   }
 
   replaceLine('General', 'AudioFilename', ' ' + newAudioFilename)
@@ -158,10 +161,11 @@ function rewriteOsu(content, { newTitle, newArtist, newCreator, newVersion, newA
   if (newBgFilename) {
     // 改背景行,同样兼容带引号 / 不带引号两种格式。
     // 改完统一用带引号格式,这样新文件名里如果带空格不会断成两段。
+    // 同样用函数式 replacement(文件名里可能带 $)。 */
     if (/^(0,0,").+?(".*)$/m.test(result)) {
-      result = result.replace(/^(0,0,")(.+?)(".*)$/m, `$1${newBgFilename}$3`)
+      result = result.replace(/^(0,0,")(.+?)(".*)$/m, (...args) => `${args[1]}${newBgFilename}${args[3]}`)
     } else {
-      result = result.replace(/^(0\s*,\s*0\s*,\s*)([^,\s][^,]*\.(?:jpg|jpeg|png))(.*)$/im, `$1"${newBgFilename}"$3`)
+      result = result.replace(/^(0\s*,\s*0\s*,\s*)([^,\s][^,]*\.(?:jpg|jpeg|png))(.*)$/im, (...args) => `${args[1]}"${newBgFilename}"${args[3]}`)
     }
   }
 
@@ -316,6 +320,37 @@ async function prefetchMap(map, packName) {
       console.warn(`  ${map.r2Key}: backgroundFile "${meta.backgroundFile}" not found in archive`)
     }
 
+    // NSV 变体(.nsv.osz)经常只传了 .osu,不带音频/曲绘 —— 直接打包会让这个难度**没声音**
+    // (站长反馈过"一张 SV 没声音")。这里回退到**同槽主图**的 .osz 借音频/曲绘:
+    // 两者本来就是同一首歌,借用不会串味;借不到才保持缺失。
+    let audioFromMain = false
+    let bgFromMain = false
+    if (map.isNsv && /\.nsv\.osz$/.test(map.r2Key) && (!audioEntry || !bgEntry)) {
+      const mainKey = map.r2Key.replace(/\.nsv\.osz$/, '.osz')
+      try {
+        const mainZip = await JSZip.loadAsync(await downloadFromR2(mainKey))
+        if (!audioEntry) {
+          const fromMain = findZipEntry(mainZip, meta.audioFilename) || (findAnyAudioEntry(mainZip) || {}).entry
+          if (fromMain) {
+            audioEntry = fromMain
+            audioSourceName = fromMain.name
+            audioFromMain = true
+            console.warn(`  ${map.r2Key}: 包里没有音频 → 借用主图 ${mainKey} 的 "${fromMain.name}"`)
+          }
+        }
+        if (!bgEntry && meta.backgroundFile) {
+          const bgFrom = findZipEntry(mainZip, meta.backgroundFile)
+          if (bgFrom) {
+            bgEntry = bgFrom
+            bgFromMain = true
+            console.warn(`  ${map.r2Key}: 包里没有曲绘 → 借用主图 ${mainKey} 的 "${bgFrom.name}"`)
+          }
+        }
+      } catch (err) {
+        console.warn(`  ${map.r2Key}: 借主图资源失败(${err.message}),这张图可能没声音`)
+      }
+    }
+
     const audioExt = getAudioExtension(audioSourceName || 'audio.mp3')
     const newAudioName = safeVersion + audioExt
     // 曲绘扩展名也按实际找到的文件取(bgEntry.name),声明 .jpg 但实际 .png 时不会错配。
@@ -347,6 +382,8 @@ async function prefetchMap(map, packName) {
       audioName: newAudioName,
       bg: bgBuf,
       bgName: newBgName,
+      audioFromMain,
+      bgFromMain,
     }
   } catch (err) {
     console.warn(`  Error processing ${map.r2Key}: ${err.message}`)
@@ -387,7 +424,32 @@ SliderTickRate:1
 256,192,0,128,0,500:0:0:0:0:
 `
 
-const MAX_MAPS_PER_PACK = 80
+// 分包规则(站长 2026-09-17,含当日修订):**≤120 → 1 包;≤200 → 2 包;≤270 → 3 包;≤360 → 4 包**;
+// 再往上按"超过 90×(n-1) 就分 n 包"继续(451→6…)。
+// 份数定了之后**均分**(每包相差 ≤1 张)。以前是"固定 80 切块",尾包会小到十几张
+// (DP 只剩 13、CO 25、TB 31…),站长要求避免这种"数量差距过大"。
+//
+// 3 包的阈值从 180 抬到 200 的原因:刚过阈值那一段会出现"谷"(181 张分 3 包 = 61/60/60),
+// 抬到 200 后 181~200 走 2 包(91/90 … 100/100)。各段起点仍会有轻微下探
+// (121→61/60、201→67/67/67、271→68/68/68/67),要更窄的区间就再调这张表。
+const PACK_SINGLE_MAX = 120
+const PACK_SPLIT_STEP = 90
+
+function packCountFor(total) {
+  if (total <= PACK_SINGLE_MAX) return 1
+  if (total <= 200) return 2
+  if (total <= 270) return 3
+  if (total <= 360) return 4
+  let parts = 5
+  while (total > PACK_SPLIT_STEP * parts) parts++
+  return parts
+}
+
+/** 第 index 包(0-based)应该放几张 —— 均分:前 total % parts 包各多 1 张。 */
+function packSizeFor(total, index, parts) {
+  const base = Math.floor(total / parts)
+  return base + (index < total % parts ? 1 : 0)
+}
 
 async function generatePack(targetType) {
   targetType = normalizeRealType(targetType)
@@ -598,11 +660,15 @@ async function generatePack(targetType) {
   const outputDir = path.join(__dirname, '..', 'output')
   if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir, { recursive: true })
 
-  const totalPacks = Math.ceil(available.length / MAX_MAPS_PER_PACK)
+  const totalPacks = packCountFor(available.length)
+  const packSizes = Array.from({ length: totalPacks }, (_, i) => packSizeFor(available.length, i, totalPacks))
+  console.log(`[${targetType}] 分包:${available.length} 张 → ${totalPacks} 包 (${packSizes.join(' / ')})`)
   const results = []
+  let cursor = 0
 
   for (let packIdx = 0; packIdx < totalPacks; packIdx++) {
-    const chunk = available.slice(packIdx * MAX_MAPS_PER_PACK, (packIdx + 1) * MAX_MAPS_PER_PACK)
+    const chunk = available.slice(cursor, cursor + packSizes[packIdx])
+    cursor += packSizes[packIdx]
     chunk.sort((a, b) => (a.difficulty || 0) - (b.difficulty || 0))
     const partNum = packIdx + 1
     const packName = `4K Tournament ${REAL_TYPE_NAMES[targetType] || targetType} Pack ${partNum}`
@@ -625,9 +691,14 @@ async function generatePack(targetType) {
     // append 顺序与 chunk 原顺序一致(按难度排过),保证 zip 里图也是按难度排
     let processed = 0
     let processedSlots = 0  // 不含 NSV 变体,用于 manifest.mapCount —— 与 totalMaps(slot 数)同口径
+    let audioFromMainCount = 0
+    let audioMissingCount = 0
+    const audioMissingKeys = []
     for (let i = 0; i < chunk.length; i++) {
       const item = prefetched[i]
       if (!item) continue
+      if (item.audioFromMain) audioFromMainCount++
+      if (!item.audio) { audioMissingCount++; audioMissingKeys.push(chunk[i].r2Key) }
       archive.append(item.osu, { name: item.osuName })
       if (item.audio) archive.append(item.audio, { name: item.audioName })
       if (item.bg) archive.append(item.bg, { name: item.bgName })
@@ -642,6 +713,10 @@ async function generatePack(targetType) {
 
     const stats = fs.statSync(outputPath)
     console.log(`[${targetType} ${partNum}] Pack generated: ${(stats.size / 1024 / 1024).toFixed(1)}MB, ${processed} entries (${processedSlots} slots)`)
+    // 音频体检:借主图补上的、以及**仍然没有音频**的(后者在游戏里没声音,要人补传)。
+    if (audioFromMainCount > 0 || audioMissingCount > 0) {
+      console.warn(`  [${targetType} ${partNum}] 音频:借用主图 ${audioFromMainCount} 张;仍缺 ${audioMissingCount} 张${audioMissingCount > 0 ? ' → ' + audioMissingKeys.slice(0, 5).join(', ') + (audioMissingKeys.length > 5 ? ' …' : '') : ''}`)
+    }
 
     results.push({
       realType: targetType,
@@ -804,5 +879,7 @@ module.exports = {
   rewriteOsu,
   normalizeRealType,
   REAL_TYPE_NAMES,
+  packCountFor,
+  packSizeFor,
   PACK_EXCLUDED_REAL_TYPES,
 }

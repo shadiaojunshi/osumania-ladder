@@ -330,9 +330,9 @@ button.round-box:focus-visible {
   font-weight: 500;
   line-height: 1.2;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  /* 与 .round-box(整场比赛视图)保持一致:列宽变窄时标题自动折到第二行。
+     以前这里是 nowrap + 省略号,拉窄列宽只会把标题截掉(站长 2026-09-17 反馈)。 */
+  word-break: break-word;
   pointer-events: none;
 }
 

@@ -13,9 +13,9 @@
       "order": 1,
       "isQualifier": true,
       "difficulty": {
-        "min": 0,
-        "max": 0,
-        "average": 0
+        "min": 7.24,
+        "max": 11.73,
+        "average": 9.97
       },
       "maps": [
         {
@@ -23,7 +23,7 @@
           "type": "RC",
           "realType": "MX",
           "name": "Creep-P, kors k - DO NOT DISTURB [Stage 1: Sleep Deprived Zone (Cut)]",
-          "difficulty": 0,
+          "difficulty": 7.24,
           "beatmapId": 5717989,
           "beatmapsetId": 2569642
         },
@@ -32,16 +32,17 @@
           "type": "HB",
           "realType": "HB2",
           "name": "OSTER project - innocent revolver [Stage 2: Syncopation]",
-          "difficulty": 0,
+          "difficulty": 7.6,
           "beatmapId": 5718137,
-          "beatmapsetId": 2569709
+          "beatmapsetId": 2569709,
+          "difficultyLn": 8
         },
         {
           "slot": "ST3",
           "type": "RC",
           "realType": "CJ",
           "name": "Monster Siren Records - Challenger [Stage 3: SFR07]",
-          "difficulty": 0,
+          "difficulty": 10.13,
           "beatmapId": 5718770,
           "beatmapsetId": 2569847
         },
@@ -50,7 +51,7 @@
           "type": "LN",
           "realType": "CO",
           "name": "sana - Sunset March (Cut Ver.) [Stage 4: Yan Hua San Yue Xia Yang Zhou]",
-          "difficulty": 0,
+          "difficulty": 9.8,
           "beatmapId": 5718268,
           "beatmapsetId": 2569731
         },
@@ -59,7 +60,7 @@
           "type": "LN",
           "realType": "DE",
           "name": "Aoi - !nterroban(?, [Stage 5: !?!?!?!?!?!?]",
-          "difficulty": 0,
+          "difficulty": 10.8,
           "beatmapId": 5718126,
           "beatmapsetId": 2569703
         },
@@ -68,16 +69,17 @@
           "type": "HB",
           "realType": "HB1",
           "name": "FUJIAN HISPEED MUSIC ACADEMY - CUNNY TRIO [Stage 6: CUZ WE <3 255.]",
-          "difficulty": 0,
+          "difficulty": 11.2,
           "beatmapId": 5718886,
-          "beatmapsetId": 2569905
+          "beatmapsetId": 2569905,
+          "difficultyLn": 11
         },
         {
           "slot": "ST7",
           "type": "RC",
           "realType": "SA",
           "name": "Sakamirito - Airengokuka [Stage 7: Purgatory]",
-          "difficulty": 0,
+          "difficulty": 11.73,
           "beatmapId": 5718151,
           "beatmapsetId": 2569721
         },
@@ -86,15 +88,22 @@
           "type": "RC",
           "realType": "DP",
           "name": "Miraidempa - Shiru Mono wa Konomu Mono ni Shikazu, Konomu Mono wa Tanoshimu Mono ni Shikazu [Stage 8: Conscience.]",
-          "difficulty": 0,
+          "difficulty": 11.33,
           "beatmapId": 5718130,
           "beatmapsetId": 2569705
         }
       ],
       "typeDifficulties": {
-        "RC": {},
-        "HB": {},
-        "LN": {},
+        "RC": {
+          "rf": 10.11
+        },
+        "HB": {
+          "rf": 9.4,
+          "ln": 9.5
+        },
+        "LN": {
+          "ln": 10.3
+        },
         "SV": {},
         "TB": {}
       }

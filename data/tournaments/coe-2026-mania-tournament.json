@@ -13,9 +13,9 @@
       "order": 1,
       "isQualifier": true,
       "difficulty": {
-        "min": 0,
-        "max": 0,
-        "average": 0
+        "min": 3.6,
+        "max": 10,
+        "average": 6.9
       },
       "maps": [
         {
@@ -23,7 +23,7 @@
           "type": "RC",
           "realType": "MTC",
           "name": "ARM (IOSYS) - CHAOS Terror-Tech Mix [Distress]",
-          "difficulty": 0,
+          "difficulty": 4.64,
           "beatmapId": 3392120,
           "beatmapsetId": 1661338
         },
@@ -32,7 +32,7 @@
           "type": "RC",
           "realType": "TC",
           "name": "BATPIIICORE - LAPPPOCHKA [Chii?]",
-          "difficulty": 0,
+          "difficulty": 8.79,
           "beatmapId": 3877613,
           "beatmapsetId": 1883359
         },
@@ -41,16 +41,17 @@
           "type": "HB",
           "realType": "MXHB",
           "name": "Hoshimachi Suisei - Jibunkatte Dazzling [I Wish, Starry [NSV]]",
-          "difficulty": 0,
+          "difficulty": 3.6,
           "beatmapId": 3401529,
-          "beatmapsetId": 1666062
+          "beatmapsetId": 1666062,
+          "difficultyLn": 4
         },
         {
           "slot": "LN1",
           "type": "LN",
           "realType": "LNMX",
           "name": "Kobaryo - SUPER EMULATOR [feat. HiTNEX-X] [ENGINE DESTRUCTION]",
-          "difficulty": 0,
+          "difficulty": 10,
           "beatmapId": 3880641,
           "beatmapsetId": 1884776
         },
@@ -65,9 +66,16 @@
         }
       ],
       "typeDifficulties": {
-        "RC": {},
-        "HB": {},
-        "LN": {},
+        "RC": {
+          "rf": 6.71
+        },
+        "HB": {
+          "rf": 3.6,
+          "ln": 4
+        },
+        "LN": {
+          "ln": 10
+        },
         "SV": {},
         "TB": {}
       }
@@ -189,9 +197,10 @@
           "type": "TB",
           "realType": "TB",
           "name": "BilliumMoto & Miyolophone - Faster Than You!!! [Victory Lap!!!]",
-          "difficulty": 0,
+          "difficulty": 7.8,
           "beatmapId": 3996092,
-          "beatmapsetId": 1933887
+          "beatmapsetId": 1933887,
+          "difficultyLn": 8.4
         }
       ],
       "typeDifficulties": {
@@ -205,7 +214,10 @@
           "ln": 9.45
         },
         "SV": {},
-        "TB": {}
+        "TB": {
+          "rf": 7.8,
+          "ln": 8.4
+        }
       }
     },
     {
@@ -214,9 +226,9 @@
       "abbreviation": "SF&F",
       "order": 3,
       "difficulty": {
-        "min": 7,
+        "min": 6,
         "max": 10,
-        "average": 8.46
+        "average": 8.34
       },
       "maps": [
         {
@@ -278,27 +290,30 @@
           "type": "HB",
           "realType": "HB2",
           "name": "Shiiki Reku - IDOL [Haniwa]",
-          "difficulty": 0,
+          "difficulty": 6,
           "beatmapId": 3353563,
-          "beatmapsetId": 1642953
+          "beatmapsetId": 1642953,
+          "difficultyLn": 6.6
         },
         {
           "slot": "HB2",
           "type": "HB",
           "realType": "HB1",
           "name": "Lime - Pixel Planet [Traversing the Cosmos]",
-          "difficulty": 0,
+          "difficulty": 9.4,
           "beatmapId": 4615369,
-          "beatmapsetId": 2183977
+          "beatmapsetId": 2183977,
+          "difficultyLn": 9.6
         },
         {
           "slot": "HB3",
           "type": "HB",
           "realType": "HB3",
           "name": "Cyte - Melty Loud Nightcore [taboo (edit) 1.15x (201bpm)]",
-          "difficulty": 0,
+          "difficulty": 7.7,
           "beatmapId": 4377569,
-          "beatmapsetId": 2031155
+          "beatmapsetId": 2031155,
+          "difficultyLn": 8.1
         },
         {
           "slot": "LN1",
@@ -350,21 +365,28 @@
           "type": "TB",
           "realType": "TB",
           "name": "Kou! - ARTFIGHT : MINMAX [TARGET : LOCKED]",
-          "difficulty": 0,
+          "difficulty": 11.6,
           "beatmapId": 5777601,
-          "beatmapsetId": 2589596
+          "beatmapsetId": 2589596,
+          "difficultyLn": 11.6
         }
       ],
       "typeDifficulties": {
         "RC": {
           "rf": 8.15
         },
-        "HB": {},
+        "HB": {
+          "rf": 7.7,
+          "ln": 8.1
+        },
         "LN": {
           "ln": 8.76
         },
         "SV": {},
-        "TB": {}
+        "TB": {
+          "rf": 11.6,
+          "ln": 11.6
+        }
       }
     }
   ],

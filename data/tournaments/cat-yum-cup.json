@@ -13,9 +13,9 @@
       "order": 1,
       "isQualifier": true,
       "difficulty": {
-        "min": 0,
-        "max": 0,
-        "average": 0
+        "min": 7.8,
+        "max": 12.57,
+        "average": 10.03
       },
       "maps": [
         {
@@ -23,7 +23,7 @@
           "type": "RC",
           "realType": "ADP",
           "name": "seatrus - O [Stage 1: Singularity]",
-          "difficulty": 0,
+          "difficulty": 7.9,
           "beatmapId": 5741115,
           "beatmapsetId": 2577115
         },
@@ -32,25 +32,27 @@
           "type": "HB",
           "realType": "HB2",
           "name": "kanemiko - Summer Time Memory [Stage 2: Thousand]",
-          "difficulty": 0,
+          "difficulty": 7.8,
           "beatmapId": 5741110,
-          "beatmapsetId": 2577111
+          "beatmapsetId": 2577111,
+          "difficultyLn": 8.6
         },
         {
           "slot": "ST3",
           "type": "HB",
           "realType": "HB1",
           "name": "Diceros Bicornis - ReviveR [StagE 3: UncertaintY]",
-          "difficulty": 0,
+          "difficulty": 10,
           "beatmapId": 5741116,
-          "beatmapsetId": 2577116
+          "beatmapsetId": 2577116,
+          "difficultyLn": 10.2
         },
         {
           "slot": "ST4",
           "type": "LN",
           "realType": "LNMX",
           "name": "MiddleIsland - Phantom Dancer [Stage 4: Illusionist]",
-          "difficulty": 0,
+          "difficulty": 9,
           "beatmapId": 5741109,
           "beatmapsetId": 2577110
         },
@@ -59,7 +61,7 @@
           "type": "RC",
           "realType": "JS",
           "name": "Primary - Inai Sekai [Stage 5: Aster tataricus]",
-          "difficulty": 0,
+          "difficulty": 10.94,
           "beatmapId": 5741112,
           "beatmapsetId": 2577113
         },
@@ -68,7 +70,7 @@
           "type": "RC",
           "realType": "JTC",
           "name": "Joker - When I'm Fucked Up #ThatsTheRealMe [Stage 6: #BrickedDown]",
-          "difficulty": 0,
+          "difficulty": 9.71,
           "beatmapId": 5741111,
           "beatmapsetId": 2577112
         },
@@ -77,7 +79,7 @@
           "type": "RC",
           "realType": "MX",
           "name": "Kiru - Fragmented Reality [Stage 7: Disrupted Existence]",
-          "difficulty": 0,
+          "difficulty": 12.57,
           "beatmapId": 5741113,
           "beatmapsetId": 2577114
         },
@@ -86,15 +88,22 @@
           "type": "LN",
           "realType": "DE",
           "name": "Naikou - J1407b [Stage 8: Heretical]",
-          "difficulty": 0,
+          "difficulty": 11.8,
           "beatmapId": 5741117,
           "beatmapsetId": 2577117
         }
       ],
       "typeDifficulties": {
-        "RC": {},
-        "HB": {},
-        "LN": {},
+        "RC": {
+          "rf": 10.28
+        },
+        "HB": {
+          "rf": 8.9,
+          "ln": 9.4
+        },
+        "LN": {
+          "ln": 10.4
+        },
         "SV": {},
         "TB": {}
       }

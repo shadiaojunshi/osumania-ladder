@@ -12,9 +12,9 @@
       "abbreviation": "Qual",
       "order": 1,
       "difficulty": {
-        "min": 0,
-        "max": 0,
-        "average": 0
+        "min": 5.92,
+        "max": 10.8,
+        "average": 8.12
       },
       "maps": [
         {
@@ -29,58 +29,68 @@
           "type": "RC",
           "realType": "TC",
           "name": "RC1",
-          "difficulty": 0
+          "difficulty": 5.92
         },
         {
           "slot": "ST3",
           "type": "RC",
           "realType": "TC",
           "name": "RC2",
-          "difficulty": 0
+          "difficulty": 9.54
         },
         {
           "slot": "ST4",
           "type": "RC",
           "realType": "SA",
           "name": "RC3",
-          "difficulty": 0
+          "difficulty": 10.8
         },
         {
           "slot": "ST5",
           "type": "LN",
           "realType": "RE",
           "name": "LN1",
-          "difficulty": 0
+          "difficulty": 6.6
         },
         {
           "slot": "ST6",
           "type": "LN",
           "realType": "DE",
           "name": "LN2",
-          "difficulty": 0
+          "difficulty": 9
         },
         {
           "slot": "ST7",
           "type": "HB",
           "realType": "HB1",
           "name": "HB1",
-          "difficulty": 0
+          "difficulty": 7.2,
+          "difficultyLn": 7.4
         },
         {
           "slot": "ST8",
           "type": "HB",
           "realType": "HB2",
           "name": "HB2",
-          "difficulty": 0
+          "difficulty": 7.6,
+          "difficultyLn": 8.2
         }
       ],
       "isQualifier": true,
       "bestOf": 8,
       "typeDifficulties": {
-        "RC": {},
-        "HB": {},
-        "LN": {},
-        "SV": {}
+        "RC": {
+          "rf": 8.75
+        },
+        "HB": {
+          "rf": 7.4,
+          "ln": 7.8
+        },
+        "LN": {
+          "ln": 7.8
+        },
+        "SV": {},
+        "TB": {}
       }
     },
     {
@@ -89,9 +99,9 @@
       "abbreviation": "RO16",
       "order": 2,
       "difficulty": {
-        "min": 0,
-        "max": 0,
-        "average": 0
+        "min": 5.3,
+        "max": 7,
+        "average": 6.08
       },
       "maps": [
         {
@@ -99,77 +109,80 @@
           "type": "RC",
           "realType": "SA",
           "name": "RC1",
-          "difficulty": 0
+          "difficulty": 5.94
         },
         {
           "slot": "RC2",
           "type": "RC",
           "realType": "JS",
           "name": "RC2",
-          "difficulty": 0
+          "difficulty": 6.17
         },
         {
           "slot": "RC3",
           "type": "RC",
           "realType": "DP",
           "name": "RC3",
-          "difficulty": 0
+          "difficulty": 5.3
         },
         {
           "slot": "RC4",
           "type": "RC",
           "realType": "CJ",
           "name": "RC4",
-          "difficulty": 0
+          "difficulty": 5.9
         },
         {
           "slot": "RC5",
           "type": "RC",
           "realType": "ADP",
           "name": "RC5",
-          "difficulty": 0
+          "difficulty": 5.3
         },
         {
           "slot": "HB1",
           "type": "HB",
           "realType": "HB1",
           "name": "HB1",
-          "difficulty": 0
+          "difficulty": 5.6,
+          "difficultyLn": 6.2
         },
         {
           "slot": "HB2",
           "type": "HB",
           "realType": "HB1",
           "name": "HB2",
-          "difficulty": 0
+          "difficulty": 5.8,
+          "difficultyLn": 6.4
         },
         {
           "slot": "HB3",
           "type": "HB",
           "realType": "HB3",
           "name": "HB3",
-          "difficulty": 0
+          "difficulty": 5.6,
+          "difficultyLn": 6
         },
         {
           "slot": "LN1",
           "type": "LN",
           "realType": "RE",
           "name": "LN1",
-          "difficulty": 0
+          "difficulty": 6
         },
         {
           "slot": "LN2",
           "type": "LN",
           "realType": "DE",
           "name": "LN2",
-          "difficulty": 0
+          "difficulty": 7
         },
         {
           "slot": "LN3",
           "type": "LN",
           "realType": "LNMX",
           "name": "LN3",
-          "difficulty": 0
+          "difficulty": 6
         },
         {
           "slot": "SV1",
@@ -183,15 +196,27 @@
           "type": "TB",
           "realType": "TB",
           "name": "TB1",
-          "difficulty": 0
+          "difficulty": 6,
+          "difficultyLn": 6.6
         }
       ],
       "bestOf": 9,
       "typeDifficulties": {
-        "RC": {},
-        "HB": {},
-        "LN": {},
-        "SV": {}
+        "RC": {
+          "rf": 5.72
+        },
+        "HB": {
+          "rf": 5.67,
+          "ln": 6.2
+        },
+        "LN": {
+          "ln": 6.33
+        },
+        "SV": {},
+        "TB": {
+          "rf": 6,
+          "ln": 6.6
+        }
       }
     },
     {
@@ -200,9 +225,9 @@
       "abbreviation": "QF",
       "order": 3,
       "difficulty": {
-        "min": 0,
-        "max": 0,
-        "average": 0
+        "min": 5.2,
+        "max": 8.92,
+        "average": 7.36
       },
       "maps": [
         {
@@ -210,91 +235,94 @@
           "type": "RC",
           "realType": "SA",
           "name": "RC1",
-          "difficulty": 0
+          "difficulty": 5.99
         },
         {
           "slot": "RC2",
           "type": "RC",
           "realType": "JS",
           "name": "RC2",
-          "difficulty": 0
+          "difficulty": 8
         },
         {
           "slot": "RC3",
           "type": "RC",
           "realType": "SS",
           "name": "RC3",
-          "difficulty": 0
+          "difficulty": 6.28
         },
         {
           "slot": "RC4",
           "type": "RC",
           "realType": "CJ",
           "name": "RC4",
-          "difficulty": 0
+          "difficulty": 7.19
         },
         {
           "slot": "RC5",
           "type": "RC",
           "realType": "MX",
           "name": "RC5",
-          "difficulty": 0
+          "difficulty": 8.92
         },
         {
           "slot": "RC6",
           "type": "RC",
           "realType": "DP",
           "name": "RC6",
-          "difficulty": 0
+          "difficulty": 6.78
         },
         {
           "slot": "HB1",
           "type": "HB",
           "realType": "HB3",
           "name": "HB1",
-          "difficulty": 0
+          "difficulty": 5.2,
+          "difficultyLn": 5.4
         },
         {
           "slot": "HB2",
           "type": "HB",
           "realType": "HB2",
           "name": "HB2",
-          "difficulty": 0
+          "difficulty": 7.8,
+          "difficultyLn": 8.6
         },
         {
           "slot": "HB3",
           "type": "HB",
           "realType": "HB2",
           "name": "HB3",
-          "difficulty": 0
+          "difficulty": 5.8,
+          "difficultyLn": 6.4
         },
         {
           "slot": "LN1",
           "type": "LN",
           "realType": "CO",
           "name": "LN1",
-          "difficulty": 0
+          "difficulty": 7.8
         },
         {
           "slot": "LN2",
           "type": "LN",
           "realType": "DE",
           "name": "LN2",
-          "difficulty": 0
+          "difficulty": 8.6
         },
         {
           "slot": "LN3",
           "type": "LN",
           "realType": "LNTC",
           "name": "LN3",
-          "difficulty": 0
+          "difficulty": 8
         },
         {
           "slot": "LN4",
           "type": "LN",
           "realType": "LNMX",
           "name": "LN4",
-          "difficulty": 0
+          "difficulty": 8
         },
         {
           "slot": "SV1",
@@ -308,15 +336,27 @@
           "type": "TB",
           "realType": "TB",
           "name": "TB1",
-          "difficulty": 0
+          "difficulty": 9.2,
+          "difficultyLn": 9.4
         }
       ],
       "bestOf": 11,
       "typeDifficulties": {
-        "RC": {},
-        "HB": {},
-        "LN": {},
-        "SV": {}
+        "RC": {
+          "rf": 7.19
+        },
+        "HB": {
+          "rf": 6.27,
+          "ln": 6.8
+        },
+        "LN": {
+          "ln": 8.1
+        },
+        "SV": {},
+        "TB": {
+          "rf": 9.2,
+          "ln": 9.4
+        }
       }
     },
     {
@@ -325,9 +365,9 @@
       "abbreviation": "SF",
       "order": 4,
       "difficulty": {
-        "min": 0,
-        "max": 0,
-        "average": 0
+        "min": 7,
+        "max": 10.4,
+        "average": 9.04
       },
       "maps": [
         {
@@ -335,98 +375,101 @@
           "type": "RC",
           "realType": "SA",
           "name": "RC1",
-          "difficulty": 0
+          "difficulty": 9.61
         },
         {
           "slot": "RC2",
           "type": "RC",
           "realType": "JS",
           "name": "RC2",
-          "difficulty": 0
+          "difficulty": 9.77
         },
         {
           "slot": "RC3",
           "type": "RC",
           "realType": "SS",
           "name": "RC3",
-          "difficulty": 0
+          "difficulty": 9.58
         },
         {
           "slot": "RC4",
           "type": "RC",
           "realType": "FCJ",
           "name": "RC4",
-          "difficulty": 0
+          "difficulty": 10.2
         },
         {
           "slot": "RC5",
           "type": "RC",
           "realType": "ADP",
           "name": "RC5",
-          "difficulty": 0
+          "difficulty": 9.53
         },
         {
           "slot": "RC6",
           "type": "RC",
           "realType": "DP",
           "name": "RC6",
-          "difficulty": 0
+          "difficulty": 9.59
         },
         {
           "slot": "RC7",
           "type": "RC",
           "realType": "WTC",
           "name": "RC7",
-          "difficulty": 0
+          "difficulty": 9.7
         },
         {
           "slot": "HB1",
           "type": "HB",
           "realType": "HB1",
           "name": "HB1",
-          "difficulty": 0
+          "difficulty": 9.4,
+          "difficultyLn": 9.6
         },
         {
           "slot": "HB2",
           "type": "HB",
           "realType": "HB2",
           "name": "HB2",
-          "difficulty": 0
+          "difficulty": 9,
+          "difficultyLn": 9
         },
         {
           "slot": "HB3",
           "type": "HB",
           "realType": "HB3",
           "name": "HB3",
-          "difficulty": 0
+          "difficulty": 7,
+          "difficultyLn": 7.2
         },
         {
           "slot": "LN1",
           "type": "LN",
           "realType": "CO",
           "name": "LN1",
-          "difficulty": 0
+          "difficulty": 8.8
         },
         {
           "slot": "LN2",
           "type": "LN",
           "realType": "DE",
           "name": "LN2",
-          "difficulty": 0
+          "difficulty": 10.4
         },
         {
           "slot": "LN3",
           "type": "LN",
           "realType": "LNMX",
           "name": "LN3",
-          "difficulty": 0
+          "difficulty": 8
         },
         {
           "slot": "LN4",
           "type": "LN",
           "realType": "LNTC",
           "name": "LN4",
-          "difficulty": 0
+          "difficulty": 8
         },
         {
           "slot": "SV1",
@@ -440,15 +483,27 @@
           "type": "TB",
           "realType": "TB",
           "name": "TB1",
-          "difficulty": 0
+          "difficulty": 9.8,
+          "difficultyLn": 10.2
         }
       ],
       "bestOf": 11,
       "typeDifficulties": {
-        "RC": {},
-        "HB": {},
-        "LN": {},
-        "SV": {}
+        "RC": {
+          "rf": 9.71
+        },
+        "HB": {
+          "rf": 8.47,
+          "ln": 8.6
+        },
+        "LN": {
+          "ln": 8.8
+        },
+        "SV": {},
+        "TB": {
+          "rf": 9.8,
+          "ln": 10.2
+        }
       }
     },
     {
@@ -457,9 +512,9 @@
       "abbreviation": "F",
       "order": 5,
       "difficulty": {
-        "min": 0,
-        "max": 0,
-        "average": 0
+        "min": 9.6,
+        "max": 11.6,
+        "average": 10.44
       },
       "maps": [
         {
@@ -467,112 +522,115 @@
           "type": "RC",
           "realType": "SA",
           "name": "RC1",
-          "difficulty": 0
+          "difficulty": 10.86
         },
         {
           "slot": "RC2",
           "type": "RC",
           "realType": "JS",
           "name": "RC2",
-          "difficulty": 0
+          "difficulty": 10.69
         },
         {
           "slot": "RC3",
           "type": "RC",
           "realType": "SS",
           "name": "RC3",
-          "difficulty": 0
+          "difficulty": 10.79
         },
         {
           "slot": "RC4",
           "type": "RC",
           "realType": "SJ",
           "name": "RC4",
-          "difficulty": 0
+          "difficulty": 11.5
         },
         {
           "slot": "RC5",
           "type": "RC",
           "realType": "MTC",
           "name": "RC5",
-          "difficulty": 0
+          "difficulty": 9.93
         },
         {
           "slot": "RC6",
           "type": "RC",
           "realType": "MX",
           "name": "RC6",
-          "difficulty": 0
+          "difficulty": 9.6
         },
         {
           "slot": "RC7",
           "type": "RC",
           "realType": "DP",
           "name": "RC7",
-          "difficulty": 0
+          "difficulty": 10.13
         },
         {
           "slot": "RC8",
           "type": "RC",
           "realType": "MX",
           "name": "RC8",
-          "difficulty": 0
+          "difficulty": 10.73
         },
         {
           "slot": "HB1",
           "type": "HB",
           "realType": "HB1",
           "name": "HB1",
-          "difficulty": 0
+          "difficulty": 9.8,
+          "difficultyLn": 10.2
         },
         {
           "slot": "HB2",
           "type": "HB",
           "realType": "HB3",
           "name": "HB2",
-          "difficulty": 0
+          "difficulty": 10.2,
+          "difficultyLn": 10.4
         },
         {
           "slot": "HB3",
           "type": "HB",
           "realType": "MNTB",
           "name": "HB3",
-          "difficulty": 0
+          "difficulty": 10,
+          "difficultyLn": 10
         },
         {
           "slot": "LN1",
           "type": "LN",
           "realType": "CO",
           "name": "LN1",
-          "difficulty": 0
+          "difficulty": 10
         },
         {
           "slot": "LN2",
           "type": "LN",
           "realType": "DE",
           "name": "LN2",
-          "difficulty": 0
+          "difficulty": 11.6
         },
         {
           "slot": "LN3",
           "type": "LN",
           "realType": "LNTC",
           "name": "LN3",
-          "difficulty": 0
+          "difficulty": 10
         },
         {
           "slot": "LN4",
           "type": "LN",
           "realType": "LNTC",
           "name": "LN4",
-          "difficulty": 0
+          "difficulty": 10.2
         },
         {
           "slot": "LN5",
           "type": "LN",
           "realType": "DE",
           "name": "LN5",
-          "difficulty": 0
+          "difficulty": 11.2
         },
         {
           "slot": "SV1",
@@ -586,15 +644,27 @@
           "type": "TB",
           "realType": "TB",
           "name": "TB1",
-          "difficulty": 0
+          "difficulty": 11.8,
+          "difficultyLn": 11.8
         }
       ],
       "bestOf": 13,
       "typeDifficulties": {
-        "RC": {},
-        "HB": {},
-        "LN": {},
-        "SV": {}
+        "RC": {
+          "rf": 10.53
+        },
+        "HB": {
+          "rf": 10,
+          "ln": 10.2
+        },
+        "LN": {
+          "ln": 10.6
+        },
+        "SV": {},
+        "TB": {
+          "rf": 11.8,
+          "ln": 11.8
+        }
       }
     },
     {
@@ -603,9 +673,9 @@
       "abbreviation": "GF",
       "order": 6,
       "difficulty": {
-        "min": 0,
-        "max": 0,
-        "average": 0
+        "min": 11,
+        "max": 12.4,
+        "average": 11.64
       },
       "maps": [
         {
@@ -613,112 +683,115 @@
           "type": "RC",
           "realType": "SA",
           "name": "RC1",
-          "difficulty": 0
+          "difficulty": 11.51
         },
         {
           "slot": "RC2",
           "type": "RC",
           "realType": "JS",
           "name": "RC2",
-          "difficulty": 0
+          "difficulty": 12.13
         },
         {
           "slot": "RC3",
           "type": "RC",
           "realType": "SS",
           "name": "RC3",
-          "difficulty": 0
+          "difficulty": 12.19
         },
         {
           "slot": "RC4",
           "type": "RC",
           "realType": "CJ",
           "name": "RC4",
-          "difficulty": 0
+          "difficulty": 11.55
         },
         {
           "slot": "RC5",
           "type": "RC",
           "realType": "ADP",
           "name": "RC5",
-          "difficulty": 0
+          "difficulty": 11.65
         },
         {
           "slot": "RC6",
           "type": "RC",
           "realType": "MX",
           "name": "RC6",
-          "difficulty": 0
+          "difficulty": 11.47
         },
         {
           "slot": "RC7",
           "type": "RC",
           "realType": "DP",
           "name": "RC7",
-          "difficulty": 0
+          "difficulty": 11.3
         },
         {
           "slot": "RC8",
           "type": "RC",
           "realType": "MTC",
           "name": "RC8",
-          "difficulty": 0
+          "difficulty": 11.4
         },
         {
           "slot": "HB1",
           "type": "HB",
           "realType": "HB1",
           "name": "HB1",
-          "difficulty": 0
+          "difficulty": 11.4,
+          "difficultyLn": 11.4
         },
         {
           "slot": "HB2",
           "type": "HB",
           "realType": "HB3",
           "name": "HB2",
-          "difficulty": 0
+          "difficulty": 11.4,
+          "difficultyLn": 11.4
         },
         {
           "slot": "HB3",
           "type": "HB",
           "realType": "MNTB",
           "name": "HB3",
-          "difficulty": 0
+          "difficulty": 12,
+          "difficultyLn": 12.2
         },
         {
           "slot": "LN1",
           "type": "LN",
           "realType": "TE",
           "name": "LN1",
-          "difficulty": 0
+          "difficulty": 11
         },
         {
           "slot": "LN2",
           "type": "LN",
           "realType": "DE",
           "name": "LN2",
-          "difficulty": 0
+          "difficulty": 12
         },
         {
           "slot": "LN3",
           "type": "LN",
           "realType": "LNMX",
           "name": "LN3",
-          "difficulty": 0
+          "difficulty": 11
         },
         {
           "slot": "LN4",
           "type": "LN",
           "realType": "LNTC",
           "name": "LN4",
-          "difficulty": 0
+          "difficulty": 11.6
         },
         {
           "slot": "LN5",
           "type": "LN",
           "realType": "LNMX",
           "name": "LN5",
-          "difficulty": 0
+          "difficulty": 12.4
         },
         {
           "slot": "SV1",
@@ -732,15 +805,27 @@
           "type": "TB",
           "realType": "TB",
           "name": "TB1",
-          "difficulty": 0
+          "difficulty": 11.6,
+          "difficultyLn": 12
         }
       ],
       "bestOf": 13,
       "typeDifficulties": {
-        "RC": {},
-        "HB": {},
-        "LN": {},
-        "SV": {}
+        "RC": {
+          "rf": 11.65
+        },
+        "HB": {
+          "rf": 11.6,
+          "ln": 11.67
+        },
+        "LN": {
+          "ln": 11.6
+        },
+        "SV": {},
+        "TB": {
+          "rf": 11.6,
+          "ln": 12
+        }
       }
     }
   ],

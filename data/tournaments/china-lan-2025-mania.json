@@ -12,8 +12,8 @@
       "abbreviation": "Qual",
       "order": 1,
       "difficulty": {
-        "min": 11,
-        "max": 12.6,
+        "min": 10,
+        "max": 12.69,
         "average": 11.93
       },
       "maps": [
@@ -31,7 +31,7 @@
           "type": "RC",
           "realType": "TC",
           "name": "RC1",
-          "difficulty": 12.6
+          "difficulty": 11.36
         },
         {
           "slot": "RC2",
@@ -45,37 +45,37 @@
           "type": "RC",
           "realType": "WTC",
           "name": "RC3",
-          "difficulty": 12.6
+          "difficulty": 12.69
         },
         {
           "slot": "LN1",
           "type": "LN",
           "realType": "LNMX",
           "name": "LN1",
-          "difficulty": 11.8
+          "difficulty": 10
         },
         {
           "slot": "LN2",
           "type": "LN",
           "realType": "DE",
           "name": "LN2",
-          "difficulty": 11.8
+          "difficulty": 12.6
         },
         {
           "slot": "HB1",
           "type": "HB",
           "realType": "HB2",
           "name": "HB1",
-          "difficulty": 12.3,
-          "difficultyLn": 12.3
+          "difficulty": 10,
+          "difficultyLn": 10.2
         },
         {
           "slot": "HB2",
           "type": "HB",
           "realType": "HB1",
           "name": "HB2",
-          "difficulty": 12.3,
-          "difficultyLn": 12.3
+          "difficulty": 11.6,
+          "difficultyLn": 12
         }
       ],
       "isQualifier": true,
@@ -85,6 +85,7 @@
           "rf": 12.6
         },
         "HB": {
+          "rf": 10.8,
           "ln": 12.3
         },
         "LN": {
@@ -222,8 +223,8 @@
           "type": "TB",
           "realType": "TB",
           "name": "ELFENSJoN - ARIADNE [The most holy you]",
-          "difficulty": 10.5,
-          "difficultyLn": 11.2,
+          "difficulty": 11.2,
+          "difficultyLn": 10.8,
           "beatmapId": 5167819,
           "beatmapsetId": 2388064
         }
@@ -243,7 +244,10 @@
         "SV": {
           "rf": 9.8
         },
-        "TB": {}
+        "TB": {
+          "rf": 11.2,
+          "ln": 10.8
+        }
       }
     },
     {
@@ -252,9 +256,9 @@
       "abbreviation": "QF",
       "order": 3,
       "difficulty": {
-        "min": 11,
-        "max": 11.5,
-        "average": 11.28
+        "min": 8.6,
+        "max": 12.21,
+        "average": 11.18
       },
       "maps": [
         {
@@ -271,7 +275,7 @@
           "type": "RC",
           "realType": "SA",
           "name": "Ariabl'eyeS - Houkai no Bigaku [Sora no Kanata]",
-          "difficulty": 11.2,
+          "difficulty": 10.88,
           "beatmapId": 5207534,
           "beatmapsetId": 2401428
         },
@@ -280,7 +284,7 @@
           "type": "RC",
           "realType": "FCJ",
           "name": "yak_won - Wind Tales [Escapade]",
-          "difficulty": 11.2,
+          "difficulty": 11.18,
           "beatmapId": 5207558,
           "beatmapsetId": 2401440
         },
@@ -289,7 +293,7 @@
           "type": "RC",
           "realType": "JTC",
           "name": "Frums - 24eeev0-$ [mint 1.2x]",
-          "difficulty": 11.2,
+          "difficulty": 11.26,
           "beatmapId": 5207575,
           "beatmapsetId": 2401452
         },
@@ -298,7 +302,7 @@
           "type": "RC",
           "realType": "MX",
           "name": "qfeileadh feat. Risa Kodaka - Tendou Musou no Homura [Homura]",
-          "difficulty": 11.2,
+          "difficulty": 12.21,
           "beatmapId": 5205657,
           "beatmapsetId": 2400770
         },
@@ -307,7 +311,7 @@
           "type": "RC",
           "realType": "DP",
           "name": "RD-Sounds feat. Meramipop - On Seeking U [O! S! U!]",
-          "difficulty": 11.2,
+          "difficulty": 11.93,
           "beatmapId": 5205954,
           "beatmapsetId": 2400881
         },
@@ -346,7 +350,7 @@
           "type": "LN",
           "realType": "CO",
           "name": "Yurry Canon - Yueni [There...fore... I am the Ideal Vassal? [1.2x Rate]]",
-          "difficulty": 11,
+          "difficulty": 9.6,
           "beatmapId": 4590115,
           "beatmapsetId": 2003254
         },
@@ -355,7 +359,7 @@
           "type": "LN",
           "realType": "DE",
           "name": "xi - Longinus [LN Prodigy (short)]",
-          "difficulty": 11,
+          "difficulty": 10,
           "beatmapId": 3665997,
           "beatmapsetId": 1714267
         },
@@ -364,7 +368,7 @@
           "type": "LN",
           "realType": "LNMX",
           "name": "Link\"0 - rezehv [Acquiesce]",
-          "difficulty": 11,
+          "difficulty": 8.6,
           "beatmapId": 5204533,
           "beatmapsetId": 2400460
         },
@@ -400,14 +404,14 @@
       "bestOf": 11,
       "typeDifficulties": {
         "RC": {
-          "rf": 11.2
+          "rf": 11.4
         },
         "HB": {
-          "rf": 10.6,
-          "ln": 11.4
+          "rf": 10.3,
+          "ln": 11.8
         },
         "LN": {
-          "ln": 11
+          "ln": 10
         },
         "SV": {
           "rf": 11.5
@@ -424,9 +428,9 @@
       "abbreviation": "SF/F",
       "order": 4,
       "difficulty": {
-        "min": 13.3,
-        "max": 13.8,
-        "average": 13.63
+        "min": 11.8,
+        "max": 13.6,
+        "average": 12.8
       },
       "maps": [
         {
@@ -434,7 +438,7 @@
           "type": "RC",
           "realType": "SS",
           "name": "OISHII - TOAST RUN [Tasty Toast]",
-          "difficulty": 13.3,
+          "difficulty": 12.78,
           "beatmapId": 5207439,
           "beatmapsetId": 2401400
         },
@@ -443,7 +447,7 @@
           "type": "RC",
           "realType": "JS",
           "name": "Armelyrics - miserable fate [Re:Fate w/ Miaurichesu]",
-          "difficulty": 13.3,
+          "difficulty": 13.16,
           "beatmapId": 5205947,
           "beatmapsetId": 2400878
         },
@@ -452,7 +456,7 @@
           "type": "RC",
           "realType": "SA",
           "name": "Takahiro Unisuga (arr: YourVinished) - GENS D'ARMES [Shifting Surpass (Cut) (280bpm)]",
-          "difficulty": 13.3,
+          "difficulty": 13.16,
           "beatmapId": 5207668,
           "beatmapsetId": 2401482
         },
@@ -461,7 +465,7 @@
           "type": "RC",
           "realType": "FCJ",
           "name": "Mitsukiyo - Gregorius | Symphony [Tempestuous]",
-          "difficulty": 13.3,
+          "difficulty": 12.87,
           "beatmapId": 5207553,
           "beatmapsetId": 2401439
         },
@@ -470,7 +474,7 @@
           "type": "RC",
           "realType": "WTC",
           "name": "Da Xiao ann - Balala the Fairies [Balala Energy (Edit.) [1.3x Rate]]",
-          "difficulty": 13.3,
+          "difficulty": 13.46,
           "beatmapId": 5205667,
           "beatmapsetId": 2278965
         },
@@ -479,7 +483,7 @@
           "type": "RC",
           "realType": "ADP",
           "name": "hkmori - we were perfect [no u [1.1x Rate]]",
-          "difficulty": 13.3,
+          "difficulty": 13,
           "beatmapId": 5205650,
           "beatmapsetId": 2400766
         },
@@ -488,7 +492,7 @@
           "type": "RC",
           "realType": "MX",
           "name": "Kurokotei as Lidelle + eili - Sfir'elle ~ la novella ~ [Sithellare]",
-          "difficulty": 13.3,
+          "difficulty": 13.17,
           "beatmapId": 5207736,
           "beatmapsetId": 2401507
         },
@@ -497,37 +501,37 @@
           "type": "HB",
           "realType": "HB1",
           "name": "BEMANI SOUND TEAM \"TAG\" - Reboot [Voltenizer 1.1x]",
-          "difficulty": 13.6,
+          "difficulty": 13.2,
           "beatmapId": 4104226,
           "beatmapsetId": 1977077,
-          "difficultyLn": 13.8
+          "difficultyLn": 13.6
         },
         {
           "slot": "HB2",
           "type": "HB",
           "realType": "HB2",
           "name": "Umeboshi Chazuke - Ao to Shiro no Hanataba wo [Journey]",
-          "difficulty": 13.6,
+          "difficulty": 12.4,
           "beatmapId": 5207577,
           "beatmapsetId": 2401454,
-          "difficultyLn": 13.8
+          "difficultyLn": 12.6
         },
         {
           "slot": "HB3",
           "type": "HB",
           "realType": "HB3",
           "name": "Juggernaut. - Retaliation (VIP) [Destruction [1.05x Rate]]",
-          "difficulty": 13.6,
+          "difficulty": 12.8,
           "beatmapId": 5207184,
           "beatmapsetId": 2401316,
-          "difficultyLn": 13.8
+          "difficultyLn": 13
         },
         {
           "slot": "LN1",
           "type": "LN",
           "realType": "TE",
           "name": "C-ta (CV:Terashima Takuma) - Kanzen Hanzai Love Letter [Series 1 [1.05x Rate]]",
-          "difficulty": 13.6,
+          "difficulty": 11.8,
           "beatmapId": 3840817,
           "beatmapsetId": 1867135
         },
@@ -536,7 +540,7 @@
           "type": "LN",
           "realType": "DE",
           "name": "DJ Raisei vs Setca. feat. nayuta - Utakata no Sekai de [Fragments. / 1.10]",
-          "difficulty": 13.6,
+          "difficulty": 13,
           "beatmapId": 4909048,
           "beatmapsetId": 2298023
         },
@@ -545,7 +549,7 @@
           "type": "LN",
           "realType": "JW",
           "name": "ginkiha - Silver Eclipse [Eclipse]",
-          "difficulty": 13.6,
+          "difficulty": 12.2,
           "beatmapId": 5207438,
           "beatmapsetId": 2401399
         },
@@ -554,7 +558,7 @@
           "type": "LN",
           "realType": "LNMX",
           "name": "Billain & Kursa - NEWGROOVEORDER [Exorbitant]",
-          "difficulty": 13.6,
+          "difficulty": 13,
           "beatmapId": 5207494,
           "beatmapsetId": 2401411
         },
@@ -563,7 +567,7 @@
           "type": "SV",
           "realType": "SV1",
           "name": "Camellia - Diastrophism [Annihilation]",
-          "difficulty": 13.5,
+          "difficulty": 12.5,
           "beatmapId": 5207745,
           "beatmapsetId": 2401513
         },
@@ -572,7 +576,7 @@
           "type": "SV",
           "realType": "SV2",
           "name": "Fellsius - Language [sv]",
-          "difficulty": 13.5,
+          "difficulty": 12.5,
           "beatmapId": 5207761,
           "beatmapsetId": 2401520
         },
@@ -581,8 +585,8 @@
           "type": "TB",
           "realType": "TB",
           "name": "Halv - Akashic Hex [Radiant Eternity]",
-          "difficulty": 13.9,
-          "difficultyLn": 14.2,
+          "difficulty": 13.2,
+          "difficultyLn": 13.6,
           "beatmapId": 5207679,
           "beatmapsetId": 2401488
         }
@@ -590,18 +594,22 @@
       "bestOf": 13,
       "typeDifficulties": {
         "RC": {
-          "rf": 13.3
+          "rf": 13
         },
         "HB": {
-          "ln": 13.8
+          "rf": 12.8,
+          "ln": 12.8
         },
         "LN": {
-          "ln": 13.9
+          "ln": 12.9
         },
         "SV": {
-          "rf": 13.5
+          "rf": 12.5
         },
-        "TB": {}
+        "TB": {
+          "rf": 13.2,
+          "ln": 13.6
+        }
       }
     }
   ],

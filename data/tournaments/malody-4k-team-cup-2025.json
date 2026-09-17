@@ -76,8 +76,9 @@
           "slot": "HB1",
           "type": "HB",
           "realType": "HB2",
-          "name": "",
-          "difficulty": 0
+          "name": "Toromaru - Curiosity [Stage 7: Inquisitiveness Lv.31]",
+          "difficulty": 0,
+          "beatmapsetId": 1
         },
         {
           "slot": "HB2",
@@ -130,8 +131,9 @@
           "slot": "RC3",
           "type": "RC",
           "realType": "TC",
-          "name": "",
-          "difficulty": 0
+          "name": "daisan - Yukidoke-iro Furawazu [RC3 Whiteout Lv.31]",
+          "difficulty": 0,
+          "beatmapsetId": 1
         },
         {
           "slot": "LN1",
@@ -193,16 +195,18 @@
           "slot": "RC1",
           "type": "RC",
           "realType": "SS",
-          "name": "",
-          "difficulty": 0
+          "name": "Senya - Yakusoku no Kimi (Cut Ver.) [RC1 9th Speed]",
+          "difficulty": 0,
+          "beatmapsetId": 1
         },
         {
           "slot": "RC2",
           "type": "RC",
           "realType": "JS",
-          "name": "",
+          "name": "Rairyu - ra'am (STARLiGHT Mix) [RC2 Vogelzauberin]",
           "difficulty": 0,
-          "beatmapId": 5193095
+          "beatmapId": 5193095,
+          "beatmapsetId": 1
         },
         {
           "slot": "RC3",
@@ -235,8 +239,9 @@
           "slot": "LN2",
           "type": "LN",
           "realType": "LNWC",
-          "name": "",
-          "difficulty": 0
+          "name": "OSTER project - SpaceLand TOYBOX [LN2 Joyful]",
+          "difficulty": 0,
+          "beatmapsetId": 1
         },
         {
           "slot": "HB1",
@@ -298,16 +303,18 @@
           "slot": "RC1",
           "type": "RC",
           "realType": "SS",
-          "name": "",
-          "difficulty": 0
+          "name": "Army Of Lovers - Crucified [RC1 Made in Heaven Lv.36]",
+          "difficulty": 0,
+          "beatmapsetId": 1
         },
         {
           "slot": "RC2",
           "type": "RC",
           "realType": "SA",
-          "name": "",
+          "name": "DJ SHARPNEL - Mmmmmmm [RC2 W Lv.35]",
           "difficulty": 0,
-          "beatmapId": 5212106
+          "beatmapId": 5212106,
+          "beatmapsetId": 1
         },
         {
           "slot": "RC3",
@@ -322,8 +329,9 @@
           "slot": "RC4",
           "type": "RC",
           "realType": "TC",
-          "name": "",
-          "difficulty": 0
+          "name": "Kolaa - async [RC4 await Lv.36]",
+          "difficulty": 0,
+          "beatmapsetId": 1
         },
         {
           "slot": "RC5",
@@ -392,8 +400,9 @@
           "slot": "TB",
           "type": "TB",
           "realType": "TB",
-          "name": "",
-          "difficulty": 0
+          "name": "NormalM - Luas na Gaoithe: IU [Sreabhadh: Thar Shaoirse na mBeanna Uachtaracha (Tiebreaker) Lv.38]",
+          "difficulty": 0,
+          "beatmapsetId": 1
         }
       ],
       "typeDifficulties": {
@@ -419,8 +428,9 @@
           "slot": "RC1",
           "type": "RC",
           "realType": "SS",
-          "name": "",
-          "difficulty": 0
+          "name": "nowisee - Ko Inu (Cut Ver.) [RC1 autism spectrum Lv.37]",
+          "difficulty": 0,
+          "beatmapsetId": 1
         },
         {
           "slot": "RC2",
@@ -435,15 +445,17 @@
           "slot": "RC3",
           "type": "RC",
           "realType": "SA",
-          "name": "",
-          "difficulty": 0
+          "name": "HanStone - The Final Musical Dance I [RC3 Final Showcase Lv.39]",
+          "difficulty": 0,
+          "beatmapsetId": 1
         },
         {
           "slot": "RC4",
           "type": "RC",
           "realType": "FCJ",
-          "name": "",
-          "difficulty": 0
+          "name": "Suzumenome feat. KASANE TETO - BRAINWAVES' GOUGE [RC4 Brain's on Jack Lv.37]",
+          "difficulty": 0,
+          "beatmapsetId": 1
         },
         {
           "slot": "RC5",
@@ -467,8 +479,9 @@
           "slot": "RC7",
           "type": "RC",
           "realType": "MX",
-          "name": "",
-          "difficulty": 0
+          "name": "nasanoa - forlorn (cut) [RC7 Melancholy Lv.37]",
+          "difficulty": 0,
+          "beatmapsetId": 1
         },
         {
           "slot": "LN1",
@@ -501,9 +514,10 @@
           "slot": "LN4",
           "type": "LN",
           "realType": "LNTC",
-          "name": "",
+          "name": "Monster Siren Records - Revealing [LN4 Virtuosa Lv.38]",
           "difficulty": 0,
-          "beatmapId": 4883790
+          "beatmapId": 4883790,
+          "beatmapsetId": 1
         },
         {
           "slot": "HB1",
@@ -518,8 +532,9 @@
           "slot": "HB2",
           "type": "HB",
           "realType": "HB2",
-          "name": "",
-          "difficulty": 0
+          "name": "Team Grimoire - Aphasia [HB2 Lugere In 0 Dicibel Lv.39]",
+          "difficulty": 0,
+          "beatmapsetId": 1
         },
         {
           "slot": "HB3",
@@ -534,15 +549,17 @@
           "slot": "SV1",
           "type": "SV",
           "realType": "SVMX",
-          "name": "",
-          "difficulty": 0
+          "name": "かめりあ - Another Xronixle [NSV]",
+          "difficulty": 0,
+          "beatmapsetId": 1
         },
         {
           "slot": "TB",
           "type": "TB",
           "realType": "TB",
-          "name": "",
-          "difficulty": 0
+          "name": "Sydosys - Partition [Nébuleuse (Tiebreaker) Lv.40]",
+          "difficulty": 0,
+          "beatmapsetId": 1
         }
       ],
       "typeDifficulties": {
@@ -568,15 +585,17 @@
           "slot": "RC1",
           "type": "RC",
           "realType": "SS",
-          "name": "",
-          "difficulty": 0
+          "name": "n.k feat. Hatsune Miku - That Girl, Ms. Hell's Angel (Cut Ver.) [RC1 Higanbana Lv.42]",
+          "difficulty": 0,
+          "beatmapsetId": 1
         },
         {
           "slot": "RC2",
           "type": "RC",
           "realType": "SA",
-          "name": "",
-          "difficulty": 0
+          "name": "Falcom Sound Team jdk - GREAT PLAINS: PAN-GAIA [RC2 Dyrodox Lv.41]",
+          "difficulty": 0,
+          "beatmapsetId": 1
         },
         {
           "slot": "RC3",
@@ -591,8 +610,9 @@
           "slot": "RC4",
           "type": "RC",
           "realType": "CJ",
-          "name": "",
-          "difficulty": 0
+          "name": "MINT - CYCLONE [RC4 Vortex Lv.40]",
+          "difficulty": 0,
+          "beatmapsetId": 1
         },
         {
           "slot": "RC5",
@@ -616,37 +636,42 @@
           "slot": "RC7",
           "type": "RC",
           "realType": "DP",
-          "name": "",
-          "difficulty": 0
+          "name": "tieLeaf - Nejimaku Tokei ga Tsuki no Michikake o Kizamu [RC7 Ashen Reach Lv.40]",
+          "difficulty": 0,
+          "beatmapsetId": 1
         },
         {
           "slot": "RCX",
           "type": "RC",
           "realType": "TC",
-          "name": "",
-          "difficulty": 0
+          "name": "Lamberti phil - Nebura [RCX Hard Lv.43]",
+          "difficulty": 0,
+          "beatmapsetId": 1
         },
         {
           "slot": "HB1",
           "type": "HB",
           "realType": "HB1",
-          "name": "",
+          "name": "Kobaryo - Unlimited Hyperlink [HB1 Infinite Nexus Lv.41]",
           "difficulty": 0,
-          "beatmapId": 5228237
+          "beatmapId": 5228237,
+          "beatmapsetId": 1
         },
         {
           "slot": "HB2",
           "type": "HB",
           "realType": "HB2",
-          "name": "",
-          "difficulty": 0
+          "name": "7mai - Binary Wonderland [HB2 Continue from Save Lv.41]",
+          "difficulty": 0,
+          "beatmapsetId": 1
         },
         {
           "slot": "HB3",
           "type": "HB",
           "realType": "MNTB",
-          "name": "",
-          "difficulty": 0
+          "name": "NormalM - Radiant Spectrala [HB3 Prism Lv.42]",
+          "difficulty": 0,
+          "beatmapsetId": 1
         },
         {
           "slot": "LN1",
@@ -679,8 +704,9 @@
           "slot": "LN4",
           "type": "LN",
           "realType": "LNTC",
-          "name": "",
-          "difficulty": 0
+          "name": "YURRY CANON - Tsukuyomi Step (feat. nameless) [LN4 LN Lv.40]",
+          "difficulty": 0,
+          "beatmapsetId": 1
         },
         {
           "slot": "LNX",
@@ -702,8 +728,9 @@
           "slot": "TB",
           "type": "TB",
           "realType": "TB",
-          "name": "",
-          "difficulty": 0
+          "name": "Camellia - Looking for Edge of Ground [Where the Cartographer's Ink Runs Dry (Tiebreaker) Lv.43]",
+          "difficulty": 0,
+          "beatmapsetId": 1
         }
       ],
       "typeDifficulties": {
@@ -729,36 +756,41 @@
           "slot": "RC1",
           "type": "RC",
           "realType": "SS",
-          "name": "",
-          "difficulty": 0
+          "name": "Akatsuki Records - Mizuiro Raindrop [RC1 Yukai na wasuregasa Lv.44]",
+          "difficulty": 0,
+          "beatmapsetId": 1
         },
         {
           "slot": "RC2",
           "type": "RC",
           "realType": "JS",
-          "name": "",
-          "difficulty": 0
+          "name": "Hoshimachi Suisei - Starry Jet (Cut Ver.) [RC2 Let's become a comet tonight Lv.42]",
+          "difficulty": 0,
+          "beatmapsetId": 1
         },
         {
           "slot": "RC3",
           "type": "RC",
           "realType": "SA",
-          "name": "",
-          "difficulty": 0
+          "name": "Daisuke Achiwa - Nefertiti (Ver. MMXI By Toshinori Hiramatsu) [RC3 Frozen Battle Lv.43]",
+          "difficulty": 0,
+          "beatmapsetId": 1
         },
         {
           "slot": "RC4",
           "type": "RC",
           "realType": "FCJ",
-          "name": "",
-          "difficulty": 0
+          "name": "LUZE - fibrolite [RC4 Opalescent Lv.44]",
+          "difficulty": 0,
+          "beatmapsetId": 1
         },
         {
           "slot": "RC5",
           "type": "RC",
           "realType": "ADP",
-          "name": "",
-          "difficulty": 0
+          "name": "hkmori - right here [RC5 effet psychologique Lv.42]",
+          "difficulty": 0,
+          "beatmapsetId": 1
         },
         {
           "slot": "RC6",
@@ -791,38 +823,43 @@
           "slot": "HB1",
           "type": "HB",
           "realType": "HB1",
-          "name": "",
-          "difficulty": 0
+          "name": "MetaHumanBoi - Solar Strike [HB1 Luminous Lv.42]",
+          "difficulty": 0,
+          "beatmapsetId": 1
         },
         {
           "slot": "HB2",
           "type": "HB",
           "realType": "HB2",
-          "name": "",
-          "difficulty": 0
+          "name": "AAAA - Splash the Beat!! [HB2 Chromatique Pulsations Lv.44]",
+          "difficulty": 0,
+          "beatmapsetId": 1
         },
         {
           "slot": "HB3",
           "type": "HB",
           "realType": "HB3",
-          "name": "",
-          "difficulty": 0
+          "name": "Codly - Vainglorious Demon (Cut Ver.) [HB3 black big shuai Lv.43]",
+          "difficulty": 0,
+          "beatmapsetId": 1
         },
         {
           "slot": "LN1",
           "type": "LN",
           "realType": "PDLN",
-          "name": "Kairiki Bear feat. flower - Lemming Ming (kemu Remix) [I want to be compensated [1.15x Rate]]",
+          "name": "KAF - Montage [Cinematic]",
           "difficulty": 0,
-          "beatmapId": 4257678,
-          "beatmapsetId": 2040875
+          "beatmapId": 4994314,
+          "beatmapsetId": 2329101
         },
         {
           "slot": "LN2",
           "type": "LN",
           "realType": "DE",
-          "name": "",
-          "difficulty": 0
+          "name": "Lime - Cynosure [Stella illa quae Polaris dicitur]",
+          "difficulty": 0,
+          "beatmapId": 5353728,
+          "beatmapsetId": 2421360
         },
         {
           "slot": "LN3",
@@ -855,15 +892,18 @@
           "slot": "SV1",
           "type": "SV",
           "realType": "PDSV",
-          "name": "",
-          "difficulty": 0
+          "name": "t+pazolite - Lilac Feel [SV1 Epilogue of Traveler Lv.???]",
+          "difficulty": 0,
+          "beatmapsetId": 1
         },
         {
           "slot": "TB",
           "type": "TB",
           "realType": "TB",
-          "name": "",
-          "difficulty": 0
+          "name": "roer & kaydotnet - Dystortion Dystopia [Dyvastating Dymolition]",
+          "difficulty": 0,
+          "beatmapId": 5265222,
+          "beatmapsetId": 2420521
         }
       ],
       "typeDifficulties": {

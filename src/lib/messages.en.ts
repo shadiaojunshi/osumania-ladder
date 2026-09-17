@@ -184,6 +184,7 @@ export const messagesEn: Record<keyof typeof messagesZh, string> = {
   'audit.refresh': 'Refresh',
   'audit.empty': 'No log entries',
   'audit.loadFailed': 'Failed to load audit log',
+  'audit.viewFull': 'View full',
   'audit.action.tournament.create': 'Create tournament',
   'audit.action.tournament.update': 'Edit tournament',
   'audit.action.tournament.delete': 'Delete tournament',

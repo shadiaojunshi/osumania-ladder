@@ -12,6 +12,9 @@ interface AuditEntry {
   target: string
   detail?: string
   ip?: string
+  // R16：list 里的 target/detail 可能被 KV metadata 字节上限收缩过；true 时可按 key 取全文。
+  truncated?: boolean
+  key?: string
 }
 
 const ACTION_LABEL_KEYS: Record<string, MessageKey> = {
@@ -50,6 +53,31 @@ export function AuditLog() {
   const [entries, setEntries] = useState<AuditEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  // R16：被收缩过的条目 → 按 key 取回完整正文，展示在行下方。
+  const [expanded, setExpanded] = useState<Record<string, AuditEntry | 'loading' | 'error'>>({})
+
+  const toggleFull = useCallback(async (entry: AuditEntry) => {
+    if (!entry.key) return
+    const k = entry.key
+    if (expanded[k] && expanded[k] !== 'error') {
+      setExpanded((prev) => {
+        const next = { ...prev }
+        delete next[k]
+        return next
+      })
+      return
+    }
+    setExpanded((prev) => ({ ...prev, [k]: 'loading' }))
+    try {
+      const res = await fetch(`/api/audit?key=${encodeURIComponent(k)}`)
+      if (!res.ok) throw new Error('failed')
+      const data = await res.json()
+      if (!data?.entry) throw new Error('empty')
+      setExpanded((prev) => ({ ...prev, [k]: data.entry as AuditEntry }))
+    } catch {
+      setExpanded((prev) => ({ ...prev, [k]: 'error' }))
+    }
+  }, [expanded])
 
   const fetchAudit = useCallback(async () => {
     setLoading(true)
@@ -97,14 +125,42 @@ export function AuditLog() {
       {!loading && entries.length > 0 && (
         <div className="divide-y divide-gray-100 dark:divide-neutral-800 max-h-[calc(100vh-260px)] overflow-y-auto">
           {entries.map((e, i) => (
-            <div key={`${e.ts}-${i}`} className="px-4 py-2.5 flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-neutral-800/50 text-sm">
-              <span className={`px-2 py-0.5 rounded text-xs font-medium shrink-0 ${ACTION_COLOR[e.action] || 'bg-gray-100 text-gray-600 dark:bg-neutral-800 dark:text-neutral-300'}`}>
-                {ACTION_LABEL_KEYS[e.action] ? t(ACTION_LABEL_KEYS[e.action]) : e.action}
-              </span>
-              <span className="text-gray-700 dark:text-neutral-200 font-mono truncate flex-1">{e.target}</span>
-              {e.detail && <span className="text-gray-400 dark:text-neutral-500 text-xs truncate max-w-[160px]">{e.detail}</span>}
-              <span className="text-gray-500 dark:text-neutral-400 text-xs shrink-0">{e.actorName}</span>
-              <span className="text-gray-400 dark:text-neutral-500 text-xs shrink-0 w-36 text-right">{formatTime(e.ts, lang)}</span>
+            <div key={`${e.ts}-${i}`} className="hover:bg-gray-50 dark:hover:bg-neutral-800/50">
+              <div className="px-4 py-2.5 flex items-center gap-3 text-sm">
+                <span className={`px-2 py-0.5 rounded text-xs font-medium shrink-0 ${ACTION_COLOR[e.action] || 'bg-gray-100 text-gray-600 dark:bg-neutral-800 dark:text-neutral-300'}`}>
+                  {ACTION_LABEL_KEYS[e.action] ? t(ACTION_LABEL_KEYS[e.action]) : e.action}
+                </span>
+                <span className="text-gray-700 dark:text-neutral-200 font-mono truncate flex-1">{e.target}</span>
+                {e.detail && <span className="text-gray-400 dark:text-neutral-500 text-xs truncate max-w-[160px]">{e.detail}</span>}
+                {e.truncated && e.key && (
+                  <button
+                    onClick={() => toggleFull(e)}
+                    className="text-xs text-blue-600 dark:text-blue-300 underline shrink-0"
+                  >
+                    {t('audit.viewFull')}
+                  </button>
+                )}
+                <span className="text-gray-500 dark:text-neutral-400 text-xs shrink-0">{e.actorName}</span>
+                <span className="text-gray-400 dark:text-neutral-500 text-xs shrink-0 w-36 text-right">{formatTime(e.ts, lang)}</span>
+              </div>
+              {e.key && expanded[e.key] && (
+                <div className="px-4 pb-3 text-xs text-gray-600 dark:text-neutral-300">
+                  {expanded[e.key] === 'loading' && <span className="text-gray-400">{t('admin.loading')}</span>}
+                  {expanded[e.key] === 'error' && <span className="text-red-500 dark:text-red-300">{t('audit.loadFailed')}</span>}
+                  {expanded[e.key] !== 'loading' && expanded[e.key] !== 'error' && (
+                    <div className="rounded border border-gray-200 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-800/60 p-2 space-y-1">
+                      <div className="font-mono break-all whitespace-pre-wrap">
+                        {(expanded[e.key] as AuditEntry).target}
+                      </div>
+                      {(expanded[e.key] as AuditEntry).detail && (
+                        <div className="text-gray-500 dark:text-neutral-400 break-all whitespace-pre-wrap">
+                          {(expanded[e.key] as AuditEntry).detail}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           ))}
         </div>

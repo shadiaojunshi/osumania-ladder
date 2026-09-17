@@ -624,6 +624,14 @@ LN 单曲使用 difficulty 是当前领域约定，不能改成 difficultyLn。�
 
 验收：fake R2 两页、主图和 NSV 混合、提前截断页都不漏；第二页失败不返回成功的部分清单；无需等真实比赛达到 1000 文件再修。
 
+**完成记录（2026-09-17）**
+
+- 状态：实现完成待验收（改动未提交）。
+- 修改文件：`functions/api/maps/status.ts`（按 cursor 循环分页；任一分页失败返回 502 `R2_LIST_FAILED`；列表键先过共享拆键校验）、`functions/api/_lib/mapKeys.ts`（新增 `splitMapRelative`）、`functions/api/_lib/tournamentId.ts`（`isValidTournamentId` 补 128 字符上限并导出 `MAX_TOURNAMENT_ID_LENGTH`）；新增 `scripts/map-status-pagination.test.mjs`。
+- 实现要点：① R2 list 单页最多 1000 个对象且默认不分页 —— 超过 1000 张的比赛后面会被静默漏掉，前端于是把"已上传"的槽位显示成未上传；现在按 `cursor` 循环累计。② **中途任何一页失败一律返回错误**，不回"部分清单"（部分清单会被前端当成权威状态，进而清掉勾选）。③ 列表里的键先过 `splitMapRelative`（复用 `validateRoundId`/`validateSlot`）—— `r1/`、`r1/../x` 这类历史垃圾键在比赛 JSON 里不可能有对应槽位，不再混进界面状态。④ `isValidTournamentId` 补 128 字符上限（= `LIMITS.maxIdLength`，测试断言两者相等），免得只调它的 `/api/maps/*` 端点接受比写路径长得多的 id 去白跑 R2/GitHub。
+- 运行的验证：`map-status-pagination.test.mjs` → **9/9**（单页主图/NSV 分开归类；25 张跨 3 页一张不少且 cursor 正确传递；第二页失败 → 502 且**没有** `uploaded` 字段；未截断时只调一次 list；`r1/`、`r1/../x` 等垃圾键被滤掉；`../evil`/`-leading`/200 字符 id 全 400，128 字符边界仍 200；两个常量相等；扫全库 8000+ 个（槽位 × 主图/NSV）键全部通过拆解校验）；`npm test` → **271/271**；前后端 `tsc` 0 错；`npm run build` 成功。
+- 未完成 / 仍有风险：① 没有真实 R2 联调（目前没有超过 1000 个对象的比赛，逻辑靠假分页 bucket 覆盖）；② 前端在 502 时仍走"清空勾选"分支（R05 定的行为），没有区分"这场确实没传"与"状态读不到"——报告未要求，要区分得再加一个 UI 状态。
+
 ### R14 [P2] 上游错误伪装成空数据；上传列表错误响应导致崩溃
 
 证据：functions/api/ref-ladder.ts:40；packs-manifest.ts:29；tournaments/[id].ts:34；src/components/admin/MapUploader.tsx:58。
@@ -663,6 +671,15 @@ LN 单曲使用 difficulty 是当前领域约定，不能改成 difficultyLn。�
 
 验收：多比赛长 ID、中文 actor/detail 时 metadata 小于限制，完整 value 不丢；列表可看摘要，详情可见完整；模拟 KV 失败有可观察诊断。
 
+**完成记录（2026-09-17）**
+
+- 状态：实现完成待验收（改动未提交）。
+- 修改文件：`functions/api/_lib/audit.ts`、`functions/api/audit/index.ts`、`src/components/admin/AuditLog.tsx`、`src/lib/messages.zh.ts` / `messages.en.ts`（新增 `audit.viewFull`）；新增 `scripts/audit-meta.test.mjs`。
+- 实现要点：① 新增 `buildAuditMetadata`：先按字符粗截（detail 200 / target 300），再按 **UTF-8 字节**（`TextEncoder`）逐字段对折收缩到 820 字节安全线内（KV 硬上限 1024）；只要裁过就打 `truncated: true`。② **完整正文始终留在 KV value**，metadata 只是列表用摘要；`listAudit` 现在把 KV key 一并带出，新增 `getAuditEntry`（**只认 `audit:` 前缀**、key ≤200 字符），端点支持 `?key=` 取全文。③ `writeAudit` 失败不再静默：`console.error('[audit] AUDIT_WRITE_FAILED', { action, targetChars, detailChars, error })` —— 只记长度与错误消息，**不含 token / 请求头**。
+- 影响面实测（2026-09-17，提交前按真实数据核算）：触发线 **31 场**（`batch.ts` 的 target = `ids.join(',')` 完全不截，`LIMITS.maxBatchItems` = 200 允许一次带这么多）。历史最大批次是 18 场（`2e8abf1`）→ target 546 字节、加其余字段约 714 字节，**没超 1024，所以过去没丢过审计**；但全库现在已有 52 场，**后台"全选保存"一次 ≈ 1579 字节 → KV 直接拒写、整条审计静默消失**，只差一步就踩到。修复后再全选：metadata 收进 820 字节、全文留在 value、列表出现"查看完整"。
+- 运行的验证：`audit-meta.test.mjs` → **9/9**（短条目不动；200 个比赛 id 的长 target 收缩到 ≤820 字节且带 truncated；200 汉字 = 600 字节放得下、400 汉字必须收；超长 actorName/ip 也能收而 `action`/`ts` 不丢；模拟 KV 拒写超限 metadata 但收缩后可写、且 value 保留完整 target；模拟 KV 失败时只记录那 4 个字段；`listAudit` 带 key 且按 key 取回全文；`getAuditEntry` 不读非 `audit:` 前缀与超长 key；旧的无 metadata 条目照常列出）；`npm test` → **271/271**；前后端 `tsc` 0 错；`npm run build` 成功。
+- 未完成 / 仍有风险：① 前端"查看完整"是行内展开，没做复制/分页；② 审计仍写单个 KV（其配额与并发问题不在本项范围）；③ 未做真实 KV 联调，拒绝阈值按文档 1024 字节模拟；④ 收缩只覆盖 detail/target/actorName/ip 四个可变文本字段 —— 万一全裁空仍超限会退回旧行为（拒写 + 日志），实际不可达（最小 metadata 约 180 字节）。
+
 ### R17 [P2，潜在] LN 参考选择器 fallback 读错字段
 
 证据：src/lib/referenceData.ts:92；RoundEditor.tsx:410、:609；MapSlotEditor.tsx:498；difficultyFit.ts:122。
@@ -672,6 +689,16 @@ LN 单曲使用 difficulty 是当前领域约定，不能改成 difficultyLn。�
 解决方法：保持显式汇总值优先；LN/ln 的单图 fallback 读取 difficulty，HB/TB 的 ln fallback 仍读取 difficultyLn。若提取共享读取函数，保持各调用方现有精度规则，不顺手全站改小数位。
 
 验收：LN fallback=12；HB/TB 双难度不串；显式汇总优先；0/缺失值不变成有效测量；参考链与拟合取同一语义。
+
+**完成记录（2026-09-17）**
+
+- 状态：实现完成待验收（改动未提交）。
+- 修改文件：新增 `src/lib/mapDifficultyReading.ts`（唯一读数实现 `readMapDifficulty`）；`src/lib/referenceData.ts`（`getRefValue` 改用它）、`src/lib/difficultyFit.ts`（`getRoundDifficulty` 去掉 ln-ln 专用补丁，改用它）；新增 `scripts/map-difficulty-reading.test.mjs`。
+- 根因：`getRefValue` 的 fallback 写的是"ln 一律读 `map.difficultyLn`"，而**全库 LN 类 1205 张图的 `difficultyLn` 全为空**（HB 470/882、TB 164/321 才有这个字段）→ LN 的 **fallback 分支**（无显式汇总值时按图平均）必然取不到值；`difficultyFit` 当时为 ln-ln 单独打了补丁，两份实现就此分叉。
+- 影响面实测（2026-09-17，提交前全库对拍）：**本次修复在当前数据上 0 处可见变化**，与上面"触发"行的"当前全库未触发该条件"一致。351 个含 LN 图的轮次里 —— 181 个有显式 `typeDifficulties.LN.ln`（走显式优先，一直有值、未受影响）；另 170 个既无显式值、LN 图的 `difficulty` 也没录入（改前改后都取不到）。**它修的是潜伏路径**（导入/新建数据漏填汇总值时才触发）+ 消除与 `difficultyFit` 的实现分叉，不是已发生的线上故障。
+- 实现要点：rf → `difficulty`；ln → **LN 类读 `difficulty`**、HB/TB 读 `difficultyLn`。只负责"取一个正整数读数"，平均值与小数位规则留在各调用方（报告要求不顺手全站改小数位：`getRefValue` 仍 `.toFixed(1)`、`getRoundDifficulty` 仍原样）。
+- 运行的验证：`map-difficulty-reading.test.mjs` → **12/12**（LN 两侧都读 difficulty；HB/TB 双难度不串；0/缺失/NaN/Infinity/负值都算没有读数；LN 只有 difficultyLn 时的兜底；显式汇总优先；汇总为 0 要回退到谱面；无有效读数返回 null；`resolveLadder` 里 LN 轮次不再整条落空；**`difficultyFit` 与 `referenceData` 对 6 个维度给出同一答案**；扫全库断言 LN 无 difficultyLn 且 HB 有）；`npm test` → **271/271**；前后端 `tsc` 0 错；`npm run build` 成功。
+- 未完成 / 仍有风险：① 这条依赖链上的 import **必须显式带 `.ts`**（referenceData/difficultyFit 会被 node --test 静态导入且未注册 loader），以后加新的值导入要注意；② `map.difficultyLn` 还有别的读点（`danLabels`、`MapSlotEditor`、`tournamentMerge`），各自的 type 口径是合理的，未一并改；③ `round.typeDifficulties.LN.ln` 若被填成显式值仍然优先。
 
 ### R18 [P2，局部] 常数样本错误固定斜率也显示 R²=1
 
@@ -749,7 +776,7 @@ LN 单曲使用 difficulty 是当前领域约定，不能改成 difficultyLn。�
 
 以下任务除标注 ✅ 外均为“待实施”，本次只写方案。P1 指有明确触发条件的数据丢失/覆盖或发布损坏风险，不表示已确认线上遭遇事故。
 
-进度速览（2026-09-14）：✅ R01（实现完成待验收，UI 自动重放未做）、✅ R02（实现完成待验收，浏览器端未联调）、✅ R03（已提交 `3634998`，未线上联调）、✅ R04（实现完成待验收，未提交，未线上联调）、✅ R05（实现完成待验收，未提交，时序行为无自动化测试）、✅ R06（实现完成待验收，未提交，**「替换当前版本」入口未做**、未线上联调）、✅ R07（实现完成待验收，未提交，并发删/重传未验收）、✅ R08、✅ R09、✅ R18、✅ R24（实施期间新增：下载路径网络重试，未提交）、✅ R25（悬浮卡段位与框高同源，未提交）、✅ R26（不参与难度统计 + 整场视图按指针选轮次 + 版本 0.9.0，未提交）、✅ R27（键型冲突改“勾选才改”+批量选择，未提交）、✅ R28（PDEX 键型 + 默认键型一律 Pending + 误标检测工具，未提交，检测结果需人工复核）、✅ R29（悬浮卡 TB 段位改用实际难度，未做浏览器验收）、✅ R30（TB 段位规则细化 + 每轮图池标题折行；MCNC 简写查为残留记录，数据未改）、✅ R31（合包分包规则均分 + `$` 注入修复 + NSV 缺音频借用主图；未重新生成包）；其余待实施。
+进度速览（2026-09-17）：✅ R01（实现完成待验收，UI 自动重放未做）、✅ R02（实现完成待验收，浏览器端未联调）、✅ R03（已提交 `3634998`，未线上联调）、✅ R04（实现完成待验收，未提交，未线上联调）、✅ R05（实现完成待验收，未提交，时序行为无自动化测试）、✅ R06（实现完成待验收，未提交，**「替换当前版本」入口未做**、未线上联调）、✅ R07（实现完成待验收，未提交，并发删/重传未验收）、✅ R08、✅ R09、✅ R18、✅ R24（实施期间新增：下载路径网络重试，未提交）、✅ R25（悬浮卡段位与框高同源，未提交）、✅ R26（不参与难度统计 + 整场视图按指针选轮次 + 版本 0.9.0，未提交）、✅ R27（键型冲突改“勾选才改”+批量选择，未提交）、✅ R28（PDEX 键型 + 默认键型一律 Pending + 误标检测工具，未提交，检测结果需人工复核）、✅ R29（悬浮卡 TB 段位改用实际难度，未做浏览器验收）、✅ R30（TB 段位规则细化 + 每轮图池标题折行；MCNC 简写查为残留记录，数据未改）、✅ R31（合包分包规则均分 + `$` 注入修复 + NSV 缺音频借用主图；未重新生成包）、✅ R13（状态 API 分页 + 失败不返回部分清单，未提交）、✅ R16（审计 metadata 按字节收缩 + 失败可见 + 可按 key 看全文，未提交）、✅ R17（LN 参考读数改用 difficulty，两处实现合并，未提交）；其余待实施。
 
 | 编号 | 工作单元 | 主要依赖 |
 | --- | --- | --- |
@@ -765,11 +792,11 @@ LN 单曲使用 difficulty 是当前领域约定，不能改成 difficultyLn。�
 | R10 | 合包发布完整性 | R09，发布消费方一起改 |
 | R11 | 谱面身份/指纹与备选副本 | 与 R10 串行 |
 | R12 | workflow/CLI/单类型发布 | 与 R10 协议对齐 |
-| R13 | R2 状态分页 | 可独立，键规则接 R04 |
+| ✅ R13 | R2 状态分页 | 可独立，键规则接 R04 |
 | R14 | 上游错误与 UI 错误状态 | 可独立 |
 | R15 | 角色校验与一致性 | 可分为局部校验和协调存储两阶段 |
-| R16 | 审计 metadata 字节上限 | 可独立 |
-| R17 | LN 参考回退 | 可独立 |
+| ✅ R16 | 审计 metadata 字节上限 | 可独立 |
+| ✅ R17 | LN 参考回退 | 可独立 |
 | ✅ R18 | 常数样本 R² | 可独立 |
 | R19 | lint/启动与验证入口 | 可独立 |
 | R20 | 旧冲突脚本防串改 | 可独立 |

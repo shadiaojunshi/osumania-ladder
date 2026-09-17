@@ -183,6 +183,7 @@ export const messagesZh = {
   'audit.refresh': '刷新',
   'audit.empty': '暂无日志',
   'audit.loadFailed': '加载审计日志失败',
+  'audit.viewFull': '查看完整',
   'audit.action.tournament.create': '创建比赛',
   'audit.action.tournament.update': '编辑比赛',
   'audit.action.tournament.delete': '删除比赛',

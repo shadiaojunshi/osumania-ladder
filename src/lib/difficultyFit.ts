@@ -1,5 +1,6 @@
 import type { Round, Tournament } from './types'
 import type { LadderEntry } from './referenceData'
+import { readMapDifficulty } from './mapDifficultyReading.ts'
 
 export type DifficultyDimensionId =
   | 'rc-rf'
@@ -123,13 +124,8 @@ export function getRoundDifficulty(
 
   const values = round.maps
     .filter((map) => map.type === dimension.type)
-    .map((map) => {
-      if (dimension.id === 'ln-ln') return map.difficulty
-      return dimension.field === 'rf' ? map.difficulty : map.difficultyLn
-    })
-    .filter((value): value is number =>
-      typeof value === 'number' && Number.isFinite(value) && value > 0
-    )
+    .map((map) => readMapDifficulty(map, dimension.type, dimension.field))
+    .filter((value): value is number => value !== null)
 
   if (values.length === 0) return null
 

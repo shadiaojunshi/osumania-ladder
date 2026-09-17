@@ -50,6 +50,24 @@ export function hasNsvSuffixAmbiguity(slot: string, nsv: boolean): boolean {
   return !nsv && slot.endsWith('.nsv')
 }
 
+/**
+ * 把 `parseMapObjectKey` 得到的 relative（`roundId/slot`，slot 自身可能含 `/`）
+ * 拆回两段并**按同一套键规则校验**。
+ *
+ * 用途：列表类端点(R2 list)会看到历史上可能存在的垃圾键（`r1/`、`r1/../x` 等）。
+ * 这些键在比赛 JSON 里不可能有对应槽位，直接过滤掉，别让它们进到界面状态里。
+ * 键规则仍在 validateRoundId/validateSlot 一处，这里不再另立标准。
+ */
+export function splitMapRelative(relative: string): { roundId: string; slot: string } | null {
+  const idx = relative.indexOf('/')
+  if (idx <= 0) return null
+  const roundId = relative.slice(0, idx)
+  const slot = relative.slice(idx + 1)
+  if (!validateRoundId(roundId).ok) return null
+  if (!validateSlot(slot).ok) return null
+  return { roundId, slot }
+}
+
 // 键段校验。不做 trim:键按原样存储,悄悄改值会让两边不一致。
 export function validateKeySegment(
   value: unknown,

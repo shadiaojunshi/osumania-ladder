@@ -9,6 +9,9 @@
 // 锚点候选 = 标尺上有该 (type,field) 数据的项;prev/next = 标尺上前后最近的有数据项。
 
 import type { Tournament } from './types'
+// 显式带扩展名：referenceData 会被 node --test 直接导入（scripts/reference-data.test.mjs
+// 没注册 loader），省略扩展名会让那条链 ERR_MODULE_NOT_FOUND。同 tournamentDiagnostics.ts。
+import { readMapDifficulty } from './mapDifficultyReading.ts'
 
 export type RefType = 'RC' | 'HB' | 'LN' | 'SV' | 'TB'
 export type RefField = 'rf' | 'ln'
@@ -69,6 +72,8 @@ export interface BaseLadderRound {
 // 找单个 round 在该 (type, field) 下的均值。
 // 优先取 round.typeDifficulties[type][field](管理员显式录入),
 // fallback 到该 round 中 type 谱面的 difficulty / difficultyLn 平均。
+// 单图读数走 mapDifficultyReading.readMapDifficulty —— LN 类的 ln 读 difficulty(R17),
+// 以前这里一律读 difficultyLn,LN 图没这个字段 → LN 侧永远拿不到值。
 // 两条路都拿不到非零数返回 null。
 export function getRefValue(
   tournament: Tournament,
@@ -89,8 +94,8 @@ export function getRefValue(
   if (slots.length === 0) return null
   const diffs: number[] = []
   for (const m of slots) {
-    const v = field === 'rf' ? m.difficulty : m.difficultyLn
-    if (typeof v === 'number' && v > 0) diffs.push(v)
+    const v = readMapDifficulty(m, type, field)
+    if (v !== null) diffs.push(v)
   }
   if (diffs.length === 0) return null
   return +(diffs.reduce((s, d) => s + d, 0) / diffs.length).toFixed(1)

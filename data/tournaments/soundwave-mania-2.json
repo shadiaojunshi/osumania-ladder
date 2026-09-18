@@ -271,7 +271,7 @@
         {
           "slot": "LN1",
           "type": "LN",
-          "realType": "CO",
+          "realType": "RE",
           "name": "Harumaki Gohan feat. Sou - Zero Talking (Cut Ver.) [Dear]",
           "difficulty": 7.5,
           "beatmapId": 4597084,
@@ -299,7 +299,7 @@
         {
           "slot": "HB2",
           "type": "HB",
-          "realType": "LNmainHB",
+          "realType": "HB4",
           "name": "linear ring with RNAcid - Gypsophila [Everlasting Memories (edit)]",
           "difficulty": 3.78,
           "beatmapId": 3619174,

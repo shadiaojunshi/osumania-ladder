@@ -1,57 +1,20 @@
 # 可疑 beatmapId / beatmapsetId（自动检测，只读）
 
-生成时间：2026-09-18T02:44:22.992Z
-数据来源：**从部署站 `osumania-ladder.pages.dev` 的构建产物里抽出的线上快照**（50 场比赛 / 4715 张谱面）——本地 checkout 缺 MKTC 2025（站长的改动经 GitHub 提交，本地未 pull），所以扫的是线上数据。本地再跑一次用：`node scripts/find-suspicious-ids.mjs`（默认扫 `data/tournaments`）。
+生成时间：2026-09-18T12:49:17.461Z
+扫描目录：`data/tournaments` · 谱面 4935 张
 
 > 口径：**0 / 1 / 负数一律视为占位或未提交**（与 `src/lib/beatmapIds.ts` 同一实现）。
 > 「同一 setId 挂 ≥3 首不同的歌」= 这个 id 不可靠。
 
 ## 总览
 
-- **占位 ID**：36 条
+- **占位 ID**：0 条
 - **不可靠的 setId**：0 组（共 0 条记录）
 - **同一 bid 挂多首不同的歌**：8 组
 
 ## 1. 占位 ID（0 / 1 / 负数）
 
-| 比赛 | 轮次 | 槽位 | 键型 | beatmapId | beatmapsetId | 名称 |
-| --- | --- | --- | --- | --- | --- | --- |
-| MKTC 2025 | Qual | HB1 | HB2 | — | 1 | Toromaru - Curiosity [Stage 7: Inquisitiveness Lv. |
-| MKTC 2025 | RO32 | RC3 | TC | — | 1 | daisan - Yukidoke-iro Furawazu [RC3 Whiteout Lv.31 |
-| MKTC 2025 | RO16 | RC1 | SS | — | 1 | Senya - Yakusoku no Kimi (Cut Ver.) [RC1 9th Speed |
-| MKTC 2025 | RO16 | RC2 | JS | 5193095 | 1 | Rairyu - ra'am (STARLiGHT Mix) [RC2 Vogelzauberin] |
-| MKTC 2025 | RO16 | LN2 | LNWC | — | 1 | OSTER project - SpaceLand TOYBOX [LN2 Joyful] |
-| MKTC 2025 | QF | RC1 | SS | — | 1 | Army Of Lovers - Crucified [RC1 Made in Heaven Lv. |
-| MKTC 2025 | QF | RC2 | SA | 5212106 | 1 | DJ SHARPNEL - Mmmmmmm [RC2 W Lv.35] |
-| MKTC 2025 | QF | RC4 | TC | — | 1 | Kolaa - async [RC4 await Lv.36] |
-| MKTC 2025 | QF | TB | TB | — | 1 | NormalM - Luas na Gaoithe: IU [Sreabhadh: Thar Sha |
-| MKTC 2025 | SF | RC1 | SS | — | 1 | nowisee - Ko Inu (Cut Ver.) [RC1 autism spectrum L |
-| MKTC 2025 | SF | RC3 | SA | — | 1 | HanStone - The Final Musical Dance I [RC3 Final Sh |
-| MKTC 2025 | SF | RC4 | FCJ | — | 1 | Suzumenome feat. KASANE TETO - BRAINWAVES' GOUGE [ |
-| MKTC 2025 | SF | RC7 | MX | — | 1 | nasanoa - forlorn (cut) [RC7 Melancholy Lv.37] |
-| MKTC 2025 | SF | LN4 | LNTC | 4883790 | 1 | Monster Siren Records - Revealing [LN4 Virtuosa Lv |
-| MKTC 2025 | SF | HB2 | HB2 | — | 1 | Team Grimoire - Aphasia [HB2 Lugere In 0 Dicibel L |
-| MKTC 2025 | SF | SV1 | SVMX | — | 1 | かめりあ - Another Xronixle [NSV] |
-| MKTC 2025 | SF | TB | TB | — | 1 | Sydosys - Partition [Nébuleuse (Tiebreaker) Lv.40] |
-| MKTC 2025 | F | RC1 | SS | — | 1 | n.k feat. Hatsune Miku - That Girl, Ms. Hell's Ang |
-| MKTC 2025 | F | RC2 | SA | — | 1 | Falcom Sound Team jdk - GREAT PLAINS: PAN-GAIA [RC |
-| MKTC 2025 | F | RC4 | CJ | — | 1 | MINT - CYCLONE [RC4 Vortex Lv.40] |
-| MKTC 2025 | F | RC7 | DP | — | 1 | tieLeaf - Nejimaku Tokei ga Tsuki no Michikake o K |
-| MKTC 2025 | F | RCX | TC | — | 1 | Lamberti phil - Nebura [RCX Hard Lv.43] |
-| MKTC 2025 | F | HB1 | HB1 | 5228237 | 1 | Kobaryo - Unlimited Hyperlink [HB1 Infinite Nexus  |
-| MKTC 2025 | F | HB2 | HB2 | — | 1 | 7mai - Binary Wonderland [HB2 Continue from Save L |
-| MKTC 2025 | F | HB3 | MNTB | — | 1 | NormalM - Radiant Spectrala [HB3 Prism Lv.42] |
-| MKTC 2025 | F | LN4 | LNTC | — | 1 | YURRY CANON - Tsukuyomi Step (feat. nameless) [LN4 |
-| MKTC 2025 | F | TB | TB | — | 1 | Camellia - Looking for Edge of Ground [Where the C |
-| MKTC 2025 | GF | RC1 | SS | — | 1 | Akatsuki Records - Mizuiro Raindrop [RC1 Yukai na  |
-| MKTC 2025 | GF | RC2 | JS | — | 1 | Hoshimachi Suisei - Starry Jet (Cut Ver.) [RC2 Let |
-| MKTC 2025 | GF | RC3 | SA | — | 1 | Daisuke Achiwa - Nefertiti (Ver. MMXI By Toshinori |
-| MKTC 2025 | GF | RC4 | FCJ | — | 1 | LUZE - fibrolite [RC4 Opalescent Lv.44] |
-| MKTC 2025 | GF | RC5 | ADP | — | 1 | hkmori - right here [RC5 effet psychologique Lv.42 |
-| MKTC 2025 | GF | HB1 | HB1 | — | 1 | MetaHumanBoi - Solar Strike [HB1 Luminous Lv.42] |
-| MKTC 2025 | GF | HB2 | HB2 | — | 1 | AAAA - Splash the Beat!! [HB2 Chromatique Pulsatio |
-| MKTC 2025 | GF | HB3 | HB3 | — | 1 | Codly - Vainglorious Demon (Cut Ver.) [HB3 black b |
-| MKTC 2025 | GF | SV1 | PDSV | — | 1 | t+pazolite - Lilac Feel [SV1 Epilogue of Traveler  |
+（无）
 
 ## 2. 不可靠的 setId（下面挂着多首不同的歌）
 

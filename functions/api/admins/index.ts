@@ -3,13 +3,14 @@ import {
   hasRole,
   getAdminMap,
   putAdminMap,
-  ROLE_RANK,
+  isRole,
   type AuthEnv,
   type SessionUser,
   type Role,
   type AdminRecord,
 } from '../_lib/auth'
 import { writeAudit } from '../_lib/audit'
+import { readJsonBody } from '../_lib/validation'
 
 type Env = AuthEnv
 
@@ -99,17 +100,24 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, data }) 
     return jsonResponse({ error: '需要 admin 及以上权限', code: 'FORBIDDEN' }, 403)
   }
 
-  const body = (await request.json()) as { uid?: string; username?: string; role?: string }
-  const uid = (body.uid ?? '').trim()
-  const username = (body.username ?? '').trim()
-  const role = body.role as Role | undefined
+  const body = await readJsonBody(request)
+  if (!body.ok) {
+    return jsonResponse({ error: body.error }, 400)
+  }
+  const parsed = (body.value ?? {}) as { uid?: unknown; username?: unknown; role?: unknown }
+  // 先验类型再 trim：uid 是数字或对象时 `(uid ?? '').trim()` 会直接抛，变成 500。
+  const uid = typeof parsed.uid === 'string' ? parsed.uid.trim() : ''
+  const username = typeof parsed.username === 'string' ? parsed.username.trim() : ''
 
   if (!uid || !/^\d+$/.test(uid)) {
     return jsonResponse({ error: 'uid 必须是 osu 用户数字 ID' }, 400)
   }
-  if (!role || !(role in ROLE_RANK)) {
+  // 用 isRole 而不是 `role in ROLE_RANK`：后者会把 'constructor' / 'toString'
+  // 这类原型链上的名字当成合法 role 放进去（见 auth.isRole 的注释）。
+  if (!isRole(parsed.role)) {
     return jsonResponse({ error: 'role 无效' }, 400)
   }
+  const role: Role = parsed.role
 
   const map = await getAdminMap(env)
   const currentRole: Role = uid === env.BOOTSTRAP_OWNER_UID ? 'owner' : map[uid]?.role ?? 'readonly'
@@ -154,8 +162,12 @@ export const onRequestDelete: PagesFunction<Env> = async ({ request, env, data }
     return jsonResponse({ error: '需要 admin 及以上权限', code: 'FORBIDDEN' }, 403)
   }
 
-  const body = (await request.json()) as { uid?: string }
-  const uid = (body.uid ?? '').trim()
+  const body = await readJsonBody(request)
+  if (!body.ok) {
+    return jsonResponse({ error: body.error }, 400)
+  }
+  const parsed = (body.value ?? {}) as { uid?: unknown }
+  const uid = typeof parsed.uid === 'string' ? parsed.uid.trim() : ''
   if (!uid) {
     return jsonResponse({ error: '缺少 uid' }, 400)
   }

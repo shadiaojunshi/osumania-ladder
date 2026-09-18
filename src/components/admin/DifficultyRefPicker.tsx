@@ -17,9 +17,21 @@ let ladderPromise: Promise<LadderEntry[]> | null = null
 export function fetchLadder(): Promise<LadderEntry[]> {
   if (!ladderPromise) {
     ladderPromise = fetch('/api/ref-ladder')
-      .then((r) => (r.ok ? r.json() : { data: { entries: [] } }))
-      .then((d: { data?: { entries?: LadderEntry[] } }) => d.data?.entries || [])
-      .catch(() => [])
+      .then(async (r) => {
+        const payload = (await r.json().catch(() => null)) as
+          | { data?: { entries?: LadderEntry[] }; error?: string }
+          | null
+        // 后端已把上游故障分类成 502 + 人话（凭据失效 / 限流 / …）。
+        if (!r.ok) throw new Error(payload?.error || `HTTP ${r.status}`)
+        return payload?.data?.entries || []
+      })
+      .catch((e) => {
+        // 失败**不缓存**：下一次打开 picker 会重试。过去这里把 [] 塞进 ladderPromise，
+        // 一次上游故障（GITHUB_TOKEN 失效 / 限流）会让整个 admin 会话都以为标尺是空的，
+        // 换好 token 也不会恢复。错误抛给调用方去显示。
+        ladderPromise = null
+        throw e
+      })
   }
   return ladderPromise
 }
@@ -75,12 +87,18 @@ export function DifficultyRefPicker({ value, onChange, type, field, excludeRef }
     maxHeight: number
   } | null>(null)
   const [entries, setEntries] = useState<LadderEntry[] | null>(null)
+  // 标尺读不到 ≠ 标尺是空的：前者要显示错误并让用户重试，后者才是「没有可选参考」。
+  const [loadError, setLoadError] = useState<string | null>(null)
 
   useEffect(() => {
     let alive = true
-    fetchLadder().then((e) => {
-      if (alive) setEntries(e)
-    })
+    fetchLadder()
+      .then((e) => {
+        if (alive) setEntries(e)
+      })
+      .catch((err: unknown) => {
+        if (alive) setLoadError((err as Error).message)
+      })
     return () => {
       alive = false
     }
@@ -225,7 +243,11 @@ export function DifficultyRefPicker({ value, onChange, type, field, excludeRef }
                 )}
               </div>
 
-              {entries === null ? (
+              {loadError ? (
+                <p className="text-red-600 dark:text-red-400 py-4 text-center">
+                  {t('refPicker.ladderFailed', { error: loadError })}
+                </p>
+              ) : entries === null ? (
                 <p className="text-gray-400 dark:text-neutral-500 py-4 text-center">
                   {t('admin.loading')}
                 </p>

@@ -17,6 +17,12 @@
 import { jsonResponse, noContent } from '../_lib/cors'
 import { hasRole, type AuthEnv, type SessionUser } from '../_lib/auth'
 import { writeAudit } from '../_lib/audit'
+import {
+  classifyGithubFailure,
+  githubFetch,
+  upstreamFailureResponse,
+  type UpstreamFailure,
+} from '../_lib/github'
 import { isMatchingTournamentId } from '../_lib/tournamentId'
 import { findDuplicateRoundIds } from '../_lib/roundIds'
 import { LIMITS, validateTournament } from '../_lib/validation'
@@ -34,19 +40,34 @@ interface Env extends AuthEnv {
   GITHUB_REPO: string
 }
 
-const GITHUB_API = 'https://api.github.com'
 const BRANCH = 'main'
 
+// R14:上游分类错误。批处理链条很长(读 ref → 读 commit → 读树 → 建 blob/tree/commit →
+// 推 ref),任何一步的上游故障过去都只有一个「HTTP xxx」的 500 —— 站长看不出
+// 到底是凭据失效还是限流。现在带上分类结果,由外层 catch 翻成 502 + code。
+interface UpstreamError extends Error {
+  upstream: UpstreamFailure
+}
+
+function upstreamError(failure: UpstreamFailure): Error {
+  const err = new Error(failure.error) as UpstreamError
+  err.upstream = failure
+  return err
+}
+
+function isUpstreamError(e: unknown): e is UpstreamError {
+  return typeof e === 'object' && e !== null && 'upstream' in e
+}
+
+/** 分类并把上游故障抛出去(调用点不用自己拆状态码)。 */
+async function failUpstream(res: Response, env: Env): Promise<never> {
+  throw upstreamError(await classifyGithubFailure(res, env))
+}
+
+// R14:统一走 _lib/github.ts —— 不再自己拼 URL/头,网络中断也不抛异常
+// (归到 UPSTREAM_UNREACHABLE),调用点只判 `!res.ok` 就够。
 async function gh(path: string, env: Env, options: RequestInit = {}) {
-  return fetch(`${GITHUB_API}/repos/${env.GITHUB_REPO}${path}`, {
-    ...options,
-    headers: {
-      Authorization: `Bearer ${env.GITHUB_TOKEN}`,
-      Accept: 'application/vnd.github+json',
-      'User-Agent': 'osumania-ladder',
-      ...((options.headers as Record<string, string>) || {}),
-    },
-  })
+  return githubFetch(path, env, options)
 }
 
 // 取「固定 commit 的树」里的 path -> blob sha。
@@ -68,8 +89,14 @@ async function resolveTreeShas(
   const map = new Map<string, string>()
   for (const id of ids) {
     const res = await gh(`/contents/${tournamentPath(id)}?ref=${baseCommitSha}`, env)
-    if (res.status === 404) continue
-    if (!res.ok) throw new Error(`读取 ${id} 的基准 sha 失败: ${res.status}`)
+    if (!res.ok) {
+      // 非 404 = 上游故障(限流/5xx/网络),必须报错,不能当成"文件不存在"。
+      // 404 这里**不做仓库探测**:能走到这一步说明前面的 `/git/ref/heads/main`
+      // 读成功了 —— token 对仓库是有权限的,所以这个 404 确实就是"这个 commit 里没有该文件"。
+      // （若凭据失效,第一步的 ref 读取就会 404 并被分类成 UPSTREAM_AUTH 拦下。）
+      if (res.status !== 404) await failUpstream(res, env)
+      continue
+    }
     const file = (await res.json()) as { sha?: unknown }
     if (typeof file.sha === 'string') map.set(tournamentPath(id), file.sha)
   }
@@ -135,13 +162,15 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, data }) 
   try {
     // 1. 取分支当前 HEAD commit sha（整批共用同一个基准）
     const refRes = await gh(`/git/ref/heads/${BRANCH}`, env)
-    if (!refRes.ok) throw new Error(`读取分支引用失败: ${refRes.status}`)
+    // 这是整条链的"门":凭据失效/失去仓库权限时 GitHub 对所有端点都回 404,
+    // 在这里就分类成 UPSTREAM_AUTH,不会让后面的读文件把 404 当成"文件不存在"。
+    if (!refRes.ok) await failUpstream(refRes, env)
     const refJson = (await refRes.json()) as { object: { sha: string } }
     const baseCommitSha = refJson.object.sha
 
     // 2. 取 base commit 指向的 tree sha
     const commitRes = await gh(`/git/commits/${baseCommitSha}`, env)
-    if (!commitRes.ok) throw new Error(`读取基准 commit 失败: ${commitRes.status}`)
+    if (!commitRes.ok) await failUpstream(commitRes, env)
     const commitJson = (await commitRes.json()) as { tree: { sha: string } }
     const baseTreeSha = commitJson.tree.sha
 
@@ -165,7 +194,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, data }) 
         method: 'POST',
         body: JSON.stringify({ content, encoding: 'utf-8' }),
       })
-      if (!blobRes.ok) throw new Error(`创建 blob 失败 (${item.id}): ${blobRes.status}`)
+      if (!blobRes.ok) await failUpstream(blobRes, env)
       const blobJson = (await blobRes.json()) as { sha: string }
       files.push({ id: item.id, sha: blobJson.sha })
       treeItems.push({
@@ -181,7 +210,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, data }) 
       method: 'POST',
       body: JSON.stringify({ base_tree: baseTreeSha, tree: treeItems }),
     })
-    if (!treeRes.ok) throw new Error(`创建 tree 失败: ${treeRes.status}`)
+    if (!treeRes.ok) await failUpstream(treeRes, env)
     const treeJson = (await treeRes.json()) as { sha: string }
 
     // 6. 创建 commit
@@ -190,7 +219,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, data }) 
       method: 'POST',
       body: JSON.stringify({ message, tree: treeJson.sha, parents: [baseCommitSha] }),
     })
-    if (!newCommitRes.ok) throw new Error(`创建 commit 失败: ${newCommitRes.status}`)
+    if (!newCommitRes.ok) await failUpstream(newCommitRes, env)
     const newCommitJson = (await newCommitRes.json()) as { sha: string }
 
     // 7. 更新分支 ref 指向新 commit（非强制更新）
@@ -207,8 +236,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, data }) 
           conflicts: headMovedConflicts(items),
         }, 409)
       }
-      const err = await updateRes.json().catch(() => ({}))
-      throw new Error(`更新分支失败: ${updateRes.status} ${JSON.stringify(err)}`)
+      await failUpstream(updateRes, env)
     }
 
     await writeAudit(env.LADDER_KV, {
@@ -222,6 +250,8 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, data }) 
 
     return jsonResponse({ success: true, count: ids.length, commit: newCommitJson.sha, files })
   } catch (e) {
+    // 上游故障(R14):回 502 + 分类码,不再把 GitHub 的原始状态码裹进 500 文案里。
+    if (isUpstreamError(e)) return upstreamFailureResponse(e.upstream)
     return jsonResponse({ error: (e as Error).message }, 500)
   }
 }

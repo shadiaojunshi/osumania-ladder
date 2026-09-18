@@ -379,6 +379,7 @@ export const messagesZh = {
   'refPicker.cancel': '取消',
   'refPicker.noRounds': '暂无 {type} 数据',
   'refPicker.ladderEmpty': '尚未配置难度标尺。去 admin 的"难度标尺"页排几个轮',
+  'refPicker.ladderFailed': '读取难度标尺失败（不是标尺为空）：{error}',
 
   // ---------- 整轮参考 (RoundRefPicker) ----------
   'roundRef.button': '整轮参考',
@@ -604,6 +605,7 @@ export const messagesZh = {
   'mapUpload.uploadedSummary': '{ok}/{total} 张已上传',
   'mapUpload.round.count': '{ok}/{total} 张',
   'mapUpload.round.allOverride': '全{n}覆盖',
+  'mapUpload.bulk.noSetId': '缺少可用的 beatmapsetId（可能是占位值），不能按 set 下载',
   'mapUpload.bulk.multiDiff': '多难度匹配不上，需手动选',
   'mapUpload.paste.title': '粘贴 slot+BID 逐张拉元数据并自动下载上传(支持手动指派未匹配 slot 和覆盖已上传)',
   'mapUpload.paste.button': '贴 BID 补传 ({badge})',
@@ -614,6 +616,9 @@ export const messagesZh = {
   'mapUpload.err.downloadFailed': '下载失败 HTTP {status}',
   'mapUpload.err.setTooBig': 'set 文件超过 {n}MB 限制',
   'mapUpload.err.noOsuInOsz': '下载的 .osz 中没有 .osu',
+  'mapUpload.loadFailed': '读取失败：{error}',
+  'mapUpload.listNotArray': '返回的不是比赛列表（后端可能出错），请重试',
+  'mapUpload.retry': '重试',
   'mapUpload.row.placeholder': '拖入或点击选择 .osz',
   'mapUpload.row.placeholderNsv': '可选 NSV: 拖入或点击选择 .osz',
   'mapUpload.row.alertNoOsu': '该 .osz 中没有 .osu 文件',

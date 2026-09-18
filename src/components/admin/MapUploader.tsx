@@ -3,12 +3,16 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import JSZip from 'jszip'
 import { useT } from '@/lib/i18n'
+import { isUsableBeatmapId, usableBeatmapId, usableBeatmapsetId } from '@/lib/beatmapIds'
 import { fetchWithNetworkRetry, isNetworkFailure, withNetworkRetry } from '@/lib/fetchRetry'
 import {
   applyPatches,
   applyStagedPatches,
+  buildSlotBaseline,
+  dropStagedSlot,
   entriesToClear,
   mergeStagedPatch,
+  slotPatchKey,
   type MapPatch,
   type PatchMap,
   type PatchOrigin,
@@ -51,6 +55,10 @@ interface BackfillSummary {
 export function MapUploader({ onDirtyChange }: { onDirtyChange?: (dirty: boolean) => void } = {}) {
   const t = useT()
   const [tournaments, setTournaments] = useState<{ id: string }[]>([])
+  // 读取比赛列表 / 单场比赛失败时的提示。后端在 GitHub 凭据失效或限流时会回
+  // { error, code } 而不是数据 —— 过去被直接 setTournaments(错误对象)，
+  // 紧接着渲染里的 tournaments.map 就把整个上传页打崩（R14）。
+  const [fetchError, setFetchError] = useState<string | null>(null)
   const [selectedTournament, setSelectedTournament] = useState<string>('')
   const [tournamentData, setTournamentData] = useState<TournamentRounds | null>(null)
   const [uploadedSlots, setUploadedSlots] = useState<Set<string>>(new Set())
@@ -68,10 +76,28 @@ export function MapUploader({ onDirtyChange }: { onDirtyChange?: (dirty: boolean
   selectedTournamentRef.current = selectedTournament
   // 切换比赛的请求令牌:只有令牌仍是最新那次切换,才允许写 UI 状态。
   const loadTokenRef = useRef(0)
+  // 存档里每个 slot 的 name/BID(删除文件后把本地回显退回去用,见 buildSlotBaseline)。
+  const slotBaselineRef = useRef<PatchMap>(new Map())
 
-  useEffect(() => {
-    fetch('/api/tournaments').then(r => r.json()).then(setTournaments).catch(() => {})
-  }, [])
+  const loadTournamentList = useCallback(async () => {
+    try {
+      const res = await fetch('/api/tournaments')
+      const payload: unknown = await res.json().catch(() => null)
+      if (!res.ok) {
+        throw new Error((payload as { error?: string } | null)?.error || `HTTP ${res.status}`)
+      }
+      // 列表端点只回数组。收到别的形状（错误对象 / HTML）一律当失败 ——
+      // 绝不能塞进 state:渲染时的 tournaments.map 会直接抛。
+      if (!Array.isArray(payload)) throw new Error(t('mapUpload.listNotArray'))
+      setTournaments(payload as { id: string }[])
+      setFetchError(null)
+    } catch (e) {
+      // 失败保留上一次的列表（首次就是空），只提示错误 —— 不用空数据覆盖。
+      setFetchError((e as Error).message)
+    }
+  }, [t])
+
+  useEffect(() => { void loadTournamentList() }, [loadTournamentList])
 
   // 有未保存暂存时上报 dirty,让 admin 外壳在切 tab 时拦截。
   useEffect(() => {
@@ -113,6 +139,7 @@ export function MapUploader({ onDirtyChange }: { onDirtyChange?: (dirty: boolean
     setBackfillProgress({ done: 0, total: 0 })
     if (!id) { setTournamentData(null); return }
     setLoading(true)
+    setFetchError(null)
     try {
       const [tourRes, statusRes] = await Promise.all([
         fetch(`/api/tournaments/${id}`),
@@ -120,9 +147,17 @@ export function MapUploader({ onDirtyChange }: { onDirtyChange?: (dirty: boolean
       ])
       // 期间又切过比赛 → 整体丢弃,一个 UI 字段都不写。
       if (token !== loadTokenRef.current) return
-      if (!tourRes.ok) throw new Error()
+      if (!tourRes.ok) {
+        // 把后端分类过的原因带出来（凭据失效 / 限流 / 这比赛真的不存在）,
+        // 而不是像过去那样一律静默清空。
+        const body = (await tourRes.json().catch(() => ({}))) as { error?: string }
+        throw new Error(body.error || `HTTP ${tourRes.status}`)
+      }
       const { tournament } = await tourRes.json()
       setTournamentData(tournament)
+      slotBaselineRef.current = buildSlotBaseline(
+        (tournament.rounds || []) as { id: string; maps: Record<string, unknown>[] }[],
+      )
       if (statusRes.ok) {
         const { uploaded, uploadedNsv } = await statusRes.json()
         if (token !== loadTokenRef.current) return
@@ -133,8 +168,11 @@ export function MapUploader({ onDirtyChange }: { onDirtyChange?: (dirty: boolean
         setUploadedSlots(new Set())
         setUploadedNsvSlots(new Set())
       }
-    } catch {
-      if (token === loadTokenRef.current) setTournamentData(null)
+    } catch (e) {
+      if (token === loadTokenRef.current) {
+        setTournamentData(null)
+        setFetchError((e as Error).message)
+      }
     } finally {
       if (token === loadTokenRef.current) setLoading(false)
     }
@@ -185,7 +223,8 @@ export function MapUploader({ onDirtyChange }: { onDirtyChange?: (dirty: boolean
     for (const round of tournamentData.rounds) {
       for (const m of round.maps) {
         if (!uploadedSlots.has(`${round.id}/${m.slot}`)) continue
-        if (m.name && m.beatmapId) continue
+        // 占位 ID（0/1）不算"已有 BID"，否则这些 slot 永远不会进补全候选。
+        if (m.name && isUsableBeatmapId(m.beatmapId)) continue
         list.push({ roundId: round.id, slot: m.slot })
       }
     }
@@ -411,6 +450,10 @@ export function MapUploader({ onDirtyChange }: { onDirtyChange?: (dirty: boolean
           })),
         })),
       })
+      // 权威版已经写进仓库了 → 重新记一次存档值(下一次删除要退回的基准)。
+      slotBaselineRef.current = buildSlotBaseline(
+        (tournament.rounds || []) as { id: string; maps: Record<string, unknown>[] }[],
+      )
       // 只移除"本次提交过 + 期间没被改写 + 真的写进去了"的条目:
       // 提交期间新加/改写的补丁保留在池里。
       setPendingPatches((current) => {
@@ -444,6 +487,23 @@ export function MapUploader({ onDirtyChange }: { onDirtyChange?: (dirty: boolean
     setSaveMsg(null)
   }, [pendingPatches, t])
 
+  // 重新对账"哪些 slot 有文件"。删除之后拉一次:文件也可能在别处被删/被传
+  // (回收站页、另一个标签页),只按本地这一次删除记账会留下过期的勾选。
+  // 读不到就**保留现状** —— 绝不能像初次加载那样清空勾选(那会让整页看起来都没传)。
+  const refreshUploadedSlots = useCallback(async (tournamentId: string) => {
+    const token = loadTokenRef.current
+    try {
+      const res = await fetch(`/api/maps/status?tournamentId=${tournamentId}`)
+      if (!res.ok) return
+      const payload = (await res.json()) as { uploaded?: string[]; uploadedNsv?: string[] }
+      if (token !== loadTokenRef.current || selectedTournamentRef.current !== tournamentId) return
+      setUploadedSlots(new Set(payload.uploaded || []))
+      setUploadedNsvSlots(new Set(payload.uploadedNsv || []))
+    } catch {
+      // 网络抖动:保留现状,下一次操作会再对一次账。
+    }
+  }, [])
+
   const deleteFile = useCallback(async (roundId: string, slot: string, isNsv: boolean) => {
     const setKey = `${roundId}/${slot}`
     const cKey = cellKey(roundId, slot, isNsv)
@@ -461,10 +521,25 @@ export function MapUploader({ onDirtyChange }: { onDirtyChange?: (dirty: boolean
       if (isNsv) setUploadedNsvSlots(prev => { const n = new Set(prev); n.delete(setKey); return n })
       else setUploadedSlots(prev => { const n = new Set(prev); n.delete(setKey); return n })
       setStatus(prev => { const n = { ...prev }; delete n[cKey]; return n })
+
+      // 文件删了,这个 slot 的**本地信息**也要跟着退回去(站长 2026-09-17 反馈):
+      // 手传时从文件里读出的 name/BID 是"暂存 + 本地回显"两份,删除只清了文件与勾选,
+      // 于是行上一直显示那份**已删除文件**的信息,保存时还会把它写进 JSON;
+      // 之后再补传,看到的仍是"先前那份信息"。
+      // 只处理**主文件**:name/BID 是从主图读出来的,删 NSV 变体不该动它们。
+      const patchKey = slotPatchKey(roundId, slot)
+      if (!isNsv) {
+        setPendingPatches((prev) => dropStagedSlot(prev, patchKey))
+        const baseline = slotBaselineRef.current.get(patchKey)
+        if (baseline) applyPatchesLocal(new Map([[patchKey, baseline]]))
+      }
+
+      // 再跟服务端对一次账(文件可能在别处被删/被传)。
+      void refreshUploadedSlots(opTournament)
     } catch {
       if (stillCurrent()) alert(t('mapUpload.alert.deleteFailed'))
     }
-  }, [selectedTournament, t])
+  }, [selectedTournament, t, applyPatchesLocal, refreshUploadedSlots])
 
   const totalMaps = tournamentData?.rounds.reduce((s, r) => s + r.maps.length, 0) || 0
   const uploadedCount = uploadedSlots.size
@@ -485,6 +560,21 @@ export function MapUploader({ onDirtyChange }: { onDirtyChange?: (dirty: boolean
             <option key={t.id} value={t.id}>{t.id}</option>
           ))}
         </select>
+        {fetchError && (
+          <p className="mt-2 text-xs text-red-600 dark:text-red-400 flex items-start gap-2">
+            <span className="flex-1">{t('mapUpload.loadFailed', { error: fetchError })}</span>
+            <button
+              type="button"
+              onClick={() => {
+                if (selectedTournament) void loadTournament(selectedTournament)
+                else void loadTournamentList()
+              }}
+              className="shrink-0 underline hover:no-underline"
+            >
+              {t('mapUpload.retry')}
+            </button>
+          </p>
+        )}
       </div>
 
       {loading && <div className="text-center text-gray-400 dark:text-neutral-500 text-sm py-8">{t('mapUpload.loading')}</div>}
@@ -615,7 +705,7 @@ function RoundUploadSection({
   const uploadedInRound = round.maps.filter(m => uploadedSlots.has(`${round.id}/${m.slot}`)).length
 
   const eligibleForBulk = round.maps.filter(
-    m => m.beatmapsetId && !uploadedSlots.has(`${round.id}/${m.slot}`)
+    m => isUsableBeatmapId(m.beatmapsetId) && !uploadedSlots.has(`${round.id}/${m.slot}`)
   )
 
   // "贴 BID 补传"在本轮有任何图时都允许打开 — 可以补漏,也可以覆盖已传的图。
@@ -636,7 +726,10 @@ function RoundUploadSection({
       const m = eligibleForBulk[i]
       try {
         const expectedVersion = extractVersionFromName(m.name)
-        const result = await autoDownloadAndTrim(m.beatmapsetId!, expectedVersion, m.slot, false, t)
+        // 占位/缺失的 setId 不能当下载目标（会去下载 beatmapset 1 那种无关的图）。
+        const setId = usableBeatmapsetId(m.beatmapsetId)
+        if (!setId) { errors.push({ slot: m.slot, msg: t('mapUpload.bulk.noSetId') }); continue }
+        const result = await autoDownloadAndTrim(setId, expectedVersion, m.slot, false, t)
         if (result.needsManualSelect) {
           errors.push({ slot: m.slot, msg: t('mapUpload.bulk.multiDiff') })
         } else {
@@ -715,7 +808,7 @@ function RoundUploadSection({
               slot={map.slot}
               type={map.type}
               name={map.name}
-              beatmapsetId={map.beatmapsetId}
+              beatmapsetId={usableBeatmapsetId(map.beatmapsetId) ?? undefined}
               roundId={round.id}
               isUploaded={uploadedSlots.has(`${round.id}/${map.slot}`)}
               isNsvUploaded={uploadedNsvSlots.has(`${round.id}/${map.slot}`)}
@@ -765,7 +858,8 @@ function PasteBidPanel({
     msg?: string
     // osu API 拿到的新 meta。只要 osu 拿到就记录,无论后续下载/上传是否成功。
     // 用户点"暂存本轮"时收进跨轮待提交池,最后统一写回 tournament JSON。
-    newMeta?: { name: string; beatmapId: number; beatmapsetId: number }
+    // ID 允许为 null：osu! 返回占位值（<=1）时按"没有"处理，别把占位值写进 JSON。
+    newMeta?: { name: string; beatmapId: number | null; beatmapsetId: number | null }
     // osu API 失败标记:用于"暂存本轮"时弹 confirm 询问是否清空这些 slot 的旧 BID。
     metaFailed?: boolean
   }
@@ -899,13 +993,17 @@ function PasteBidPanel({
           ...next[i],
           newMeta: {
             name: `${meta.artist} - ${meta.title} [${meta.version}]`,
-            beatmapId: Number(meta.beatmapId),
-            beatmapsetId: Number(meta.beatmapsetId),
+            // osu! 的响应字段是字符串；占位值（<=1）一律当没有。
+            beatmapId: usableBeatmapId(Number(meta.beatmapId)),
+            beatmapsetId: usableBeatmapsetId(Number(meta.beatmapsetId)),
           },
           state: 'downloading',
         }
         setRows([...next])
-        const result = await autoDownloadAndTrim(Number(meta.beatmapsetId), meta.version, targetSlot, false, t)
+        // 占位 setId（<=1）不能拿去下载 —— 会去下 beatmapset 1（完全无关的图）。
+        const setId = usableBeatmapsetId(Number(meta.beatmapsetId))
+        if (!setId) throw new Error(t('mapUpload.bulk.noSetId'))
+        const result = await autoDownloadAndTrim(setId, meta.version, targetSlot, false, t)
         if (result.needsManualSelect) {
           next[i] = { ...next[i], state: 'error', msg: t('mapUpload.paste.errMultiDiff') }
         } else {
@@ -1202,8 +1300,10 @@ function parseOsuMeta(content: string): OsuDiffInfo {
       if (t.startsWith('Version:')) version = t.slice(8).trim()
       if (t.startsWith('Artist:')) artist = t.slice(7).trim()
       if (t.startsWith('Title:')) title = t.slice(6).trim()
-      if (t.startsWith('BeatmapID:')) { const n = parseInt(t.slice(10).trim(), 10); if (n > 0) beatmapId = n }
-      if (t.startsWith('BeatmapSetID:')) { const n = parseInt(t.slice(14).trim(), 10); if (n > 0) beatmapsetId = n }
+      // 占位 ID（0/1/负数）不算有 ID —— `.mcz`→`.osz` 的转换器会写 `BeatmapSetID:1`，
+      // 以前只滤 `> 0`，于是 1 被当成真 set id 存进 JSON（见 beatmapIds.ts）。
+      if (t.startsWith('BeatmapID:')) beatmapId = usableBeatmapId(parseInt(t.slice(10).trim(), 10)) ?? undefined
+      if (t.startsWith('BeatmapSetID:')) beatmapsetId = usableBeatmapsetId(parseInt(t.slice(14).trim(), 10)) ?? undefined
     }
     if (section === 'General' && t.startsWith('AudioFilename:'))
       audioFilename = t.slice(14).trim()

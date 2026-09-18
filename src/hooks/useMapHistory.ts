@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import type { Tournament } from '@/lib/types'
 import { normalizeRealType } from '@/lib/realType'
+import { isUsableBeatmapId } from '@/lib/beatmapIds'
 
 export interface MapUsage {
   tournamentId: string
@@ -60,11 +61,14 @@ export function useMapHistory(tournaments: Tournament[], excludeTournamentId?: s
             beatmapsetId: map.beatmapsetId,
             name: map.name,
           }
-          if (map.beatmapId) {
+          // 占位 ID（0/1/负数）不进索引：`BeatmapSetID:1` 会把 36 首无关的歌
+          // 粘成"同一个 set"（MKTC 2025），于是每个槽位的"同 set 相关版本"
+          // 与"同 set 共识"都是被污染的假信号。见 lib/beatmapIds.ts。
+          if (isUsableBeatmapId(map.beatmapId)) {
             if (!byBid.has(map.beatmapId)) byBid.set(map.beatmapId, [])
             byBid.get(map.beatmapId)!.push(usage)
           }
-          if (map.beatmapsetId) {
+          if (isUsableBeatmapId(map.beatmapsetId)) {
             if (!bySet.has(map.beatmapsetId)) bySet.set(map.beatmapsetId, [])
             bySet.get(map.beatmapsetId)!.push(usage)
           }

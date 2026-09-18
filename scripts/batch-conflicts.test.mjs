@@ -18,11 +18,14 @@ const { onRequestPost } = await import('../functions/api/tournaments/batch.ts')
 const user = { uid: '1', username: 'tester', role: 'admin' }
 const env = { GITHUB_TOKEN: 'token', GITHUB_REPO: 'o/r', LADDER_KV: { put: async () => {} } }
 
-const jsonRes = (status, data) => ({
-  ok: status >= 200 && status < 300,
-  status,
-  json: async () => data,
-})
+// 用真实 Response：batch 现在走 `classifyGithubFailure`（R14），它会 clone 响应体
+// 判断是不是我们自己合成的故障 —— 假对象没有 clone()，会让"上游失败"在测试里
+// 变成一个 TypeError 的 500，看着"通过"其实测的是别的东西。
+const jsonRes = (status, data) =>
+  new Response(JSON.stringify(data), {
+    status,
+    headers: { 'Content-Type': 'application/json' },
+  })
 
 function makeRequest(body, { invalidJson = false } = {}) {
   return {
@@ -286,7 +289,10 @@ test('R01 树被截断时退回逐文件读取,读取失败不当成"文件不�
       env,
       data: { user },
     })
-    assert.equal(res.status, 500, '读取基准失败必须报错')
+    // R14:上游故障统一 502 + code(以前是把 GitHub 的状态码包进 500 文案,
+    // 凭据失效/限流/5xx 全长得一样,看不出该去换 token 还是等一会儿)。
+    assert.equal(res.status, 502, '读取基准失败必须报错')
+    assert.equal((await res.json()).code, 'UPSTREAM_ERROR')
     assert.equal(broken.count('POST', '/git/blobs'), 0, '读取失败绝不能继续写')
   } finally {
     broken.restore()

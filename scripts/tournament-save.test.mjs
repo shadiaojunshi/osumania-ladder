@@ -125,7 +125,10 @@ test('R02 复审:非冲突的 GitHub 失败也带上原文,不再只剩一句 Fa
       env: envFor(),
       data: { user: user('admin') },
     })
-    assert.equal(res.status, 500)
+    // R14:状态码统一成 502 —— 上游故障不再把 GitHub 的原始状态码透传给前端
+    // （token 失效时那样会回 401，语义上等于「你没登录」）。文案与 code 保持原样：
+    // 分不出类别时仍带 GitHub 原文，不会只剩一句 Failed to update。
+    assert.equal(res.status, 502)
     const payload = await res.json()
     assert.equal(payload.code, 'UPDATE_FAILED')
     assert.match(payload.error, /Server Error/, '应把 GitHub 的原文带给前端')

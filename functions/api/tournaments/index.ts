@@ -1,25 +1,12 @@
 import { jsonResponse, noContent } from '../_lib/cors'
 import { hasRole, type AuthEnv, type SessionUser } from '../_lib/auth'
 import { writeAudit } from '../_lib/audit'
+import { githubFetch, classifyGithubFailure, upstreamFailureResponse } from '../_lib/github'
 import { readJsonBody, validatePathId, validateTournament } from '../_lib/validation'
 
 interface Env extends AuthEnv {
   GITHUB_TOKEN: string
   GITHUB_REPO: string
-}
-
-const GITHUB_API = 'https://api.github.com'
-
-async function githubFetch(path: string, env: Env, options: RequestInit = {}) {
-  return fetch(`${GITHUB_API}/repos/${env.GITHUB_REPO}${path}`, {
-    ...options,
-    headers: {
-      Authorization: `Bearer ${env.GITHUB_TOKEN}`,
-      Accept: 'application/vnd.github+json',
-      'User-Agent': 'osumania-ladder',
-      ...((options.headers as Record<string, string>) || {}),
-    },
-  })
 }
 
 export const onRequestOptions: PagesFunction<Env> = async () => noContent()
@@ -28,7 +15,9 @@ export const onRequestOptions: PagesFunction<Env> = async () => noContent()
 export const onRequestGet: PagesFunction<Env> = async ({ env }) => {
   const res = await githubFetch('/contents/data/tournaments', env)
   if (!res.ok) {
-    return jsonResponse({ error: 'Failed to list tournaments' }, res.status)
+    // 过去这里把 GitHub 的状态码原样透传：401（token 失效）回给前端就成了
+    // 「你没登录」，站长会去重新登录而不是换 token。现在统一分类成 502 + code。
+    return upstreamFailureResponse(await classifyGithubFailure(res, env))
   }
   const files = (await res.json()) as { name: string; sha: string }[]
   const tournaments = files

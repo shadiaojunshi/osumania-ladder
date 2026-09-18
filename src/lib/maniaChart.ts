@@ -5,6 +5,9 @@
 // 也就是 `!v` 指令输出的那张图。此处只做数据与布局,不碰 DOM、
 // 不依赖 @data 别名(便于用 node --test 直接锁定几何)。
 
+// 占位 ID 判读（显式 .ts：本模块会被 node --test 静态导入，省略扩展名会 ERR_MODULE_NOT_FOUND）。
+import { usableBeatmapId, usableBeatmapsetId } from './beatmapIds.ts'
+
 // ---------- 雨沐的原始常量,改了就不是 !v 了 ----------
 export const LANE_WIDTH = 10
 export const CHUNK_GAP = 30
@@ -112,8 +115,9 @@ export function parseManiaBeatmap(text: string): ManiaBeatmap {
       if (key === 'Title' && !title.value) title.value = value
       else if (key === 'Artist' && !artist.value) artist.value = value
       else if (key === 'Version' && !version.value) version.value = value
-      else if (key === 'BeatmapID') beatmapId = Number.parseInt(value, 10) || null
-      else if (key === 'BeatmapSetID') beatmapsetId = Number.parseInt(value, 10) || null
+      // 占位 ID（0/1/负数）当没有 —— 见 beatmapIds.ts。
+      else if (key === 'BeatmapID') beatmapId = usableBeatmapId(Number.parseInt(value, 10))
+      else if (key === 'BeatmapSetID') beatmapsetId = usableBeatmapsetId(Number.parseInt(value, 10))
       continue
     }
 

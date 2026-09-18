@@ -1,4 +1,6 @@
 // Extract only chart text via R2 ranges; audio/background assets stay in R2.
+import { usableBeatmapId, usableBeatmapsetId } from './beatmapIds.ts'
+
 type GetRange = (start: number, end: number) => Promise<Uint8Array>
 type ZipEntry = { name: string; method: number; flags: number; size: number; compressedSize: number; offset: number }
 const MAX_CHART_SIZE = 8 * 1024 * 1024
@@ -25,8 +27,11 @@ export function parseOsuMetadata(content: string) {
     if (key === 'Artist') meta.artist ??= value
     if (key === 'Title') meta.title ??= value
     if (key === 'Version') meta.version ??= value
-    if (key === 'BeatmapID') meta.beatmapId ??= Number.parseInt(value, 10)
-    if (key === 'BeatmapSetID') meta.beatmapsetId ??= Number.parseInt(value, 10)
+    // 占位 ID（0/1/负数）一律当"没有 ID" —— 见 _lib/beatmapIds.ts。
+    // 这里必须挡，否则 `/api/maps/meta` 会把占位值回给前端，而「一键补全」拿它
+    // **写回比赛 JSON** —— 清理脚本刚删掉的 setId=1 又被补上（MKTC 那 36 张）。
+    if (key === 'BeatmapID') meta.beatmapId ??= usableBeatmapId(Number.parseInt(value, 10)) ?? undefined
+    if (key === 'BeatmapSetID') meta.beatmapsetId ??= usableBeatmapsetId(Number.parseInt(value, 10)) ?? undefined
   }
   return meta
 }
@@ -129,7 +134,9 @@ export async function extractOsuFromOsz(fileSize: number, getRange: GetRange, be
     if (!content.trimStart().startsWith('osu file format') || !content.includes('[HitObjects]')) throw new Error('invalid osu beatmap')
     const uploadedId = parseOsuMetadata(content).beatmapId
     if (entries.length === 1) {
-      if (beatmapId && uploadedId && uploadedId > 0 && uploadedId !== beatmapId) throw new Error('uploaded BID differs from the selected BID')
+      // uploadedId 已经是"过了占位判读"的值（parseOsuMetadata 里归一化过），
+      // 这里不再自己判 `> 0` —— 两处口径必须一致，否则占位 ID 会在这里被放行。
+      if (beatmapId && uploadedId && uploadedId !== beatmapId) throw new Error('uploaded BID differs from the selected BID')
       return { content, osuName: entry.name }
     }
     if (uploadedId === beatmapId) matches.push({ content, osuName: entry.name })

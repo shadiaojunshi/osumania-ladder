@@ -614,6 +614,80 @@ LN 单曲使用 difficulty 是当前领域约定，不能改成 difficultyLn。�
 - **复审修正（2026-09-17，提交前审查）**：① `PACK_SINGLE_MAX` 原本被 `packCountFor` 里的字面量 `120` 架空（声明了没用上），已改用它取值；② 文档里的旧规则已一并更新 —— `CODEX-HANDOFF.md` §5.3 与总览行、`SECURITY-DEPLOY-STATUS.md` 的合包流程原写"每包最多 80 张（`MAX_MAPS_PER_PACK`）"，该常量已删、说法成了错的，现改为阈值+均分；同时把"改写 .osu 一律用函数式 replacement"与"NSV 借同槽主图资源"两条规则补进 §5.3（否则下一位改动者会重新踩 `$` 注入那类坑）。
 - 复审另核（无问题，记录备查）：分包数变化**不会**让下载链接指向旧内容 —— R2 是按同名 key 覆盖上传，Drive 侧 `uploadOrUpdate` 也是拿旧 `fileId` **原地更新内容**（不是复用旧文件），消失的 part 走孤儿清理删除；manifest 用 `(realType, part)` 找回 fileId 因此是安全的。
 
+### R32 [P2] 上传页删掉 .osz 后,该 slot 的本地信息（name/BID）不回滚 —— 重传也填不回去
+
+来源：站长 2026-09-17 —— "手传一个文件，之后再把这个文件删掉，再用 bid 补传，这个 slot 在上传铺面那里的信息还是先前的信息"。
+
+证据（`src/components/admin/MapUploader.tsx`）：手传成功时从 .osu 的 `[Metadata]` 解析出 name/BID，**同时**写两份 —— 跨轮暂存池（`stagePatches(..., 'fill')`）与本地回显（`applyPatchesLocal`）；而 `deleteFile` 只清「文件 + 勾选 + 该格的 status」三样，池里的条目与回显**一个字都没动**。
+
+为什么"重传也填不回去"（这才是闭环）：手传回填的判定是**只补缺失字段**——
+
+```ts
+const cur = tournamentData?.rounds.find(...)?.maps.find(m => m.slot === slot)
+if (builtName && !cur?.name) patch.name = builtName
+```
+
+而 `cur` 读的就是**被回显改过的** `tournamentData`；删了文件之后它仍然带着那份已删除文件的 name/BID，于是重新手传时 `!cur?.name` 为假 → 补丁是空的 → 什么都不写、界面也不变。同理，「一键补全」的候选条件是 `if (m.name && m.beatmapId) continue`，也被这份残留信息骗过去，直接跳过该 slot。
+
+**完成记录（2026-09-17）**
+
+- 状态：实现完成待验收（改动未提交；**未做浏览器实机验收**）。
+- 修改文件：`src/lib/mapPatchCommit.ts`（新增 `slotPatchKey` / `buildSlotBaseline` / `dropStagedSlot`）、`src/components/admin/MapUploader.tsx`、`scripts/map-patch-commit.test.mjs`（+4 例）。
+- 实现要点：① 加载比赛（以及每次"保存全部"刷新权威数据）时，记一份**存档基准** `slotBaselineRef`：每个 slot 的 `name/beatmapId/beatmapsetId`，字段一律存在、本来没有的记 `null`（应用时等于删掉该字段）。② 删除**主文件**成功后：丢掉该 slot 在暂存池里的条目，并把回显退回存档值 —— 那份补丁本来就是从刚删掉的文件里读出来的，留着会一直挂在行上、保存时还会写进 JSON。③ **删 NSV 变体不动这些字段**：name/BID 来自主图，删 NSV 不该把它们清掉。④ 删除后额外拉一次 `/api/maps/status` 对账 —— 文件也可能在别处被删/被传（回收站页、另一个标签页），只按本地这次删除记账会留下过期的勾选；**读不到就保留现状**，不像初次加载那样清空（否则一次网络抖动会把整页勾选抹掉）。
+- 运行的验证：新增 4 例（`buildSlotBaseline` 的"缺席=null"语义；把基准应用回去时空字段被清掉、存档里有的值原样恢复；`dropStagedSlot` 不改原 map、没有该 key 时返回同一对象；**完整时序** 手传 → 删除 → BID 补传后，池里与实际写入的都是新信息）；`npm test` → **323/323**；前后端 `tsc` 0 错；`npm run build` 成功。
+- 未完成 / 仍有风险：① 未做浏览器实机验收（"删了文件行上的信息立刻回到存档值""补传后显示新信息"这两条要人眼确认）；② 存档基准只在**加载比赛**与**保存全部之后**刷新，页面停留期间若别处改了 JSON，回滚会退回**打开页面那一刻**的值（比现在残留"已删除文件的信息"更接近正确，但不等于最新）；③ 池里被丢掉的补丁若是用户手填的值（explicit），也会一起丢 —— 判断是"删除这个 slot 的文件"本身就是明确动作，界面上重填一次即可，但这条取舍写在代码注释里了。
+
+### R33 [P1] MKTC 2025 的一批谱面带着**占位 ID**（`beatmapsetId = 1`），把键型冲突工具整批粘成一组
+
+来源：站长 2026-09-18 —— 截图里「同 set 待核对」把 MKTC 2025 一整批（Qual 到 GF、几十个槽位）归成了一组，并说明"这些 MKTC 谱面都是我前不久手动上传的谱面（它们是通过 mcz 转 osz 来的）"。
+
+证据（本地 checkout 缺 MKTC，改从**部署站 `osumania-ladder.pages.dev` 的构建产物**里抽出线上数据核对 —— 50 场比赛 / 4715 张谱面）：
+
+- **MKTC 2025 的 89 张里 36 张 `beatmapsetId = 1`**，而这 36 条对应 **36 首不同的歌**（`Toromaru - Curiosity`、`daisan - Yukidoke-iro Furawazu`、`Senya - Yakusoku no Kimi` …），其中 33 张连 `beatmapId` 都没有。
+- 全库其余 49 场**没有任何** ≤10 的 ID（`setId <= 10` 只出现过这个 `1`）→ 这是转换产物，不是真实数据。
+
+根因：Malody `.mcz` → `.osz` 的转换器在 `[Metadata]` 里写了占位 `BeatmapSetID:1`（`BeatmapID` 为 0/空）；而上传时解析只滤 `> 0`，于是 **1 被当成真 set id 写进了比赛 JSON**。
+
+后果（**不只是显示难看**）：
+
+1. **键型冲突工具**按 `beatmapsetId` 分组 → 36 条无关谱面粘成一组「同 set 待核对」（截图），真实的键型冲突被这一组淹掉；`classifySetConflict` 还会因为它"有 ≥2 种 realType、≥2 个 bid"而判成 `setReview` 报出来。
+2. **上传页的「下载」按钮是按 setId 下载的**（`autoDownloadAndTrim(beatmapsetId, …)`）→ 这些行点下去会去下载 **beatmapset 1**（完全无关的图）；版本比对不通过会报错，最坏情况是版本恰好对上、**把错的图传到这个槽位**。批量下载（按轮）同样中招。
+3. **误标检测的「同 beatmapset 共识」(S2)** 被污染 —— 36 张不同歌的谱面成了"同一个 set"。
+
+**完成记录（2026-09-18）**
+
+- 状态：实现完成待验收（改动未提交；**MKTC 的数据尚未清理**，见未完成项）。
+- 修改文件：新增 `src/lib/beatmapIds.ts`（判读唯一实现）、`scripts/find-suspicious-ids.mjs`、`scripts/clear-placeholder-ids.mjs`、`scripts/beatmap-ids.test.mjs`、`reports/beatmap-id-suspects.md`；改 `src/lib/mapConflictDetection.ts`、`src/lib/maniaChart.ts`、`src/components/admin/RealTypeConflictChecker.tsx`、`src/components/admin/MapUploader.tsx`、`src/lib/messages.zh.ts` / `messages.en.ts`。
+- 实现要点：
+  1. **判读集中一处**：`PLACEHOLDER_ID_MAX = 1` —— `0 / 1 / 负数 / 非整数` 一律当"没有 ID"（osu! 用 `-1` 表示未提交，`0/1` 是转换器常见默认值；实测真实 set id 都在十万级，不会误伤）。
+  2. **入口不再污染数据**：`MapUploader` 解析 `.osu` 的 `[Metadata]`、`maniaChart` 的解析、贴 BID 时 osu! 响应里的 set/bid，全部过 `usableBeatmapId/usableBeatmapsetId`。`PasteBidPanel` 的 `newMeta` 类型放宽为 `number | null`（占位值不写进 JSON）。
+  3. **工具不再被带偏**：冲突检查器的分组不接收占位 ID；`classifySetConflict` 增加"同一个 setId 下出现 **≥3 首不同的歌** → 这个 id 不可靠，不报"（取 3 而不是 2：同一套图不同难度偶尔写法不同，2 首还可能是噪声；MKTC 那组是 36 首）。
+  4. **上传页不再拿占位值去下载**：行内 `beatmapsetId` 先归一化，批量下载前再判一次（拿不到可用 setId 的行进错误列表，新增文案 `mapUpload.bulk.noSetId`），「一键补全」的候选条件也改用 `isUsableBeatmapId`（否则占位 ID 会让这些 slot 永远进不了候选）。
+  5. **清单与清理工具**：`node scripts/find-suspicious-ids.mjs` → `reports/beatmap-id-suspects.md`（占位 ID 逐条列出 / 同一个 setId 挂 ≥3 首歌的组 / 同一个 bid 挂多首歌的组）；`node scripts/clear-placeholder-ids.mjs`（**默认 dry-run**，只删占位字段，写回前自检"除这些 key 外逐字节一致"，`--write` 才落盘）。
+- 运行的验证：`beatmap-ids.test.mjs` → **7/7**（占位阈值含 `1.5`/`NaN`/字符串；`songKeyOf`；**36 首不同歌共用 setId → 不再报**；真的是同一首歌的多难度仍然照常报；倍速 set 仍能识别；既有短路条件不变；数据不变量"`data/tournaments` 里不该有占位 ID"）；清理脚本在**线上数据副本**上验过：dry-run 报 1 个文件 / 36 处，`--write` 后逐条比对确认**只删了那 36 个 `beatmapsetId`、其它字段 0 处变动**，再跑检测脚本 → 0 条；`npm test` → **330/330**；前后端 `tsc` 0 错；`npm run build` 成功。
+- 未完成 / 仍有风险：① **MKTC 那 36 条数据还没清** —— 本地 checkout 没有这份数据（站长的改动经 GitHub 提交、本地未 pull），所以清理要由站长 `git pull` 后跑 `node scripts/clear-placeholder-ids.mjs --write`（或按报告手工清）；② 这些图**真实的 osu! BID 需要人工补**：源 `.osz` 的元数据里就没有（转换器只写了占位），只能用「贴 BID 补传」或编辑页手工填；③ 未做浏览器实机验收；④ 「同一个 bid 挂多首歌」的 8 组**没有动**（多数应是同一张图两种写法，属人工判断，脚本只列出来）。
+
+**复查追加修正（2026-09-18，另一条工作线复核后补做）**
+
+- 状态：实现完成待验收（改动未提交）。
+- **先更正完成记录里一句不成立的话**：第 1 点写的「判读集中一处」与修改文件里写的「`src/lib/beatmapIds.ts`（判读唯一实现）」都不对 —— `grep -rn "beatmapIds" functions/` 当时返回**空**，后端**一处都没接**。真实情况是：`functions/` 里至少还有三套自己的 `> 0` 老口径。这一条不是文字问题，见下面第 1 条缺口。
+- 复核确认隔壁写得对的（未改动）：`classifySetConflict` 的 ≥3 首歌判定（取 3 而非 2 的理由成立）、`RealTypeConflictChecker` 的 `byBid`/`bySet` 过滤、两个脚本的 dry-run 与写回自检、`beatmap-ids.test.mjs` 的 7 例。
+
+- **缺口 1（最要命的一条）：脏数据会复发。** 判读只做在前端，而「一键补全」的数据源是 `/api/maps/meta` —— 它读 R2 里那些 `.osz` 的 `[Metadata]`，走的是 `functions/api/_lib/osuArchive.ts` 的 `parseOsuMetadata`，那里仍是 `> 0` 老口径。**MKTC 那 36 张的 `.osz` 就躺在 R2 里**（`[Metadata]` 里写死了 `BeatmapSetID:1`），所以：清理脚本刚删掉的占位值，站长在后台点一次「一键补全」就**被写回比赛 JSON**。隔壁把"数据清理"列成未完成项，但即使清了也守不住。
+  - 修法：新增 `functions/api/_lib/beatmapIds.ts`（后端那份，注释写明为何不跨边界 import —— `functions/` 与 `src/` 是两条独立构建，仓库里零个跨边界 import 先例；沿用 `_lib/tournamentId.ts` 的 `MAX_TOURNAMENT_ID_LENGTH` vs `_lib/validation.ts` 的 `LIMITS.maxIdLength` 那套"两份 + 测试锁一致"的既有做法）；`parseOsuMetadata` 的 `BeatmapID`/`BeatmapSetID` 两处解析改过判读；`extractOsuFromOsz` 里 `uploadedId > 0` 的重复阈值去掉（改由 `parseOsuMetadata` 统一归一化，避免两处口径各写一套）；`functions/api/maps/meta.ts` 三处 `> 0` 改共享判读（`unsubmitted` 也随之改成"没有可用 BID"）。
+- **缺口 2：R33 报告自己点名的"第 3 条后果"没实现，而且不止一处。** 报告写「误标检测的『同 beatmapset 共识』(S2) 被污染」，但至少两个地方在按 setId 建"共识"索引、都没防护：
+  - `src/hooks/useMapHistory.ts` 的 `byBid`/`bySet` —— 上传页贴 BID 时的"这张图在别处出现过"提示，取自这两个索引。已按 `isUsableBeatmapId` 挡掉占位 ID。
+  - `scripts/find-suspect-realtypes.mjs` 的 `indexByBid`（S1 跨比赛共识）与 `indexBySet`（S2 同套图共识）—— **报告里说的 S2 就在这个脚本里**，隔壁和我都漏了。同样按判读过滤。
+- **缺口 3：另外三处写/判定路径漏网。**
+  - `src/components/admin/BulkImporter.tsx`（批量建整场比赛，ID 直接写进 JSON）：osu! meta 与手抄的 `mapId` 都过判读（手抄个 `1` 过去会写成 `beatmapId: 1`）。
+  - `src/components/admin/MapUploader.tsx`：贴 BID 补传的下载目标 `Number(meta.beatmapsetId)` 未归一化 —— 会去下载 beatmapset 1，正是报告第 2 条后果，只是换了个入口（批量下载那边隔壁已经挡了）。
+  - `src/lib/tournamentDiagnostics.ts`：`mapIdentityKey` 与"这个 BID 在别处出现过"的比较集都拿占位 ID 当身份 → 36 张无关谱面互相判成"同一张图被复用了"。
+- **改动的源码注释同步更正**：`src/lib/beatmapIds.ts` 头部「全站唯一一处」改成「前端这一侧」，并写明后端有 `functions/api/_lib/beatmapIds.ts` 这份镜像、两份由测试锁一致、改一边必须改另一边。
+- 新增 `scripts/beatmap-ids-backend.test.mjs`（**11 例**）：前后端两份实现的阈值与 14 个样本判定**逐项对齐**（含 `1.5`/`NaN`/`Infinity`/字符串/对象）；`parseOsuMetadata` 对 `0`/`1`/`-1`/空一律返回 undefined 而真实 ID 照常、边界 `2` 算真实；`/api/maps/meta` 对占位 setId 的 `.osz` 回的是"没有 ID"（`beatmapsetId === undefined` + `unsubmitted: true`）而真实 ID 照常回；`extractOsuFromOsz` 在两个难度一真一占位时按真 BID 唯一命中、单难度占位 BID 不报"不一致"而真 BID 不符仍拦住；`mapIdentityKey`/`findDuplicateRoundMaps` 不拿占位 ID 当身份（两条端到端断言）；`analyzeImportedMapIds` 的"这场已存在"比较集不含占位 ID；BulkImporter 的 ID 判读（含手抄 `1`/`0`）；`useMapHistory` 不按占位 ID 建索引。后三条（BulkImporter / MapUploader / useMapHistory）是**逻辑复刻** —— React 组件与 hook 没法在 `node:test` 里直接跑，所以行为仍需浏览器实机验收，这几条只保证"判读函数用对了"。
+- **顺带修掉一处既有测试的夹具**：`scripts/admin-data-quality.test.mjs` 的"重复比赛警告"用例原来拿 `1/2/3` 当 BID —— 我改了 `analyzeImportedMapIds` 之后 `1` 会被判读滤掉，overlap 从 2/4 掉到 1/4、断言必挂。夹具改成真实量级的值（`5000001`…），并把"为什么不能用小数字当 BID 夹具"写进注释。这处**不是**被测代码的问题，是夹具与新的判读口径不再匹配。
+- 影响面实测（2026-09-18）：`grep -rn "beatmapIds" functions/` → 改动前**空**（印证后端零接入）；本地 `data/tournaments` 52 场 4750 张谱面里 `"beatmapsetId": 1|0|-1` 与 `"beatmapId": 1|0|-1` **均无匹配** —— 脏数据只在线上的 GitHub 仓库里，所以 R33 的"数据不变量"测试在本地暂时是能过的（它挡的是复发，不是现状）。
+- 未完成 / 仍有风险：① **两处同类的旧脚本未改**（都属既有工具的 R20 范围，不在 R33 改动集里）：`scripts/detect-type-conflicts.js:41` 按 `beatmapsetId` 分组且只判 `if (map.beatmapsetId)` —— 占位 ID 一样会把 36 张无关谱面粘成一组，与冲突检查器修好的那个 bug 是同一个；`scripts/backfill-bid.js:190` 写回 `beatmapsetId` 只判 `> 0` —— 触发面很窄（外层 `meta.beatmapId > 0` 已挡住"BID 是占位"那批，只有"真 BID + 占位 setId"这种少见组合能走到），但口径确实是旧的。② `find-suspect-realtypes.mjs` 的改动**未跑过**（脚本要读全库数据 + 我的 Bash 工具全程不可用）：改的是两处索引条件，逻辑上与测试里已覆盖的 `findDuplicateRoundMaps` 同款，但仍需实际跑一次 `node scripts/find-suspect-realtypes.mjs` 确认报告条数变化合理（预期：只会**减少**误报，不该凭空多出条目）。③ 后端这份判读**同样要人工保持同步**（没有构建期强制），只在测试里锁；④ 其余仍待站长：MKTC 数据 `git pull` 后跑清理脚本、真实 BID 人工补、浏览器实机验收。
+
 ## 6. 可靠性与局部修复任务
 
 ### R13 [P2] 上传状态 API 忽略分页
@@ -646,6 +720,50 @@ LN 单曲使用 difficulty 是当前领域约定，不能改成 difficultyLn。�
 
 验收：401、403 rate limit、404、500、无效 JSON 各有正确行为；上传页不崩；真实空列表仍正常；后端凭据错误不会显示“所有数据为空”。
 
+**完成记录（2026-09-17）**
+
+- 状态：实现完成待验收（改动未提交）。
+- 修改文件：新增 `functions/api/_lib/github.ts`（GitHub 访问唯一入口 + 上游失败分类）；改 `functions/api/ref-ladder.ts`、`packs-manifest.ts`、`tournaments/[id].ts`、`tournaments/index.ts`、`references.ts`、`trash/index.ts`（删各自的本地上游请求副本，统一接分类）；改 `src/components/admin/MapUploader.tsx`、`DifficultyRefPicker.tsx`、`RoundRefPicker.tsx`；`src/lib/messages.zh.ts` / `messages.en.ts`（新增 `mapUpload.loadFailed` / `mapUpload.listNotArray` / `mapUpload.retry` / `refPicker.ladderFailed`）；新增 `scripts/upstream-errors.test.mjs`。
+- 实现要点：① **上游故障一律回 502**，不占用 401 —— 401 在中间件里已经是“你没登录”的语义，被上游凭据问题占用会让前端以为要重新登录。② **404 要探一次才知道含义**：GitHub 对**无权访问的私有仓库回 404 而不是 403**，“token 失效”与“文件真的不存在”状态码完全一样（2026-11 那次后台三 tab 全空就是这个）。所以 404 时补一次 `GET /repos/{repo}`：仓库可见 = 真不存在（`NOT_FOUND`，调用方自己决定它是不是合法空态）；仓库也 404 = 凭据问题（502 `UPSTREAM_AUTH`）；探测本身也失败 = 说不清，回 502 让站长重试，**不伪装成“文件不存在”**。③ 网络中断不抛异常，归到 `UPSTREAM_UNREACHABLE`，调用点只判 `!res.ok` 就够。④ ref-ladder / packs-manifest 把 `NOT_FOUND` 当成合法空态（标尺/清单文件还没建）；`tournaments/[id]` 真不存在才回 404 并带上 `code`。⑤ 前端：`MapUploader` 的列表加载抽成 `loadTournamentList`，`!res.ok` 时读后端 error 抛错而不是把错误对象 `setTournaments`（后者下一次 `tournaments.map` 直接崩）；列表非数组也报错；失败**保留上一份有效数据**并显示错误 + 重试按钮。`DifficultyRefPicker` 失败**不再缓存失败的 Promise**（原来一次失败会把这个 isolate 的标尺读取永久钉死），`RoundRefPicker` 同样带出后端 error。
+- 影响面实测（2026-09-17，按记忆 `diff-old-impl-then-filter-reachable`：用 `git show HEAD:` 取改动前实现**原样跑**，与改后对拍，假 fetch 路由 8 个场景）：
+
+  | 场景 | 改前 | 改后 |
+  | --- | --- | --- |
+  | ref-ladder · GitHub 401 | **200** `{data:{entries:[]}}` | 502 `UPSTREAM_AUTH` |
+  | ref-ladder · 404 且仓库不可见 | **200** `{data:{entries:[]}}` | 502 `UPSTREAM_AUTH` |
+  | ref-ladder · 正常 | 200 带数据 | 一致 |
+  | packs-manifest · 403 限流 | **200** 空清单 | 502 `UPSTREAM_RATE_LIMIT` |
+  | tournaments/[id] · GitHub 401 | **404** “Tournament not found” | 502 `UPSTREAM_AUTH` |
+  | tournaments/[id] · 真不存在 | 404 | 404（＋`code: NOT_FOUND`） |
+  | tournaments 列表 · GitHub 401 | **401** | 502 `UPSTREAM_AUTH` |
+  | tournaments 列表 · 正常 | 200 | 一致 |
+
+  其中两处最坏：**(a)** `[id]` 把凭据失效报成 404 —— 站长看到的是“这场比赛没了”，会以为数据被删了去重传；**(b)** 列表把上游 401 原样透传，**前端会当成“你的登录过期了”而触发登出流程**，站长被莫名其妙踢出后台，真实原因（GITHUB_TOKEN 过期）反而查不到。另核实正常路径的 GitHub 调用次数**恒为 1**（探测只在 404 时发生），没有把每次请求都变成两次。
+- 运行的验证：`upstream-errors.test.mjs` → **19/19**（401 / 403+ratelimit / 429 / 403 无 ratelimit / 5xx / 404+仓库可见 / 404+仓库不可见 / 404+探测失败 / 网络中断共 9 种分类；5 个端点的 handler 级行为；两条“正常路径不变、且不多打探测”的断言）；`npm test` → **305/305**；前后端 `tsc` 0 错。
+- 未完成 / 仍有风险：① `DifficultyFitTool.tsx` 与 `admin/page.tsx` 的列表读取仍是静默失败（不崩、不污染缓存，但会把读不到显示成空）——同类问题，报告未点名，留待一并处理；② 未线上联调，分类阈值按 GitHub 文档模拟；③ 探测请求让 404 路径多一次往返（只在真不存在/凭据失效时发生，正常路径无影响）。
+
+**复查追加修正（2026-09-17，另一条工作线复核后补做）**
+
+- 状态：实现完成待验收（改动未提交）。
+- 发现的漏网：分类只接到 6 个**读取**端点，`functions/api/maps/upload.ts` 与 `functions/api/tournaments/batch.ts` 仍在各自拼 GitHub 请求 —— 而它们恰好是最容易撞上凭据问题的**写路径**：
+  ① **上传**读权威比赛 JSON 时按 `status === 404` 直判「比赛 X 不存在」。GitHub 对**无权访问的私有仓库回 404 而不是 403**（就是本次 R14 认定的证据），于是 token 失活时站长被告知「比赛不存在」，会以为数据被删了去重传；更糟的是前端 `res.status >= 400 && < 500` 判断为**确定性失败、直接不重试**，连重试的机会都没有。
+  ② **批量保存**链路上任何上游故障都只剩一句「HTTP xxx」的 500（读 ref / 读 commit / 建 blob / 建 tree / 建 commit / 推 ref），凭据失效与限流长得一模一样。
+- 修改文件：`functions/api/maps/upload.ts`（`fetchTournamentJson` 改走 `githubFetch` + `classifyGithubFailure`：只有 `NOT_FOUND`「仓库可见但没这个文件」才是 404 `TOURNAMENT_NOT_FOUND`，其余回 502 + code）、`functions/api/tournaments/batch.ts`（本地 `gh()` 改为委托 `githubFetch`；六处失败点统一 `failUpstream` → 502 + code；逐文件读的 404 保留「该 commit 里没有此文件」语义 —— 能走到那里说明 `/git/ref/heads/main` 已读成功，token 对仓库有权限，所以不需要探测仓库，非 404 才分类）；新增 `scripts/upstream-errors-write-path.test.mjs`；`scripts/map-keys.test.mjs` / `scripts/batch-conflicts.test.mjs` 的假 fetch 改成返回真实 `Response`。
+- **顺带修掉两个假通过**：那两个测试文件的桩返回的是 `{ ok, status, json }` 假对象，而 `classifyGithubFailure` 会 `res.clone()` 读一次响应体 —— 只要某个用例返回 404，生产代码就会抛 `TypeError: res.clone is not a function`，被 handler 的 catch 兜成 500。`batch-conflicts` 里「读取失败必须报错」那条用例正是**因为这个 TypeError 才 500「通过」的**（断言的是状态码 500）。两处改成真实 `Response` 后该用例断言同步改成 502 + `UPSTREAM_ERROR`。
+- 影响面对拍（把两个文件临时还原成 `HEAD` 版本、用同一份新测试原样跑）：**8 例里 5 例失败** —— 上传凭据失效、上传限流/断网、批量 ref 404 凭据失效、批量 ref 401、批量建 blob 限流；另 3 例（真不存在仍是 404、两条正常路径不变）两版都通过。说明这些断言确实区分新旧行为，不是空转。
+- 运行的验证：`upstream-errors-write-path.test.mjs` → **8/8**；`npm test` → **313/313**；前后端 `tsc` 0 错；`npm run build` 成功。
+- 未完成 / 仍有风险：① **写路径仍透传上游状态码** —— `PUT /api/tournaments/{id}`（`code: UPDATE_FAILED` 但沿用上游 status，token 失效时回的是 **401**）、`DELETE /api/tournaments/{id}`、`PUT /api/references`、`PUT /api/packs-manifest` 四处仍是 `jsonResponse({ ... }, res.status)`，与「401 是『你没登录』的语义」这条原则不一致（建议同款替换成 `upstreamFailureResponse(await classifyGithubFailure(res, env))`）；② 上传在凭据失效时会被前端按 5xx 重试 3 次才报错（能用，但多两次无谓请求）；
+
+**复查追加修正 2（2026-09-17 傍晚）：四处写路径收尾 + 一处真 bug**
+
+- 状态：实现完成待验收（改动未提交）。
+- 收尾内容：`PUT /api/tournaments/{id}`、`DELETE /api/tournaments/{id}`、`PUT /api/references`、`PUT /api/packs-manifest` 也接入分类。分流规则：**能分类的说清类别**（凭据 / 限流 / 权限 / 网络 / 不存在 → `upstreamFailureResponse`，502 或 404 + code）；**分不出类别（5xx / 没见过的状态码）时保留调用方自己的文案 + GitHub 原文，但状态码统一成 502**（新增 `isGenericUpstreamFailure`）—— 这样既不透传上游状态码，也不会违反 R02 复审那条「别只剩一句 Failed to update」的要求。
+- **过程中撞到一个真 bug（由新测试当场抓到）**：`[id].ts` 的 PUT 原本先 `await res.json()` 读 body（给 409 分支取 GitHub 的 "sha does not match"），我第一版把分类放在它后面 —— `classifyGithubFailure` 里的 `res.clone()` 直接抛 **`Body has already been consumed`**，在生产上就是一个 500。两处修掉：① 调用点改成只在 409 分支读 body（加注释说明 body 只能读一次）；② `github.ts` 的 `readOwnFailure` 给 `clone().json()` 加 try/catch —— 读不到就退回按状态码分类，**绝不因为"读个诊断信息"把整个请求变成 500**。
+- 测试：`upstream-errors-write-path.test.mjs` 扩到 **14/14**（新增 6 例：PUT 单场 401 → 502 `UPSTREAM_AUTH`、PUT 单场 GitHub 409 仍是 409 `EDIT_CONFLICT`（分类不能吃掉原有冲突语义）、PUT 单场正常 200 且回传新 sha、DELETE 单场 401 → 502、references PUT 401 → 502 且正常写入仍 200、packs-manifest PUT 限流 → 502 `UPSTREAM_RATE_LIMIT`）；`scripts/tournament-save.test.mjs` 的 R02 复审断言同步把 `500` 改成 `502`（文案与 code 不变，已注明原因）。
+- 影响面对拍（把 `[id].ts` / `references.ts` / `packs-manifest.ts` 临时还原成 `HEAD` 版本、用同一份测试跑）：**14 例里 4 例失败** —— 正是新增的那 4 条写路径断言；恢复后 14/14。
+- 运行的验证：`npm test` → **319/319**；前后端 `tsc` 0 错；`npm run build` 成功。
+- 至此 **8 个访问 GitHub 的端点全部接入统一分类**（上传、批量保存、单场增改删、列表、references、packs-manifest、ref-ladder、回收站），R14 点名要区分的行为（401 / 403 限流 / 404 / 500 / 无效 JSON / 网络中断）都有对应用例。仍未做：未线上联调（分类阈值按 GitHub 文档模拟）。
+
 ### R15 [P2] 管理员角色校验、缓存可变引用与 KV 并发
 
 证据：functions/api/admins/index.ts:110、:114、:124、:136；_lib/auth.ts:174、:196。
@@ -658,6 +776,15 @@ LN 单曲使用 difficulty 是当前领域约定，不能改成 difficultyLn。�
 4. 不再声称所有节点最多 5 秒生效。记录真实一致性边界；需要即时撤权时读取路径也必须符合相应保证。
 
 验收：constructor/toString/数组角色被拒绝；KV put 失败后原角色不变；两个管理请求不互相覆盖；bootstrap owner 不可变；跨节点撤权行为符合文档。
+
+**完成记录（2026-09-17）**
+
+- 状态：实现完成待验收，**但第 3 条验收项（并发不互相覆盖）明确未达成**，见下。改动未提交。
+- 修改文件：`functions/api/_lib/auth.ts`（新增并导出 `isRole`、新增 `sanitizeAdminMap`、`getAdminMap` / `putAdminMap` / `hasRole` 改写、新增 `clearAdminMapCache`）、`functions/api/admins/index.ts`（role 改用 `isRole`、uid/username 先验类型、body 改走 `readJsonBody`）；新增 `scripts/admin-role.test.mjs`。
+- 实现要点：① **原型链不是角色表**。`role in ROLE_RANK` 对 `'constructor'` / `'toString'` / `'valueOf'` / `'__proto__'` / `'hasOwnProperty'` 全部返回 true（已 `node -e` 实测），请求体塞 `role: 'constructor'` 能通过校验写进 KV。它**不提权**（`ROLE_RANK['constructor'] >= 1` 是 `function >= 1` → false），但会写脏数据，且之后该管理员被**静默降级成 readonly**（比较得 NaN → false，还不报错）。改用 `Object.prototype.hasOwnProperty.call(ROLE_RANK, value)`（`isRole`），`hasRole` 里再挡一次作纵深防御。② **读出来的脏数据要净化**：`sanitizeAdminMap` 逐条过 `isRole`，非法的剔除并打 `[auth] INVALID_ROLE_IN_KV`（只记 uid 与 role 的 typeof，无敏感值），一处的坏数据不该让整份名单失效。③ **缓存不能是可变引用**：`getAdminMap` 返回**副本**（调用方拿到后会直接 `delete map[uid]` 再 `putAdminMap`，返回本体的话一旦 put 失败就留下“内存里改了、KV 里没改”的假象）；`putAdminMap` 先落 KV、**成功了才更新缓存**。④ 类型校验：uid 是数字/对象时 `(uid ?? '').trim()` 直接抛 → 500，现在先 `typeof` 再 trim，回 400。⑤ **一致性边界改写**：删掉“所有节点最多 5 秒生效”的说法 —— 那 5 秒只是**本 isolate 内**的读缓存 TTL，KV 本身最终一致、官方给的全球传播上界是 **60 秒**，所以一次撤权在别的边缘节点上最多可能延迟约 60s + 5s。
+- 影响面实测：**没能核**线上 KV 里是否已有非法 role（无线上凭据，`admins` key 读不到）。所以 `sanitizeAdminMap` 按“可能已经有脏数据”处理 —— 即使历史上被人塞过 `role: 'constructor'`，读取时也会被剔除并降级成 readonly，而不是继续喂给 `hasRole`。若确实没被利用过，这段就是纯预防性的。
+- 运行的验证：`admin-role.test.mjs` → **15/15**（8 个原型链名字 + 非字符串/大小写/空串全被 `isRole` 拒；`hasRole` 对非法 role 不给任何权限；KV 里预置 `role: 'constructor'` 的条目被剔除、同次读取的合法条目不受连累、且留下诊断；`getAdminMap` 返回副本；**KV 写失败后角色不变**；`clearAdminMapCache` 后重读 KV；POST `role=constructor` → 400 且**不落库**；uid 数字 → 400 而非 500；username 非字符串 → 退回 uid；body 非 JSON → 400；合法请求正常写；bootstrap owner 改/删均 403；DELETE uid 非字符串 → 400）；`npm test` → **305/305**；前后端 `tsc` 0 错。
+- 未完成 / 仍有风险：① **「两个管理请求不互相覆盖」未达成** —— `putAdminMap` 仍是「读整份 → 改 → 写整份」，并发权限变更会互相覆盖（后写的赢）。真正修需要 Durable Object 之类的强一致协调，属架构改造，不在本轮范围；只把名单拆成每 UID 一个 key **解决不了**同 UID 竞争，也解决不了即时撤权。已把这条边界写进 `auth.ts` 的注释。实际触发面极小：只有站长在后台改权限时才会发生，两次点击之间隔着一次 KV 往返。② 跨节点撤权符合文档 —— 文档已改成 60s + 5s 的真实上界，代码行为与之一致；要即时撤权仍需换存储。③ 未线上联调。
 
 ### R16 [P2] 长 batch target 超出 KV metadata 限额，审计静默丢失
 
@@ -776,7 +903,7 @@ LN 单曲使用 difficulty 是当前领域约定，不能改成 difficultyLn。�
 
 以下任务除标注 ✅ 外均为“待实施”，本次只写方案。P1 指有明确触发条件的数据丢失/覆盖或发布损坏风险，不表示已确认线上遭遇事故。
 
-进度速览（2026-09-17）：✅ R01（实现完成待验收，UI 自动重放未做）、✅ R02（实现完成待验收，浏览器端未联调）、✅ R03（已提交 `3634998`，未线上联调）、✅ R04（实现完成待验收，未提交，未线上联调）、✅ R05（实现完成待验收，未提交，时序行为无自动化测试）、✅ R06（实现完成待验收，未提交，**「替换当前版本」入口未做**、未线上联调）、✅ R07（实现完成待验收，未提交，并发删/重传未验收）、✅ R08、✅ R09、✅ R18、✅ R24（实施期间新增：下载路径网络重试，未提交）、✅ R25（悬浮卡段位与框高同源，未提交）、✅ R26（不参与难度统计 + 整场视图按指针选轮次 + 版本 0.9.0，未提交）、✅ R27（键型冲突改“勾选才改”+批量选择，未提交）、✅ R28（PDEX 键型 + 默认键型一律 Pending + 误标检测工具，未提交，检测结果需人工复核）、✅ R29（悬浮卡 TB 段位改用实际难度，未做浏览器验收）、✅ R30（TB 段位规则细化 + 每轮图池标题折行；MCNC 简写查为残留记录，数据未改）、✅ R31（合包分包规则均分 + `$` 注入修复 + NSV 缺音频借用主图；未重新生成包）、✅ R13（状态 API 分页 + 失败不返回部分清单，未提交）、✅ R16（审计 metadata 按字节收缩 + 失败可见 + 可按 key 看全文，未提交）、✅ R17（LN 参考读数改用 difficulty，两处实现合并，未提交）；其余待实施。
+进度速览（2026-09-17）：✅ R01（实现完成待验收，UI 自动重放未做）、✅ R02（实现完成待验收，浏览器端未联调）、✅ R03（已提交 `3634998`，未线上联调）、✅ R04（实现完成待验收，未提交，未线上联调）、✅ R05（实现完成待验收，未提交，时序行为无自动化测试）、✅ R06（实现完成待验收，未提交，**「替换当前版本」入口未做**、未线上联调）、✅ R07（实现完成待验收，未提交，并发删/重传未验收）、✅ R08、✅ R09、✅ R18、✅ R24（实施期间新增：下载路径网络重试，未提交）、✅ R25（悬浮卡段位与框高同源，未提交）、✅ R26（不参与难度统计 + 整场视图按指针选轮次 + 版本 0.9.0，未提交）、✅ R27（键型冲突改“勾选才改”+批量选择，未提交）、✅ R28（PDEX 键型 + 默认键型一律 Pending + 误标检测工具，未提交，检测结果需人工复核）、✅ R29（悬浮卡 TB 段位改用实际难度，未做浏览器验收）、✅ R30（TB 段位规则细化 + 每轮图池标题折行；MCNC 简写查为残留记录，数据未改）、✅ R31（合包分包规则均分 + `$` 注入修复 + NSV 缺音频借用主图；未重新生成包）、✅ R13（状态 API 分页 + 失败不返回部分清单，未提交）、✅ R16（审计 metadata 按字节收缩 + 失败可见 + 可按 key 看全文，未提交）、✅ R17（LN 参考读数改用 difficulty，两处实现合并，未提交）、✅ R14（上游故障不再伪装成空数据/404/401，404 探仓库可见性，前端不再崩且失败保留旧数据，未提交）、⚠️ R15（原型链 role 拒绝 + 脏数据净化 + 缓存返回副本 + 写失败不动缓存 + 一致性边界改成 60s+5s；**并发丢更新未修**，需强一致存储，未提交）、✅ R14 复查追加（上传/批量保存 + 四处写路径全部接上分类：凭据失效不再报「比赛不存在」也不再回 401，批量上游故障回 502 而不是 500；过程修掉一个 `res.clone` 已被消费导致 500 的真 bug，未提交）、✅ R32（删除 .osz 后该 slot 的本地 name/BID 与暂存补丁一起回滚 + 删除后对账已上传状态，未提交）、✅ R33（占位 ID 判读 + 冲突检查器/下载路径防护 + 检测与清理脚本；**MKTC 的 36 条数据待站长清理**）；其余待实施。
 
 | 编号 | 工作单元 | 主要依赖 |
 | --- | --- | --- |
@@ -793,8 +920,8 @@ LN 单曲使用 difficulty 是当前领域约定，不能改成 difficultyLn。�
 | R11 | 谱面身份/指纹与备选副本 | 与 R10 串行 |
 | R12 | workflow/CLI/单类型发布 | 与 R10 协议对齐 |
 | ✅ R13 | R2 状态分页 | 可独立，键规则接 R04 |
-| R14 | 上游错误与 UI 错误状态 | 可独立 |
-| R15 | 角色校验与一致性 | 可分为局部校验和协调存储两阶段 |
+| ✅ R14 | 上游错误与 UI 错误状态 | 可独立 |
+| ⚠️ R15 | 角色校验与一致性 | 局部校验已做；并发覆盖未达成（待换强一致存储） |
 | ✅ R16 | 审计 metadata 字节上限 | 可独立 |
 | ✅ R17 | LN 参考回退 | 可独立 |
 | ✅ R18 | 常数样本 R² | 可独立 |
@@ -811,6 +938,8 @@ LN 单曲使用 difficulty 是当前领域约定，不能改成 difficultyLn。�
 | ✅ R29 | 悬浮卡 TB 段位改用实际难度（站长反馈） | 无 |
 | ✅ R30 | TB 段位规则细化 + 每轮图池标题折行（站长反馈） | 无 |
 | ✅ R31 | 合包分包规则 / `$` 注入 / NSV 缺音频（站长反馈） | 无 |
+| ✅ R32 | 删除 .osz 后本地信息不回滚（站长反馈） | 无 |
+| ✅ R33 | 占位 beatmapId/beatmapsetId（站长反馈） | 无 |
 
 完成记录模板（由执行对应任务的 AI 填写在该任务末尾）：
 

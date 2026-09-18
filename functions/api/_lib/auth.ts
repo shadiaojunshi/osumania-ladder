@@ -18,6 +18,18 @@ export const ROLE_RANK: Record<Role, number> = {
   owner: 3,
 }
 
+/**
+ * `value` 是不是一个合法 role。
+ *
+ * 必须查**自有属性**：`value in ROLE_RANK` 对 'constructor' / 'toString' / 'valueOf' /
+ * '__proto__' 这些原型链上的名字也返回 true —— 请求体里塞一个 `role: 'constructor'`
+ * 就能通过校验写进 KV。之后 resolveRole 返回这个非法值，`ROLE_RANK[role] >= rank`
+ * 得到 NaN 比较 → false，等于**把这个管理员静默降级成 readonly**（还不报错）。
+ */
+export function isRole(value: unknown): value is Role {
+  return typeof value === 'string' && Object.prototype.hasOwnProperty.call(ROLE_RANK, value)
+}
+
 export interface SessionUser {
   uid: string
   username: string
@@ -163,34 +175,86 @@ function readCookie(request: Request, name: string): string | null {
 
 // ---------- admin list (KV) ----------
 
-// 5 秒 isolate 内存缓存,防失控请求把 KV 配额打爆。
-// 同一个 Cloudflare 边缘节点上的同一 isolate 内重复调用都命中缓存;
-// putAdminMap 写后立即失效(角色变更不能延迟生效)。
+// 5 秒 isolate 内存缓存，防失控请求把 KV 配额打爆。
+//
+// 一致性边界（别再声称"所有节点最多 5 秒生效"）：这 5 秒只是**本 isolate 内**的读缓存 TTL。
+// Cloudflare KV 本身是最终一致的，官方给的全球传播上界是 **60 秒**，所以一次撤权在别的
+// 边缘节点上最多可能延迟约 60s + 5s。需要「立即生效」的强一致协调得换 Durable Object
+// （见 PROJECT-REVIEW R15）。
 let adminMapCache: { value: AdminMap; expiresAt: number } | null = null
 const ADMIN_MAP_TTL_MS = 5_000
 
+/**
+ * 把 KV 里读出来的原始对象净化成 AdminMap：
+ * - 非法 role 的条目降级成 readonly（= 不授予任何权限），并留下诊断日志；
+ *   一处脏数据不该让整个名单失效，更不该把非法值继续喂给 hasRole。
+ * - 其余字段补类型兜底，免得下游 `.trim()` / 比较时炸。
+ */
+function sanitizeAdminMap(parsed: unknown): AdminMap {
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return {}
+  const out: AdminMap = {}
+  for (const [uid, raw] of Object.entries(parsed as Record<string, unknown>)) {
+    if (!raw || typeof raw !== 'object') continue
+    const rec = raw as Record<string, unknown>
+    if (!isRole(rec.role)) {
+      console.error('[auth] INVALID_ROLE_IN_KV', { uid, roleType: typeof rec.role })
+      continue // readonly = 不在名单里
+    }
+    if (rec.role === 'readonly') continue
+    out[uid] = {
+      role: rec.role,
+      username: typeof rec.username === 'string' ? rec.username : uid,
+      addedBy: typeof rec.addedBy === 'string' ? rec.addedBy : '',
+      addedAt: typeof rec.addedAt === 'string' ? rec.addedAt : '',
+    }
+  }
+  return out
+}
+
+/**
+ * 读管理员名单。**返回副本**：调用方拿到后会直接 `delete map[uid]` / `map[uid] = rec`
+ * 再 putAdminMap，返回缓存本体的话，一旦 put 失败就会留下「内存里改了、KV 里没改」的假象。
+ */
 export async function getAdminMap(env: AuthEnv): Promise<AdminMap> {
   const now = Date.now()
   if (adminMapCache && adminMapCache.expiresAt > now) {
-    return adminMapCache.value
+    return { ...adminMapCache.value }
   }
   const raw = await env.LADDER_KV.get(ADMINS_KEY)
   let value: AdminMap = {}
   if (raw) {
     try {
-      value = JSON.parse(raw) as AdminMap
+      value = sanitizeAdminMap(JSON.parse(raw))
     } catch {
       value = {}
     }
   }
   adminMapCache = { value, expiresAt: now + ADMIN_MAP_TTL_MS }
-  return value
+  return { ...value }
 }
 
+/**
+ * 写整份名单。
+ *
+ * 已知边界（R15，未修）：这里是「读整份 → 改 → 写整份」，两个并发的权限变更会互相覆盖
+ *（后写的赢）。实际影响极小 —— 只有站长在后台改权限时才会触发，两次点击之间隔着一次
+ * KV 往返。要真正可靠得换成 Durable Object 之类的强一致协调；
+ * 只把名单拆成「每 UID 一个 key」解决不了同 UID 竞争。
+ */
 export async function putAdminMap(env: AuthEnv, map: AdminMap): Promise<void> {
-  await env.LADDER_KV.put(ADMINS_KEY, JSON.stringify(map))
-  // 同一 isolate 立即看到新值;别的 isolate 最多 5s 后看到。
-  adminMapCache = { value: map, expiresAt: Date.now() + ADMIN_MAP_TTL_MS }
+  const snapshot = { ...map }
+  // 先落 KV，成功了才更新缓存 —— 写失败时缓存保持旧值，
+  // 不能出现「缓存说他是 admin、KV 里其实没写进去」。
+  await env.LADDER_KV.put(ADMINS_KEY, JSON.stringify(snapshot))
+  adminMapCache = { value: snapshot, expiresAt: Date.now() + ADMIN_MAP_TTL_MS }
+}
+
+/**
+ * 丢掉 isolate 内的名单缓存，下一次读取重新打 KV。
+ * 权限变更后想立刻生效、以及测试要一个确定的起点时用。
+ */
+export function clearAdminMapCache(): void {
+  adminMapCache = null
 }
 
 export async function resolveRole(env: AuthEnv, uid: string): Promise<Role> {
@@ -215,5 +279,8 @@ export async function getSessionUser(
 
 export function hasRole(user: SessionUser | null, min: Role): boolean {
   if (!user) return false
+  // 纵深防御：SessionUser.role 来自 resolveRole，理论上已经被净化过，
+  // 但这里再挡一次，杜绝「非法 role 被当成某个档位」的可能。
+  if (!isRole(user.role)) return false
   return ROLE_RANK[user.role] >= ROLE_RANK[min]
 }

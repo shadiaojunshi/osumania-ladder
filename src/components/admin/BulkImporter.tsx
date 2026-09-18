@@ -8,6 +8,7 @@ import { findMatchingTemplate, applyTemplateRealTypes } from '@/lib/poolTemplate
 import { useT, type MessageKey } from '@/lib/i18n'
 import { tournaments as allTournaments } from '@/generated/tournaments'
 import { analyzeImportedMapIds } from '@/lib/tournamentDiagnostics'
+import { usableBeatmapId, usableBeatmapsetId } from '@/lib/beatmapIds'
 
 interface BeatmapApiResponse {
   beatmapId: string
@@ -381,18 +382,19 @@ export function BulkImporter({ onImport, onClose, existingRoundCount, currentTou
         // 识别成功:写 name + beatmapId + beatmapsetId。
         // 识别失败但贴了 BID(r.mapId 是 beatmap id):仍保留 beatmapId,
         // 只是没有 beatmapsetId → 上传流程(要 set id)自然跳过它,但 BID 不丢。
-        const fallbackBid = !m && /^\d+$/.test(r.mapId) ? Number(r.mapId) : undefined
+        // ID 一律过占位判读（见 @/lib/beatmapIds）:osu! 返回 0/1 这类占位值、
+        // 或用户手抄了个 `1`，都不该被当成真 ID 写进 JSON。
+        const fallbackBid = !m ? usableBeatmapId(/^\d+$/.test(r.mapId) ? Number(r.mapId) : undefined) : null
+        const importedBid = m ? usableBeatmapId(Number(m.beatmapId)) : null
+        const importedSetId = m ? usableBeatmapsetId(Number(m.beatmapsetId)) : null
         return {
           slot,
           type,
           realType,
           name: m ? `${m.artist} - ${m.title} [${m.version}]` : '',
           difficulty: 0,
-          ...(m
-            ? { beatmapId: Number(m.beatmapId), beatmapsetId: Number(m.beatmapsetId) }
-            : fallbackBid !== undefined
-              ? { beatmapId: fallbackBid }
-              : {}),
+          ...(importedBid ? { beatmapId: importedBid } : fallbackBid ? { beatmapId: fallbackBid } : {}),
+          ...(importedSetId ? { beatmapsetId: importedSetId } : {}),
           category,
         }
       })

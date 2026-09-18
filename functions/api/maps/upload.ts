@@ -7,6 +7,7 @@
 import { jsonResponse, noContent } from '../_lib/cors'
 import { hasRole, type AuthEnv, type SessionUser } from '../_lib/auth'
 import { writeAudit } from '../_lib/audit'
+import { classifyGithubFailure, githubFetch } from '../_lib/github'
 import { isValidTournamentId } from '../_lib/tournamentId'
 import {
   ARCHIVE_LIMITS,
@@ -28,8 +29,6 @@ interface Env extends AuthEnv {
   GITHUB_REPO: string
   R2_BUCKET: R2Bucket
 }
-
-const GITHUB_API = 'https://api.github.com'
 
 export const onRequestOptions: PagesFunction<Env> = async () => noContent()
 
@@ -53,24 +52,21 @@ type TournamentFetch =
 
 // 读权威比赛 JSON(仓库里已提交的那份),用于确认 round/slot 真的存在。
 async function fetchTournamentJson(env: Env, id: string): Promise<TournamentFetch> {
-  let res: Response
-  try {
-    res = await fetch(`${GITHUB_API}/repos/${env.GITHUB_REPO}/contents/data/tournaments/${id}.json`, {
-      headers: {
-        Authorization: `Bearer ${env.GITHUB_TOKEN}`,
-        Accept: 'application/vnd.github+json',
-        'User-Agent': 'osumania-ladder',
-      },
-    })
-  } catch (err) {
-    return { ok: false, error: `读取比赛数据失败: ${(err as Error).message}`, code: 'UPSTREAM_ERROR', status: 502 }
-  }
-  if (res.status === 404) {
-    return { ok: false, error: `比赛 ${id} 不存在`, code: 'TOURNAMENT_NOT_FOUND', status: 404 }
-  }
+  // 走共享入口:_lib/github.ts 会把上游故障分类(401/限流/5xx/网络)。
+  const res = await githubFetch(`/contents/data/tournaments/${id}.json`, env)
+
   if (!res.ok) {
-    return { ok: false, error: `读取比赛数据失败: HTTP ${res.status}`, code: 'UPSTREAM_ERROR', status: 502 }
+    const failure = await classifyGithubFailure(res, env)
+    // 只有「仓库可见、但没这个文件」才是「比赛不存在」。
+    // GitHub 对**无权访问的私有仓库**回 404 而不是 403 —— 也就是说 token 失效
+    // 与文件真的不存在状态码一样。过去这里直接按 404 报「比赛 X 不存在」,
+    // 站长会以为数据被删了去重传,而真正的原因（凭据/权限）完全看不到。
+    if (failure.code === 'NOT_FOUND') {
+      return { ok: false, error: `比赛 ${id} 不存在`, code: 'TOURNAMENT_NOT_FOUND', status: 404 }
+    }
+    return { ok: false, error: failure.error, code: failure.code, status: failure.status }
   }
+
   try {
     const file = (await res.json()) as { content?: string }
     if (typeof file.content !== 'string') {

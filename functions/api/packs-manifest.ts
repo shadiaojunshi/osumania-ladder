@@ -1,25 +1,17 @@
 import { jsonResponse, noContent } from './_lib/cors'
 import { hasRole, type AuthEnv, type SessionUser } from './_lib/auth'
 import { writeAudit } from './_lib/audit'
+import {
+  githubFetch,
+  classifyGithubFailure,
+  isGenericUpstreamFailure,
+  upstreamFailureResponse,
+} from './_lib/github'
 import { readJsonBody, validatePacksManifest } from './_lib/validation'
 
 interface Env extends AuthEnv {
   GITHUB_TOKEN: string
   GITHUB_REPO: string
-}
-
-const GITHUB_API = 'https://api.github.com'
-
-async function githubFetch(path: string, env: Env, options: RequestInit = {}) {
-  return fetch(`${GITHUB_API}/repos/${env.GITHUB_REPO}${path}`, {
-    ...options,
-    headers: {
-      Authorization: `Bearer ${env.GITHUB_TOKEN}`,
-      Accept: 'application/vnd.github+json',
-      'User-Agent': 'osumania-ladder',
-      ...((options.headers as Record<string, string>) || {}),
-    },
-  })
 }
 
 export const onRequestOptions: PagesFunction<Env> = async () => noContent()
@@ -28,7 +20,13 @@ export const onRequestOptions: PagesFunction<Env> = async () => noContent()
 export const onRequestGet: PagesFunction<Env> = async ({ env }) => {
   const res = await githubFetch('/contents/data/packs-manifest.json', env)
   if (!res.ok) {
-    return jsonResponse({ manifest: { packs: [], lastGenerated: '' }, sha: null })
+    const failure = await classifyGithubFailure(res, env)
+    // 清单文件还不存在 = 合法的空清单；其余上游故障要报错，
+    // 否则站长在链接编辑器里看到的是「一个包都没有」。
+    if (failure.code === 'NOT_FOUND') {
+      return jsonResponse({ manifest: { packs: [], lastGenerated: '' }, sha: null })
+    }
+    return upstreamFailureResponse(failure)
   }
   const file = (await res.json()) as { content: string; sha: string }
   const decoded = decodeURIComponent(escape(atob(file.content.replace(/\n/g, ''))))
@@ -70,8 +68,12 @@ export const onRequestPut: PagesFunction<Env> = async ({ request, env, data }) =
   })
 
   if (!res.ok) {
-    const err = await res.json()
-    return jsonResponse({ error: 'Failed to update', details: err }, res.status)
+    // R14:同上 —— 写路径的凭据失效必须回 502 UPSTREAM_AUTH,不能是 401。
+    const failure = await classifyGithubFailure(res, env)
+    if (!isGenericUpstreamFailure(failure)) return upstreamFailureResponse(failure)
+    // 分不出类别时保留 GitHub 原文(状态码仍是 502)。
+    const err = await res.json().catch(() => ({}))
+    return jsonResponse({ error: 'Failed to update', details: err }, failure.status)
   }
 
   await writeAudit(env.LADDER_KV, {

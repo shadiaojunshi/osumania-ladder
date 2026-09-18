@@ -6,6 +6,7 @@
 import { jsonResponse, noContent } from './_lib/cors'
 import { hasRole, type AuthEnv, type SessionUser } from './_lib/auth'
 import { writeAudit } from './_lib/audit'
+import { githubFetch, classifyGithubFailure, upstreamFailureResponse } from './_lib/github'
 import { readJsonBody, validateRefLadderEntries, type LadderEntry } from './_lib/validation'
 
 interface Env extends AuthEnv {
@@ -13,27 +14,19 @@ interface Env extends AuthEnv {
   GITHUB_REPO: string
 }
 
-const GITHUB_API = 'https://api.github.com'
 const FILE_PATH = '/contents/data/ref-ladder.json'
-
-async function githubFetch(path: string, env: Env, options: RequestInit = {}) {
-  return fetch(`${GITHUB_API}/repos/${env.GITHUB_REPO}${path}`, {
-    ...options,
-    headers: {
-      Authorization: `Bearer ${env.GITHUB_TOKEN}`,
-      Accept: 'application/vnd.github+json',
-      'User-Agent': 'osumania-ladder',
-      ...((options.headers as Record<string, string>) || {}),
-    },
-  })
-}
 
 export const onRequestOptions: PagesFunction<Env> = async () => noContent()
 
 export const onRequestGet: PagesFunction<Env> = async ({ env }) => {
   const res = await githubFetch(FILE_PATH, env)
   if (!res.ok) {
-    return jsonResponse({ data: { entries: [] }, sha: null })
+    const failure = await classifyGithubFailure(res, env)
+    // 标尺文件还没建时 GitHub 回 404 —— 那是合法的「空链」初始状态，不是故障。
+    // 其余（凭据失效 / 限流 / 5xx）必须报错：过去这里一律回空数组，
+    // 站长看到的是「标尺被清空了」，而其实一份没少。
+    if (failure.code === 'NOT_FOUND') return jsonResponse({ data: { entries: [] }, sha: null })
+    return upstreamFailureResponse(failure)
   }
   const file = (await res.json()) as { content: string; sha: string }
   const decoded = decodeURIComponent(escape(atob(file.content.replace(/\n/g, ''))))

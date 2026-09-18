@@ -1,5 +1,6 @@
 import type { Tournament } from './types'
 import { normalizeRealType } from './realType.ts'
+import { usableBeatmapId } from './beatmapIds.ts'
 
 // PDEX = 特殊槽位(跨大类,如 HB&SV)的"待分类",2026-09-15 加。
 // 它和 PDSV 不同:PDEX 只当分类队列,不进合包(见 scripts/generate-pack.js),
@@ -78,7 +79,10 @@ export function mapIdentityKey(map: {
   if (name) {
     return `meta:${String(map.type || '').toUpperCase()}|${name}|${map.difficulty ?? ''}|${map.difficultyLn ?? ''}`
   }
-  return map.beatmapId ? `bid:${map.beatmapId}` : null
+  // 占位 ID（0/1/负数）不是身份：拿它当 key 会让 36 张无关谱面互相判成
+  // "同一张图被复用了"（MKTC 2025 的 BeatmapSetID:1 就是）。见 lib/beatmapIds.ts。
+  const bid = usableBeatmapId(map.beatmapId)
+  return bid ? `bid:${bid}` : null
 }
 
 /** Find a map reused in more than one round of the same tournament. */
@@ -210,7 +214,11 @@ export function analyzeImportedMapIds(
       if (!tournament?.rounds || tournament.id === excludeTournamentId) continue
       const tournamentIds = new Set(
         tournament.rounds.flatMap((round) =>
-          (round.maps || []).flatMap((map) => map.beatmapId ? [String(map.beatmapId)] : []),
+          // 同上：占位 ID 不进"这个 BID 在别处出现过"的比较集。
+          (round.maps || []).flatMap((map) => {
+            const bid = usableBeatmapId(map.beatmapId)
+            return bid ? [String(bid)] : []
+          }),
         ),
       )
       let overlap = 0

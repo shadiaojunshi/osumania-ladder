@@ -3,26 +3,13 @@ import { hasRole, type AuthEnv, type SessionUser } from '../_lib/auth'
 import { writeAudit } from '../_lib/audit'
 import { listTrash, getTrash, removeTrash } from '../_lib/trash'
 import { onlyIfAbsent } from '../_lib/mapKeys'
+import { githubFetch } from '../_lib/github'
 import { validatePathId, validateTournament, readJsonBody } from '../_lib/validation'
 
 interface Env extends AuthEnv {
   GITHUB_TOKEN: string
   GITHUB_REPO: string
   R2_BUCKET: R2Bucket
-}
-
-const GITHUB_API = 'https://api.github.com'
-
-async function githubFetch(path: string, env: Env, options: RequestInit = {}) {
-  return fetch(`${GITHUB_API}/repos/${env.GITHUB_REPO}${path}`, {
-    ...options,
-    headers: {
-      Authorization: `Bearer ${env.GITHUB_TOKEN}`,
-      Accept: 'application/vnd.github+json',
-      'User-Agent': 'osumania-ladder',
-      ...((options.headers as Record<string, string>) || {}),
-    },
-  })
 }
 
 export const onRequestOptions: PagesFunction<Env> = async () => noContent()

@@ -74,9 +74,14 @@ export function RoundRefPicker({ roundAbbr, siblingAbbrs, roundIndex, onApply, e
   const buttonRef = useRef<HTMLButtonElement>(null)
   const [popoverPos, setPopoverPos] = useState<{ top: number; left: number; maxHeight: number } | null>(null)
 
+  // 标尺读不到 ≠ 标尺是空的：前者要显示错误，后者才是「没有基准轮」。
+  const [loadError, setLoadError] = useState<string | null>(null)
+
   useEffect(() => {
     let alive = true
-    fetchLadder().then((e) => { if (alive) setEntries(e) })
+    fetchLadder()
+      .then((e) => { if (alive) setEntries(e) })
+      .catch((err: unknown) => { if (alive) setLoadError((err as Error).message) })
     return () => { alive = false }
   }, [])
 
@@ -226,7 +231,11 @@ export function RoundRefPicker({ roundAbbr, siblingAbbrs, roundIndex, onApply, e
               </div>
               <p className="text-[10px] text-gray-400 dark:text-neutral-500">{t('roundRef.hint')}</p>
 
-              {entries === null ? (
+              {loadError ? (
+                <p className="text-red-600 dark:text-red-400 py-4 text-center">
+                  {t('refPicker.ladderFailed', { error: loadError })}
+                </p>
+              ) : entries === null ? (
                 <p className="text-gray-400 dark:text-neutral-500 py-4 text-center">{t('admin.loading')}</p>
               ) : baseRounds.length === 0 ? (
                 <p className="text-gray-400 dark:text-neutral-500 py-4 text-center">{t('roundRef.noBase')}</p>

@@ -42,8 +42,14 @@ function tailOf(bytes, size = ARCHIVE_LIMITS.tailBytes) {
   return bytes.slice(Math.max(0, bytes.length - size))
 }
 
+// 用**真实 Response** 而不是 { ok, status, json } 的假对象：上传路径现在会走
+// `classifyGithubFailure`，它对 404 要做仓库探测、并 clone 一次响应体判断是不是
+// 我们自己合成的故障 —— 假对象没有 clone()，会把生产逻辑的正常分支打崩在测试里。
 function jsonRes(status, data) {
-  return { ok: status >= 200 && status < 300, status, json: async () => data }
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { 'Content-Type': 'application/json' },
+  })
 }
 
 function makeFakeBucket() {
@@ -83,7 +89,11 @@ function makeFakeBucket() {
 function installGithub(tournaments) {
   const original = globalThis.fetch
   globalThis.fetch = async (url) => {
-    const id = decodeURIComponent(String(url).split('/data/tournaments/')[1] || '').replace(/\.json.*$/, '')
+    const full = String(url)
+    // R14:404 的含义要靠"仓库还看不看得见"来区分 —— 所以这里必须回答仓库探测请求,
+    // 否则 upload 会把"仓库探测也 404"当成凭据失效(502 UPSTREAM_AUTH)。仓库可见 = 文件真的不存在。
+    if (/\/repos\/[^/]+\/[^/]+$/.test(full)) return jsonRes(200, { full_name: 'owner/repo' })
+    const id = decodeURIComponent(full.split('/data/tournaments/')[1] || '').replace(/\.json.*$/, '')
     if (!(id in tournaments)) return jsonRes(404, { message: 'Not Found' })
     const content = Buffer.from(JSON.stringify(tournaments[id]), 'utf8').toString('base64')
     return jsonRes(200, { content })

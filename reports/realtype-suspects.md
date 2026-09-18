@@ -1,16 +1,16 @@
 # 疑似键型误标候选（自动检测）
 
-生成时间:2026-09-15T14:00:13.393Z
-扫描:data/tournaments · 谱面 4625 张
+生成时间:2026-09-18T08:49:33.575Z
+扫描:data/tournaments · 谱面 4750 张
 
 > **只读报告**,不修改任何比赛数据。候选按证据强度排序,高置信只是"先看这批",不是自动结论 ——
 > 有些分歧纯粹是两个编辑者口径不同(同一张图一个算 HB2、一个算 HB3),需要人来拍板。
 
 ## 总览
 
-- 候选:27 张(高 16 / 中 11 / 低 0)
-- 涉及比赛:16 个
-- 能给出去向建议的:LNmainHB 3 · CO 2 · RCmainHB 2 · MX 1 · HB2 1 · HB3 1
+- 候选:19 张(高 10 / 中 9 / 低 0)
+- 涉及比赛:11 个
+- 能给出去向建议的:LNmainHB 4 · LNMX 2 · HB3 2 · ADP 1 · JTC 1 · ME 1
 
 **先看「高置信」**:它们要么"同一张图在别处被标成别的键型且这里是少数派",要么同时命中多个弱指纹。
 「中置信」里最多的那一类来自主信号 S7 —— 整个组的键型同质化到全库罕见(详见信号说明)。
@@ -19,38 +19,30 @@
 
 | 置信 | 分数 | 比赛 | 轮次 | 槽位 | 大类 | 当前键型 | 建议 | 证据 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 高 | 8 | RDC 2024 | QF/SF | B-RC1 | RC | SS | MX | RDC 2024 QF/SF 的 RC 组 6 张只用 4 种键型(SS / JS / DP / TC)；全库 79 个同规模 RC 组里这样只占 4%,而它正是"RC 的第一个键型" SS<br>同一 beatmapId 4724306 在别处被标为 MX(各一次,平票),而这里是默认值 SS<br>RDC 2024 QF/SF 的 RC 组里 SS 出现 2 次(同组键型重复) |
-| 高 | 5 | RDC 2024 | QF/SF | A-LN1 | LN | RE | — | RDC 2024 QF/SF 的 LN 组 2 张只用 1 种键型(RE)；全库 72 个同规模 LN 组里这样只占 3%,而它正是"LN 的第一个键型" RE<br>RDC 2024 QF/SF 的 LN 组里 RE 出现 2 次(同组键型重复) |
-| 高 | 5 | RDC 2024 | QF/SF | A-RC1 | RC | SS | — | RDC 2024 QF/SF 的 RC 组 6 张只用 4 种键型(SS / JS / DP / TC)；全库 79 个同规模 RC 组里这样只占 4%,而它正是"RC 的第一个键型" SS<br>RDC 2024 QF/SF 的 RC 组里 SS 出现 2 次(同组键型重复) |
-| 高 | 5 | RDC 2024 | GF | A-RC1 | RC | SS | — | RDC 2024 GF 的 RC 组 8 张只用 5 种键型(SS / JS / FCJ / MX / CJ)；全库 36 个同规模 RC 组里这样只占 3%,而它正是"RC 的第一个键型" SS<br>RDC 2024 GF 的 RC 组里其它 7 张都不是 SS,只有它还是默认值 |
-| 高 | 5 | RDC 2024 | QF/SF | B-LN1 | LN | RE | — | RDC 2024 QF/SF 的 LN 组 2 张只用 1 种键型(RE)；全库 72 个同规模 LN 组里这样只占 3%,而它正是"LN 的第一个键型" RE<br>RDC 2024 QF/SF 的 LN 组里 RE 出现 2 次(同组键型重复) |
-| 高 | 5 | SKWT | Qual | ST6 | LN | RE | — | SKWT Qual 的 LN 组 2 张只用 1 种键型(RE)；全库 72 个同规模 LN 组里这样只占 3%,而它正是"LN 的第一个键型" RE<br>SKWT Qual 的 LN 组里 RE 出现 2 次(同组键型重复) |
-| 高 | 5 | SKWT | Qual | ST7 | LN | RE | — | SKWT Qual 的 LN 组 2 张只用 1 种键型(RE)；全库 72 个同规模 LN 组里这样只占 3%,而它正是"LN 的第一个键型" RE<br>SKWT Qual 的 LN 组里 RE 出现 2 次(同组键型重复) |
-| 高 | 5 | SSR | PO | HB1 | HB | HB1 | — | SSR PO 的 HB 组 3 张只用 1 种键型(HB1)；全库 163 个同规模 HB 组里这样只占 1%,而它正是"HB 的第一个键型" HB1<br>SSR PO 的 HB 组里 HB1 出现 3 次(同组键型重复) |
-| 高 | 5 | SSR | PO | HB2 | HB | HB1 | — | SSR PO 的 HB 组 3 张只用 1 种键型(HB1)；全库 163 个同规模 HB 组里这样只占 1%,而它正是"HB 的第一个键型" HB1<br>SSR PO 的 HB 组里 HB1 出现 3 次(同组键型重复) |
-| 高 | 5 | SSR | PO | HB3 | HB | HB1 | — | SSR PO 的 HB 组 3 张只用 1 种键型(HB1)；全库 163 个同规模 HB 组里这样只占 1%,而它正是"HB 的第一个键型" HB1<br>SSR PO 的 HB 组里 HB1 出现 3 次(同组键型重复) |
-| 高 | 5 | TSC2 | RO16 | LN1 | LN | RE | — | TSC2 RO16 的 LN 组 3 张只用 1 种键型(RE)；全库 100 个同规模 LN 组里这样只占 2%,而它正是"LN 的第一个键型" RE<br>TSC2 RO16 的 LN 组里 RE 出现 3 次(同组键型重复) |
-| 高 | 5 | TSC2 | RO16 | LN2 | LN | RE | — | TSC2 RO16 的 LN 组 3 张只用 1 种键型(RE)；全库 100 个同规模 LN 组里这样只占 2%,而它正是"LN 的第一个键型" RE<br>TSC2 RO16 的 LN 组里 RE 出现 3 次(同组键型重复) |
-| 高 | 5 | TSC2 | RO16 | LN3 | LN | RE | — | TSC2 RO16 的 LN 组 3 张只用 1 种键型(RE)；全库 100 个同规模 LN 组里这样只占 2%,而它正是"LN 的第一个键型" RE<br>TSC2 RO16 的 LN 组里 RE 出现 3 次(同组键型重复) |
-| 高 | 5 | VNMC 4K 2025 | RO32 | HB1 | HB | HB1 | — | VNMC 4K 2025 RO32 的 HB 组 3 张只用 1 种键型(HB1)；全库 163 个同规模 HB 组里这样只占 1%,而它正是"HB 的第一个键型" HB1<br>VNMC 4K 2025 RO32 的 HB 组里 HB1 出现 3 次(同组键型重复) |
-| 高 | 5 | VNMC 4K 2025 | RO32 | HB2 | HB | HB1 | — | VNMC 4K 2025 RO32 的 HB 组 3 张只用 1 种键型(HB1)；全库 163 个同规模 HB 组里这样只占 1%,而它正是"HB 的第一个键型" HB1<br>VNMC 4K 2025 RO32 的 HB 组里 HB1 出现 3 次(同组键型重复) |
-| 高 | 5 | VNMC 4K 2025 | RO32 | HB3 | HB | HB1 | — | VNMC 4K 2025 RO32 的 HB 组 3 张只用 1 种键型(HB1)；全库 163 个同规模 HB 组里这样只占 1%,而它正是"HB 的第一个键型" HB1<br>VNMC 4K 2025 RO32 的 HB 组里 HB1 出现 3 次(同组键型重复) |
+| 高 | 6 | MCNC 4K 2024 | Playoff2 | LN3 | LN | LNWC | LNMX | 同一 beatmapId 3947211 在别处被标为 LNMX×2 / LNWC×1,当前 LNWC 是少数派<br>同一 beatmapset 1913501 的同类图多数标为 LNMX |
+| 高 | 6 | MCNC 4K 2024 | Qual | RC1 | RC | TC | ADP | 同一 beatmapId 4651348 在别处被标为 ADP×2 / TC×1,当前 TC 是少数派<br>同一 beatmapset 2198005 的同类图多数标为 ADP |
+| 高 | 6 | MCNC 4K 2024 | Playoff1 | RC5 | RC | MX | JTC | 同一 beatmapId 4462321 在别处被标为 JTC×2 / MX×1,当前 MX 是少数派<br>同一 beatmapset 2123348 的同类图多数标为 JTC |
+| 高 | 5 | CET 4K 2026 | Playin | RC1 | RC | SS | — | CET 4K 2026 Playin 的 RC 组 8 张只用 6 种键型(SS / JS / SA / DP / MX / ADP)；全库 39 个同规模 RC 组里这样只占 3%,而它正是"RC 的第一个键型" SS<br>CET 4K 2026 Playin 的 RC 组里其它 7 张都不是 SS,只有它还是默认值 |
+| 高 | 5 | RDC 2024 | QF/SF | A-LN1 | LN | RE | — | RDC 2024 QF/SF 的 LN 组 2 张只用 1 种键型(RE)；全库 73 个同规模 LN 组里这样只占 1%,而它正是"LN 的第一个键型" RE<br>RDC 2024 QF/SF 的 LN 组里 RE 出现 2 次(同组键型重复) |
+| 高 | 5 | RDC 2024 | GF | A-RC1 | RC | SS | — | RDC 2024 GF 的 RC 组 8 张只用 5 种键型(SS / JS / FCJ / MX / CJ)；全库 39 个同规模 RC 组里这样只占 3%,而它正是"RC 的第一个键型" SS<br>RDC 2024 GF 的 RC 组里其它 7 张都不是 SS,只有它还是默认值 |
+| 高 | 5 | RDC 2024 | QF/SF | B-LN1 | LN | RE | — | RDC 2024 QF/SF 的 LN 组 2 张只用 1 种键型(RE)；全库 73 个同规模 LN 组里这样只占 1%,而它正是"LN 的第一个键型" RE<br>RDC 2024 QF/SF 的 LN 组里 RE 出现 2 次(同组键型重复) |
+| 高 | 5 | TSC2 | RO16 | LN1 | LN | RE | — | TSC2 RO16 的 LN 组 3 张只用 1 种键型(RE)；全库 102 个同规模 LN 组里这样只占 2%,而它正是"LN 的第一个键型" RE<br>TSC2 RO16 的 LN 组里 RE 出现 3 次(同组键型重复) |
+| 高 | 5 | TSC2 | RO16 | LN2 | LN | RE | — | TSC2 RO16 的 LN 组 3 张只用 1 种键型(RE)；全库 102 个同规模 LN 组里这样只占 2%,而它正是"LN 的第一个键型" RE<br>TSC2 RO16 的 LN 组里 RE 出现 3 次(同组键型重复) |
+| 高 | 5 | TSC2 | RO16 | LN3 | LN | RE | — | TSC2 RO16 的 LN 组 3 张只用 1 种键型(RE)；全库 102 个同规模 LN 组里这样只占 2%,而它正是"LN 的第一个键型" RE<br>TSC2 RO16 的 LN 组里 RE 出现 3 次(同组键型重复) |
 
 ## 中置信
 
 | 置信 | 分数 | 比赛 | 轮次 | 槽位 | 大类 | 当前键型 | 建议 | 证据 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 中 | 4 | AC | RO64 | HB1 | HB | HB1 | HB2 | 同一 beatmapId 3917229 在别处被标为 HB2(各一次,平票),而这里是默认值 HB1<br>AC RO64 的 HB 组里其它 2 张都不是 HB1,只有它还是默认值 |
-| 中 | 4 | JAST | Playoff | LN1 | LN | RE | CO | 同一 beatmapId 3978783 在别处被标为 CO(各一次,平票),而这里是默认值 RE<br>JAST Playoff 的 LN 组里其它 2 张都不是 RE,只有它还是默认值 |
+| 中 | 4 | MCNC 4K 2024 | RO32 | LN1 | LN | RE | LNMX | 同一 beatmapId 4681225 在别处被标为 LNMX(各一次,平票),而这里是默认值 RE<br>MCNC 4K 2024 RO32 的 LN 组里其它 2 张都不是 RE,只有它还是默认值 |
 | 中 | 4 | MCNC 4K 2025 | F | HB2 | HB | HB1 | HB3 | 同一 beatmapId 4303090 在别处被标为 HB3(各一次,平票),而这里是默认值 HB1<br>MCNC 4K 2025 F 的 HB 组里其它 2 张都不是 HB1,只有它还是默认值 |
-| 中 | 4 | MMT 2026 | GF | LN3 | LN | RE | CO | 同一 beatmapId 4386542 在别处被标为 CO(各一次,平票),而这里是默认值 RE<br>MMT 2026 GF 的 LN 组里其它 4 张都不是 RE,只有它还是默认值 |
-| 中 | 4 | PFC S4 | SF | HB1 | HB | HB1 | RCmainHB | 同一 beatmapId 4822719 在别处被标为 RCmainHB(各一次,平票),而这里是默认值 HB1<br>PFC S4 SF 的 HB 组里其它 3 张都不是 HB1,只有它还是默认值 |
 | 中 | 4 | WOGS 2025 | RO16 | LN3 | HB | HB1 | — | 难度名里出现「LN / Release」一路的词(`P*Light feat. mow*2 - OVERDRIVERS [EXTREME [LN]]`),当前标的是 HB1(大类第一个键型)<br>WOGS 2025 RO16 的 HB 组里其它 2 张都不是 HB1,只有它还是默认值 |
 | 中 | 3 | CMIT 4K 2026 | QF | HB1 | HB | HB1 | LNmainHB | HB 图 ln 6 比 rf 4.44 高 1.56,更像 LN 主导的 HB<br>CMIT 4K 2026 QF 的 HB 组里其它 3 张都不是 HB1,只有它还是默认值 |
-| 中 | 3 | CYC | RO32 | HB1 | HB | HB1 | RCmainHB | 同一 beatmapId 5427343 在别处被标为 RCmainHB(各一次,平票),而这里是默认值 HB1 |
-| 中 | 3 | MCNC4K2026 | Qual | ST6 | HB | HB1 | — | 难度名里出现「LN / Release」一路的词(`LN2`),当前标的是 HB1(大类第一个键型) |
+| 中 | 3 | GBC 2025 Spring S&EX | S4 | HB2 | HB | HB1 | HB3 | 同一 beatmapId 5101249 在别处被标为 HB3(各一次,平票),而这里是默认值 HB1 |
+| 中 | 3 | MWC 4K 2023 | SF | SV1 | SV | SV1 | ME | 同一 beatmapId 4294644 在别处被标为 ME(各一次,平票),而这里是默认值 SV1 |
 | 中 | 3 | MWC 4K 2025 | RO16 | HB1 | HB | HB1 | LNmainHB | HB 图 ln 10 比 rf 8 高 2.00,更像 LN 主导的 HB<br>MWC 4K 2025 RO16 的 HB 组里其它 2 张都不是 HB1,只有它还是默认值 |
 | 中 | 3 | THMC 4 | Group | HB1 | HB | HB1 | LNmainHB | HB 图 ln 7 比 rf 5 高 2.00,更像 LN 主导的 HB<br>THMC 4 Group 的 HB 组里其它 2 张都不是 HB1,只有它还是默认值 |
+| 中 | 3 | TSC2 | RO32 | HB1 | HB | HB1 | LNmainHB | HB 图 ln 4 比 rf 2.5 高 1.50,更像 LN 主导的 HB<br>TSC2 RO32 的 HB 组里其它 2 张都不是 HB1,只有它还是默认值 |
 
 ## 低置信（弱指纹,仅供参考）
 
@@ -59,99 +51,59 @@
 
 ## 按比赛分组（高 + 中,便于复核）
 
-### RDC 2024 (roasted-duck-cup-2024) — 5 张
+### MCNC 4K 2024 (osumania-4k-chinese-national-cup-2024) — 4 张
 
-- [高/8] QF/SF · B-RC1 · `SS` → `MX` · Camellia feat. Nanahira - Amor De Verao [Heatness]
-  - RDC 2024 QF/SF 的 RC 组 6 张只用 4 种键型(SS / JS / DP / TC)；全库 79 个同规模 RC 组里这样只占 4%,而它正是"RC 的第一个键型" SS
-  - 同一 beatmapId 4724306 在别处被标为 MX(各一次,平票),而这里是默认值 SS
-  - RDC 2024 QF/SF 的 RC 组里 SS 出现 2 次(同组键型重复)
-- [高/5] QF/SF · A-LN1 · `RE` · Thaehan - Doki-Doki [Why notes are supposed to be held?]
-  - RDC 2024 QF/SF 的 LN 组 2 张只用 1 种键型(RE)；全库 72 个同规模 LN 组里这样只占 3%,而它正是"LN 的第一个键型" RE
-  - RDC 2024 QF/SF 的 LN 组里 RE 出现 2 次(同组键型重复)
-- [高/5] QF/SF · A-RC1 · `SS` · Yunomi - Game Over(feat. TORIENA) [owo(Cut.)]
-  - RDC 2024 QF/SF 的 RC 组 6 张只用 4 种键型(SS / JS / DP / TC)；全库 79 个同规模 RC 组里这样只占 4%,而它正是"RC 的第一个键型" SS
-  - RDC 2024 QF/SF 的 RC 组里 SS 出现 2 次(同组键型重复)
-- [高/5] GF · A-RC1 · `SS` · dj TAKA feat. Erika Mochizuki - MOON [Sparkling moonlight]
-  - RDC 2024 GF 的 RC 组 8 张只用 5 种键型(SS / JS / FCJ / MX / CJ)；全库 36 个同规模 RC 组里这样只占 3%,而它正是"RC 的第一个键型" SS
-  - RDC 2024 GF 的 RC 组里其它 7 张都不是 SS,只有它还是默认值
-- [高/5] QF/SF · B-LN1 · `RE` · meiyo - Nani Yatte mo Umaku Ikanai [waht]
-  - RDC 2024 QF/SF 的 LN 组 2 张只用 1 种键型(RE)；全库 72 个同规模 LN 组里这样只占 3%,而它正是"LN 的第一个键型" RE
-  - RDC 2024 QF/SF 的 LN 组里 RE 出现 2 次(同组键型重复)
+- [高/6] Playoff2 · LN3 · `LNWC` → `LNMX` · Tonari no Niwa wa Aoi (NIWASHI+Aoi) - Polacro [Side:Delta]
+  - 同一 beatmapId 3947211 在别处被标为 LNMX×2 / LNWC×1,当前 LNWC 是少数派
+  - 同一 beatmapset 1913501 的同类图多数标为 LNMX
+- [高/6] Qual · RC1 · `TC` → `ADP` · Aphex Twin - Bucephalus Bouncing Ball (Cut Ver.) [Conundrum]
+  - 同一 beatmapId 4651348 在别处被标为 ADP×2 / TC×1,当前 TC 是少数派
+  - 同一 beatmapset 2198005 的同类图多数标为 ADP
+- [高/6] Playoff1 · RC5 · `MX` → `JTC` · Pa's Lam System - City Lights Feat. EVO+ , Jinmenusagi (Pa's Lam System Remix) [Phosphorescent]
+  - 同一 beatmapId 4462321 在别处被标为 JTC×2 / MX×1,当前 MX 是少数派
+  - 同一 beatmapset 2123348 的同类图多数标为 JTC
+- [中/4] RO32 · LN1 · `RE` → `LNMX` · Ling Yuan yousa - Tao Hua Xiao [Beng Beng Tiao Tiao]
+  - 同一 beatmapId 4681225 在别处被标为 LNMX(各一次,平票),而这里是默认值 RE
+  - MCNC 4K 2024 RO32 的 LN 组里其它 2 张都不是 RE,只有它还是默认值
 
-### SSR (solo-score-rush) — 3 张
-
-- [高/5] PO · HB1 · `HB1` · Frums - Mu [g--uis..-e's ..-.in..-s-a..-ne.-. (ed.it)]
-  - SSR PO 的 HB 组 3 张只用 1 种键型(HB1)；全库 163 个同规模 HB 组里这样只占 1%,而它正是"HB 的第一个键型" HB1
-  - SSR PO 的 HB 组里 HB1 出现 3 次(同组键型重复)
-- [高/5] PO · HB2 · `HB1` · Skrillex - Voltage [Believe]
-  - SSR PO 的 HB 组 3 张只用 1 种键型(HB1)；全库 163 个同规模 HB 组里这样只占 1%,而它正是"HB 的第一个键型" HB1
-  - SSR PO 的 HB 组里 HB1 出现 3 次(同组键型重复)
-- [高/5] PO · HB3 · `HB1` · BUTAOTOME - Gensou no Satellite (Cut Ver.) [Warp the Crescent]
-  - SSR PO 的 HB 组 3 张只用 1 种键型(HB1)；全库 163 个同规模 HB 组里这样只占 1%,而它正是"HB 的第一个键型" HB1
-  - SSR PO 的 HB 组里 HB1 出现 3 次(同组键型重复)
-
-### TSC2 (two-shot-cup-2) — 3 张
+### TSC2 (two-shot-cup-2) — 4 张
 
 - [高/5] RO16 · LN1 · `RE` · Rice Shower (CV: Iwami Manaka) - Sasayaka na Inori (TV Size) [My Little Dark Princess (nerf ver.)]
-  - TSC2 RO16 的 LN 组 3 张只用 1 种键型(RE)；全库 100 个同规模 LN 组里这样只占 2%,而它正是"LN 的第一个键型" RE
+  - TSC2 RO16 的 LN 组 3 张只用 1 种键型(RE)；全库 102 个同规模 LN 组里这样只占 2%,而它正是"LN 的第一个键型" RE
   - TSC2 RO16 的 LN 组里 RE 出现 3 次(同组键型重复)
 - [高/5] RO16 · LN2 · `RE` · Takanashi Hoshino (CV: Hanamori Yumiri) - Hoshino Song (Quilt remix) [DenYi's Hard]
-  - TSC2 RO16 的 LN 组 3 张只用 1 种键型(RE)；全库 100 个同规模 LN 组里这样只占 2%,而它正是"LN 的第一个键型" RE
+  - TSC2 RO16 的 LN 组 3 张只用 1 种键型(RE)；全库 102 个同规模 LN 组里这样只占 2%,而它正是"LN 的第一个键型" RE
   - TSC2 RO16 的 LN 组里 RE 出现 3 次(同组键型重复)
 - [高/5] RO16 · LN3 · `RE` · San-Z - 60% Fantasy [elexire's Hard]
-  - TSC2 RO16 的 LN 组 3 张只用 1 种键型(RE)；全库 100 个同规模 LN 组里这样只占 2%,而它正是"LN 的第一个键型" RE
+  - TSC2 RO16 的 LN 组 3 张只用 1 种键型(RE)；全库 102 个同规模 LN 组里这样只占 2%,而它正是"LN 的第一个键型" RE
   - TSC2 RO16 的 LN 组里 RE 出现 3 次(同组键型重复)
+- [中/3] RO32 · HB1 · `HB1` → `LNmainHB` · Designant - Designant. [Toko's Present]
+  - HB 图 ln 4 比 rf 2.5 高 1.50,更像 LN 主导的 HB
+  - TSC2 RO32 的 HB 组里其它 2 张都不是 HB1,只有它还是默认值
 
-### VNMC 4K 2025 (vietnamese-national-mania-championship-4k-2025) — 3 张
+### RDC 2024 (roasted-duck-cup-2024) — 3 张
 
-- [高/5] RO32 · HB1 · `HB1` · MYUKKE. - BUNA*SYNERGY!!! [M [1.2x Rate]]
-  - VNMC 4K 2025 RO32 的 HB 组 3 张只用 1 种键型(HB1)；全库 163 个同规模 HB 组里这样只占 1%,而它正是"HB 的第一个键型" HB1
-  - VNMC 4K 2025 RO32 的 HB 组里 HB1 出现 3 次(同组键型重复)
-- [高/5] RO32 · HB2 · `HB1` · KERO - Color Printer [CMYK]
-  - VNMC 4K 2025 RO32 的 HB 组 3 张只用 1 种键型(HB1)；全库 163 个同规模 HB 组里这样只占 1%,而它正是"HB 的第一个键型" HB1
-  - VNMC 4K 2025 RO32 的 HB 组里 HB1 出现 3 次(同组键型重复)
-- [高/5] RO32 · HB3 · `HB1` · Camellia - Clouds In The Blue (Livium's Lonely Wandering Remix) [Overshadow]
-  - VNMC 4K 2025 RO32 的 HB 组 3 张只用 1 种键型(HB1)；全库 163 个同规模 HB 组里这样只占 1%,而它正是"HB 的第一个键型" HB1
-  - VNMC 4K 2025 RO32 的 HB 组里 HB1 出现 3 次(同组键型重复)
+- [高/5] QF/SF · A-LN1 · `RE` · Thaehan - Doki-Doki [Why notes are supposed to be held?]
+  - RDC 2024 QF/SF 的 LN 组 2 张只用 1 种键型(RE)；全库 73 个同规模 LN 组里这样只占 1%,而它正是"LN 的第一个键型" RE
+  - RDC 2024 QF/SF 的 LN 组里 RE 出现 2 次(同组键型重复)
+- [高/5] GF · A-RC1 · `SS` · dj TAKA feat. Erika Mochizuki - MOON [Sparkling moonlight]
+  - RDC 2024 GF 的 RC 组 8 张只用 5 种键型(SS / JS / FCJ / MX / CJ)；全库 39 个同规模 RC 组里这样只占 3%,而它正是"RC 的第一个键型" SS
+  - RDC 2024 GF 的 RC 组里其它 7 张都不是 SS,只有它还是默认值
+- [高/5] QF/SF · B-LN1 · `RE` · meiyo - Nani Yatte mo Umaku Ikanai [waht]
+  - RDC 2024 QF/SF 的 LN 组 2 张只用 1 种键型(RE)；全库 73 个同规模 LN 组里这样只占 1%,而它正是"LN 的第一个键型" RE
+  - RDC 2024 QF/SF 的 LN 组里 RE 出现 2 次(同组键型重复)
 
-### SKWT (south-korean-winter-tournament) — 2 张
+### CET 4K 2026 (chinese-extraterrestrials-tournament-4k-2026) — 1 张
 
-- [高/5] Qual · ST6 · `RE` · HALLO CEL ft. Kasane Teto, Ui - Teto the 31st [Stage 6: Party]
-  - SKWT Qual 的 LN 组 2 张只用 1 种键型(RE)；全库 72 个同规模 LN 组里这样只占 3%,而它正是"LN 的第一个键型" RE
-  - SKWT Qual 的 LN 组里 RE 出现 2 次(同组键型重复)
-- [高/5] Qual · ST7 · `RE` · Houshou Marine - Ahoy!! Warera Houshou Kaizokudan* [Stage 7: Ahoy]
-  - SKWT Qual 的 LN 组 2 张只用 1 种键型(RE)；全库 72 个同规模 LN 组里这样只占 3%,而它正是"LN 的第一个键型" RE
-  - SKWT Qual 的 LN 组里 RE 出现 2 次(同组键型重复)
-
-### AC (abstraction-cup) — 1 张
-
-- [中/4] RO64 · HB1 · `HB1` → `HB2` · Virtual Riot - Don't Worry [Mutation.]
-  - 同一 beatmapId 3917229 在别处被标为 HB2(各一次,平票),而这里是默认值 HB1
-  - AC RO64 的 HB 组里其它 2 张都不是 HB1,只有它还是默认值
-
-### JAST (just-a-summer-tournament) — 1 张
-
-- [中/4] Playoff · LN1 · `RE` → `CO` · luvlxckdown - tbh i dont like being social [introverted [edit]]
-  - 同一 beatmapId 3978783 在别处被标为 CO(各一次,平票),而这里是默认值 RE
-  - JAST Playoff 的 LN 组里其它 2 张都不是 RE,只有它还是默认值
+- [高/5] Playin · RC1 · `SS` · LUZE feat. Emew - Unmeiron [Predestinazione]
+  - CET 4K 2026 Playin 的 RC 组 8 张只用 6 种键型(SS / JS / SA / DP / MX / ADP)；全库 39 个同规模 RC 组里这样只占 3%,而它正是"RC 的第一个键型" SS
+  - CET 4K 2026 Playin 的 RC 组里其它 7 张都不是 SS,只有它还是默认值
 
 ### MCNC 4K 2025 (osumania-4k-chinese-national-cup-2025) — 1 张
 
 - [中/4] F · HB2 · `HB1` → `HB3` · kanemiko - Cold Fusion [Catalyst (cut 1.05x)]
   - 同一 beatmapId 4303090 在别处被标为 HB3(各一次,平票),而这里是默认值 HB1
   - MCNC 4K 2025 F 的 HB 组里其它 2 张都不是 HB1,只有它还是默认值
-
-### MMT 2026 (mexico-mania-tournament-4k-2026) — 1 张
-
-- [中/4] GF · LN3 · `RE` → `CO` · Kordhell - Live Another Day [Alive [1.15x Rate]]
-  - 同一 beatmapId 4386542 在别处被标为 CO(各一次,平票),而这里是默认值 RE
-  - MMT 2026 GF 的 LN 组里其它 4 张都不是 RE,只有它还是默认值
-
-### PFC S4 (po-fang-cup-s4) — 1 张
-
-- [中/4] SF · HB1 · `HB1` → `RCmainHB` · Akiri - Void Of Altair [Alptraum's Insane]
-  - 同一 beatmapId 4822719 在别处被标为 RCmainHB(各一次,平票),而这里是默认值 HB1
-  - PFC S4 SF 的 HB 组里其它 3 张都不是 HB1,只有它还是默认值
 
 ### WOGS 2025 (winter-osumania-grand-slam-tournament-2025) — 1 张
 
@@ -165,15 +117,15 @@
   - HB 图 ln 6 比 rf 4.44 高 1.56,更像 LN 主导的 HB
   - CMIT 4K 2026 QF 的 HB 组里其它 3 张都不是 HB1,只有它还是默认值
 
-### CYC (cat-yum-cup) — 1 张
+### GBC 2025 Spring S&EX (gbc2025sex) — 1 张
 
-- [中/3] RO32 · HB1 · `HB1` → `RCmainHB` · MisoilePunch - Mesheer [Stellarius]
-  - 同一 beatmapId 5427343 在别处被标为 RCmainHB(各一次,平票),而这里是默认值 HB1
+- [中/3] S4 · HB2 · `HB1` → `HB3` · KERO - Color Printer [CMYK]
+  - 同一 beatmapId 5101249 在别处被标为 HB3(各一次,平票),而这里是默认值 HB1
 
-### MCNC4K2026 (osu-mania-chinese-national-cup-4k-2026-rebirth) — 1 张
+### MWC 4K 2023 (osumania-4k-world-cup-2023) — 1 张
 
-- [中/3] Qual · ST6 · `HB1` · LN2
-  - 难度名里出现「LN / Release」一路的词(`LN2`),当前标的是 HB1(大类第一个键型)
+- [中/3] SF · SV1 · `SV1` → `ME` · ZxNX as "Delaina" - End Me [CHOKE]
+  - 同一 beatmapId 4294644 在别处被标为 ME(各一次,平票),而这里是默认值 SV1
 
 ### MWC 4K 2025 (osumania-4k-world-cup-2025) — 1 张
 

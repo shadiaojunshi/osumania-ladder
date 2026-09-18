@@ -30,6 +30,12 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
+// 占位 ID 判读（显式 .ts：本脚本会被 node 直接跑，省略扩展名会 ERR_MODULE_NOT_FOUND）。
+// S1「同一 BID 跨比赛共识」与 S2「同一 beatmapset 共识」都按这两个 id 建索引 ——
+// 占位 ID（0/1/负数，见 lib/beatmapIds.ts）混进来会把无关谱面粘成一组，
+// 于是"共识"变成假信号（MKTC 2025 那 36 张的 `BeatmapSetID:1` 就是）。
+import { isUsableBeatmapId } from '../src/lib/beatmapIds.ts'
+
 // 各大类里"排在第一"的真实键型 —— 也就是以前那个会被当成默认值的键型。
 const FIRST_REAL_TYPE = { RC: 'SS', HB: 'HB1', LN: 'RE', SV: 'SV1' }
 // TB 只有一种键型,谈不上"选错";SPECIAL 的 type 是 HB&SV 这种跨大类名,不走这套。
@@ -161,11 +167,13 @@ function findCandidates(maps) {
   const indexByBid = new Map()
   const indexBySet = new Map()
   maps.forEach((map, i) => {
-    if (map.beatmapId) {
+    // 占位 ID（0/1/负数）不是身份：拿它建索引会让 36 张无关谱面互相成为"共识"
+    // （S1 同 BID / S2 同 set 都会被污染，见 lib/beatmapIds.ts）。
+    if (isUsableBeatmapId(map.beatmapId)) {
       if (!indexByBid.has(map.beatmapId)) indexByBid.set(map.beatmapId, [])
       indexByBid.get(map.beatmapId).push(i)
     }
-    if (map.beatmapsetId) {
+    if (isUsableBeatmapId(map.beatmapsetId)) {
       if (!indexBySet.has(map.beatmapsetId)) indexBySet.set(map.beatmapsetId, [])
       indexBySet.get(map.beatmapsetId).push(i)
     }

@@ -3,25 +3,17 @@ import { hasRole, type AuthEnv, type SessionUser } from '../_lib/auth'
 import { writeAudit } from '../_lib/audit'
 import { addTrash } from '../_lib/trash'
 import { findDuplicateRoundIds } from '../_lib/roundIds'
+import {
+  githubFetch,
+  classifyGithubFailure,
+  isGenericUpstreamFailure,
+  upstreamFailureResponse,
+} from '../_lib/github'
 import { readJsonBody, validatePathId, validateTournament } from '../_lib/validation'
 
 interface Env extends AuthEnv {
   GITHUB_TOKEN: string
   GITHUB_REPO: string
-}
-
-const GITHUB_API = 'https://api.github.com'
-
-async function githubFetch(path: string, env: Env, options: RequestInit = {}) {
-  return fetch(`${GITHUB_API}/repos/${env.GITHUB_REPO}${path}`, {
-    ...options,
-    headers: {
-      Authorization: `Bearer ${env.GITHUB_TOKEN}`,
-      Accept: 'application/vnd.github+json',
-      'User-Agent': 'osumania-ladder',
-      ...((options.headers as Record<string, string>) || {}),
-    },
-  })
 }
 
 export const onRequestOptions: PagesFunction<Env> = async () => noContent()
@@ -37,7 +29,13 @@ export const onRequestGet: PagesFunction<Env> = async ({ params, env }) => {
   const res = await githubFetch(path, env)
 
   if (!res.ok) {
-    return jsonResponse({ error: 'Tournament not found' }, 404)
+    // 过去所有失败都回 404「Tournament not found」：token 失效时站长会以为
+    // 是那场比赛被删了，然后去回收站找。只有真 404 才是「不存在」。
+    const failure = await classifyGithubFailure(res, env)
+    if (failure.code === 'NOT_FOUND') {
+      return jsonResponse({ error: 'Tournament not found', code: 'NOT_FOUND' }, 404)
+    }
+    return upstreamFailureResponse(failure)
   }
 
   const file = (await res.json()) as { content: string; sha: string }
@@ -132,11 +130,13 @@ export const onRequestPut: PagesFunction<Env> = async ({ params, request, env, d
   })
 
   if (!res.ok) {
-    const err = (await res.json().catch(() => ({}))) as { message?: string }
     // 409 = 编辑基准过期:文件在编辑期间被别处(上传器回填、另一个标签页)更新过。
     // GitHub 只回一句 "sha does not match",照抄给前端等于没说,这里翻译成人话。
     // 前端据此给出「以最新版本为基准继续」的按钮(见 admin/page.tsx 的 handleRefreshBase)。
+    // 注意:**body 只能在这里读一次** —— 下面的 classifyGithubFailure 会 clone 响应去
+    // 看是不是我们自己合成的故障,先读过就会抛 "Body has already been consumed"(实测过)。
     if (res.status === 409) {
+      const err = (await res.json().catch(() => ({}))) as { message?: string }
       return jsonResponse(
         {
           error: '这个文件在你编辑期间被更新过（编辑基准已过期），本次保存没有写入。',
@@ -146,14 +146,22 @@ export const onRequestPut: PagesFunction<Env> = async ({ params, request, env, d
         409,
       )
     }
-    // 其余失败也带上 GitHub 的原文,别再让前端只看到一句 "Failed to update"。
+    // 其余失败交给共享分类(R14):上游凭据/限流/网络一类一律 **502 + code**。
+    // 以前是 `res.status` 原样透传 —— token 失效时这里回的是 **401**,
+    // 而 401 在本站的语义是「你没登录」,站长会去重新登录而不是换 token,
+    // 真实原因反而查不到。
+    const failure = await classifyGithubFailure(res, env)
+    if (!isGenericUpstreamFailure(failure)) return upstreamFailureResponse(failure)
+    // 分不出类别(5xx / 没见过的状态码):保留 GitHub 原文,别让前端只看到一句泛泛的
+    // 「上游故障」(R02 复审的要求),但状态码仍统一成 502。
+    const err = (await res.json().catch(() => ({}))) as { message?: string }
     return jsonResponse(
       {
-        error: `保存失败：${err.message || `GitHub 返回 ${res.status}`}`,
+        error: `保存失败：${err.message || failure.error}`,
         code: 'UPDATE_FAILED',
         details: err,
       },
-      res.status,
+      failure.status,
     )
   }
 
@@ -212,8 +220,11 @@ export const onRequestDelete: PagesFunction<Env> = async ({ params, request, env
   })
 
   if (!res.ok) {
-    const err = await res.json()
-    return jsonResponse({ error: 'Failed to delete', details: err }, res.status)
+    // 同上:DELETE 也不再把 GitHub 的 401/403 透传给前端(R14)。
+    const failure = await classifyGithubFailure(res, env)
+    if (!isGenericUpstreamFailure(failure)) return upstreamFailureResponse(failure)
+    const err = await res.json().catch(() => ({}))
+    return jsonResponse({ error: 'Failed to delete', details: err }, failure.status)
   }
 
   // 进回收站（带 TTL，到期自动清理）。即便此步失败也不回滚删除——

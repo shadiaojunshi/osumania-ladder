@@ -44,8 +44,13 @@ test('import diagnostics catch identical rounds from raw rows when no BID is ava
 })
 
 test('import diagnostics warn when at least half of imported unique BIDs belong to one tournament', () => {
-  const existing = tournament('known', 'KNOWN', [round('qf', 'QF', [map('RC1', 1), map('RC2', 2), map('RC3', 3)])])
-  const diagnostics = analyzeImportedMapIds([{ groupIndex: 0, mapIds: ['1', '2', '9', '10'] }], [existing])
+  // R33 起这里的 BID 必须用真实量级的值：`analyzeImportedMapIds` 比较的是
+  // "JSON 里已有的 BID"，占位 ID（`<=1`，见 lib/beatmapIds.ts）不进比较集 ——
+  // 拿 1/2/3 当夹具会被判读滤掉，测的就不是重叠率本身了。
+  const existing = tournament('known', 'KNOWN', [round('qf', 'QF', [
+    map('RC1', 5000001), map('RC2', 5000002), map('RC3', 5000003),
+  ])])
+  const diagnostics = analyzeImportedMapIds([{ groupIndex: 0, mapIds: ['5000001', '5000002', '9999991', '9999992'] }], [existing])
   assert.equal(diagnostics.duplicateTournaments.length, 1)
   assert.equal(diagnostics.duplicateTournaments[0].ratio, 0.5)
 })

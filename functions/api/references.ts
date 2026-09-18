@@ -1,25 +1,17 @@
 import { jsonResponse, noContent } from './_lib/cors'
 import { hasRole, type AuthEnv, type SessionUser } from './_lib/auth'
 import { writeAudit } from './_lib/audit'
+import {
+  githubFetch,
+  classifyGithubFailure,
+  isGenericUpstreamFailure,
+  upstreamFailureResponse,
+} from './_lib/github'
 import { readJsonBody, validateReferences } from './_lib/validation'
 
 interface Env extends AuthEnv {
   GITHUB_TOKEN: string
   GITHUB_REPO: string
-}
-
-const GITHUB_API = 'https://api.github.com'
-
-async function githubFetch(path: string, env: Env, options: RequestInit = {}) {
-  return fetch(`${GITHUB_API}/repos/${env.GITHUB_REPO}${path}`, {
-    ...options,
-    headers: {
-      Authorization: `Bearer ${env.GITHUB_TOKEN}`,
-      Accept: 'application/vnd.github+json',
-      'User-Agent': 'osumania-ladder',
-      ...((options.headers as Record<string, string>) || {}),
-    },
-  })
 }
 
 export const onRequestOptions: PagesFunction<Env> = async () => noContent()
@@ -28,7 +20,8 @@ export const onRequestOptions: PagesFunction<Env> = async () => noContent()
 export const onRequestGet: PagesFunction<Env> = async ({ env }) => {
   const res = await githubFetch('/contents/data/references.json', env)
   if (!res.ok) {
-    return jsonResponse({ error: 'Failed to fetch references' }, res.status)
+    // 过去把 GitHub 的状态码原样透传：401（token 失效）在前端看起来就是「你没登录」。
+    return upstreamFailureResponse(await classifyGithubFailure(res, env))
   }
   const file = (await res.json()) as { content: string; sha: string }
   const decoded = decodeURIComponent(escape(atob(file.content.replace(/\n/g, ''))))
@@ -70,8 +63,12 @@ export const onRequestPut: PagesFunction<Env> = async ({ request, env, data }) =
   })
 
   if (!res.ok) {
-    const err = await res.json()
-    return jsonResponse({ error: 'Failed to update', details: err }, res.status)
+    // R14:写路径也不透传上游状态码(过去 GitHub 的 401 会变成前端的「你没登录」)。
+    const failure = await classifyGithubFailure(res, env)
+    if (!isGenericUpstreamFailure(failure)) return upstreamFailureResponse(failure)
+    // 分不出类别时保留 GitHub 原文(状态码仍是 502)。
+    const err = await res.json().catch(() => ({}))
+    return jsonResponse({ error: 'Failed to update', details: err }, failure.status)
   }
 
   await writeAudit(env.LADDER_KV, {

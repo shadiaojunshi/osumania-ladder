@@ -380,6 +380,7 @@ export const messagesEn: Record<keyof typeof messagesZh, string> = {
   'refPicker.cancel': 'Cancel',
   'refPicker.noRounds': 'No {type} data',
   'refPicker.ladderEmpty': 'No difficulty ladder configured yet. Arrange some rounds in the "Difficulty ladder" admin tab',
+  'refPicker.ladderFailed': 'Failed to load the difficulty ladder (this is not an empty ladder): {error}',
 
   // ---------- Round-level reference (RoundRefPicker) ----------
   'roundRef.button': 'Round ref',
@@ -605,6 +606,7 @@ export const messagesEn: Record<keyof typeof messagesZh, string> = {
   'mapUpload.uploadedSummary': '{ok}/{total} uploaded',
   'mapUpload.round.count': '{ok}/{total}',
   'mapUpload.round.allOverride': 'All {n} (override)',
+  'mapUpload.bulk.noSetId': 'No usable beatmapsetId (looks like a placeholder); cannot download by set',
   'mapUpload.bulk.multiDiff': 'Multiple diffs, manual select needed',
   'mapUpload.paste.title': 'Paste slot+BID to fetch metadata and auto download/upload one by one (supports manual slot reassignment and overwriting uploaded slots)',
   'mapUpload.paste.button': 'Paste BID ({badge})',
@@ -615,6 +617,9 @@ export const messagesEn: Record<keyof typeof messagesZh, string> = {
   'mapUpload.err.downloadFailed': 'Download failed HTTP {status}',
   'mapUpload.err.setTooBig': 'Set file exceeds {n}MB limit',
   'mapUpload.err.noOsuInOsz': 'Downloaded .osz contains no .osu',
+  'mapUpload.loadFailed': 'Load failed: {error}',
+  'mapUpload.listNotArray': 'The server did not return a tournament list (backend error?). Please retry.',
+  'mapUpload.retry': 'Retry',
   'mapUpload.row.placeholder': 'Drop or click to select .osz',
   'mapUpload.row.placeholderNsv': 'Optional NSV: drop or click to select .osz',
   'mapUpload.row.alertNoOsu': 'This .osz has no .osu file',

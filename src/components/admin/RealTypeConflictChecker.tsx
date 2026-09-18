@@ -5,6 +5,7 @@ import { useT } from '@/lib/i18n'
 import { tournaments as allTournaments } from '@/generated/tournaments'
 import type { Tournament } from '@/lib/types'
 import { classifySetConflict, extractRate } from '@/lib/mapConflictDetection'
+import { isUsableBeatmapId } from '@/lib/beatmapIds'
 import { findPendingMaps } from '@/lib/tournamentDiagnostics'
 import { normalizeRealType } from '@/lib/realType'
 
@@ -120,11 +121,13 @@ function findConflicts(tournaments: Tournament[]): Conflict[] {
           beatmapsetId: m.beatmapsetId,
           rate: extractRate(m.name),
         }
-        if (m.beatmapId) {
+        // 占位 ID（0/1/负数）不参与分组：它们不是真实 ID，混进来会把无关谱面粘成
+        // 一组"同 set/BID 冲突"（MKTC 2025 的 36 张就是 `BeatmapSetID:1`）。
+        if (isUsableBeatmapId(m.beatmapId)) {
           if (!byBid.has(m.beatmapId)) byBid.set(m.beatmapId, [])
           byBid.get(m.beatmapId)!.push(usage)
         }
-        if (m.beatmapsetId) {
+        if (isUsableBeatmapId(m.beatmapsetId)) {
           if (!bySet.has(m.beatmapsetId)) bySet.set(m.beatmapsetId, [])
           bySet.get(m.beatmapsetId)!.push(usage)
         }

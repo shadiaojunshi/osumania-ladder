@@ -1,4 +1,5 @@
 import { extractOsuFromOsz, parseOsuMetadata } from '../_lib/osuArchive.ts'
+import { isUsableBeatmapId, usableBeatmapId, usableBeatmapsetId } from '../_lib/beatmapIds.ts'
 import { jsonResponse, noContent } from '../_lib/cors'
 import { hasRole, type AuthEnv, type SessionUser } from '../_lib/auth'
 import { isValidTournamentId } from '../_lib/tournamentId'
@@ -85,12 +86,15 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env, data }) =
         }
         const { content, osuName } = await extractOsuFromOsz(fileSize, getRange)
         const meta = { ...parseOsuMetadata(content), osuName }
+        // parseOsuMetadata 已按占位判读归一化过（见 _lib/beatmapIds.ts），这里直接判缺。
+        // 过去这里自己写了一套 `> 0`，与前端 `src/lib/beatmapIds.ts` 的 `<= 1` 口径不一致 ——
+        // 占位 `BeatmapSetID:1` 会被这个接口回给前端，然后「一键补全」把它写回比赛 JSON。
         results[ck] = {
           status: 'ok',
           ...meta,
-          beatmapId: meta.beatmapId && meta.beatmapId > 0 ? meta.beatmapId : undefined,
-          beatmapsetId: meta.beatmapsetId && meta.beatmapsetId > 0 ? meta.beatmapsetId : undefined,
-          unsubmitted: !meta.beatmapId || meta.beatmapId <= 0,
+          beatmapId: usableBeatmapId(meta.beatmapId) ?? undefined,
+          beatmapsetId: usableBeatmapsetId(meta.beatmapsetId) ?? undefined,
+          unsubmitted: !isUsableBeatmapId(meta.beatmapId),
         }
       } catch (err) {
         results[ck] = { status: 'error', error: err instanceof Error ? err.message : String(err) }

@@ -134,3 +134,46 @@ export function entriesToClear(
 export function isCurrentRequest(token: number, currentToken: number): boolean {
   return token === currentToken
 }
+
+/** 补丁池的 key:一处拼好,别在各调用点各拼一份。 */
+export function slotPatchKey(roundId: string, slot: string): string {
+  return `${roundId}/${slot}`
+}
+
+/**
+ * 记录"存档里"每个 slot 的 name / beatmapId / beatmapsetId —— **字段总是存在**,
+ * 本来没有的记为 null(应用时等于把该字段删掉)。
+ *
+ * 用途(站长 2026-09-17 反馈):上传页删掉某个 slot 的 .osz 之后,该 slot 的本地回显与
+ * 暂存补丁**都要退回存档值**。否则会出现:
+ *   手传 → 从文件里读出 name/BID(暂存 + 回显)→ 删掉文件 → 行上仍显示那份**已删除**
+ *   文件的信息,而且保存时还会把它写进 JSON;之后再补传,看到的仍是"先前那份信息"。
+ */
+export function buildSlotBaseline(rounds: PatchRound[]): PatchMap {
+  const baseline: PatchMap = new Map()
+  for (const round of rounds) {
+    for (const map of round.maps) {
+      const name = map.name
+      const beatmapId = map.beatmapId
+      const beatmapsetId = map.beatmapsetId
+      baseline.set(slotPatchKey(round.id, String(map.slot)), {
+        name: typeof name === 'string' && name !== '' ? name : null,
+        beatmapId: typeof beatmapId === 'number' ? beatmapId : null,
+        beatmapsetId: typeof beatmapsetId === 'number' ? beatmapsetId : null,
+      })
+    }
+  }
+  return baseline
+}
+
+/**
+ * 剔除某个 slot 在池里的条目(删除文件时用)。
+ * 返回**同一个对象**表示没变化 —— 方便 `setState(prev => dropStagedSlot(prev, key) === prev ? prev : ...)`
+ * 这种写法跳过无意义的重渲染。
+ */
+export function dropStagedSlot(staged: StagedPatchMap, key: string): StagedPatchMap {
+  if (!staged.has(key)) return staged
+  const next = new Map(staged)
+  next.delete(key)
+  return next
+}

@@ -4,9 +4,12 @@ import test from 'node:test'
 import {
   applyPatches,
   applyStagedPatches,
+  buildSlotBaseline,
+  dropStagedSlot,
   entriesToClear,
   isCurrentRequest,
   mergeStagedPatch,
+  slotPatchKey,
 } from '../src/lib/mapPatchCommit.ts'
 
 // R05:补丁池的纯逻辑。关键点:fill 补丁不覆盖远端已有的值;提交用快照,
@@ -119,4 +122,71 @@ test('R05 只有"本次提交过 + 未被改写 + 真写进去"的条目才清�
 test('R05 请求令牌:只有仍是最新那次切换才算数', () => {
   assert.equal(isCurrentRequest(3, 3), true)
   assert.equal(isCurrentRequest(3, 4), false)
+})
+
+// ---------- 删除文件后的回滚（站长 2026-09-17 反馈）----------
+// 现象:手传一个文件 → 删掉它 → 再用 BID 补传,行上显示的还是"先前那份信息"。
+// 根因:手传时从 .osu 读出的 name/BID 会同时进"暂存池"和"本地回显",而删除只清了
+// 文件与勾选 —— 池里那条补丁和回显都留着,于是行上一直是那份**已删除文件**的信息,
+// 保存时还会把它写进 JSON。修法:删除主文件时丢掉该 slot 的暂存条目,并把回显退回存档值。
+
+test('删除回滚:buildSlotBaseline 记录存档值,缺席的字段记为 null', () => {
+  const baseline = buildSlotBaseline(rounds())
+  assert.deepEqual(baseline.get('r1/A'), { name: null, beatmapId: null, beatmapsetId: null })
+  assert.deepEqual(baseline.get('r1/B'), { name: 'remote name', beatmapId: 777, beatmapsetId: null })
+})
+
+test('删除回滚:把 baseline 应用回去 = 空字段被清掉、存档里有的值原样恢复', () => {
+  const data = rounds()
+  // 手传带来的回显
+  applyPatches(data, new Map([['r1/A', { name: 'uploaded title', beatmapId: 111, beatmapsetId: 222 }]]))
+  assert.equal(data[0].maps[0].name, 'uploaded title')
+
+  const key = slotPatchKey('r1', 'A')
+  applyPatches(data, new Map([[key, buildSlotBaseline(rounds()).get(key)]]))
+  assert.equal('name' in data[0].maps[0], false, '存档里没有 name → 回滚后应被删掉')
+  assert.equal('beatmapId' in data[0].maps[0], false)
+  assert.equal('beatmapsetId' in data[0].maps[0], false)
+
+  // 存档里本来有值的 slot 不被清空
+  const keyB = slotPatchKey('r1', 'B')
+  applyPatches(data, new Map([[keyB, buildSlotBaseline(rounds()).get(keyB)]]))
+  assert.equal(data[0].maps[1].name, 'remote name')
+  assert.equal(data[0].maps[1].beatmapId, 777)
+})
+
+test('删除回滚:dropStagedSlot 丢掉条目且不动其它条目(没有该 key 时返回原对象)', () => {
+  const staged = new Map([
+    ['r1/A', { patch: { name: 'stale' }, origin: 'fill' }],
+    ['r1/B', { patch: { name: 'keep' }, origin: 'explicit' }],
+  ])
+  const after = dropStagedSlot(staged, 'r1/A')
+  assert.deepEqual([...after.keys()], ['r1/B'])
+  assert.equal(staged.has('r1/A'), true, '原 map 不被就地修改')
+  assert.equal(dropStagedSlot(after, 'r1/MISSING'), after, '没有该 key 时返回同一个对象(跳过重渲染)')
+})
+
+test('删除回滚:完整时序 —— 手传 → 删除 → BID 补传后,池里与原样的都是**新**信息', () => {
+  const data = rounds()
+  const baseline = buildSlotBaseline(rounds())
+  let staged = new Map()
+  const key = slotPatchKey('r1', 'A')
+
+  // 1) 手传:从 .osu 读出的元数据以 fill 进池 + 回显
+  staged = new Map([[key, mergeStagedPatch(undefined, { name: 'old title', beatmapId: 111, beatmapsetId: 222 }, 'fill')]])
+  applyPatches(data, new Map([[key, { name: 'old title', beatmapId: 111, beatmapsetId: 222 }]]))
+
+  // 2) 删除该文件:丢池里的条目 + 回显退回存档值
+  staged = dropStagedSlot(staged, key)
+  applyPatches(data, new Map([[key, baseline.get(key)]]))
+  assert.equal(staged.has(key), false, '那份补丁是刚从已删除文件里读出来的,不能留着')
+  assert.equal('name' in data[0].maps[0], false, '行上不该再显示已删除文件的信息')
+
+  // 3) BID 补传:新信息以 explicit 进池(照写,不受 fill 的"不覆盖"限制)
+  staged = new Map([[key, mergeStagedPatch(staged.get(key), { name: 'new title', beatmapId: 999, beatmapsetId: 888 }, 'explicit')]])
+  const result = applyStagedPatches(data, staged)
+  assert.deepEqual(result.appliedKeys, [key])
+  assert.equal(data[0].maps[0].name, 'new title', '补传后的信息必须覆盖旧值')
+  assert.equal(data[0].maps[0].beatmapId, 999)
+  assert.equal(data[0].maps[0].beatmapsetId, 888)
 })

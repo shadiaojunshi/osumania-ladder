@@ -11,9 +11,16 @@
 | `.workbuddy/memory/2026-09-18.md` | 今天的详细工作日志 |
 | `docs/security-review-and-recovery-2026-09-18.md` | **另一条线**写的安全审查 + 删除恢复手册 + 额度分析。它有一节「合包交接给另一 AI」是写给合包链的，本文件的第 3 节就是照它整改的结果 |
 
-## 1. 工作区现状（**全部未提交**）
+## 1. 工作区现状（**已全部提交并推送，本节仅存档**）
 
-按约定改动都留在工作区，由站长/VSCode 端提交。**不要丢弃、不要 git stash**（历史上 stash 毁过 .git）。
+> **2026-09-19 更新**：本文件 §1/§3.B 原先写的"工作区已清空、改动都未提交"**两处都已过期**，现已按实际状态改写。真实情况分两批：
+>
+> 1. **第一批（已推送）**：R01–R18、R24–R33 与合包发布链。落地提交 `2ca51d9`（占位 ID 判读 + 管理员角色 + 上游错误分类 + 删除前备份 + 请求体实流计数）、`67ebdcf`（合包发布链，含下面"这条线"全部文件）、`cd8d96e`（MKTC 36 条占位 setId 清理）、`419c4b4`（检测报告刷新）。
+> 2. **第二批（R19/R20/R21/R22，已随本批提交入库）**：`eslint.config.mjs`、`public/_headers`、`scripts/serve-static.mjs`、`scripts/{backfill-bid,detect-type-conflicts}.mjs` 及其测试、`scripts/security-headers.test.mjs`、`.gitignore` 的 tsbuildinfo 与 `/*-report.json` 规则、`roundLabelLayout.ts` 死代码清理、`RECOVERY-RUNBOOK.md`、`VERIFY-AFTER-DEPLOY-2026-09-18.md`、`BATCH-METADATA-BACKFILL.md` 等。
+>
+> 本节下面两张清单保留原始用途 —— 说明"哪几个文件属于哪条线"，**不要拿它当"当前未提交改动"的清单**（那份盘点的正确位置是 `git status`）。
+>
+> 历史提醒仍然有效：**禁用 `git stash`**（历史上 stash 毁过 .git）。
 
 **这条线（合包发布链）改的：**
 
@@ -67,7 +74,7 @@
 - **审查后加固**（另一条线的 7 条意见里成立的 5 条）：裸 `--offline` 与空 `--type=` 会静默全量发布 → 改成硬错误；孤儿清理从生成流程**摘出去**（重跑 hash 变了会误删线上正在引用的对象）；Drive 孤儿也默认只报告；`pendingMirrors` 只增不减；packs 桶 LIST 补分页。
 - **Drive 也版本化**：Drive 文件名 = 与 R2 相同的内容键 → **同名即同内容**，已存在就跳过上传（重跑省整轮流量），内容变了才新建，旧文件只进孤儿报告。
 
-**当前验证状态**：`npm test` **418/418**；前后端 `tsc` 0 错；`npm run build` 成功。**但从未在真实 R2 / GitHub Actions 上跑过全量** —— 所有发布路径的结论都来自纯函数单测、源码结构断言和故障注入式的单元测试。
+**当前验证状态（2026-09-19 复测）**：`npm test` **495/495**；前后端 `tsc` 0 错；`npm run build` 成功；`npm run lint` 25 条存量错误（基线见 `PROJECT-REVIEW` R19）。**但从未在真实 R2 / GitHub Actions 上跑过全量** —— 所有发布路径的结论都来自纯函数单测、源码结构断言和故障注入式的单元测试。
 
 ## 3. 还没做的
 
@@ -77,13 +84,16 @@
 2. **发布链的端到端故障注入测试**。现在只有纯函数单测 + 源码结构断言。缺的是：接上假 R2 / 假 Drive / 假 GitHub，注入「第 N 包上传失败」「Drive 中途失败」「push 冲突」，然后断言**旧清单里每个 URL 仍指向原来的 bytes**。这条是另一条线明确点出的验收项。
 3. **真实 R2 上的全量实跑**。内容摘要的粒度、大小预筛命中率、Drive 的跳过率、身份报告的实际内容，都只在 204 张缓存样本上验证过。跑之前建议先单类型离线预览（`--type=SS`，不上传、不动清单）。
 
-### B. R19–R23（都在 §8 表里，逐个可独立做）
+### B. R19–R22 已实施；**只剩 R23 的发布验收**（见 `PROJECT-REVIEW-2026-09-12.md` 对应章节与 §8 表）
 
-- **R19 lint 与本地启动**：`next lint` 在 Next 16 已不可用，要补 **ESLint 9 flat config**（`eslint` 与 `eslint-config-next` 都已装）；`package.json` 里的 `next start` 与 `output: 'export'` 不匹配，要换成静态预览或 `wrangler pages dev`。**先跑一遍拿存量错误基线**，报告要求「不得大范围禁规则」。
-- **R20 旧冲突脚本**：按图集归并、修复定位未限定轮次的问题。
-- **R21 安全头与写请求 Origin**：先核实部署再动。**另一条线的安全文档已经做了很细的分析**（含「后台响应加 `Cache-Control: private, no-store`」「写操作验证 Origin + JSON/CSRF」「CORS `*` 不等于认证数据可跨站读，别误报成已确认泄漏」），照它做，别重复调研。
-- **R22 构建产物与死代码清账**：包含 `out/`、`output/` 里的历史产物、无生产调用的算法。
-- **R23 谱包内容与部署状态核实**：只读核实可以先做（别按 `data/packs-manifest.json` 的旧日期推断线上事故）；发布验收要等合包稳定。
+> **2026-09-19 重写**：R19 / R20 / R21 / R22 **四项已全部实施并随本批提交入库**，本节原先"改动在工作区、未提交"与"下面两条（R21、R23）仍未实施"的说法都已过期。要点：
+>
+> - **R19**：`eslint.config.mjs`（ESLint 9 flat config，core-web-vitals 预设，**无禁规则**）+ `package.json` scripts（`lint`=`eslint .`、`start`=静态预览、`dev:api`、`typecheck`、`typecheck:functions`、`verify`）+ `scripts/serve-static.mjs`（零依赖伺服 `out/`，附单测）。**`npm run lint` 仍会因 25 条存量错误退出 1** —— 全部来自 `eslint-plugin-react-hooks` v7 的新规则（`set-state-in-effect` / `refs` / `immutability`），集中在「挂载即 setState / 取数时立刻置 loading / 用 ref 存基准」这类写法，逐条修等于重构后台取数层。基线清单与理由见 R19 完成记录（站长已确认保持 error、不降级）。
+> - **R20**：`detect-type-conflicts` 重写成与后台体检同源的 CLI（默认只读、写回必须显式指定组与目标、保留 CRLF、定位不唯一即整组拒绝）；`backfill-bid` 的 ID 判读统一到 `src/lib/beatmapIds.ts` 并转 ESM。两者删旧 `.js`、新增 20 + 12 例测试。
+> - **R21**：`public/_headers` + 中间件的写请求 Origin 闸门 + API 响应统一 `private, no-store`。**代码完成，但部署侧仍未验证** —— 验收步骤见 `VERIFY-AFTER-DEPLOY-2026-09-18.md` §3。
+> - **R22**：`tsconfig.tsbuildinfo` 停止跟踪 + `.gitignore` 规则；`roundLabelLayout.ts` 的标签防碰撞死算法与其 9 例测试删除（保留 `RoundLayout` 类型）。
+>
+> **唯一整块未实施的是 R23 的发布验收**（只读核实已完成），见其完成记录。
 
 ### C. 我从审查里认领但没做完的
 
@@ -107,7 +117,9 @@
 ## 5. 怎么验收（照抄即可）
 
 ```bash
-npm test                                        # 期望 418/418
+npm run verify                                  # 前端 TS → 后端 TS → lint → 测试（一条龙；lint 现在会失败，见下）
+npm test                                        # 期望 495/495
+npm run lint                                    # 目前 25 条存量错误 → 退出 1（基线见 PROJECT-REVIEW R19）
 npx tsc --noEmit                                # 期望 0 错
 npx tsc -p functions/tsconfig.json --noEmit     # 期望 0 错
 npm run build                                   # 期望成功

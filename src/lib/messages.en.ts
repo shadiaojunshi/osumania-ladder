@@ -263,8 +263,8 @@ export const messagesEn: Record<keyof typeof messagesZh, string> = {
   'realTypeMaps.staged': '{n} tournament change(s) staged; submit them together from Create/Edit.',
   'realTypeMaps.stagedOne': 'The keytype change was staged in this browser.',
   'realTypeMaps.stageFailed': 'Failed to load the latest {id}; the keytype change was not staged.',
-  'realTypeMaps.duplicateWarning': 'The same BID is reused across rounds of one tournament. SSR SF/F are examples; verify the source pool before changing data.',
-  'realTypeMaps.duplicateRowHint': 'Also used in: {rounds}',
+  'realTypeMaps.duplicateWarning': 'The same map identity (same BID, or same name + difficulty) appears in more than one round of a tournament. Rows are marked with ! — verify the source pool before changing data.',
+  'realTypeMaps.duplicateRowHint': 'Same identity also used in: {rounds}',
 
   // ---------- AdminsManager ----------
   'admins.title': 'Admin manager',

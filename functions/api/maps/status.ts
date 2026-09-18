@@ -18,7 +18,8 @@ function corsHeaders() {
 function jsonResponse(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
-    headers: { 'Content-Type': 'application/json', ...corsHeaders() },
+    // R21：后台数据不许被共享缓存/边缘缓存留存。
+    headers: { 'Content-Type': 'application/json', 'Cache-Control': 'private, no-store', ...corsHeaders() },
   })
 }
 

@@ -193,7 +193,8 @@ d:/osumania ladder/              ← 注意路径带空格，bash 里用引号
 - 按 `realType` 聚合所有比赛谱面 → 去重 → 分包。**分包规则（2026-09-17 站长定，`packCountFor()` / `packSizeFor()`）**：≤120 张 1 包、≤200 张 2 包、≤270 张 3 包、≤360 张 4 包，再往上按 90 步进（451→6 包）；份数定了之后**均分**，各包只差 ≤1 张。旧的"固定 80 张切块"（`MAX_MAPS_PER_PACK`）已删除 —— 尾包会小到十几张（DP 只剩 13、CO 25、TB 31）。⚠️ 改分包会改变包内 `.osu` 的 `Title`（=包名）→ 玩家已下成绩会断，与 §5.4 同性质。
 - **改写 `.osu` 一律用函数式 replacement**：`String.replace` 的**字符串** replacement 会把值里的 `$'` / `$&` / `$1` 当特殊模式展开（实测 `$'` 把 Title 行之后整份文件注入该行，谱面直接坏掉）。值来自曲名/作者/版本，`sanitizeFileName` 并不清 `$`。
 - **NSV 变体缺音频/曲绘时借用同槽主图**：`.nsv.osz`（NSV 变体）常常只带 `.osu`，直接打包会让这个难度在游戏里**没声音**。现在发现音频/曲绘缺失且是 NSV 时，回退去读同槽的 `<slot>.osz` 借同一首歌的音频/曲绘；每个包的日志里会打印体检行 `音频:借用主图 x 张;仍缺 y 张 → <keys>`（"仍缺"的那些要人补传）。
-- **去重签名优先级**：`beatmapId` → 指纹 `Artist|Title|Creator|Version`（无 BID 老图）→ `r2Key` 兜底。NSV 变体单独成条目。多源复用同一谱面时合并，多个来源写进 osu! `Version` 字段的括号标签 `(MWC 2025 F HB3 & VNMC …)`。
+- **去重签名（R11，2026-09-12 起，**别再按旧的"元数据指纹"理解**）**：合并键 = **候选键 + NSV + 内容摘要**。候选键三选一互斥：有 BID → `bid:<id>`；无 BID 用 `.osu` **内部**元数据 → `meta:artist|title|creator|version`（不是 JSON 的 `name`）；都没有 → `solo:<r2Key>`（永不合并）。**等价性只看内容摘要**（`Mode` + `[Difficulty]`/`[TimingPoints]`/`[HitObjects]`；标题/背景/音频名不算差异，**OD/HP 算**）。⚠️ **两条道互不相通** —— 同内容但一个有 BID 一个没有 → **不合并也不报冲突（静默）**；都无 BID 时元数据必须**逐字相同**才合并。反过来：**清 BID 救不回这种情形**，保留正确的 BID 对合并更有利。多源复用同一谱面时合并，来源写进 osu! `Version` 的括号标签 `(MWC 2025 F HB3 & VNMC …)`；顺序 = 比赛排序（`priority` 降序 → `year` 降序 → `id` 升序）。
+- **身份核对报告** `reports/pack-identity-report.md`：同 BID / 同元数据但内容不同（已阻止合并，各自打包）、文件缺失且身份无法确认，以及**「内容摘要相同、但身份来源不同」**（2026-09-18 加，**只报告、不改包** —— 用于先量化"该合没合"的规模）。摘要取自预取阶段已经在手上的 `.osu`，**零额外下载**；跑 `--type=<类型>` 的离线预览也会写，或直接用 Actions 的 **Identity Report**（只读，用仓库密钥跑）。
 - **输出命名**：文件名 `<realType>_<part>.osz`（单包也带 `_1`，破坏性升级 `57904da`，勿回退）；osu! 内部 `Title = "4K Tournament {名字} Pack {n}"`、`Artist = "Various Artists"`、`Creator = "various mappers,compiled by the osu!mania Ladder Team"`、`BeatmapID=0`、`BeatmapSetID=-1`、`Source/Tags` 清空。
 - **[Difficulty] 段整体不做干预 —— OD 与 HP 都跟随原谱，原谱是多少就是多少**（2026-09-13 用户先要求「取消所有的合包 OD 下限」，随后追加「HP 也跟随原谱」；旧的 `OD_FLOOR` 表、`getOdFloor()`、`rewriteOsu` 里的抬 OD 分支，以及固定写 7 的 `HP_TARGET` 已全部删除）。⚠️ 重新合包会让包内 .osu 字节与旧包不同（OD/HP 变了），玩家已下成绩会断 —— 与 §5.4 同一性质，别再单独推导。
 - **每包生成完立即上传 R2 公开桶并删本地副本**（磁盘防爆，`d6afbf7`/`8b6fd1c` 的修复）。上传 Body 必须用 **Buffer 而非流**（R2 不支持 chunked 上传）。R2 上传失败时保留本地副本。
@@ -263,7 +264,7 @@ git push origin main      # → Cloudflare Pages 自动部署（2-4 分钟生效
 
 ---
 
-## 7. GitHub Actions（三个 workflow）
+## 7. GitHub Actions（四个 workflow）
 
 仓库 `osumania-ladder`，在 GitHub 网页 **Actions 标签页手动触发**：
 
@@ -280,6 +281,14 @@ git push origin main      # → Cloudflare Pages 自动部署（2-4 分钟生效
 ### ③ Backup R2 + Cleanup Trash
 每天 UTC 18:07（北京时间 02:07）定时：主桶增量备份到 `osumania-ladder-maps-backup` + 清 R2 `trash/` 前缀超期文件。也可手动触发。
 
+### ④ Identity Report (read-only)
+**只读身份体检**，回答"内容一样、但身份来源不同的图有多少"。输入 `real_type`（留空 = 全部类型）。
+- 真正跑的是一条命令：`node scripts/generate-pack.js --identity-report [--type=X]` —— **不生成包、不上传 R2、不改 manifest、不写 output/**，只读 `maps/` 算内容摘要与候选键。
+- 结果写进 `reports/pack-identity-report.md`（开头是逐类型汇总表：槽位 / 可读引用 / 读取失败 / 三类问题计数），**提交回仓库**并把前 80 行打进 job summary。
+- 需要 Secret：只要 `R2_ACCOUNT_ID` / `R2_ACCESS_KEY` / `R2_SECRET_KEY`（用不到 packs 桶与 Drive）。
+- ⚠️ 两个反直觉点：① 报告里的 `读取失败` 表示**没看清**，不等于"没有重复"；② 体检有任何类型失败时**不写报告文件**（避免用残报告覆盖上一次结果，那个文件是要提交的）。
+- ⚠️ 提交报告会触发一次站点重建 —— 这是手动、刻意的动作，不是"每次保存都重建"。
+
 **Drive 上传失败的兜底**：日志出 `FATAL: refresh_token invalid` → 用 OAuth Playground 重跑拿新 refresh token → 更新 GitHub Secret `GDRIVE_REFRESH_TOKEN` → 跑 ②。
 
 ---
@@ -288,13 +297,13 @@ git push origin main      # → Cloudflare Pages 自动部署（2-4 分钟生效
 
 | 脚本 | 用途 | 用法 |
 |---|---|---|
-| `generate-pack.js` | 合包核心（§5.3） | `node scripts/generate-pack.js --type=SS`（单类型）；不带参数=全量+重建 manifest |
+| `generate-pack.js` | 合包核心（§5.3） | `node scripts/generate-pack.js --type=SS`（单类型）；不带参数=全量+重建 manifest；`--identity-report [--type=X]` = **只读身份体检**（不打包/不上传/不改清单，写 `reports/pack-identity-report.md`，也有同名 Action） |
 | `upload-to-gdrive.js` | 从 R2 拉流传 Drive + 孤儿清理 | `node scripts/upload-to-gdrive.js`（需 GDRIVE_* 环境变量） |
 | `backup-r2.js` | R2 增量备份 + trash 清理 | `node scripts/backup-r2.js`（每日 Action 调） |
 | `generate-tournaments.js` | 由 data/tournaments/*.json 生成 `src/generated/tournaments.ts` | `npm run dev/build` 自动跑；手动 `node scripts/generate-tournaments.js` |
-| `backfill-bid.js` | **从 R2 回填 BID/setID 到 JSON**（只增不改，不动 difficulty） | `node scripts/backfill-bid.js`（dry-run 报告）；`--apply` 才写回 |
+| `backfill-bid.mjs` | **从 R2 回填 BID/setID 到 JSON**（只增不改，不动 difficulty；占位 ID 按 `beatmapIds.ts` 判读） | `node scripts/backfill-bid.mjs`（dry-run 报告）；`--apply` 才写回 |
 | `recalc-round-difficulty.js` | 按新公式重算所有 round 的 difficulty.min/max/average（TB 排除、HB 双侧平均） | `node scripts/recalc-round-difficulty.js --dry` 先看 diff |
-| `detect-type-conflicts.js` | 检测同谱面（含倍速变体）type/realType 分配冲突，交互式修复 | `node scripts/detect-type-conflicts.js` |
+| `detect-type-conflicts.mjs` | 键型冲突体检（与后台「realType 体检」同源）：同 BID / 倍速变体可统一，同 set 的普通多难度只供人工核对 | `node scripts/detect-type-conflicts.mjs`（**只读**）；写回要显式 `--apply --bid=<id> \| --set=<id> --to=<realType>` |
 | `test-merge-fix.js` | 测试合包合并逻辑（无 bid 谱面对） | `node scripts/test-merge-fix.js` |
 | `set-priority.js` / `batch-set-priority.js` | **一次性**给比赛设 priority（历史脚本，已跑过，新比赛手动在 JSON 填） | 一般不再用 |
 
@@ -380,9 +389,18 @@ Tabs（`src/app/admin/page.tsx` 的 `Tab` 类型）：
 | 只合某一个键型 | 同上，realType 填如 `SS`（Drive 上传/manifest 会 skip） |
 | Drive 上传重跑 | GitHub → Actions → **Upload Packs to Google Drive (Re-run)** |
 | 备份 R2 | 自动每日；手动触发 Backup R2 workflow |
-| 回填无 BID 老图 | `node scripts/backfill-bid.js --apply`（本地，需 R2 凭证） |
-| 体检 realType 冲突 | admin → realType 体检，或 `node scripts/detect-type-conflicts.js` |
+| 回填无 BID 老图 | `node scripts/backfill-bid.mjs --apply`（本地，需 R2 凭证） |
+| 体检 realType 冲突 | admin → realType 体检，或 `node scripts/detect-type-conflicts.mjs`（只读；要改就按报告里的示例命令显式 --apply） |
 | 改谱面可视化的画法/几何 | `src/lib/maniaChart.ts`（先跑 `node --test scripts/mania-chart.test.mjs`，几何断言会兜住手滑） |
 | 检查 manifest 合法性 | `node -e "const m=require('./data/packs-manifest.json'); console.log(m.packs.length)"` |
-| 本地起站 | `npm run dev`（纯前端）；后端测试用 `wrangler pages dev` |
-| 校验后端 TS | `npx tsc --noEmit -p functions/tsconfig.json` |
+| 本地开发（改代码热更） | `npm run dev`（纯前端；`/api/*` 一律 404） |
+| 预览静态产物 | `npm run build` → `npm start`（= `node scripts/serve-static.mjs`，只伺服 `out/`） |
+| 带后端联调 | `npm run dev:api`（= `wrangler pages dev out`，需 `.dev.vars`） |
+| 跑测试 | `npm test` |
+| 跑 lint | `npm run lint`（ESLint 9 flat config，约 2 分半；**当前有 25 条存量错误会退出 1**，基线见 `PROJECT-REVIEW` R19） |
+| 校验前端 TS | `npm run typecheck` |
+| 校验后端 TS | `npm run typecheck:functions` |
+| 一次跑全套 | `npm run verify`（前端 TS → 后端 TS → lint → 测试；lint 现在是红的，会停在那一步） |
+| 新增写 API（POST/PUT/DELETE） | 不用额外做事：`functions/api/_middleware.ts` 统一校验 Origin（完整 origin 不同即 403 `BAD_ORIGIN`）。响应请用 `_lib/cors.ts` 的 `jsonResponse`（自带 `private, no-store`） |
+| 换/加域名调本站写 API | 配环境变量 `WRITE_ORIGIN_ALLOWLIST`（逗号分隔）；同源与预览域名不用配 |
+| 数据被篡改 / 要回档 | **先停 Backup R2 workflow**（别让后续备份继续覆盖镜像），再按 `RECOVERY-RUNBOOK.md`：JSON 用 `git restore --source=<可信commit>`；R2 的 `.osz` 先看 **`<备份桶>/snapshots/<日期>/maps/…`**（变更前存档，保留 7 天），其次 `trash/`、`versions/`、镜像 |

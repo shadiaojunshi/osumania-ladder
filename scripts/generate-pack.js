@@ -24,6 +24,7 @@ const {
   metadataCandidateKey,
   pathsNeedingContentCheck,
   clusterEntries,
+  findSameContentDifferentIdentity,
   slotTotalOf,
   pickExistingPath,
   tryPathsInOrder,
@@ -346,16 +347,15 @@ async function prefetchOne(map, packName) {
     }
     const osuContent = await zip.files[osuFileName].async('string')
 
-    // 身份校验:备选路径的内容摘要必须与簇的基准一致 —— 否则就是拿别的图冒充(R11 第 3 条)。
-    if (map.contentKey) {
-      const sig = contentSignature(osuContent)
-      if (sig !== map.contentKey) {
-        return {
-          ok: false,
-          key: map.r2Key,
-          reason: 'content-mismatch',
-          error: `内容摘要不一致（期望 ${map.contentKey}，实际 ${sig || '空'}）`,
-        }
+    // 内容摘要：既用于身份校验（备选路径不能冒充），也顺手交给调用方做「跨身份来源的
+    // 同内容」报告 —— 此处 .osu 已经在手上，多算一次哈希**不额外下载任何东西**。
+    const sig = contentSignature(osuContent)
+    if (map.contentKey && sig !== map.contentKey) {
+      return {
+        ok: false,
+        key: map.r2Key,
+        reason: 'content-mismatch',
+        error: `内容摘要不一致（期望 ${map.contentKey}，实际 ${sig || '空'}）`,
       }
     }
 
@@ -443,6 +443,8 @@ async function prefetchOne(map, packName) {
 
     return {
       ok: true,
+      // 顺手带出内容摘要：只用于「跨身份来源的同内容」报告，不参与合并决策。
+      contentKey: sig,
       payload: {
         osu: Buffer.from(rewritten, 'utf-8'),
         osuName: safeVersion + '.osu',
@@ -704,6 +706,10 @@ async function generatePack(targetType, { publish = true } = {}) {
   const results = []
   let cursor = 0
 
+  // 「跨身份来源的同内容」报告用：预取阶段每个条目本来就下载+解析过了，这里只是把
+  // 已经算好的内容摘要收集起来。**零额外下载**，也不影响任何打包/合并决策。
+  const identitySeen = []
+
   for (let packIdx = 0; packIdx < totalPacks; packIdx++) {
     const chunk = available.slice(cursor, cursor + packSizes[packIdx])
     cursor += packSizes[packIdx]
@@ -750,6 +756,14 @@ async function generatePack(targetType, { publish = true } = {}) {
         continue
       }
       const p = item.payload
+      identitySeen.push({
+        r2Key: item.usedPath || chunk[i].r2Key,
+        beatmapId: chunk[i].beatmapId,
+        metadataKey: chunk[i].metadataKey,
+        isNsv: !!chunk[i].isNsv,
+        contentKey: item.contentKey || chunk[i].contentKey || null,
+        sources: chunk[i].sources || [],
+      })
       if (p.audioFromMain) audioFromMainCount++
       if (!p.audio) { audioMissingCount++; audioMissingKeys.push(chunk[i].r2Key) }
       archive.append(p.osu, { name: p.osuName })
@@ -875,7 +889,13 @@ async function generatePack(targetType, { publish = true } = {}) {
     packs: results,
     // 身份判定的产出（同 BID/同元数据但内容不同、缺文件且身份无法确认），
     // 由 main 汇总成 reports/pack-identity-report.md 供人工核对。
-    identity,
+    // sameContent 是**只报告不改包**的一项：内容摘要相同、但身份来源（候选键）不同，
+    // 现在既不合并不报冲突 —— 先量化规模，再决定要不要真的按内容合并（R11 后续）。
+    identity: {
+      ...identity,
+      sameContent: findSameContentDifferentIdentity(identitySeen),
+      sameContentScanned: identitySeen.length,
+    },
   }
 }
 
@@ -884,28 +904,61 @@ const MANIFEST_PATH = path.join(__dirname, '..', 'data', 'packs-manifest.json')
 const PREV_MANIFEST_PATH = path.join(__dirname, '..', 'data', 'packs-manifest.previous.json')
 
 /**
+ * 报告里有内容的条数：conflicts + unresolved + sameContent。
+ * 用来决定"要不要提示报告已更新"—— **三类都算**，漏掉 sameContent 会让
+ * "只有同内容重复、没有冲突"的那次运行一声不吭（看起来像没出报告）。
+ */
+function countIdentityIssues(identity) {
+  if (!identity) return 0
+  return (identity.conflicts || []).length + (identity.unresolved || []).length + (identity.sameContent || []).length
+}
+
+/**
  * 把"需要人工核对"的身份问题写成报告（R11 要求输出核对项，而不是静默合并/静默丢弃）。
  * 内容等价的多路径引用属于正常合并，不进这份报告（在运行日志里）。
  */
-function writeIdentityReport(typeResults, outPath = IDENTITY_REPORT_PATH) {
+function writeIdentityReport(typeResults, outPath = IDENTITY_REPORT_PATH, options = {}) {
   const lines = [
     '# 合包身份核对报告',
     '',
     `生成时间：${new Date().toISOString()}`,
+    ...(options.note ? [options.note, ''] : []),
     '',
     '只列**需要人工核对**的项：同一个 BID / 同一组元数据下内容不同的谱面（已阻止合并，各自打包），',
-    '以及指向的文件缺失、身份无法确认的引用（来源标签未挂靠）。内容等价的多路径引用属正常合并，只在运行日志里。',
+    '指向的文件缺失、身份无法确认的引用（来源标签未挂靠），以及**内容摘要相同但身份来源不同**',
+    '（现在的实现既不合并不报冲突，只在这里列出来量化规模）。内容等价的多路径引用属正常合并，只在运行日志里。',
     '',
   ]
+  if (options.summaryTable) {
+    const n = (arr) => (arr || []).length
+    lines.push(
+      '## 本次体检汇总',
+      '',
+      '| 类型 | 槽位 | 可读引用 | 读取失败 | 同 BID/元数据但内容不同 | 缺文件身份不明 | 同内容不同身份来源 |',
+      '|---|---:|---:|---:|---:|---:|---:|',
+    )
+    for (const t of typeResults) {
+      const id = (t && t.identity) || {}
+      lines.push(
+        `| ${t.realType} | ${t.status === STATUS_SKIPPED ? 0 : t.plannedSlots ?? '-'} | ${id.readableEntries ?? '-'} | ` +
+          `${id.readFailed ?? '-'} | ${t.identity ? n(id.conflicts) : '-'} | ${t.identity ? n(id.unresolved) : '-'} | ${t.identity ? n(id.sameContent) : '-'} |`,
+      )
+    }
+    lines.push('', '> `读取失败` = 这些引用没看清（下载/解压/解析失败），**不等于**它们没有重复。', '')
+  }
   let total = 0
   for (const t of typeResults) {
     const id = t && t.identity
     if (!id) continue
     const conflicts = id.conflicts || []
     const unresolved = id.unresolved || []
-    if (conflicts.length === 0 && unresolved.length === 0) continue
-    total += conflicts.length + unresolved.length
+    const sameContent = id.sameContent || []
+    if (conflicts.length === 0 && unresolved.length === 0 && sameContent.length === 0) continue
+    total += conflicts.length + unresolved.length + sameContent.length
     lines.push(`## ${t.realType}`, '')
+    if (id.readFailed) {
+      lines.push(`> 有 ${id.readFailed} 个引用读取失败、未参与本次判定 —— 这部分是"看不清"，不等于"没有重复"。`, '')
+    }
     if (conflicts.length) {
       lines.push('### 同 BID / 同元数据但内容不同（已阻止合并）', '')
       for (const c of conflicts) {
@@ -925,10 +978,126 @@ function writeIdentityReport(typeResults, outPath = IDENTITY_REPORT_PATH) {
       }
       lines.push('')
     }
+    if (sameContent.length) {
+      lines.push(
+        `### 内容摘要相同、但身份来源不同（${sameContent.length} 组，只报告、未改动打包结果）`,
+        '',
+        '判据：内容摘要（Mode + [Difficulty] + [TimingPoints] + [HitObjects]）逐字节等价，',
+        '但候选键不同（一个有 BID / 一个用元数据 / 各自独立）→ 当前实现不会合并，两个条目各占一个位置。',
+        '是否值得改成"按内容合并"要看这里的规模与人工判断（合并会动包内条目数与 manifest.mapCount）。',
+        '',
+      )
+      for (const g of sameContent) {
+        lines.push(`- 摘要 \`${g.contentKey}\`${g.isNsv ? '（NSV）' : ''}`)
+        for (const grp of g.groups) {
+          const members = grp.members.map((m) => {
+            const from = (m.sources || []).map((s) => `${s.tournamentAbbr}${s.roundAbbr} ${s.slot}`).join('、')
+            return `\`${m.r2Key}\`${from ? ` ← ${from}` : ''}`
+          })
+          lines.push(`  - **${grp.candidateKey}**：${members.join(' ／ ')}`)
+        }
+      }
+      lines.push('')
+    }
   }
   if (total === 0) lines.push('（本次没有任何需要人工核对的项）', '')
   fs.mkdirSync(path.dirname(outPath), { recursive: true })
   fs.writeFileSync(outPath, lines.join('\n') + '\n')
+}
+
+/**
+ * 只读身份体检（`--identity-report`）：**不打包、不上传、不改 manifest、不写 output/**。
+ *
+ * 为什么单独实现而不复用 `generatePack`：generatePack 的后半段是分包 → 写 zip → 传 R2 →
+ * 门控发布，报告模式一条都不需要。抽出公共部分要把全项目最贵的那条流程改一遍；这里只复用
+ * 它的**原语**（列对象、聚簇、读身份、报告渲染），编排逻辑重复约 40 行，换来的是
+ * 「报告绝不可能影响打包结果」。
+ *
+ * 与合包流程的关键差别：这里要读**所有存在的引用**的内容摘要。合包只在「无 BID」或
+ * 「同 BID 多路径」时才读内容（单路径的 BID 本身就是身份）—— 而跨身份来源的重复，
+ * 恰恰有一半是「有 BID」的那种，不读就会漏。代价是下载该类型的每张图（只读，不改任何东西）。
+ */
+async function analyzeTypeIdentity(targetType, sharedR2Keys = null) {
+  const tournamentsDir = path.join(__dirname, '..', 'data', 'tournaments')
+  const files = fs.readdirSync(tournamentsDir).filter((f) => f.endsWith('.json'))
+
+  const mapsToProcess = []
+  for (const file of files) {
+    const tournament = JSON.parse(fs.readFileSync(path.join(tournamentsDir, file), 'utf-8'))
+    for (const round of tournament.rounds || []) {
+      for (const map of round.maps || []) {
+        if (normalizeRealType(map.realType) !== targetType) continue
+        mapsToProcess.push({
+          tournamentId: tournament.id,
+          tournamentAbbr: tournament.abbreviation,
+          roundId: round.id,
+          roundAbbr: round.abbreviation,
+          slot: map.slot,
+          difficulty: map.difficulty || 0,
+          beatmapId: map.beatmapId || null,
+          r2Key: `maps/${tournament.id}/${round.id}/${map.slot}.osz`,
+        })
+      }
+    }
+  }
+
+  console.log(`[${targetType}] 槽位 ${mapsToProcess.length} 个`)
+  if (mapsToProcess.length === 0) {
+    return { realType: targetType, status: STATUS_SKIPPED, reason: 'no-slots', plannedSlots: 0, identity: null }
+  }
+
+  // 全部类型体检时共用一份清单：maps/ 前缀的对象可能有上万个，逐类型重复列举既慢又白花请求。
+  const r2Keys = sharedR2Keys || new Set((await listR2Objects('maps/')).map((o) => o.Key))
+
+  const rawEntries = []
+  for (const m of mapsToProcess) {
+    const src = { tournamentAbbr: m.tournamentAbbr, roundAbbr: m.roundAbbr, slot: m.slot }
+    rawEntries.push({
+      ...m, isNsv: false, source: src, exists: r2Keys.has(m.r2Key), metadataKey: null, contentKey: null,
+    })
+    const nsvKey = m.r2Key.replace(/\.osz$/, '.nsv.osz')
+    if (r2Keys.has(nsvKey)) {
+      rawEntries.push({
+        ...m, r2Key: nsvKey, isNsv: true, source: src, exists: true, metadataKey: null, contentKey: null,
+      })
+    }
+  }
+
+  const needRead = rawEntries.filter((e) => e.exists)
+  let readFailed = 0
+  if (needRead.length > 0) {
+    console.log(`[${targetType}] 读取 ${needRead.length} 个引用的内容摘要（只读，不打包）...`)
+    const infos = await mapWithConcurrency(needRead, 4, (e) => readIdentity(e.r2Key))
+    const byKey = new Map(needRead.map((e, i) => [e.r2Key, infos[i]]))
+    for (const e of needRead) {
+      const info = byKey.get(e.r2Key)
+      if (info && info.ok) {
+        e.metadataKey = metadataCandidateKey(info.meta)
+        e.contentKey = info.contentKey
+      } else {
+        e.identityError = (info && info.error) || 'read-failed'
+        readFailed++
+        console.warn(`  身份读取失败 ${e.r2Key}: ${e.identityError}`)
+      }
+    }
+  }
+
+  const { conflicts, unresolved } = clusterEntries(rawEntries)
+  const readable = rawEntries.filter((e) => e.exists && e.contentKey)
+  const sameContent = findSameContentDifferentIdentity(readable)
+
+  console.log(
+    `[${targetType}] 槽位 ${mapsToProcess.length}｜可读引用 ${readable.length}｜读取失败 ${readFailed}` +
+      `｜同 BID/同元数据但内容不同 ${conflicts.length}｜缺文件身份不明 ${unresolved.length}｜同内容不同身份来源 ${sameContent.length}`,
+  )
+
+  return {
+    realType: targetType,
+    status: STATUS_OK,
+    plannedSlots: mapsToProcess.length,
+    packs: [],
+    identity: { conflicts, unresolved, sameContent, readFailed, readableEntries: readable.length },
+  }
 }
 
 async function main() {
@@ -953,6 +1122,49 @@ async function main() {
     if (w.code === 'excluded-type') {
       console.warn(`注意:${w.type} 属于 Pending 族,不产出下载包。`)
     }
+  }
+
+  if (cli.mode === 'identity-report') {
+    // 只读体检：先于打包/发布分支返回，绝不落到"全量发布"那条路上。
+    const allTypes = Object.keys(REAL_TYPE_NAMES).filter((t) => !PACK_EXCLUDED_REAL_TYPES.has(t))
+    const types = cli.targetType ? [cli.targetType] : allTypes
+    console.log(`只读身份体检：${types.length} 个类型 —— ${types.join(', ')}`)
+    console.log('不打包、不上传 R2、不改 manifest、不写 output/；只读 R2 算身份并写报告。')
+    // 全部类型共用一份 maps/ 对象清单（否则 38 个类型要各列一遍）。
+    let sharedR2Keys = null
+    if (types.length > 1) {
+      console.log('先列一次 maps/ 的对象清单（全部类型共用）...')
+      sharedR2Keys = new Set((await listR2Objects('maps/')).map((o) => o.Key))
+      console.log(`maps/ 现有对象 ${sharedR2Keys.size} 个`)
+    }
+    const results = []
+    for (const type of types) {
+      try {
+        results.push(await analyzeTypeIdentity(type, sharedR2Keys))
+      } catch (err) {
+        console.error(`[${type}] 体检失败：${err.message}`)
+        results.push({
+          realType: type, status: STATUS_FAILED, reason: 'identity-report',
+          detail: err.message, packs: [], identity: null,
+        })
+      }
+    }
+    const failed = results.filter((r) => r.status === STATUS_FAILED)
+    if (failed.length > 0) {
+      // **不写报告**：部分类型失败时写出来的是一份"看起来完整、其实是残的"报告，
+      // 覆盖掉上一次的结果之后没法分辨（尤其它是会被提交进仓库的文件）。
+      console.error(`\n${failed.length} 个类型体检失败：${failed.map((r) => r.realType).join(', ')}`)
+      console.error('为避免用不完整的报告覆盖上一次的结果，本次不写报告文件。')
+      process.exit(1)
+    }
+    writeIdentityReport(results, IDENTITY_REPORT_PATH, {
+      note: '本次由 `--identity-report` 生成（**只读体检**）：没有生成或上传任何包，也没有改动清单。',
+      summaryTable: true,
+    })
+    const issues = results.reduce((n, r) => n + countIdentityIssues(r.identity), 0)
+    console.log(`\n报告：${path.relative(path.join(__dirname, '..'), IDENTITY_REPORT_PATH)}`)
+    console.log(`共 ${issues} 条需要人工看。`)
+    return
   }
 
   if (cli.mode === 'single-preview' || cli.mode === 'single-publish') {
@@ -997,7 +1209,7 @@ async function main() {
 
     // 身份核对报告（只含本次这个类型）
     writeIdentityReport([result])
-    if (result.identity && (result.identity.conflicts || []).length + (result.identity.unresolved || []).length > 0) {
+    if (countIdentityIssues(result.identity) > 0) {
       console.warn(`身份核对报告（只含 ${cli.targetType}）: ${path.relative(path.join(__dirname, '..'), IDENTITY_REPORT_PATH)}`)
     }
     return
@@ -1050,10 +1262,7 @@ async function main() {
   console.log('\nManifest updated:', manifestPath)
 
   writeIdentityReport(typeResults)
-  const identityIssues = typeResults.reduce(
-    (n, t) => n + ((t.identity && ((t.identity.conflicts || []).length + (t.identity.unresolved || []).length)) || 0),
-    0,
-  )
+  const identityIssues = typeResults.reduce((n, t) => n + countIdentityIssues(t.identity), 0)
   if (identityIssues > 0) {
     console.warn(`\n身份核对:${identityIssues} 项需要人工看 → ${path.relative(path.join(__dirname, '..'), IDENTITY_REPORT_PATH)}`)
   }
@@ -1109,4 +1318,7 @@ module.exports = {
   packCountFor,
   packSizeFor,
   PACK_EXCLUDED_REAL_TYPES,
+  // 报告渲染是纯函数式的（给一个类型结果数组 + 输出路径），导出来是为了能单测
+  writeIdentityReport,
+  countIdentityIssues,
 }

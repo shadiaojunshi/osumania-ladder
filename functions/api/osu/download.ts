@@ -11,7 +11,10 @@ function corsHeaders() {
 function errorResponse(msg: string, status = 500) {
   return new Response(JSON.stringify({ error: msg }), {
     status,
-    headers: { 'Content-Type': 'application/json', ...corsHeaders() },
+    // R21：错误响应更不该被缓存（否则一次抖动会被留着）。
+    // 注意下面的 200 附件流是刻意保留差异的：它有自己的 Content-Disposition，
+    // 不加 no-store。
+    headers: { 'Content-Type': 'application/json', 'Cache-Control': 'private, no-store', ...corsHeaders() },
   })
 }
 

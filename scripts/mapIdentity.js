@@ -219,6 +219,64 @@ function clusterEntries(entries = []) {
 }
 
 /**
+ * 找出「内容摘要相同、但身份来源（候选键）不同」的组。
+ *
+ * 这是当前实现**既不会合并、也不会报冲突**的一类重复：候选键三选一互斥
+ * （有 BID → `bid:N`；否则元数据 → `meta:…`；都没有 → `solo:路径`），而合并键 =
+ * 候选键 + NSV + 内容摘要 —— 于是两张内容逐字节相同、但一张带 BID 一张不带的图，
+ * 会各自成簇、在包里静默地各占一个条目（包内 Version 只差来源标签前缀）。
+ *
+ * **只用于出报告，不参与任何合并决策。** 想改成"同内容就合并"之前，先用它看清全库
+ * 到底有多少这种重复（改动会动到包内条目数与 manifest.mapCount，不能拍脑袋做）。
+ *
+ * 读不到内容（`contentKey` 为空）的引用**不参与** —— 不能因为"都读不到"就说它们相等。
+ *
+ * 输入项：{ r2Key, beatmapId, metadataKey, isNsv, contentKey, sources? }
+ * 输出：[{ contentKey, isNsv, groups: [{ candidateKey, members: [{ r2Key, sources }] }] }]
+ */
+function findSameContentDifferentIdentity(entries = []) {
+  const bySignature = new Map()
+  for (const e of entries) {
+    if (!e || !e.contentKey) continue
+    const key = e.contentKey + '|nsv:' + (e.isNsv ? 1 : 0)
+    if (!bySignature.has(key)) bySignature.set(key, [])
+    bySignature.get(key).push(e)
+  }
+
+  const out = []
+  for (const [, list] of bySignature) {
+    const byCandidate = new Map()
+    for (const e of list) {
+      const candidateKey = candidateKeyOf(e)
+      if (!byCandidate.has(candidateKey)) byCandidate.set(candidateKey, [])
+      byCandidate.get(candidateKey).push(e)
+    }
+    // 只有一个候选键 → 走的是正常合并路径（已经合成一条），不算"跨身份来源的重复"。
+    if (byCandidate.size < 2) continue
+    out.push({
+      contentKey: list[0].contentKey,
+      isNsv: !!list[0].isNsv,
+      groups: [...byCandidate.entries()].map(([candidateKey, members]) => ({
+        candidateKey,
+        members: members.map((e) => ({
+          r2Key: e.r2Key,
+          // 两种输入形状都接受：`sources`（数组）或 `source`（单条，clusterEntries 用的形状）
+          sources: (e.sources || (e.source ? [e.source] : [])).slice(),
+        })),
+      })),
+    })
+  }
+
+  // 稳定顺序：先主图后 NSV，再按摘要、再按首个候选键。
+  return out.sort(
+    (a, b) =>
+      (a.isNsv ? 1 : 0) - (b.isNsv ? 1 : 0) ||
+      a.contentKey.localeCompare(b.contentKey) ||
+      a.groups[0].candidateKey.localeCompare(b.groups[0].candidateKey),
+  )
+}
+
+/**
  * 计数口径：只数**主图**簇（NSV 变体是同一槽位的附加难度，不算新槽位）。
  * 必须与 manifest.mapCount（包内非 NSV 条目数）同口径，否则下载页进度条
  * 分子永远追不上分母（R11 第 5 条）。
@@ -272,6 +330,7 @@ module.exports = {
   clusterKeyOf,
   pathsNeedingContentCheck,
   clusterEntries,
+  findSameContentDifferentIdentity,
   slotTotalOf,
   pickExistingPath,
   tryPathsInOrder,

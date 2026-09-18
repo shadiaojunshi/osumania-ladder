@@ -1,0 +1,111 @@
+name: Identity Report (read-only)
+
+# 只读身份体检：回答"内容一样但身份来源不同的图有多少"。
+#
+# 为什么单独一个 workflow：本地没有 R2 凭据时跑不了（`--identity-report` 要读 maps/ 里的
+# 原始 .osz）。这个 workflow 用的是仓库里已有的 R2 secrets，**只读**：
+#   · 不生成包、不上传对象、不改 manifest（--identity-report 模式下这些分支根本不会进入）
+#   · 唯一写的东西是仓库里的 reports/pack-identity-report.md（方便人看、也让历次结果可追溯）
+# 代价：提交报告会触发一次站点重建。这是一次**手动、刻意**的动作，不是每次保存都重建。
+#
+# 与 generate-packs.yml 的区别：那边改 R2 与清单，所以必须和 Drive 那个 workflow 共用
+# `packs-publish` 发布组；这边一个字节都不写线上，不需要排队等发布，用自己的组即可。
+
+on:
+  workflow_dispatch:
+    inputs:
+      real_type:
+        description: '指定 realType（留空 = 全部类型）。只读体检，不打包、不上传、不改清单'
+        required: false
+        default: ''
+
+concurrency:
+  group: identity-report
+  cancel-in-progress: false
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - run: npm ci
+
+      - name: Run read-only identity report
+        # 输入经 env 传入，再用**双引号包住的变量**作为参数值，绝不把 `${{ }}` 直接插进
+        # shell 代码（与 generate-packs.yml 同样的理由：含空格/分号的输入会变成额外语法）。
+        # 类型名由脚本自己的白名单校验，未知类型 exit 2、什么都不做。
+        env:
+          REAL_TYPE: ${{ github.event.inputs.real_type }}
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY: ${{ secrets.R2_ACCESS_KEY }}
+          R2_SECRET_KEY: ${{ secrets.R2_SECRET_KEY }}
+          R2_BUCKET: osumania-ladder-maps
+        run: |
+          set -euo pipefail
+          args=("--identity-report")
+          if [ -n "$REAL_TYPE" ]; then args+=("--type=$REAL_TYPE"); fi
+          echo "运行：node scripts/generate-pack.js ${args[*]}"
+          node scripts/generate-pack.js "${args[@]}"
+
+      - name: Show report in job summary
+        if: always()
+        run: |
+          set -euo pipefail
+          if [ ! -f reports/pack-identity-report.md ]; then
+            echo "没有生成报告文件。" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          {
+            echo "## 身份体检报告（前 80 行）"
+            echo ''
+            echo '```'
+            sed -n '1,80p' reports/pack-identity-report.md
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Commit report
+        # 体检本身失败时不要提交半成品报告。
+        if: success()
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add reports/pack-identity-report.md
+          if git diff --cached --quiet; then
+            echo "报告没有变化，跳过提交。"
+            exit 0
+          fi
+          git commit -m "Update pack identity report (read-only)"
+          # push 撞上远端新提交时先 rebase 再试，重试次数有上限。
+          # **禁止 force push、禁止回滚**（与 generate-packs.yml 同一约定）。
+          for i in 1 2 3; do
+            if git push; then
+              exit 0
+            fi
+            echo "push 失败（第 $i 次），先同步远端再试"
+            git fetch origin "${GITHUB_REF_NAME}"
+            if ! git rebase "origin/${GITHUB_REF_NAME}"; then
+              git rebase --abort || true
+              echo "::error::报告与远端冲突，已保留本地结果，请人工处理。"
+              exit 1
+            fi
+          done
+          echo "::error::push 连续失败，已保留本地提交与结果。"
+          exit 1
+
+      - name: Keep report on failure
+        # runner 一退出工作区就没了 —— 报告是本次唯一产出，失败时也要留一份（不含任何凭据）。
+        if: failure() || cancelled()
+        uses: actions/upload-artifact@v4
+        with:
+          name: identity-report-debug
+          path: reports/pack-identity-report.md
+          if-no-files-found: ignore
+          retention-days: 7

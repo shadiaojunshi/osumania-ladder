@@ -556,3 +556,73 @@ test('加固：孤儿挑选带保留期，太新的一律不动；时间未知�
   assert.deepEqual(loose.orphans, ['SS_1.fresh000.osz', 'SS_1.old00000.osz'])
   assert.deepEqual(loose.kept, ['SS_1.unknown0.osz'])
 })
+
+// ---------- 只读身份体检（--identity-report，2026-09-18）----------
+
+test('体检：--identity-report 单独用 = 全部类型，且**绝不能落到 full 模式**', () => {
+  const r = cli(['--identity-report'])
+  assert.equal(r.ok, true)
+  assert.equal(r.mode, 'identity-report')
+  assert.equal(r.targetType, null)
+  // 这条是最要命的：mode 一旦是 'full'，main 就会真的全量发布（生成 + 传 R2 + 改清单）。
+  assert.notEqual(r.mode, 'full', '体检模式绝不能是全量发布')
+  assert.equal(r.publish, false)
+})
+
+test('体检：与 --type 合用只体检该类型', () => {
+  const r = cli(['--identity-report', '--type=SS'])
+  assert.equal(r.ok, true)
+  assert.equal(r.mode, 'identity-report')
+  assert.equal(r.targetType, 'SS')
+})
+
+test('体检：待分类类型（Pending 族）只给提示，不算错误', () => {
+  const r = cli(['--identity-report', `--type=${[...EXCLUDED][0]}`])
+  assert.equal(r.ok, true)
+  assert.equal(r.mode, 'identity-report')
+  assert.equal(r.warnings[0].code, 'excluded-type')
+})
+
+test('体检：与 --publish / --offline 互斥（它本来就不发布）', () => {
+  for (const extra of [['--publish'], ['--offline']]) {
+    const r = cli(['--identity-report', ...extra])
+    assert.equal(r.ok, false, `${extra[0]} 必须被拒`)
+    assert.equal(r.errors[0].error, 'identity-report-conflict')
+    assert.match(describeCliError(r.errors[0]), /只读体检/)
+  }
+})
+
+test('体检：--type= 空值被拒，但文案说的是"省略即体检全部类型"（不是"全量发布"）', () => {
+  const r = cli(['--identity-report', '--type='])
+  assert.equal(r.ok, false)
+  assert.equal(r.errors.length, 1, '一次错误只报一次')
+  assert.equal(r.errors[0].error, 'identity-report-empty-type')
+  const text = describeCliError(r.errors[0])
+  assert.match(text, /体检全部类型/)
+  assert.ok(!text.includes('全量发布'), '本模式下省略 --type 不会发布，不能拿全量发布的文案吓人')
+})
+
+test('体检：未知类型只报一次 unknown-type（不附带多余的 --type= 空值错误）', () => {
+  const r = cli(['--identity-report', '--type=NOPE'])
+  assert.equal(r.ok, false)
+  assert.equal(r.errors.length, 1)
+  assert.equal(r.errors[0].error, 'unknown-type')
+})
+
+test('体检：打错选项照样被拒（不会静默变成"体检全部类型"）', () => {
+  const r = cli(['--identity-report', '--bogus'])
+  assert.equal(r.ok, false)
+  assert.equal(r.errors[0].error, 'unknown-option')
+})
+
+test('守门：identity-report.yml 必须保持只读（不得出现发布开关或改数据的提交）', () => {
+  // 这个 workflow 用的是**仓库里的真实 R2 密钥**，所以它的只读性只能靠断言守：
+  // 以后有人往 run 里补一句 `--publish`，就会变成"点一下把线上包重打一遍"。
+  const src = readFileSync(new URL('../.github/workflows/identity-report.yml', import.meta.url), 'utf-8')
+  assert.ok(src.includes('--identity-report'), '必须跑体检模式')
+  assert.ok(!src.includes('--publish'), '体检 workflow 绝不能带 --publish')
+  assert.ok(!/git add -A|git add \./.test(src), '不能用 git add -A（会把无关文件一起提交）')
+  assert.ok(src.includes('git add reports/pack-identity-report.md'), '只提交报告文件')
+  assert.ok(/permissions:\s*\n?\s*contents: write/.test(src), '要能 push 报告')
+  assert.ok(!/real_type[\s\S]{0,200}R2_PACKS/.test(src) || !src.includes('R2_PACKS_BUCKET'), '体检不需要 packs 桶密钥')
+})

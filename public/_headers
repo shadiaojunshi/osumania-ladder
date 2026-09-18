@@ -1,0 +1,20 @@
+# Cloudflare Pages 静态响应头（R21）。
+#
+# 这个文件只作用于**静态产物**（`next build` 会把 public/ 原样拷到输出目录）。
+# `/api/*` 是 Pages Functions，`_headers` 管不到它们的响应 —— 那些响应头由
+# `functions/api/**` 的代码自己设置（见 `_lib/cors.ts` 与 `_middleware.ts`）。
+#
+# 范围刻意只限后台页：目标是"后台不能被跨站 iframe 嵌入"。
+# 评审明确要求**不要**在这里上 `script-src 'self'` 之类会破坏 Next 静态站内联
+# 启动脚本的 CSP；要做完整 CSP 需要单独一轮部署 + 实测。
+#
+# 线上核对方式（只读）：
+#   curl -sI https://osumania-ladder.pages.dev/admin | grep -i "x-frame\|content-security"
+
+/admin
+  X-Frame-Options: DENY
+  Content-Security-Policy: frame-ancestors 'none'
+
+/admin.html
+  X-Frame-Options: DENY
+  Content-Security-Policy: frame-ancestors 'none'

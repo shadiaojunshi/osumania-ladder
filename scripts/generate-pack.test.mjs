@@ -1,4 +1,7 @@
 import assert from 'node:assert/strict'
+import fs from 'node:fs'
+import os from 'node:os'
+import path from 'node:path'
 import { createRequire } from 'node:module'
 import test from 'node:test'
 
@@ -17,7 +20,7 @@ process.env.R2_ACCESS_KEY = 'test-key'
 process.env.R2_SECRET_KEY = 'test-secret'
 
 const require = createRequire(import.meta.url)
-const { rewriteOsu, packCountFor, packSizeFor } = require('./generate-pack.js')
+const { rewriteOsu, packCountFor, packSizeFor, writeIdentityReport, countIdentityIssues } = require('./generate-pack.js')
 
 const sampleOsu = (od, hp = 5) => [
   'osu file format v14',
@@ -158,4 +161,174 @@ test('实测规模下的分包(不再出现十几张的小尾包)', () => {
     assert.ok(Math.min(...sizes) >= 60, `${total}: 最小包不应小于 60 张`)
     assert.ok(Math.max(...sizes) <= 120, `${total}: 最大包不应超过 120 张`)
   }
+})
+
+// ---------- 身份报告：渲染「同内容、不同身份来源」（只报告，不改包）----------
+
+const srcOf = (abbr, round, slot) => ({ tournamentAbbr: abbr, roundAbbr: round, slot })
+const tmpReport = () =>
+  path.join(os.tmpdir(), `mania-identity-report-${process.pid}-${Math.random().toString(36).slice(2)}.md`)
+
+test('身份报告：渲染「内容摘要相同但身份来源不同」小节，且明说没有改动打包结果', () => {
+  const out = tmpReport()
+  try {
+    writeIdentityReport([{
+      realType: 'SS',
+      identity: {
+        conflicts: [],
+        unresolved: [],
+        sameContent: [{
+          contentKey: 'deadbeefdeadbeef',
+          isNsv: false,
+          groups: [
+            { candidateKey: 'bid:500', members: [{ r2Key: 'maps/a/r1/RC1.osz', sources: [srcOf('T1', 'r1', 'RC1')] }] },
+            { candidateKey: 'meta:x|t|c|v', members: [{ r2Key: 'maps/b/r2/RC2.osz', sources: [srcOf('T2', 'r2', 'RC2')] }] },
+          ],
+        }],
+      },
+    }], out)
+    const text = fs.readFileSync(out, 'utf-8')
+    assert.match(text, /## SS/)
+    assert.match(text, /内容摘要相同、但身份来源不同/)
+    assert.ok(text.includes('`deadbeefdeadbeef`'), '摘要要列出来')
+    assert.ok(text.includes('bid:500') && text.includes('meta:x|t|c|v'), '两条候选键都要列出来')
+    assert.ok(text.includes('maps/b/r2/RC2.osz'), '路径要列出来')
+    assert.ok(text.includes('T2r2 RC2'), '来源标签要列出来')
+    assert.ok(text.includes('只报告'), '要说清没有改动打包结果')
+  } finally {
+    fs.rmSync(out, { force: true })
+  }
+})
+
+test('身份报告：没有任何需要核对的项时写明「本次没有」', () => {
+  const out = tmpReport()
+  try {
+    writeIdentityReport([{ realType: 'JS', identity: { conflicts: [], unresolved: [], sameContent: [] } }], out)
+    const text = fs.readFileSync(out, 'utf-8')
+    assert.ok(text.includes('（本次没有任何需要人工核对的项）'))
+    assert.ok(!text.includes('## JS'), '没有问题的类型不该占一节')
+  } finally {
+    fs.rmSync(out, { force: true })
+  }
+})
+
+test('身份报告：旧调用方没给 sameContent 也不会崩，更不会伪造一节', () => {
+  const out = tmpReport()
+  try {
+    writeIdentityReport([{ realType: 'LN', identity: { conflicts: [], unresolved: [] } }], out)
+    const text = fs.readFileSync(out, 'utf-8')
+    assert.ok(text.includes('（本次没有任何需要人工核对的项）'))
+  } finally {
+    fs.rmSync(out, { force: true })
+  }
+})
+
+test('身份报告：体检汇总表逐类型列出四项计数，跳过类型不留假数字', () => {
+  const out = tmpReport()
+  try {
+    writeIdentityReport([
+      {
+        realType: 'SS', status: 'ok', plannedSlots: 120,
+        identity: {
+          conflicts: [], unresolved: [], readableEntries: 118, readFailed: 2,
+          sameContent: [{
+            contentKey: 'aaa', isNsv: false,
+            groups: [
+              { candidateKey: 'bid:1', members: [{ r2Key: 'maps/a.osz', sources: [srcOf('T1', 'r1', 'RC1')] }] },
+              { candidateKey: 'meta:z', members: [{ r2Key: 'maps/b.osz', sources: [srcOf('T2', 'r2', 'RC2')] }] },
+            ],
+          }],
+        },
+      },
+      { realType: 'JS', status: 'skipped', plannedSlots: 0, identity: null },
+      {
+        realType: 'CJ', status: 'ok', plannedSlots: 40,
+        identity: {
+          conflicts: [{
+            candidateKey: 'bid:9', reason: 'same-bid-different-content',
+            members: [{ contentKey: 'ccc', paths: ['maps/c.osz'], sources: [srcOf('T3', 'r3', 'RC3')] }],
+          }],
+          unresolved: [], sameContent: [], readableEntries: 40, readFailed: 0,
+        },
+      },
+    ], out, { note: '本次由只读体检生成', summaryTable: true })
+    const text = fs.readFileSync(out, 'utf-8')
+    assert.match(text, /## 本次体检汇总/)
+    assert.match(text, /本次由只读体检生成/)
+    assert.match(text, /\| SS \| 120 \| 118 \| 2 \| 0 \| 0 \| 1 \|/)
+    assert.match(text, /\| CJ \| 40 \| 40 \| 0 \| 1 \| 0 \| 0 \|/)
+    assert.match(text, /\| JS \| 0 \| - \| - \| - \| - \| - \|/, '跳过的类型不能编造计数')
+    assert.ok(text.includes('不等于'), '要提醒"读取失败"不等于"没有重复"')
+  } finally {
+    fs.rmSync(out, { force: true })
+  }
+})
+
+test('身份报告：某类型有读取失败时，该类型的段落里要写出来（"看不清"≠"没有重复"）', () => {
+  const out = tmpReport()
+  try {
+    writeIdentityReport([{
+      realType: 'SS',
+      status: 'ok',
+      plannedSlots: 10,
+      identity: {
+        readFailed: 3,
+        unresolved: [],
+        sameContent: [],
+        conflicts: [{
+          candidateKey: 'bid:500',
+          reason: 'same-bid-different-content',
+          members: [{ contentKey: 'aaa', paths: ['maps/a.osz'], sources: [srcOf('T1', 'r1', 'RC1')] }],
+        }],
+      },
+    }], out)
+    const text = fs.readFileSync(out, 'utf-8')
+    assert.match(text, /## SS/)
+    assert.match(text, /有 3 个引用读取失败、未参与本次判定/)
+    assert.ok(!text.includes('本次体检汇总'), '非体检模式下不该插汇总表')
+  } finally {
+    fs.rmSync(out, { force: true })
+  }
+})
+
+test('守门：报告条数统计必须把 sameContent 算进去（否则"只有同内容重复"那次会一声不吭）', () => {
+  assert.equal(countIdentityIssues(null), 0)
+  assert.equal(countIdentityIssues({ conflicts: [], unresolved: [], sameContent: [] }), 0)
+  assert.equal(countIdentityIssues({ conflicts: [1, 2], unresolved: [], sameContent: [] }), 2)
+  assert.equal(countIdentityIssues({ conflicts: [], unresolved: [1], sameContent: [] }), 1)
+  assert.equal(countIdentityIssues({ conflicts: [], unresolved: [], sameContent: [1, 2, 3] }), 3)
+  assert.equal(countIdentityIssues({ conflicts: [1], unresolved: [1], sameContent: [1] }), 3)
+  // 旧调用方没有 sameContent 字段也要能算
+  assert.equal(countIdentityIssues({ conflicts: [1], unresolved: [] }), 1)
+})
+
+test('守门：--identity-report 分支必须写在打包/发布分支之前（顺序反了会真的全量发布）', () => {
+  // main() 里 mode 的分支是顺序判断的：'identity-report' 落在 'single-*' / 全量分支之后的话，
+  // 只读体检就会掉进发布路径 —— 那是真的要传 R2、改清单的。这条顺序只能靠源码断言守住。
+  const src = fs.readFileSync(new URL('./generate-pack.js', import.meta.url), 'utf-8')
+  const iIdentity = src.indexOf("if (cli.mode === 'identity-report')")
+  const iSingle = src.indexOf("if (cli.mode === 'single-preview' || cli.mode === 'single-publish')")
+  assert.ok(iIdentity > 0, '只读体检分支必须存在')
+  assert.ok(iSingle > 0, '单类型分支必须存在')
+  assert.ok(iIdentity < iSingle, '只读体检必须先于发布分支判断')
+  assert.ok(src.includes('writeIdentityReport(results, IDENTITY_REPORT_PATH, {'), '体检模式要写报告')
+  // 部分类型失败时不能写报告：那个文件会被提交，用残报告覆盖上次结果之后没法分辨。
+  // 断言「条件 + 跳过写报告」这段整体，只断言提示文案是守不住的（把条件改成 false 就绕过去了）。
+  assert.match(
+    src,
+    /if \(failed\.length > 0\) \{[\s\S]{0,400}?本次不写报告文件/,
+    '体检有失败时必须跳过写报告（条件本身也要在）',
+  )
+})
+
+test('守门：预取阶段必须真的把内容摘要送进报告（这条线断了报告会永远是空，且不报错）', () => {
+  // 这段接线只能在有 R2 凭据时执行，脱网测不到行为，所以断言源码里的三个关键点，
+  // 防止有人"顺手清理"掉它 —— 报告空着和"确实没有重复"在外观上完全一样。
+  const src = fs.readFileSync(new URL('./generate-pack.js', import.meta.url), 'utf-8')
+  assert.ok(src.includes('contentKey: sig,'), 'prefetchOne 必须把已算好的内容摘要带出来')
+  assert.ok(src.includes('identitySeen.push('), '预取时要收集报告用的条目')
+  assert.ok(
+    src.includes('sameContent: findSameContentDifferentIdentity(identitySeen)'),
+    '要用收集到的条目真的算出报告内容',
+  )
 })

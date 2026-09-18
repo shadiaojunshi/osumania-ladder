@@ -99,7 +99,7 @@ LN 单曲使用 difficulty 是当前领域约定，不能改成 difficultyLn。�
 
 **完成记录（2026-09-13）**
 
-- 状态：实现完成待验收（改动未提交）；末端 UI 见「未完成」一节。
+- 状态：实现完成待验收（已提交，见 §8 顶部提交号；原记"改动未提交"已过期）；末端 UI 见「未完成」一节。
 - 修改文件：新增 `functions/api/_lib/batchConflicts.ts`、`scripts/batch-conflicts.test.mjs`、`scripts/_ts-extension-loader.mjs`；改造 `functions/api/tournaments/batch.ts`、`src/app/admin/page.tsx`、`src/components/admin/JsonPreview.tsx`、`src/components/admin/RealTypeConflictChecker.tsx`、`src/components/admin/TournamentForm.tsx`、`src/lib/messages.zh.ts`、`src/lib/messages.en.ts`。
 - 协议：`POST /api/tournaments/batch` 改为 `{ items: [{ id, tournament, baseSha }], summary? }`。`baseSha` 必须显式出现，`null` 才表示新建；缺失/为空字符串/旧式 `changes` 载荷一律 400 `INVALID_BATCH`（缺失不能被当成新建，否则旧客户端绕过校验）。成功返回 `{ success, count, commit, files: [{ id, sha }] }`，逐文件给新 blob sha。
 - 服务端校验：读一次 HEAD（整批共用基准）→ 取该 commit 的 tree → 逐文件比对 blob sha：更新项要求 `actual === baseSha`，新建项要求路径不存在。任一不符返回 409 `EDIT_CONFLICT` + `conflicts[{ id, reason, expected, actual }]`（reason: `modified` / `missing` / `exists`），**整批不创建任何 blob/tree/commit**。tree 被 GitHub 截断或读取失败时退回逐文件查 contents API，保证「查不到」只代表确实不存在；读取失败直接 500 且不写。ref 更新保持 `force:false`，返回 409/422（HEAD 在比对之后被推进）时返回 409 + reason `head-moved`，**不做任何重试**。
@@ -132,7 +132,7 @@ LN 单曲使用 difficulty 是当前领域约定，不能改成 difficultyLn。�
 
 **完成记录（2026-09-13）**
 
-- 状态：实现完成待验收（改动未提交）。采用「允许请求期间继续编辑 + 保留为未保存」这一分支，未采用「提交期间锁定编辑入口」。
+- 状态：实现完成待验收（已提交，见 §8 顶部提交号；原记"改动未提交"已过期）。采用「允许请求期间继续编辑 + 保留为未保存」这一分支，未采用「提交期间锁定编辑入口」。
 - 修改文件：`functions/api/tournaments/[id].ts`（PUT 回传新 sha）、`functions/api/tournaments/index.ts`（POST 回传新 sha）、`src/app/admin/page.tsx`（`handleSubmit` 快照与模式转换）、`src/components/admin/TournamentForm.tsx`（create→edit 草稿键切换时清理过期 create 草稿）、`src/lib/messages.zh.ts` / `messages.en.ts`（新增 `admin.save.unsavedInput`）；新增 `scripts/tournament-save.test.mjs`。
 - 服务端：`PUT /api/tournaments/{id}` 与 `POST /api/tournaments` 都读取 GitHub 成功响应里的 `content.sha`，随响应返回 `{ success, id, sha }`（取不到时为 `null`，不报错）；PUT 仍把调用方传入的 `sha` 原样透传给 GitHub 作为乐观锁。与 R01 的 batch 响应约定一致（都回传 sha；batch 是逐文件的 `files[].sha`）。
 - 前端 `handleSubmit`：① 请求前记录提交快照（内容、id、该 id 当时的暂存条目、是否编辑模式）；② 成功后**一律**进入/保持编辑模式：`setEditingId` + 用返回的新 sha `setEditingSha` + `setEditingBaseline(提交内容)`，因此新建之后继续保存会走 PUT，编辑连续保存也不再带旧 SHA；③ 只有「提交期间没有新输入」（比较 `JSON.stringify(tournament)` 与快照）时才 `setEditInitialData`/`saveSignal++`/清 dirty/删该 id 的暂存条目，否则保留为未保存并用新文案提示「已保存，但你在保存期间的新输入还没保存，请再点一次保存」；④ 删除暂存条目仍带身份判断（`current[id] !== stagedAtStart` 时不动），所以提交期间新暂存的草稿不会被顺手删掉；⑤ 失败（含 GitHub 409 冲突）不改动任何草稿与 dirty 状态。
@@ -158,7 +158,7 @@ LN 单曲使用 difficulty 是当前领域约定，不能改成 difficultyLn。�
 
 **完成记录（2026-09-13）**
 
-- 状态：实现完成待验收（改动未提交）。
+- 状态：实现完成待验收（已提交，见 §8 顶部提交号；原记"改动未提交"已过期）。
 - 修改文件：新增 `functions/api/_lib/validation.ts`、`scripts/validation.test.mjs`；改造 `functions/api/tournaments/index.ts`、`functions/api/tournaments/[id].ts`、`functions/api/tournaments/batch.ts`、`functions/api/references.ts`、`functions/api/packs-manifest.ts`、`functions/api/ref-ladder.ts`、`functions/api/trash/index.ts`。
 - 边界怎么定的：先写临时脚本扫描 `data/`（50 场 / 345 轮 / 4429 槽位）再定边界，脚本用完即删。**刻意放宽**的 5 处都有数据依据，不是漏掉：
   ① tournament/round 的 `name`/`abbreviation` 只校验类型与长度、允许空串 —— `TournamentForm.addRound` 新建轮次默认就是 `name:''`/`abbreviation:''`，要求非空会挡住「先建轮次再填名字」；tournament 层的 `name`/`abbreviation` 反过来要求非空，因为表单第一步的「下一步」按钮就以 `canProceed = name.trim() && abbreviation.trim()` 为条件。
@@ -194,7 +194,7 @@ LN 单曲使用 difficulty 是当前领域约定，不能改成 difficultyLn。�
 
 **完成记录（2026-09-14）**
 
-- 状态：实现完成待验收（改动未提交；未做真实 R2 / Pages 联调）。
+- 状态：实现完成待验收（已提交，见 §8 顶部提交号；原记"改动未提交"已过期；未做真实 R2 / Pages 联调）。
 - 修改文件：新增 `functions/api/_lib/mapKeys.ts`（键规则唯一来源：键段校验、键构造/反解、nsv 解析、.osz 尾部检查、权威数据定位）、`scripts/map-keys.test.mjs`；改造 `functions/api/maps/upload.ts`、`maps/delete.ts`、`maps/status.ts`、`maps/meta.ts`。
 - 先扫数据再定规则（本项要求）：全库 51 个文件 / 4526 个槽位实测 —— **14 个 slot 含 `/`**（`FS/TB`、`GM(HR/SD)`、`GM(FL&EZ)`）、0 个 slot 以 `.nsv` 结尾、同比赛内 0 个重复 slot、0 个重复 round id、0 个键碰撞；max tournamentId 46 / roundId 9 / slot 9 字符。据此：**slot 与 roundId 允许 `/`、`&`、`()`、`.`**（收紧会挡住真实槽位，与 R03 的放宽清单一致），只拒绝空串、超长、`.`/`..`、空路径段、反斜杠与控制字符；NSV 后缀歧义规则可安全启用（现有 0 例）。
 - 键规则：所有端点统一走 `mapObjectKey/mapObjectPrefix/parseMapObjectKey`。`maps/{tid}/{rid}/{slot}[.nsv].osz`；**主图的 slot 以 `.nsv` 结尾 → 400 `SLOT_SUFFIX_CONFLICT`**（它的键会和「基础 slot 的 NSV」完全相同）。status/meta 的反解与列表前缀也换成共享实现。
@@ -231,7 +231,7 @@ LN 单曲使用 difficulty 是当前领域约定，不能改成 difficultyLn。�
 
 **完成记录（2026-09-14）**
 
-- 状态：实现完成待验收（改动未提交；异步时序这一条的自动测试只覆盖纯逻辑，UI 部分未做浏览器联调）。
+- 状态：实现完成待验收（已提交，见 §8 顶部提交号；原记"改动未提交"已过期；异步时序这一条的自动测试只覆盖纯逻辑，UI 部分未做浏览器联调）。
 - 修改文件：新增 `src/lib/mapPatchCommit.ts`（补丁池纯逻辑）、`scripts/map-patch-commit.test.mjs`；改造 `src/components/admin/MapUploader.tsx`；`src/lib/messages.zh.ts` / `messages.en.ts` 补文案。
 - 异步隔离：① `loadTournament` 每次切换递增请求令牌并重置 `uploadedSlots/uploadedNsvSlots/status/errorMsg/uploading/backfillSummary/backfillProgress`，只有令牌仍是最新那次切换才允许写 UI（`isCurrentRequest`）；期间又切换则整体丢弃。② `selectedTournamentRef` 让异步回调读到"现在在不在看同一场"：`uploadFile`（含 formData 的 tournamentId 改为操作开始时的 id）、`runBackfill`（URL 用绑定的 id）、`commitPending`、`deleteFile` 全部改为"完成后校验所属比赛"，不匹配就不写状态、不入补丁池——A 的上传完成不再污染 B。③ 上传/补全/保存进行中拒绝切换比赛（提示 `mapUpload.stage.switchBusy`），把"写操作飞在半路"的窗口直接关掉。④ `status` 请求失败时清空勾选集合，不再沿用上一场比赛的勾选。⑤ `backfillRunning` 这类全局 UI 标志无论上下文都复位，避免按钮永久停在"补全中"。
 - 补丁池快照：新增 `StagedPatchMap`（条目 = `{ patch, origin }`）。`commitPending` 先取快照，再用 `applyStagedPatches` 写入，最后 `entriesToClear(快照, 当前池, 真正写入的 key)` —— 只移除"本次提交过 + 期间没被改写（对象同一）+ 真的写进去了"的条目；提交期间新加/改写的补丁保留。`applied=0` 不再擅自清池（保留并提示），并新增「清空暂存」按钮作为出口。
@@ -256,7 +256,7 @@ LN 单曲使用 difficulty 是当前领域约定，不能改成 difficultyLn。�
 
 **完成记录（2026-09-14）**
 
-- 状态：实现完成待验收（改动未提交；未做真实 R2 / GitHub 联调）。解决方案第 1、3、4 点已实现，第 2 点（"替换当前版本"入口）**未实现**（默认不再覆盖，所以暂时不需要它），第 5 点见下。
+- 状态：实现完成待验收（已提交，见 §8 顶部提交号；原记"改动未提交"已过期；未做真实 R2 / GitHub 联调）。解决方案第 1、3、4 点已实现，第 2 点（"替换当前版本"入口）**未实现**（默认不再覆盖，所以暂时不需要它），第 5 点见下。
 - 修改文件：`functions/api/_lib/mapKeys.ts`（`versions/` 键、条件写助手）、`functions/api/maps/upload.ts`（覆盖前归档 + 条件写）、`functions/api/trash/index.ts`（恢复默认不覆盖 + 清理顺序）、`functions/api/_lib/trash.ts`（记录新字段 `originalEtag`）、`functions/api/maps/delete.ts`（写入 `originalEtag`）；新增 `scripts/r2-version-safety.test.mjs`。
 - 用到的存储原语（查证过 Cloudflare Workers API 文档）：`put(key, body, { onlyIf })` 在条件不满足时**返回 `null` 且不存对象**；`R2Conditional` 支持 `etagMatches` / `etagDoesNotMatch` / `uploadedBefore` / `uploadedAfter`，也可以直接传 `Headers`（除 `If-Range` 外的条件头都支持）。因此"不覆盖/只有一个成功"是**存储层保证**的，不是 HEAD 与 write 之间的运气：新建用 `Headers{ If-None-Match: '*' }`，覆盖用 `{ etagMatches: 读到的 etag }`。
 - 上传（第 3 点）：写入前 `head` 目标；存在旧对象就先把旧对象连同 metadata 归档到 `versions/{key}`（**归档键固定，不带版本后缀** —— 保留策略见下方"保留策略拍板"），**归档失败直接 502 `ARCHIVE_FAILED` 并且绝不覆盖目标**；随后用条件写落新对象，条件失败返回 409 `UPLOAD_CONFLICT`（提示旧版本已归档、刷新后重试）。响应新增 `archivedKey`。审计 detail 里标注是否归档了旧版本。
@@ -284,7 +284,7 @@ LN 单曲使用 difficulty 是当前领域约定，不能改成 difficultyLn。�
 
 **完成记录（2026-09-14）**
 
-- 状态：实现完成待验收（改动未提交；**并发删除/重传这一条尚未验收**，见下）。
+- 状态：实现完成待验收（已提交，见 §8 顶部提交号；原记"改动未提交"已过期；**并发删除/重传这一条尚未验收**，见下）。
 - 修改文件：`functions/api/maps/delete.ts`（重排顺序 + 结构化失败）、`functions/api/_lib/trash.ts`（新增幂等写入）、`functions/api/_lib/mapKeys.ts`（新增 opId 派生）；新增 `scripts/map-delete-order.test.mjs`。
 - 新的顺序：**① 读原对象 → ② 写可恢复副本到 `trash/{key}.{opId}` → ③ 写回收站 KV 记录 → ④ 才删原对象**。每一步失败的状态都可恢复：副本写失败（`TRASH_COPY_FAILED`，502）原对象完好、不写记录、不删任何东西；KV 写失败（`TRASH_RECORD_FAILED`，502）原对象完好，并尽力把刚写下的、没有记录指向的副本清掉；原对象删失败（`DELETE_FAILED`，502，`trashed:true` + `trashId`）副本与记录都在，UI 上找得到、可恢复。成功响应新增 `trashId`，便于提示与跳转。任何一步失败都写审计（含具体原因）。
 - 重试幂等：新增 `deleteOperationId(key, versionSignature)` —— 由「对象 key + etag/version」派生，**同一对象的同一版本重试得到同一个 id**；副本键 `trashObjectKey(key, opId)` 与回收站记录都由它派生。`addTrashIdempotent(kv, entry, opId)` 先用 marker 键 `trashop:{opId}` 查已有记录：查到就复用（`reused:true`），不再新建条目。marker 前缀与 `trash:` 不重叠，不会混进回收站列表；marker 写失败只会让下一次重试多建一条记录（数据不丢），不阻塞主流程。`TrashEntry` 增加可选 `opId` 字段（展示层不受影响）。
@@ -309,7 +309,7 @@ LN 单曲使用 difficulty 是当前领域约定，不能改成 difficultyLn。�
 
 **完成记录（2026-09-12）**
 
-- 状态：实现完成待验收（改动未提交）。
+- 状态：实现完成待验收（已提交，见 §8 顶部提交号；原记"改动未提交"已过期）。
 - 修改文件：`scripts/backup-r2.js`（重构出可测试的作业入口）；新增 `scripts/backup-r2.test.mjs`。
 - 实际改动：① 新增 `runBackupJob(client, opts)` 一次完成「备份 → 判定 → 清理」，只有全部前缀 `status === 'ok'` 才执行 trash 清理，返回 `{ backupResults, cleanup, exitCode }`；`cleanup === null` 即代表「没有发出任何 DeleteObject」；② 每个前缀独立返回 `status / listed / sourceCount / copied / skipped / failed / failures`，**列举失败标记 `listed:false`，不把源对象数当 0**（权限/网络错误不会被误当空 bucket）；③ 任一复制失败或列举失败 → 跳过全部清理并设 `process.exitCode = 1`；④ 清理阶段自身删除失败计入 `failed`，同样非零；⑤ `listAll` 遇到 `IsTruncated` 但缺续页 token 时抛错，不再静默漏对象；⑥ 复制保留 `ContentType`（缺省 `application/octet-stream`）与 `Metadata`/`CacheControl`/`ContentDisposition`/`ContentEncoding`/`ContentLanguage`；⑦ 备份前缀扩为 `['maps/', 'versions/']`（versions/ 由 R06 引入，不存在时列举为空属正常）；⑧ 显式禁止 `R2_BACKUP_BUCKET === R2_BUCKET`；⑨ 日志与异常统一经 `redactSecrets` 把凭据打码成 `[redacted]`；⑩ 文件头注记「备份 bucket 是同键覆盖镜像、不是版本历史；trash/ 不做独立镜像备份，本次删除的过期对象没有第二份副本」。
 - 运行的验证：`node --test --experimental-strip-types scripts/backup-r2.test.mjs` → 8/8；`npm test` → 83/83；`node --check scripts/backup-r2.js` 通过。用例覆盖：复制失败 → `cleanup === null` 且 DeleteObject 调用数为 0、`exitCode 1`；全部成功 → 只删超期对象、未超期与无 `LastModified` 的保留、`exitCode 0`；清理阶段删除失败 → `exitCode 1`；列举抛 `AccessDenied` → `status 'failed'` / `listed false` / `sourceCount 0` → 跳过清理；分页两页全量覆盖 + 截断缺 token 抛错；`size+etag` 一致时跳过（不发 Get/Put）；复制保留 `ContentType`/`Metadata`/`CacheControl`；`redactSecrets` 打码凭据。全部使用内存 fake client，不接触线上凭据。
@@ -340,7 +340,7 @@ LN 单曲使用 difficulty 是当前领域约定，不能改成 difficultyLn。�
 
 **完成记录（2026-09-12）**
 
-- 状态：实现完成待验收（改动未提交）。
+- 状态：实现完成待验收（已提交，见 §8 顶部提交号；原记"改动未提交"已过期）。
 - 修改文件：`scripts/upload-to-gdrive.js`（重构孤儿判定与失败处理）；新增 `scripts/upload-to-gdrive.test.mjs`。
 - 实际改动：① 孤儿判定改用「目标 manifest 仍引用的 fileId」作保留集合（`gdriveFileId` 字段 + `googleDrive` 链接里的 id），不再用「本次上传成功的 ID」——generate-pack 会把旧 fileId / links 带进新 manifest，因此失败包继承的旧对象不会被误删；② 任一上传或权限失败即跳过全部孤儿删除、保留 `packs-manifest.previous.json` 并 `exit 1`（CI 的 Commit manifest 步骤随之不执行）；③ 上传/权限请求改为每次调用 body 工厂取一条新流，旧 fileId 404 回退 create 时不再复用已被消费的流；④ 权限 API 只接受 `alreadyExists` 类 400，其余 400/5xx 按失败处理；⑤ 孤儿删除去重，404 幂等，非 404 失败改为抛出（非零退出）。
 - 运行的验证：`node --test --experimental-strip-types scripts/upload-to-gdrive.test.mjs` → 8/8；`npm test` → 75/75；`npx tsc --noEmit` → 0 错；`npm run build` → 成功。测试用内存 fake Drive，覆盖：单包失败不删任何旧文件、失败包继承的旧 fileId 不算孤儿、全部成功才删真孤儿（含去重）、旧 fileId 404 后回退上传取到两条独立流、权限 400 非 alreadyExists 视为失败 / alreadyExists 视为成功、保留集合识别两种 Drive 链接写法。
@@ -366,7 +366,7 @@ LN 单曲使用 difficulty 是当前领域约定，不能改成 difficultyLn。�
 
 **完成记录（2026-09-18）**
 
-- 状态：实现完成待验收（改动未提交；**未在带真实 R2 凭据的环境跑过全量**）。
+- 状态：实现完成待验收（已提交，见 §8 顶部提交号；原记"改动未提交"已过期；**未在带真实 R2 凭据的环境跑过全量**）。
 - 修改文件：新增 `scripts/pack-publish.js`（发布决策，纯函数）、`scripts/pack-publish.test.mjs`；改 `scripts/generate-pack.js`、`scripts/upload-to-gdrive.js`。
 - 已做的（对应上面第 1、2、4、5 条）：
   1. **把两种「缺」分开**：JSON 里有槽位、但 R2 里一张可读文件都没有 → `no-available-files`（本次生成失败，不再返回空数组让这个类型从清单里消失）；JSON 里一个槽位都没有 → `skipped`（保留旧包与旧清单项，**不算失败** —— 本地数据滞后是常见情况，混为一谈就会把线上包当孤儿清掉）。`prefetchMap` 不再返回 `null` 让外层静默 `continue`，改成带原因的 `{ ok:false, reason, error }`（`no-osu` / `read-failed`）。
@@ -384,7 +384,7 @@ LN 单曲使用 difficulty 是当前领域约定，不能改成 difficultyLn。�
 
 **复查追加修正 3（2026-09-18）：第 3 条「版本对象键」落地 —— 发布变成真正的原子操作**
 
-- 状态：实现完成待验收（改动未提交；**仍未在真实 R2 上跑过全量**）。
+- 状态：实现完成待验收（已提交，见 §8 顶部提交号；原记"改动未提交"已过期；**仍未在真实 R2 上跑过全量**）。
 - 修改文件：`scripts/pack-publish.js`（新增 `objectKeyFor` / `legacyObjectKeyFor` / `referencedObjectKeys`，`findOrphanKeys` 改按引用判定，`buildManifestPacks` 传递 `objectKey`）、`scripts/generate-pack.js`（上传改用内容寻址的键）、`scripts/upload-to-gdrive.js`（从 R2 读时用 `objectKey`）、`scripts/pack-publish.test.mjs`（+6 例）。
 - 实现要点：
   1. **键里带内容哈希**：`{realType}_{part}.{sha256 前 8 位}.osz`。新内容 = 新键 —— 传到一半失败时线上清单仍指向**旧键**、旧对象原地不动，不会出现「同一个键一半新一半旧」；内容没变则哈希相同、复用同一对象，不产生垃圾。
@@ -442,7 +442,7 @@ LN 单曲使用 difficulty 是当前领域约定，不能改成 difficultyLn。�
 
 **完成记录（2026-09-18）**
 
-- 状态：实现完成待验收（改动未提交；**未在带真实 R2 凭据的环境跑过全量**）。
+- 状态：实现完成待验收（已提交，见 §8 顶部提交号；原记"改动未提交"已过期；**未在带真实 R2 凭据的环境跑过全量**）。
 - 修改文件：新增 `scripts/mapIdentity.js`（身份判定，纯函数）、`scripts/map-identity.test.mjs`；改 `scripts/generate-pack.js`（身份段整体重写、预取备选、核对报告），顺手删掉已无用的 `generateMapFingerprint` 与 `crypto` 引用。
 - 已做的（对应上面 1–6 条）：
   1. **元数据降级为「候选键」**：等价性改由**内容摘要**决定 —— `contentSignature` 只取玩法内容（`[General]` 的 `Mode`、`[Difficulty]`、`[TimingPoints]`、`[HitObjects]`），忽略 Metadata / Events（背景视频）/ Colours / Editor / Storyboard 以及空行与注释行，取 sha1 前 16 位。**元数据四项全空 → `metadataCandidateKey` 返回 null → 不参与候选**（各自独立）—— 这条直接封掉了旧逻辑里 `fp:|||` 把全库空元数据谱面并成一张的路径。
@@ -477,7 +477,7 @@ LN 单曲使用 difficulty 是当前领域约定，不能改成 difficultyLn。�
 
 **完成记录（2026-09-18）**
 
-- 状态：实现完成待验收（改动未提交；**未在真实 Actions 上跑过**）。
+- 状态：实现完成待验收（已提交，见 §8 顶部提交号；原记"改动未提交"已过期；**未在真实 Actions 上跑过**）。
 - 修改文件：`.github/workflows/generate-packs.yml`、`.github/workflows/upload-packs-to-drive.yml`、`scripts/generate-pack.js`、`scripts/pack-publish.js`（新增 `resolveRealType` / `parsePackCli` / `describeCliError` / `CLI_USAGE`；`buildManifestPacks` 增加 `preserveOtherTypes`）、`scripts/pack-publish.test.mjs`。
 - 已做的（对应上面 1–5 条；第 6 条见下）：
   1. **shell 注入边界**：workflow 输入改为先经 `env`，run 里用双引号包住的变量拼进**数组**，再以 `"${args[@]}"` 传给脚本 —— `${{ }}` 表达式不再直接出现在 shell 代码里。本地用真实脚本实测（`REAL_TYPE='SS; touch <marker>'`）：传给脚本的参数个数 = 1、内容原样、被白名单拒绝、**marker 文件没有生成**。
@@ -507,6 +507,21 @@ LN 单曲使用 difficulty 是当前领域约定，不能改成 difficultyLn。�
 
 验收：清单、对象、包内内容三者对应同一可追溯版本；原图修复已验证；用户确认过需要发布的变更；失败可以继续使用上一版。
 
+**当前状态（2026-09-19）：只读核实已完成（第 1、2、5 步）；第 3、4 步（隔离样包核对、正式发布验收）仍未做** —— 见下方完成记录。第 3 步的前置条件（R09/R10/R11/R12）**已全部落地**，所以「做隔离样包核对」现在可以开工了；但**发布验收仍应等真实 R2/Actions 上的全量实跑完成** —— 那是 R10/R11 目前唯一的验收缺口。**注意**：不要按 `data/packs-manifest.json` 的 `lastGenerated`（2026-08-13）推断线上出过事故，单类型生成可能已改 R2 而未改此日期。
+
+**完成记录（2026-09-18）：只读核实已做，发布验收仍等外部条件**
+
+- 状态：**第 1、2、5 步的只读部分已完成**；**第 3、4 步（隔离样包核对、正式发布验收）未做** —— 前者需要 R2 凭据（`generate-pack.js` 即使只做 `--type=SS` 离线预览也会在启动时校验凭据并 `exit 1`），后者需要先跑通真实 R2/Actions 全量。本轮新增的报告文件（`reports/pack-liveness-*.json`、`reports/realtype-suspects.md`）随后续提交入库。
+- 本轮新增/改写的报告：`reports/pack-liveness-report.json`、`reports/pack-liveness-retry.json`（新建，55 个包逐个核对）、`reports/realtype-suspects.md`（脚本重跑，条数 31 → 25）。
+- **核实结论（全部只读）**：
+  1. **清单 ↔ 线上部署 ↔ R2 对象：同一版本。** 清单 `lastGenerated = 2026-08-13T07:00:43Z`；线上 `/download` 页面的 HTML（构建期就把清单渲进去了）里能看到 `SV1_1.osz` 与 `208 MB`，与该清单的 SV1 part 1 一致；**55 个包的 R2 对象全部存在**，实测大小与清单 `sizeMB` 全部吻合（最大偏差 0.2MB，属四舍五入）。第一轮 55 次 HEAD 里有 23 个 `fetch failed`，放慢重试后 **23 个全部可达、无一 404** —— 那是 **r2.dev 公开域在连续请求下限流**，不是坏链。
+  2. **R2 自 2026-08-13 那次全量发布之后没有被改动过**：所有对象的 `last-modified` 都落在 2026-08-13 06:28–07:00 UTC 之间；清单里 **55 个包全部没有 `objectKey` / `gdriveObjectKey`**，R2 链接仍是旧式固定键（`{realType}_{part}.osz`）。由此可判定 **R10/R11/R12 的新发布链在 R2 上从未产出过包**（与 HANDOFF 「从未在真实 R2/Actions 上跑过全量」一致），也**不存在**「单类型生成改了 R2 却没改清单日期」的情况。**注意：这条结论的依据是 R2 对象的 last-modified 与清单字段，不是清单日期本身。**
+  3. **数据侧的已修复项确实落地**：全库 54 个文件 / 381 轮 / 4935 张谱面 —— **重复 round id = 0**（SSR SF/F 那类事故的根因已清）、**残留占位 `beatmapsetId` / `beatmapId` = 0**（R33 的 MKTC 清理已生效）、仍标 Pending 的只有 9 张（`PDLN`×2、`PDSV`×7，属正常的「还没定」标记）。
+  4. **误标检测脚本实跑**（R33 留下的待验项）：`node scripts/find-suspect-realtypes.mjs` → 扫描 4935 张 → 候选 **13 张（高 7 / 中 6 / 低 0）**；报告表格条数 **31 → 25（只减不增）**，符合「改动只会减少误报、不该凭空多出条目」的预期。
+  5. **旧待办对照源码的现状**：① 页头「反馈/问卷」入口**未实现**（`src/` 里没有任何 feedback 代码；`docs/design/2026-09-homepage-implementation.md` §5 写明前提是站长先给外部问卷 URL，而 `docs/anonymous-feedback-and-abuse-plan.md` 已把它改成站内 `/feedback` 方案）；② **GM 键型已注册**（`src/lib/realTypeCatalog.ts:75`），`poolTemplates.ts` 按既有决定不含 GM（非常规池位）；③ **代码里没有存任何 osu! token** —— 会话只带 uid/username + 过期时间（`Max-Age` 来自 `SESSION_TTL_SECONDS`），osu! 侧的 client secret / API key 都是环境变量；旧文档里那个「2026-11 到期」不是读 token 元数据得出的，本轮也没有读环境变量。
+- **没做的（需要外部条件，已列入 `VERIFY-AFTER-DEPLOY-2026-09-18.md` §5）**：① GitHub Actions 运行历史 —— 仓库是**私有**的（未认证访问 `api.github.com/repos/shadiaojunshi/osumania-ladder/actions/runs` 返回 `Not Found`，本机也没有 `gh`）；② R2 桶与 Drive 的对象/文件列表（无凭据，本轮只能用公开的 r2.dev 域名逐个核对**已知**对象）；③ 隔离样包核对；④ 正式发布验收。
+- 与后续任务的接口变化：无。新加的两份 liveness 报告可以当作「当前线上包的基线」，将来真实发布跑完后重新生成再比对即可。
+
 ## 5.1 实施期间新增发现（本站长 2026-09-14 反馈）
 
 ### R24 [P2] 一键下载上传：网络层中断没有任何重试，且限流会被当成"BID 有问题"
@@ -527,7 +542,7 @@ LN 单曲使用 difficulty 是当前领域约定，不能改成 difficultyLn。�
 
 **完成记录（2026-09-14）**
 
-- 状态：实现完成待验收（改动未提交；未做浏览器端到端验收）。
+- 状态：实现完成待验收（已提交，见 §8 顶部提交号；原记"改动未提交"已过期；未做浏览器端到端验收）。
 - 修改文件：新增 `src/lib/fetchRetry.ts`、`scripts/fetch-retry.test.mjs`；改 `src/components/admin/MapUploader.tsx`（两处 fetch 接入重试、`metaFailed` 条件收紧、网络错误文案）、`src/lib/messages.zh.ts` / `messages.en.ts`（新增 `mapUpload.paste.errNetwork`）。
 - 运行的验证：`node --test --experimental-strip-types scripts/fetch-retry.test.mjs` → 6/6；`npm test` → 218/218；`npx tsc --noEmit` → 0 错；`npm run build` → 成功。用例覆盖：网络抛错后成功（退避 600/1200ms）、连续网络失败按次数抛出、HTTP 500/404 **不**重试、非网络异常不重试、`attempts=1` 退化为单次、分类辅助函数。
 - 未完成 / 仍有风险：① 服务端透传上游流时的**中途断流无法重试**（响应头已发出）；② 仍没有"整批失败后自动补跑一遍"的机制 —— 站长手动重跑是有效的兜底，本轮只做到"单行内自动重试"，是否要加自动补跑待定；③ 未做浏览器端实机验收（本地无法复现真实的连接中断）。
@@ -551,7 +566,7 @@ LN 单曲使用 difficulty 是当前领域约定，不能改成 difficultyLn。�
 
 **完成记录（2026-09-14）**
 
-- 状态：实现完成待验收（改动未提交）。
+- 状态：实现完成待验收（已提交，见 §8 顶部提交号；原记"改动未提交"已过期）。
 - 修改文件：`src/components/ladder/HoverCard.tsx`（新增 `liveLabelForType`，`buildDifficultyLabel` 改为现算优先）、`src/lib/messages.zh.ts`/`messages.en.ts`（版本号 → `v0.9.0`，见下）。
 - 运行的验证：`npm test` → 221/221；`npx tsc --noEmit` → 0 错；`npm run build` → 成功。**注意：段位映射逻辑（`danBand`/`getRfDanName`）目前内联在组件里，无法直接单测** —— 想锁住"悬浮卡必须与框高同源"这条回归，需要把它抽成 `src/lib/danNames.ts`（把段位表作为参数传入，避免 `@data` 别名在 node 下解析不了）。
 - 未完成 / 仍有风险：① 悬浮卡只拿到 `type`、**拿不到被悬浮的 slot**，所以多 TB 的轮次（如 TB + SHOWTB）悬浮卡只能按整型聚合显示，不能精确到那个框；② `typeDifficulties` 与实际值不一致的**数据**没有清理（站长约束"不改比赛 JSON"，需要时由后台重新保存一次即可回填）；③ 没有自动化测试（见上）。
@@ -568,7 +583,7 @@ LN 单曲使用 difficulty 是当前领域约定，不能改成 difficultyLn。�
 
 **完成记录（2026-09-15）**
 
-- 状态：实现完成待验收（改动未提交；未做浏览器实机验收）。
+- 状态：实现完成待验收（已提交，见 §8 顶部提交号；原记"改动未提交"已过期；未做浏览器实机验收）。
 - 修改文件：新增 `src/lib/difficultyCount.ts`（唯一判断处）、`scripts/difficulty-count.test.mjs`；`src/lib/types.ts`（`BeatmapMeta.excludeFromDifficulty?`）、`src/components/admin/MapSlotEditor.tsx`（槽位行勾选框）、`src/components/admin/RoundEditor.tsx`（`recalcDifficulty` / `autoCalcTypeDiffs` 排除）、`src/components/ladder/LadderView.tsx`（框高/范围/组内取数 + 指针高度选轮次）、`src/components/ladder/HoverCard.tsx`（7 处聚合取数）、`src/lib/messages.zh.ts` / `messages.en.ts`（勾选框文案 + 版本号）、`package.json`。
 - 实现要点：① 判断集中在 `countsForDifficulty/countableMaps`，口径是**默认参与、只有显式 `true` 才排除**，所以老数据零迁移、取消勾选写回 `undefined`（JSON 不落脏值）；② 后台 `recalcDifficulty`（本轮 min/max/average）与 `autoCalcTypeDiffs`（各键型平均值）+ 前端 ladder 三视图与悬浮卡**同一口径**，避免"框高排除了、数字没排除"这类各说各话；③ 勾选框沿用 `mapsToOutput` 的 `{ category, ...rest }` 展开，字段自动落盘（不需改序列化）；④ 整场比赛视图把指针 y 反解成难度（与 `ladderGeometry.plotOffsetY` 同一线性公式，包含顶部被裁切的情况），取难度区间离它最近的那一轮，**hover 与 click 同步**。
 - 运行的验证：`node --test --experimental-strip-types scripts/difficulty-count.test.mjs` → 3/3；`npm test` → 224/224；`npx tsc --noEmit` → 0 错；`npm run build` → 成功。用例覆盖：默认参与（缺席/false 都参与、只有 true 排除）、`countableMaps` 过滤保序且不改原数组、**扫全库 4526 张图确认当前没有任何图勾了这一项**（即功能不影响既有显示）。
@@ -582,7 +597,7 @@ LN 单曲使用 difficulty 是当前领域约定，不能改成 difficultyLn。�
 
 **完成记录（2026-09-15）**
 
-- 状态：实现完成待验收（改动未提交；未做浏览器实机验收）。
+- 状态：实现完成待验收（已提交，见 §8 顶部提交号；原记"改动未提交"已过期；未做浏览器实机验收）。
 - 修改文件：`src/components/admin/RealTypeConflictChecker.tsx`、`src/lib/messages.zh.ts` / `messages.en.ts`（新增 5 条文案）。
 - 行为变化：以前"有差异的组一律写回"，现在**默认全不勾、只有勾上的组才会被写**：
   ① 每行左侧加勾选框（`setReview` 那种纯提示行不给勾；组内已一致、没有可改内容的行勾选框禁用）；
@@ -603,7 +618,7 @@ LN 单曲使用 difficulty 是当前领域约定，不能改成 difficultyLn。�
 
 **完成记录（2026-09-15）**
 
-- 状态：① ② ③ 实现完成待验收（改动未提交，未做浏览器实机验收）；④ 交付为**只读检测工具 + 候选报告**，不是自动改数据。
+- 状态：① ② ③ 实现完成待验收（已提交，见 §8 顶部提交号；原记"改动未提交"已过期；未做浏览器实机验收）；④ 交付为**只读检测工具 + 候选报告**，不是自动改数据。
 - 修改文件：
   - 新增 `src/lib/realTypeCatalog.ts`（键型目录的唯一来源：`REAL_TYPES` / `PENDING_REAL_TYPE_BY_CATEGORY` / `CATEGORY_COLORS` / `defaultRealTypeFor` / `realTypeOptionsFor`。纯数据模块，无 React、无 `@data`，可被 `node --test` 直接导入）；
   - `src/components/admin/MapSlotEditor.tsx`（改为复用目录并 re-export 旧符号；`handleCategoryChange` 用 `defaultRealTypeFor`；下拉在"当前值不在列表"时显式给占位项）；
@@ -730,7 +745,7 @@ if (builtName && !cur?.name) patch.name = builtName
 
 **完成记录（2026-09-17）**
 
-- 状态：实现完成待验收（改动未提交；**未做浏览器实机验收**）。
+- 状态：实现完成待验收（已提交，见 §8 顶部提交号；原记"改动未提交"已过期；**未做浏览器实机验收**）。
 - 修改文件：`src/lib/mapPatchCommit.ts`（新增 `slotPatchKey` / `buildSlotBaseline` / `dropStagedSlot`）、`src/components/admin/MapUploader.tsx`、`scripts/map-patch-commit.test.mjs`（+4 例）。
 - 实现要点：① 加载比赛（以及每次"保存全部"刷新权威数据）时，记一份**存档基准** `slotBaselineRef`：每个 slot 的 `name/beatmapId/beatmapsetId`，字段一律存在、本来没有的记 `null`（应用时等于删掉该字段）。② 删除**主文件**成功后：丢掉该 slot 在暂存池里的条目，并把回显退回存档值 —— 那份补丁本来就是从刚删掉的文件里读出来的，留着会一直挂在行上、保存时还会写进 JSON。③ **删 NSV 变体不动这些字段**：name/BID 来自主图，删 NSV 不该把它们清掉。④ 删除后额外拉一次 `/api/maps/status` 对账 —— 文件也可能在别处被删/被传（回收站页、另一个标签页），只按本地这次删除记账会留下过期的勾选；**读不到就保留现状**，不像初次加载那样清空（否则一次网络抖动会把整页勾选抹掉）。
 - 运行的验证：新增 4 例（`buildSlotBaseline` 的"缺席=null"语义；把基准应用回去时空字段被清掉、存档里有的值原样恢复；`dropStagedSlot` 不改原 map、没有该 key 时返回同一对象；**完整时序** 手传 → 删除 → BID 补传后，池里与实际写入的都是新信息）；`npm test` → **323/323**；前后端 `tsc` 0 错；`npm run build` 成功。
@@ -755,7 +770,7 @@ if (builtName && !cur?.name) patch.name = builtName
 
 **完成记录（2026-09-18）**
 
-- 状态：实现完成待验收（改动未提交；**MKTC 的数据尚未清理**，见未完成项）。
+- 状态：实现完成待验收（已提交，见 §8 顶部提交号；原记"改动未提交"已过期；**MKTC 那 36 条数据已于 2026-09-18 清理并推送**，提交 `cd8d96e`，复扫 0 命中）。
 - 修改文件：新增 `src/lib/beatmapIds.ts`（判读唯一实现）、`scripts/find-suspicious-ids.mjs`、`scripts/clear-placeholder-ids.mjs`、`scripts/beatmap-ids.test.mjs`、`reports/beatmap-id-suspects.md`；改 `src/lib/mapConflictDetection.ts`、`src/lib/maniaChart.ts`、`src/components/admin/RealTypeConflictChecker.tsx`、`src/components/admin/MapUploader.tsx`、`src/lib/messages.zh.ts` / `messages.en.ts`。
 - 实现要点：
   1. **判读集中一处**：`PLACEHOLDER_ID_MAX = 1` —— `0 / 1 / 负数 / 非整数` 一律当"没有 ID"（osu! 用 `-1` 表示未提交，`0/1` 是转换器常见默认值；实测真实 set id 都在十万级，不会误伤）。
@@ -768,7 +783,7 @@ if (builtName && !cur?.name) patch.name = builtName
 
 **复查追加修正（2026-09-18，另一条工作线复核后补做）**
 
-- 状态：实现完成待验收（改动未提交）。
+- 状态：实现完成待验收（已提交，见 §8 顶部提交号；原记"改动未提交"已过期）。
 - **先更正完成记录里一句不成立的话**：第 1 点写的「判读集中一处」与修改文件里写的「`src/lib/beatmapIds.ts`（判读唯一实现）」都不对 —— `grep -rn "beatmapIds" functions/` 当时返回**空**，后端**一处都没接**。真实情况是：`functions/` 里至少还有三套自己的 `> 0` 老口径。这一条不是文字问题，见下面第 1 条缺口。
 - 复核确认隔壁写得对的（未改动）：`classifySetConflict` 的 ≥3 首歌判定（取 3 而非 2 的理由成立）、`RealTypeConflictChecker` 的 `byBid`/`bySet` 过滤、两个脚本的 dry-run 与写回自检、`beatmap-ids.test.mjs` 的 7 例。
 
@@ -799,7 +814,7 @@ if (builtName && !cur?.name) patch.name = builtName
 
 **完成记录（2026-09-17）**
 
-- 状态：实现完成待验收（改动未提交）。
+- 状态：实现完成待验收（已提交，见 §8 顶部提交号；原记"改动未提交"已过期）。
 - 修改文件：`functions/api/maps/status.ts`（按 cursor 循环分页；任一分页失败返回 502 `R2_LIST_FAILED`；列表键先过共享拆键校验）、`functions/api/_lib/mapKeys.ts`（新增 `splitMapRelative`）、`functions/api/_lib/tournamentId.ts`（`isValidTournamentId` 补 128 字符上限并导出 `MAX_TOURNAMENT_ID_LENGTH`）；新增 `scripts/map-status-pagination.test.mjs`。
 - 实现要点：① R2 list 单页最多 1000 个对象且默认不分页 —— 超过 1000 张的比赛后面会被静默漏掉，前端于是把"已上传"的槽位显示成未上传；现在按 `cursor` 循环累计。② **中途任何一页失败一律返回错误**，不回"部分清单"（部分清单会被前端当成权威状态，进而清掉勾选）。③ 列表里的键先过 `splitMapRelative`（复用 `validateRoundId`/`validateSlot`）—— `r1/`、`r1/../x` 这类历史垃圾键在比赛 JSON 里不可能有对应槽位，不再混进界面状态。④ `isValidTournamentId` 补 128 字符上限（= `LIMITS.maxIdLength`，测试断言两者相等），免得只调它的 `/api/maps/*` 端点接受比写路径长得多的 id 去白跑 R2/GitHub。
 - 运行的验证：`map-status-pagination.test.mjs` → **9/9**（单页主图/NSV 分开归类；25 张跨 3 页一张不少且 cursor 正确传递；第二页失败 → 502 且**没有** `uploaded` 字段；未截断时只调一次 list；`r1/`、`r1/../x` 等垃圾键被滤掉；`../evil`/`-leading`/200 字符 id 全 400，128 字符边界仍 200；两个常量相等；扫全库 8000+ 个（槽位 × 主图/NSV）键全部通过拆解校验）；`npm test` → **271/271**；前后端 `tsc` 0 错；`npm run build` 成功。
@@ -821,7 +836,7 @@ if (builtName && !cur?.name) patch.name = builtName
 
 **完成记录（2026-09-17）**
 
-- 状态：实现完成待验收（改动未提交）。
+- 状态：实现完成待验收（已提交，见 §8 顶部提交号；原记"改动未提交"已过期）。
 - 修改文件：新增 `functions/api/_lib/github.ts`（GitHub 访问唯一入口 + 上游失败分类）；改 `functions/api/ref-ladder.ts`、`packs-manifest.ts`、`tournaments/[id].ts`、`tournaments/index.ts`、`references.ts`、`trash/index.ts`（删各自的本地上游请求副本，统一接分类）；改 `src/components/admin/MapUploader.tsx`、`DifficultyRefPicker.tsx`、`RoundRefPicker.tsx`；`src/lib/messages.zh.ts` / `messages.en.ts`（新增 `mapUpload.loadFailed` / `mapUpload.listNotArray` / `mapUpload.retry` / `refPicker.ladderFailed`）；新增 `scripts/upstream-errors.test.mjs`。
 - 实现要点：① **上游故障一律回 502**，不占用 401 —— 401 在中间件里已经是“你没登录”的语义，被上游凭据问题占用会让前端以为要重新登录。② **404 要探一次才知道含义**：GitHub 对**无权访问的私有仓库回 404 而不是 403**，“token 失效”与“文件真的不存在”状态码完全一样（2026-11 那次后台三 tab 全空就是这个）。所以 404 时补一次 `GET /repos/{repo}`：仓库可见 = 真不存在（`NOT_FOUND`，调用方自己决定它是不是合法空态）；仓库也 404 = 凭据问题（502 `UPSTREAM_AUTH`）；探测本身也失败 = 说不清，回 502 让站长重试，**不伪装成“文件不存在”**。③ 网络中断不抛异常，归到 `UPSTREAM_UNREACHABLE`，调用点只判 `!res.ok` 就够。④ ref-ladder / packs-manifest 把 `NOT_FOUND` 当成合法空态（标尺/清单文件还没建）；`tournaments/[id]` 真不存在才回 404 并带上 `code`。⑤ 前端：`MapUploader` 的列表加载抽成 `loadTournamentList`，`!res.ok` 时读后端 error 抛错而不是把错误对象 `setTournaments`（后者下一次 `tournaments.map` 直接崩）；列表非数组也报错；失败**保留上一份有效数据**并显示错误 + 重试按钮。`DifficultyRefPicker` 失败**不再缓存失败的 Promise**（原来一次失败会把这个 isolate 的标尺读取永久钉死），`RoundRefPicker` 同样带出后端 error。
 - 影响面实测（2026-09-17，按记忆 `diff-old-impl-then-filter-reachable`：用 `git show HEAD:` 取改动前实现**原样跑**，与改后对拍，假 fetch 路由 8 个场景）：
@@ -843,7 +858,7 @@ if (builtName && !cur?.name) patch.name = builtName
 
 **复查追加修正（2026-09-17，另一条工作线复核后补做）**
 
-- 状态：实现完成待验收（改动未提交）。
+- 状态：实现完成待验收（已提交，见 §8 顶部提交号；原记"改动未提交"已过期）。
 - 发现的漏网：分类只接到 6 个**读取**端点，`functions/api/maps/upload.ts` 与 `functions/api/tournaments/batch.ts` 仍在各自拼 GitHub 请求 —— 而它们恰好是最容易撞上凭据问题的**写路径**：
   ① **上传**读权威比赛 JSON 时按 `status === 404` 直判「比赛 X 不存在」。GitHub 对**无权访问的私有仓库回 404 而不是 403**（就是本次 R14 认定的证据），于是 token 失活时站长被告知「比赛不存在」，会以为数据被删了去重传；更糟的是前端 `res.status >= 400 && < 500` 判断为**确定性失败、直接不重试**，连重试的机会都没有。
   ② **批量保存**链路上任何上游故障都只剩一句「HTTP xxx」的 500（读 ref / 读 commit / 建 blob / 建 tree / 建 commit / 推 ref），凭据失效与限流长得一模一样。
@@ -855,7 +870,7 @@ if (builtName && !cur?.name) patch.name = builtName
 
 **复查追加修正 2（2026-09-17 傍晚）：四处写路径收尾 + 一处真 bug**
 
-- 状态：实现完成待验收（改动未提交）。
+- 状态：实现完成待验收（已提交，见 §8 顶部提交号；原记"改动未提交"已过期）。
 - 收尾内容：`PUT /api/tournaments/{id}`、`DELETE /api/tournaments/{id}`、`PUT /api/references`、`PUT /api/packs-manifest` 也接入分类。分流规则：**能分类的说清类别**（凭据 / 限流 / 权限 / 网络 / 不存在 → `upstreamFailureResponse`，502 或 404 + code）；**分不出类别（5xx / 没见过的状态码）时保留调用方自己的文案 + GitHub 原文，但状态码统一成 502**（新增 `isGenericUpstreamFailure`）—— 这样既不透传上游状态码，也不会违反 R02 复审那条「别只剩一句 Failed to update」的要求。
 - **过程中撞到一个真 bug（由新测试当场抓到）**：`[id].ts` 的 PUT 原本先 `await res.json()` 读 body（给 409 分支取 GitHub 的 "sha does not match"），我第一版把分类放在它后面 —— `classifyGithubFailure` 里的 `res.clone()` 直接抛 **`Body has already been consumed`**，在生产上就是一个 500。两处修掉：① 调用点改成只在 409 分支读 body（加注释说明 body 只能读一次）；② `github.ts` 的 `readOwnFailure` 给 `clone().json()` 加 try/catch —— 读不到就退回按状态码分类，**绝不因为"读个诊断信息"把整个请求变成 500**。
 - 测试：`upstream-errors-write-path.test.mjs` 扩到 **14/14**（新增 6 例：PUT 单场 401 → 502 `UPSTREAM_AUTH`、PUT 单场 GitHub 409 仍是 409 `EDIT_CONFLICT`（分类不能吃掉原有冲突语义）、PUT 单场正常 200 且回传新 sha、DELETE 单场 401 → 502、references PUT 401 → 502 且正常写入仍 200、packs-manifest PUT 限流 → 502 `UPSTREAM_RATE_LIMIT`）；`scripts/tournament-save.test.mjs` 的 R02 复审断言同步把 `500` 改成 `502`（文案与 code 不变，已注明原因）。
@@ -878,7 +893,7 @@ if (builtName && !cur?.name) patch.name = builtName
 
 **完成记录（2026-09-17）**
 
-- 状态：实现完成待验收，**但第 3 条验收项（并发不互相覆盖）明确未达成**，见下。改动未提交。
+- 状态：实现完成待验收（已提交，见 §8 顶部提交号），**但第 3 条验收项（并发不互相覆盖）明确未达成**，见下 —— 这是 R15 至今唯一未闭合的点。
 - 修改文件：`functions/api/_lib/auth.ts`（新增并导出 `isRole`、新增 `sanitizeAdminMap`、`getAdminMap` / `putAdminMap` / `hasRole` 改写、新增 `clearAdminMapCache`）、`functions/api/admins/index.ts`（role 改用 `isRole`、uid/username 先验类型、body 改走 `readJsonBody`）；新增 `scripts/admin-role.test.mjs`。
 - 实现要点：① **原型链不是角色表**。`role in ROLE_RANK` 对 `'constructor'` / `'toString'` / `'valueOf'` / `'__proto__'` / `'hasOwnProperty'` 全部返回 true（已 `node -e` 实测），请求体塞 `role: 'constructor'` 能通过校验写进 KV。它**不提权**（`ROLE_RANK['constructor'] >= 1` 是 `function >= 1` → false），但会写脏数据，且之后该管理员被**静默降级成 readonly**（比较得 NaN → false，还不报错）。改用 `Object.prototype.hasOwnProperty.call(ROLE_RANK, value)`（`isRole`），`hasRole` 里再挡一次作纵深防御。② **读出来的脏数据要净化**：`sanitizeAdminMap` 逐条过 `isRole`，非法的剔除并打 `[auth] INVALID_ROLE_IN_KV`（只记 uid 与 role 的 typeof，无敏感值），一处的坏数据不该让整份名单失效。③ **缓存不能是可变引用**：`getAdminMap` 返回**副本**（调用方拿到后会直接 `delete map[uid]` 再 `putAdminMap`，返回本体的话一旦 put 失败就留下“内存里改了、KV 里没改”的假象）；`putAdminMap` 先落 KV、**成功了才更新缓存**。④ 类型校验：uid 是数字/对象时 `(uid ?? '').trim()` 直接抛 → 500，现在先 `typeof` 再 trim，回 400。⑤ **一致性边界改写**：删掉“所有节点最多 5 秒生效”的说法 —— 那 5 秒只是**本 isolate 内**的读缓存 TTL，KV 本身最终一致、官方给的全球传播上界是 **60 秒**，所以一次撤权在别的边缘节点上最多可能延迟约 60s + 5s。
 - 影响面实测：**没能核**线上 KV 里是否已有非法 role（无线上凭据，`admins` key 读不到）。所以 `sanitizeAdminMap` 按“可能已经有脏数据”处理 —— 即使历史上被人塞过 `role: 'constructor'`，读取时也会被剔除并降级成 readonly，而不是继续喂给 `hasRole`。若确实没被利用过，这段就是纯预防性的。
@@ -899,7 +914,7 @@ if (builtName && !cur?.name) patch.name = builtName
 
 **完成记录（2026-09-17）**
 
-- 状态：实现完成待验收（改动未提交）。
+- 状态：实现完成待验收（已提交，见 §8 顶部提交号；原记"改动未提交"已过期）。
 - 修改文件：`functions/api/_lib/audit.ts`、`functions/api/audit/index.ts`、`src/components/admin/AuditLog.tsx`、`src/lib/messages.zh.ts` / `messages.en.ts`（新增 `audit.viewFull`）；新增 `scripts/audit-meta.test.mjs`。
 - 实现要点：① 新增 `buildAuditMetadata`：先按字符粗截（detail 200 / target 300），再按 **UTF-8 字节**（`TextEncoder`）逐字段对折收缩到 820 字节安全线内（KV 硬上限 1024）；只要裁过就打 `truncated: true`。② **完整正文始终留在 KV value**，metadata 只是列表用摘要；`listAudit` 现在把 KV key 一并带出，新增 `getAuditEntry`（**只认 `audit:` 前缀**、key ≤200 字符），端点支持 `?key=` 取全文。③ `writeAudit` 失败不再静默：`console.error('[audit] AUDIT_WRITE_FAILED', { action, targetChars, detailChars, error })` —— 只记长度与错误消息，**不含 token / 请求头**。
 - 影响面实测（2026-09-17，提交前按真实数据核算）：触发线 **31 场**（`batch.ts` 的 target = `ids.join(',')` 完全不截，`LIMITS.maxBatchItems` = 200 允许一次带这么多）。历史最大批次是 18 场（`2e8abf1`）→ target 546 字节、加其余字段约 714 字节，**没超 1024，所以过去没丢过审计**；但全库现在已有 52 场，**后台"全选保存"一次 ≈ 1579 字节 → KV 直接拒写、整条审计静默消失**，只差一步就踩到。修复后再全选：metadata 收进 820 字节、全文留在 value、列表出现"查看完整"。
@@ -918,7 +933,7 @@ if (builtName && !cur?.name) patch.name = builtName
 
 **完成记录（2026-09-17）**
 
-- 状态：实现完成待验收（改动未提交）。
+- 状态：实现完成待验收（已提交，见 §8 顶部提交号；原记"改动未提交"已过期）。
 - 修改文件：新增 `src/lib/mapDifficultyReading.ts`（唯一读数实现 `readMapDifficulty`）；`src/lib/referenceData.ts`（`getRefValue` 改用它）、`src/lib/difficultyFit.ts`（`getRoundDifficulty` 去掉 ln-ln 专用补丁，改用它）；新增 `scripts/map-difficulty-reading.test.mjs`。
 - 根因：`getRefValue` 的 fallback 写的是"ln 一律读 `map.difficultyLn`"，而**全库 LN 类 1205 张图的 `difficultyLn` 全为空**（HB 470/882、TB 164/321 才有这个字段）→ LN 的 **fallback 分支**（无显式汇总值时按图平均）必然取不到值；`difficultyFit` 当时为 ln-ln 单独打了补丁，两份实现就此分叉。
 - 影响面实测（2026-09-17，提交前全库对拍）：**本次修复在当前数据上 0 处可见变化**，与上面"触发"行的"当前全库未触发该条件"一致。351 个含 LN 图的轮次里 —— 181 个有显式 `typeDifficulties.LN.ln`（走显式优先，一直有值、未受影响）；另 170 个既无显式值、LN 图的 `difficulty` 也没录入（改前改后都取不到）。**它修的是潜伏路径**（导入/新建数据漏填汇总值时才触发）+ 消除与 `difficultyFit` 的实现分叉，不是已发生的线上故障。
@@ -936,7 +951,7 @@ if (builtName && !cur?.name) patch.name = builtName
 
 **完成记录（2026-09-12）**
 
-- 状态：实现完成待验收（改动未提交）。
+- 状态：实现完成待验收（已提交，见 §8 顶部提交号；原记"改动未提交"已过期）。
 - 修改文件：`src/lib/difficultyFit.ts`（`LinearFit.rSquared` 类型改为 `number | null`，两处 `totalSum <= Number.EPSILON` 分支返回 `null`，删除 `Math.max(0, ·)` 截断）；`src/components/admin/DifficultyFitTool.tsx`（R² 显示 `N/A`）；新增 `scripts/difficulty-fit.test.mjs`。
 - 运行的验证：`node --test --experimental-strip-types scripts/difficulty-fit.test.mjs` → 5/5；`npm test` → 75/75；`npx tsc --noEmit` → 0 错；`npm run build` → 成功。样例：`(0,5)(1,5)` + 固定 `slope=2` → R²=null、RMSE=1、predict(0)=4；`slope=0` 精确预测仍为 null；最小二乘常数样本为 null；`(0,0)(1,1)(2,2)(3,3)` 强制 `slope=-1` → R²=-3（不再被截为 0）；普通样本 R²/slope/intercept/predict 全部不变。
 - 未验证或仍有风险：`N/A` 为硬编码文案（与既有的硬编码 `R²` 标签一致），未走 i18n；当前全库仅 `DifficultyFitTool.tsx` 一处消费 `rSquared`，无其它页面受影响。
@@ -955,6 +970,30 @@ if (builtName && !cur?.name) patch.name = builtName
 
 验收：lint 不再将 lint 当目录；新配置可执行且无意扫描用户目录；启动说明可实际打开静态站，Functions 测试入口另有说明。
 
+**当前状态（2026-09-19）：已实施** —— 见下方完成记录。立项时的前置事实：`eslint` 与 `eslint-config-next` 都已装（直接补 flat config 即可）；`package.json` 的 `next start` 与 `output: 'export'` 确实不匹配。实施时按要求**先跑一遍拿了存量错误基线**（25 条），且**没有大范围禁规则**。
+
+**完成记录（2026-09-18）**
+
+- 状态：实现完成待验收（已随本批提交入库；原记"改动在工作区"已过期）。
+- 修改文件：新增 `eslint.config.mjs`、`scripts/serve-static.mjs`、`scripts/serve-static.test.mjs`；改 `package.json`（scripts）、`src/components/admin/PackLinksEditor.tsx`、`ReferencesEditor.tsx`、`RefLadderEditor.tsx`。
+- 做了什么：
+  1. **`eslint.config.mjs`**：ESLint 9 flat config，直接展开 `eslint-config-next/core-web-vitals`（16.2.6 导出的本身就是 flat config 数组，不需要 `@eslint/eslintrc` 的 FlatCompat）。`ignores` 只声明扫描范围：`.next` / `out` / `build` / `output` / `src/generated` / `reports` / `.workbuddy` / `.wrangler`，外加工作区自带的 `ManiaMapAnalyser.by.Leo_Black/**` 与 `osu-toolbox/**`。**没有关任何规则。**
+  2. **`package.json`**：`lint` 从 `next lint`（实测它把 "lint" 当目录扫）改为 `eslint .`；`start` 从 `next start`（与 `output: 'export'` 不匹配）改为 `node scripts/serve-static.mjs`；新增 `dev:api`（`wrangler pages dev out`）、`typecheck`、`typecheck:functions`、`verify`。
+  3. **`scripts/serve-static.mjs`**：零依赖（`node:http`）的 `out/` 静态服务器。路由按 Next 静态导出的真实形状解析 —— `/admin` → `admin.html`，**不是** `admin/index.html`。路径解析做成纯函数 `staticCandidates()` 以便单测；底部有 `import.meta.url` 守卫，被 import 不会起服务。首行与启动横幅都明确写着「不含 /api，后端是 Pages Functions」，避免把纯静态预览说成后端联调。
+  4. 顺手修掉 3 处 `react-hooks/immutability`（"先引用后声明"）：`PackLinksEditor` / `ReferencesEditor` / `RefLadderEditor` 里 `useEffect(() => { fetchX() }, [])` 写在 `const fetchX = async () => {…}` **之前**，把 effect 挪到函数声明之后。**行为不变**（原先靠闭包在渲染后才执行，能跑，但属 TDZ 隐患）。
+- 实际运行的验证：
+  - `npx eslint .` → **186 个文件 / 25 错误 / 6 警告**，退出码 1，耗时约 2 分半。同时确认**扫到的用户目录、产物目录、node_modules 文件数为 0**（按路径过滤后为空 —— 验收要求的"无意扫描用户目录"成立）。
+  - **存量基线**（修完上面 3 处后重测，错误数 25 → 25 没降：那 3 处是同一批写法暴露出的更深一层问题）：`20 × react-hooks/set-state-in-effect`、`4 × react-hooks/refs`、`1 × react-hooks/immutability`（`src/lib/i18n.ts:37`），另有 `6 × react-hooks/exhaustive-deps` 警告。**全部来自 `eslint-plugin-react-hooks` v7 的新规则**（`set-state-in-effect` 等，为 React Compiler 合规而设），集中在「挂载即 setState / 取数时立刻置 loading / 用 ref 保存当前基准以免 effect 反复重建」这类写法上，分布在 `src/app/admin/page.tsx`（126/173/200）、`AdminsManager`、`AuditLog`、`DifficultyFitTool`、`DifficultyRefPicker`、`MapSlotEditor`、`MapUploader`、`PackLinksEditor`、`RefLadderEditor`、`ReferencesEditor`、`RoundRefPicker`、`TournamentForm`、`TrashManager`、`ManiaChartModal`、`RoundDetailModal`、`i18n.ts`。逐条真修等于重构后台取数层 —— 本项明令「不得顺手重构整库」，故**只记录基线、规则保持 error**（经站长确认）。
+  - `node --test scripts/serve-static.test.mjs` → **7/7**：6 例纯函数（根路径/查询串、`<route>.html` 映射、带扩展名、`//` 与 `.` 规范化、目录穿越拒绝含编码形式、反斜杠/NUL/坏百分号）+ 1 例真起 http server 断言路由映射、content-type、404、以及**原样发裸 `..` 的请求必须 404**（用 `http.request` 而非 `fetch`，因为 fetch 会在客户端先把 `/../` 规范化掉，测不到服务端行为）。
+  - 冒烟实测：`PORT=4173 node scripts/serve-static.mjs` 后 curl → `/`、`/admin`、`/download` 均 200 `text/html`；`/nope` 与 `/../package.json` 均 404 并回 `out/404.html`；首页返回真实 HTML。
+  - `npm test` → **416/416**（418 − 9 例随 R22 删除的死代码测试 + 7 例新增 serve-static）；`npx tsc --noEmit` 0 错；`npx tsc -p functions/tsconfig.json --noEmit` 0 错。
+- 未验证 / 仍有风险：
+  - **`npm run lint` 现在退出 1**（25 条存量错误，见上），因此 `npm run verify` 会停在 lint 这一步。这是刻意的：不靠降级/禁用规则把 lint 刷绿。
+  - 提交前已补跑 `npm run build` → **成功**（`/`、`/admin`、`/download` 三条路由均静态预渲染；本次没有被批量删除守卫拦下）。**浏览器端到端仍未跑** —— 建议站长 `npm start` 后目视确认 `/`、`/admin`、`/download`。
+  - `dev:api` 依赖 `wrangler`，它**没有**进 devDependencies，首次运行会走 `npx` 现下载；`.dev.vars` 下的真实联调未实测。
+  - **没有加 CI**（第 4 条是「如加入 CI」）。本次只落地了本地验证入口（`typecheck` / `typecheck:functions` / `lint` / `test` / `verify`）。
+- 与后续任务的接口变化：`npm run lint` 的语义从「直接报错」变成「真的跑」；`npm start` 不再是 `next start`。
+
 ### R20 [P2] 旧冲突脚本按图集归并，修复定位未限定轮次
 
 证据：scripts/detect-type-conflicts.js:48、:73、:189。按 beatmapsetId 比较 type，同 set 不同难度本来可以不同 type；修复遍历全部 rounds，仅匹配 beatmapId 与 slot，两个 undefined BID 也会相等。
@@ -967,6 +1006,28 @@ if (builtName && !cur?.name) patch.name = builtName
 4. 迁移到 oneoff 目录若需要，同步 workflow/路径，不仅改文件头注释。
 
 验收：同 set 不同 BID 不误报必修冲突；不同轮次相同 slot/无 BID 不串改；默认运行不写比赛数据；输入与原始值不一致时拒绝 apply。
+
+**当前状态（2026-09-19）：已实施** —— 见下方完成记录。立项时定位的待修位置是 `scripts/detect-type-conflicts.js:41`、`scripts/backfill-bid.js:190`；两个文件均已删除并重写为 `.mjs`。
+
+**完成记录（2026-09-18）**
+
+- 状态：实现完成待验收（已随本批提交入库；原记"未提交"已过期）。立项时 `git rm` 的两个文件（`scripts/backfill-bid.js`、`scripts/detect-type-conflicts.js`）随本批一并删除。
+- 修改文件：新增 `scripts/detect-type-conflicts.mjs`（重写）+ `scripts/detect-type-conflicts.test.mjs`（20 例）+ `scripts/backfill-bid.mjs`（CJS→ESM + 判读统一）+ `scripts/backfill-bid.test.mjs`（12 例）；删除 `scripts/detect-type-conflicts.js`、`scripts/backfill-bid.js`；`.gitignore` 加 `/*-report.json`；`CODEX-HANDOFF.md` 的脚本表与速查表同步。
+- 做了什么：
+  1. **`detect-type-conflicts` 重写成与后台「realType 体检」同源的 CLI**：分类一律复用 `src/lib/mapConflictDetection.ts`（`classifySetConflict` / `extractRate`）与 `src/lib/beatmapIds.ts`（`isUsableBeatmapId`），不再自己解释一遍。修掉的旧行为：
+     - 旧版按 `type`（大类）分组，把「同一 setId 下不同难度」当成必修冲突 —— 同套图里 rc 版与 ln 版本来就合法。现在分三类：`bid`（同一 beatmapId 被标了不同 realType，可统一）/ `rateSet`（同 setId、多难度、有倍速差，可统一）/ `setReview`（同 setId、多难度、倍速相同但键型不同，**只供人工核对，脚本不改**）。
+     - 旧版 `if (map.beatmapsetId)` 用真值判断 —— 占位 `BeatmapSetID:1` 会把无关谱面粘成一组（与 R33 修好的是同一个 bug）。现在占位 ID（0/1/负数/非整数）不参与分组。
+     - 旧版**默认就进交互式修复**，且定位是「遍历所有 rounds、只匹配 beatmapId + slot」—— 两个 `undefined` beatmapId 会相等，能把**别的轮次**里同 slot 的图一起改掉。现在默认**只读、一个文件都不写**；写回必须显式 `--apply --bid=|--set= … --to=…`，并逐条核对（轮次按轮次下标收敛、slot 唯一或 beatmapId 精确匹配、文件里的值必须仍等于报告里记的原值），**任一条对不上就整组拒绝、不做部分写入**。
+     - 旧版直接 `JSON.stringify(data, null, 2) + '\n'` 写回，而比赛 JSON 实际是 **CRLF** —— 实测这会把整个文件重排（25794 → 24708 字节），补丁根本没法审。现在保留原换行风格，并断言「改动行数 == 计划条数」，超了就中止且不写盘。
+  2. **`backfill-bid` 的 ID 判读统一到 `src/lib/beatmapIds.ts`**（旧版到处写 `> 0`：占位 setId 会被当真写回；占位 `BeatmapID:1` 又被当成「已有 BID」，那批图永远修不了）。写回同样保留 CRLF；核心判定抽成纯函数 `decideFill(map, meta)` 便于单测。为 import 那份共享 `.ts`，脚本从 CJS 改成 ESM（与 `find-suspect-realtypes.mjs` / `clear-placeholder-ids.mjs` 一致）。
+- 实际运行的验证：
+  - `node scripts/detect-type-conflicts.mjs`（对真实数据只读）→ 54 个比赛文件 / 4935 张谱面 / **28 组**：`bid 5`、`rateSet 2`、`setReview 21`；退出码 0，**没有写任何文件**。
+  - `scripts/detect-type-conflicts.test.mjs` **20 例**：三类分类、占位 ID 不分组、≥3 首不同歌的 setId 不可靠、`setReview` 拒绝、`--to` 不在取值里拒绝、原值不一致拒绝、无可用 BID 且 slot 重复拒绝、轮次 id 重复且下标对不上拒绝、轮次 id 重复时按下标各改自己那张、CRLF 保真，以及 CLI 端到端（默认只读不写盘 / 参数错误 / 不存在的组 / 只改一行 / `--set` 走 setReview 也拒绝 / **同一 slot 出现在不同轮次时只改目标那一轮**）。临时目录用 `TOURNAMENTS_DIR` 覆盖，不碰真实数据。
+  - `scripts/backfill-bid.test.mjs` **12 例**：`decideFill` 的只增不改（已有真实 BID 不动、占位 BID 可覆盖、占位 setId 不写、name 只在空/slot/纯空白时补、Unknown 兜底）+ `parseOszMetadata` 只读 `[Metadata]` 段 + 端到端（解析→判定两处 ID 都落位）+ 占位值原样读出交给调用方判读。
+  - **变异测试 5 处全部被测试抓到**：不拒绝「值不一致」、写回不保留换行、占位 ID 参与分组、`setReview` 也允许改、去掉轮次下标收敛。第 5 处第一次没抓到，补了一例「轮次 id 重复时按下标各改自己那张」才抓住 —— 补用例后重跑全绿。
+  - `npm test` **448/448**；`node scripts/backfill-bid.mjs` 无凭据时仍打印 `Missing R2 credentials` 并退出 1。
+- 未验证 / 仍有风险：**没有跑过真实 R2 回填**（`--apply` 需凭据且会改比赛数据，按约定由站长在有凭据的环境先 dry-run 再决定）；`detect-type-conflicts --apply` 只对临时目录验证过，没有对真实数据执行过写入。
+- 与后续任务的接口变化：`scripts/backfill-bid.js` → **`scripts/backfill-bid.mjs`**；`scripts/detect-type-conflicts.js` → **`scripts/detect-type-conflicts.mjs`**（调用方式从「交互式」改为显式 `--apply --bid/--set --to`）。报告里新增 `replacedPlaceholder` 计数。
 
 ## 7. 加固、维护与实施边界
 
@@ -984,6 +1045,29 @@ if (builtName && !cur?.name) patch.name = builtName
 
 验收：后台不能被跨站 iframe 嵌入；正常首页/后台/OAuth 可用；不允许的写 Origin 拒绝；允许 Origin 正常；未登录依旧 401、无权限依旧 403；部署后实测静态与 Functions 两类响应。
 
+**当前状态（2026-09-19）：已实施** —— 见下方完成记录。实施前照另一条线的 `docs/security-review-and-recovery-2026-09-18.md` 做了细化分析（含「后台响应加 `Cache-Control: private, no-store`」「写操作验证 Origin + JSON/CSRF」「CORS `*` 不等于认证数据可跨站读，别误报成已确认泄漏」），**没有重复调研**。代码已完成，但**部署侧仍未验证** —— 要等站长部署后只读核实，见 `VERIFY-AFTER-DEPLOY-2026-09-18.md` §3。
+
+**完成记录（2026-09-18）**
+
+- 状态：实现完成待验收（已随本批提交入库；原记"未提交"已过期）。**部署侧未验证** —— `_headers` 是否真的生效、Origin 闸门在生产上的行为，都要等站长部署后只读核实（核对步骤见 `VERIFY-AFTER-DEPLOY-2026-09-18.md` §3）。
+- 修改文件：新增 `public/_headers`、`scripts/security-headers.test.mjs`（17 例）；改 `functions/api/_middleware.ts`（写请求 Origin 闸门）、`functions/api/_lib/cors.ts`（统一 `private, no-store`）、`functions/api/maps/status.ts`、`functions/api/osu/beatmap.ts`、`functions/api/osu/download.ts`（各自手写的 jsonResponse/errorResponse 也补 no-store）。
+- **先只读核实线上**（2026-09-18，`osumania-ladder.pages.dev`）：
+  - `/`、`/admin` → 200；响应头只有 `content-type` / `cache-control: public, max-age=0, must-revalidate` / `referrer-policy` / `x-content-type-options: nosniff`。**没有任何 `X-Frame-Options` 或 CSP** —— 后台确实可以被跨站 iframe 嵌入，这就是本项要堵的。
+  - `/admin/` → `308` 永久重定向（尾斜杠由边缘归一到 `/admin`）。
+  - `/api/auth/me` → 200 JSON；`/api/references`、`/api/tournaments` → 401 JSON。三者都**没有 `Cache-Control`** —— 会话与比赛数据的响应此前没有任何缓存策略。
+  - 静态与 API 都带 `access-control-allow-origin: *`。按安全文档的结论，`*` 本身不是泄漏（响应不带 credentials、cookie 是 SameSite=Lax），**没有**顺手改它。
+- 做了什么：
+  1. **`public/_headers`（只管静态产物）**：只对 `/admin` 与 `/admin.html` 下发 `X-Frame-Options: DENY` + `Content-Security-Policy: frame-ancestors 'none'`。**刻意不上 `script-src`/`default-src`** —— 那会破坏 Next 静态站的内联启动脚本；完整 CSP 要单独一轮部署再验证（文件里写了只读核对命令）。范围只限后台页，不顺手给全站加头。注意 `_headers` **管不到 `/api/*`**（那是 Pages Functions），所以 API 的头在代码里做。
+  2. **`functions/api/_middleware.ts`：写方法（POST/PUT/PATCH/DELETE）必须来自本站**，否则 `403 { code: 'BAD_ORIGIN' }`。判据是 **Origin 的完整 origin（协议 + host + 端口）等于请求自身的 origin** —— 生产域名、预览域名、本地 `wrangler pages dev` 都自动放行，不需要维护域名清单，也就不会因为漏配把正常保存挡掉。只比 host 是不够的：`http://本站` 会以「同 host」通过，那是一次跨 origin 的写。需要额外放行别的源时用环境变量 `WRITE_ORIGIN_ALLOWLIST`（逗号分隔）。
+     - **不带 Origin 的请求放行**：浏览器跨站写一定带 Origin，所以「没有 Origin」只可能是 curl/脚本，拦它只会挡工具、拦不住攻击。`Origin: null`（沙箱 iframe、file://）解析不出 origin → 拒绝。
+     - **顺序是先 Origin、后会话**：跨站写直接 403；本站写照旧「没登录 401 / 没权限 403」，原有语义没动。
+     - GET / HEAD / OPTIONS 不走这道闸门：读请求靠 CORS + 会话保护；OAuth 回调是浏览器从 osu.ppy.sh 导航过来的 GET，不受影响。
+  3. **API 响应统一 `Cache-Control: private, no-store`**：`_lib/cors.ts` 的 `jsonResponse` / `noContent`（`extraHeaders` 可覆盖），以及 `maps/status.ts`、`osu/beatmap.ts`、`osu/download.ts` 里各自手写的 JSON 响应。**刻意保留的差异**：`/api/osu/raw` 的谱面文本仍是 `private, no-cache` + ETag/304，`/api/osu/download` 仍是附件流 —— 测试里有断言锁住这两处别被「收拢」掉。CORS 的 `*` 与只允许 GET 的 Allow-Methods 保持原样（第 5 条：GET-only 方法列表不是 bug）。
+- 实际运行的验证：新增 `scripts/security-headers.test.mjs` **17 例**：`_headers` 语法可解析 / 后台页两条规则齐全 / CSP 只含 `frame-ancestors`（偷偷上完整 CSP 会被测挂）/ 范围只限后台页 / `isWriteMethod` / Origin 纯函数（同源、跨站、协议不一致、无 Origin、`null`、坏 URL、allowlist 命中与坏项不能让全部放行）/ 中间件端到端（跨站写 403 且不进下游、同源写无 cookie 仍 401、无 Origin 写 401、GET 跨站 401、OPTIONS 204、allowlist 配了才放行）/ 缓存头三例（含可覆盖与差异保留）/ 源码顺序断言（Origin 在会话之前）。`npm test` **465/465**；前后端 tsc 0 错。
+  - 变异测试 7 处，**6 处被测试抓到**：只比 host、取消 Origin 检查、无 Origin 也拒、先判会话后判 Origin、后台页不设 `X-Frame-Options`、给静态头上了完整 CSP。第 7 处（把 `jsonResponse` 的 `Cache-Control` 改回可缓存）**变异脚本的锚点没对上、没真正改到文件**，属工具问题；对应断言是直接读 `response.headers.get('cache-control')`，绑定是构造性的。
+- 未验证 / 仍有风险（**都需要站长部署后确认**）：① `public/_headers` 是否被 Pages 读到（Next 静态导出会把 `public/` 拷进输出目录，但 Pages 的构建输出目录配置在仓库之外，我无法核实）；② 生产/预览/自定义域名下的写请求是否照常放行；③ 将来若有别的域名要调本站写 API，必须显式配 `WRITE_ORIGIN_ALLOWLIST`，否则会被 403。
+- 与后续任务的接口变化：新增可选环境变量 `WRITE_ORIGIN_ALLOWLIST`；跨站写现在返回 **403 `BAD_ORIGIN`**（此前会走到会话检查、返回 401）。
+
 ### R22 [P3] 构建产物、无生产调用算法与文档清账
 
 范围：.gitignore、tsconfig.tsbuildinfo、src/lib/roundLabelLayout.ts、scripts/round-label-layout.test.mjs、相关交接文档。
@@ -998,11 +1082,30 @@ if (builtName && !cur?.name) patch.name = builtName
 
 验收：构建后不再出现新 tsbuildinfo 差异；LadderView 类型检查与布局不变；剩余测试覆盖生产行为；用户目录与未提交 UI 改动保留。
 
+**当前状态（2026-09-19）：已实施** —— 见下方完成记录。立项时实测 `git ls-files tsconfig.tsbuildinfo` 仍被跟踪、`.gitignore` 里**没有** `tsbuildinfo` 规则；已按计划 `git rm --cached` + 加忽略规则（本地文件保留，未还原其中的改动）。
+
+**完成记录（2026-09-18）**
+
+- 状态：实现完成待验收（已随本批提交入库；原记"未提交"已过期）。`git rm --cached tsconfig.tsbuildinfo` 与删除 `scripts/round-label-layout.test.mjs` 随本批一并落地。
+- 修改文件：`.gitignore`、`tsconfig.tsbuildinfo`（停止跟踪，本地文件保留）、`src/lib/roundLabelLayout.ts`、删除 `scripts/round-label-layout.test.mjs`、`docs/design/2026-09-homepage-implementation.md`（补一条日期化说明）。
+- 做了什么：
+  1. `.gitignore` 加 `tsconfig.tsbuildinfo`，并 `git rm --cached tsconfig.tsbuildinfo`。**本地文件保留**（151,868 字节，未还原、未改动其中内容），以后跑 tsc 不再产生噪声 diff。
+  2. `src/lib/roundLabelLayout.ts` **只留 `RoundLayout` 类型**（`src/components/ladder/LadderView.tsx:15` 在用，动它会断 import）。删掉无生产调用的 `buildRoundLabelPlacements` / `LabelPlacement` / `LabelLayoutResult` / `LABEL_HEIGHT` / `LABEL_GAP` / `LABEL_ANCHOR_OFFSET`，并**同时删掉只覆盖这套死代码的 `scripts/round-label-layout.test.mjs`（9 例）**。依据：该算法是为"独立标题层"准备的，而标题层已撤回（`LadderView.tsx` 里已注明"用户已拍板：本视图不做独立标题层"），删除前全仓库 grep 确认只有它自己的测试引用它。文件里留了取回命令 `git show 419c4b4:src/lib/roundLabelLayout.ts`。
+  3. auth 尾斜杠：**只读核实，未改代码**。线上实测 `https://osumania-ladder.pages.dev`：`/api/auth/me` → 200 而 `/api/auth/me/` → 401；`/api/auth/login` → 302 而 `/api/auth/login/` → 401；`/api/tournaments` 与 `/api/tournaments/` 都是 401。即 `functions/api/_middleware.ts` 的 `PUBLIC_PATHS.has(url.pathname)` 是精确匹配，尾斜杠形式会被当成"需要登录" —— **失败方向是更严（401），不是绕过**，没有安全问题。而 `functions/api/_lib/osu.ts:38` 的 `buildRedirectUri()` 拼的是 `${SITE_URL 去掉尾斜杠}/api/auth/callback`（精确路径），OAuth 回调踩不到这个形式。按第 4 条「需支持才改」的原则**不动代码**；若将来要支持，做法是「去掉一个尾斜杠后再精确查一次 PUBLIC_PATHS」，**不要**改成前缀匹配免鉴权。
+  4. 第 3 条（统一重复常量）**明确不做**：现存重复只有 `src/lib/difficultyLimits.ts` 与 `functions/api/_lib/validation.ts` 的 `LIMITS.maxDifficulty`（两者不可能互相 import，Node 侧要与 Workers 侧解耦，现在靠测试断言两边相等），以及 `scripts/*` 的保留期常量（只跑在 Node，functions 不碰）。为几个常量引入跨运行时共享层属于「为小常量引入大架构」，本条本身就写明不做。
+- 实际运行的验证：`npx tsc --noEmit` → 0 错（含 `LadderView` 的 `RoundLayout` 用法）；`npm test` → **416/416**；全仓库 grep 已无 `buildRoundLabelPlacements` / `LabelPlacement` / `LABEL_GAP` / `LABEL_ANCHOR` 的活引用（只剩本文件里的说明注释）；`git status` 确认 `D  tsconfig.tsbuildinfo`（已暂存）且本地文件仍在。
+- 未验证 / 仍有风险：布局**没有做浏览器验收** —— 但本项只删无调用导出、不动 `RoundLayout` 的形状，也不动 `LadderView` 里的难度→y 计算，改动面是"移除导出"，类型检查 + 既有渲染路径均不受影响；`npm run build` 未跑。
+- 与后续任务的接口变化：无。`RoundLayout` 形状不变。
+
 ## 8. 任务清单与后续记录
 
-以下任务除标注 ✅ 外均为“待实施”，本次只写方案。P1 指有明确触发条件的数据丢失/覆盖或发布损坏风险，不表示已确认线上遭遇事故。
+下表是任务清单与状态总览（2026-09-19 更新）。标注 ✅ 的已实现并进入 `main`；⚠️ 表示部分达成。**R19–R22 已随本批提交入库**（原先记的"改动在工作区、未提交"均已过期），见各自章节末尾的完成记录；**R23 只读核实已完成、发布验收仍待实施**。R21 的响应头与 R23 的发布验收都需要部署/凭据，已整理成 `VERIFY-AFTER-DEPLOY-2026-09-18.md` 交给接手人。P1 指有明确触发条件的数据丢失/覆盖或发布损坏风险，不表示已确认线上遭遇事故。
 
-进度速览（2026-09-17）：✅ R01（实现完成待验收，UI 自动重放未做）、✅ R02（实现完成待验收，浏览器端未联调）、✅ R03（已提交 `3634998`，未线上联调）、✅ R04（实现完成待验收，未提交，未线上联调）、✅ R05（实现完成待验收，未提交，时序行为无自动化测试）、✅ R06（实现完成待验收，未提交，**「替换当前版本」入口未做**、未线上联调）、✅ R07（实现完成待验收，未提交，并发删/重传未验收）、✅ R08、✅ R09、✅ R18、✅ R24（实施期间新增：下载路径网络重试，未提交）、✅ R25（悬浮卡段位与框高同源，未提交）、✅ R26（不参与难度统计 + 整场视图按指针选轮次 + 版本 0.9.0，未提交）、✅ R27（键型冲突改“勾选才改”+批量选择，未提交）、✅ R28（PDEX 键型 + 默认键型一律 Pending + 误标检测工具，未提交，检测结果需人工复核）、✅ R29（悬浮卡 TB 段位改用实际难度，未做浏览器验收）、✅ R30（TB 段位规则细化 + 每轮图池标题折行；MCNC 简写查为残留记录，数据未改）、✅ R31（合包分包规则均分 + `$` 注入修复 + NSV 缺音频借用主图；未重新生成包）、✅ R13（状态 API 分页 + 失败不返回部分清单，未提交）、✅ R16（审计 metadata 按字节收缩 + 失败可见 + 可按 key 看全文，未提交）、✅ R17（LN 参考读数改用 difficulty，两处实现合并，未提交）、✅ R14（上游故障不再伪装成空数据/404/401，404 探仓库可见性，前端不再崩且失败保留旧数据，未提交）、⚠️ R15（原型链 role 拒绝 + 脏数据净化 + 缓存返回副本 + 写失败不动缓存 + 一致性边界改成 60s+5s；**并发丢更新未修**，需强一致存储，未提交）、✅ R14 复查追加（上传/批量保存 + 四处写路径全部接上分类：凭据失效不再报「比赛不存在」也不再回 401，批量上游故障回 502 而不是 500；过程修掉一个 `res.clone` 已被消费导致 500 的真 bug，未提交）、✅ R32（删除 .osz 后该 slot 的本地 name/BID 与暂存补丁一起回滚 + 删除后对账已上传状态，未提交）、✅ R33（占位 ID 判读 + 冲突检查器/下载路径防护 + 检测与清理脚本；**MKTC 的 36 条数据待站长清理**）、✅ R10（合包发布门控 + **内容寻址的对象键** + 审查后加固：GC 拆成独立命令带保留期、裸 `--offline`/空 `--type=` 直接报错、**Drive 也改内容寻址并跳过已上传**：任一包失败则整次不发布、占位包不上传、镜像链接合并 + `pendingMirrors`、孤儿清理默认只报告；未在真实 R2 上跑过全量）、⚠️ R11（谱面身份：元数据降级为候选键、等价性改由内容摘要决定，同 BID 也核对内容并输出人工核对项，备选路径按内容等价兜底、来源标签不丢、计数与 mapCount 同口径；未在真实 R2 上跑过全量）、✅ R12（workflow 输入改 env + 数组传参、CLI 白名单校验、单类型区分「离线预览 / 发布」两态、两个发布 workflow 共用 concurrency 组、push 冲突保留本地结果；第 6 条已随版本键落地，未在真实 Actions 上跑过）；其余待实施。
+进度速览（2026-09-18）：**本文件此前各处"未提交"的标记全部过期 —— 实现均已提交并推送**（`2ca51d9` 占位 ID 判读 + 管理员角色 + 上游错误分类 + 删除前备份 + 请求体实流计数；`67ebdcf` 合包发布链；`cd8d96e` MKTC 36 条占位 setId 清理；`419c4b4` 检测报告刷新）。以下只保留每项**尚未验收**的边界：✅ R01（UI 自动重放未做）、✅ R02（浏览器端未联调）、✅ R03（已提交 `3634998`，未线上联调）、✅ R04（未线上联调）、✅ R05（时序行为无自动化测试）、✅ R06（**「替换当前版本」入口未做**、未线上联调）、✅ R07（并发删/重传未验收）、✅ R08、✅ R09、✅ R18、✅ R24（下载路径网络重试）、✅ R25（悬浮卡段位与框高同源）、✅ R26（不参与难度统计 + 整场视图按指针选轮次 + 版本 0.9.0）、✅ R27（键型冲突改“勾选才改”+批量选择）、✅ R28（PDEX 键型 + 默认键型一律 Pending + 误标检测工具，检测结果需人工复核）、✅ R29（悬浮卡 TB 段位改用实际难度，未做浏览器验收）、✅ R30（TB 段位规则细化 + 每轮图池标题折行；MCNC 简写查为残留记录，数据未改）、✅ R31（合包分包规则均分 + `$` 注入修复 + NSV 缺音频借用主图；未重新生成包）、✅ R13（状态 API 分页 + 失败不返回部分清单）、✅ R16（审计 metadata 按字节收缩 + 失败可见 + 可按 key 看全文）、✅ R17（LN 参考读数改用 difficulty，两处实现合并）、✅ R14（上游故障不再伪装成空数据/404/401，404 探仓库可见性，前端不再崩且失败保留旧数据）、⚠️ R15（原型链 role 拒绝 + 脏数据净化 + 缓存返回副本 + 写失败不动缓存 + 一致性边界改成 60s+5s；**并发丢更新未修**，需强一致存储）、✅ R14 复查追加（上传/批量保存 + 四处写路径全部接上分类：凭据失效不再报「比赛不存在」也不再回 401，批量上游故障回 502 而不是 500；过程修掉一个 `res.clone` 已被消费导致 500 的真 bug）、✅ R32（删除 .osz 后该 slot 的本地 name/BID 与暂存补丁一起回滚 + 删除后对账已上传状态）、✅ R33（占位 ID 判读 + 冲突检查器/下载路径防护 + 检测与清理脚本；**MKTC 那 36 条数据已清理并推送** `cd8d96e`）、✅ R10（合包发布门控 + **内容寻址的对象键** + 审查后加固：GC 拆成独立命令带保留期、裸 `--offline`/空 `--type=` 直接报错、**Drive 也改内容寻址并跳过已上传**：任一包失败则整次不发布、占位包不上传、镜像链接合并 + `pendingMirrors`、孤儿清理默认只报告；未在真实 R2 上跑过全量）、⚠️ R11（谱面身份：元数据降级为候选键、等价性改由内容摘要决定，同 BID 也核对内容并输出人工核对项，备选路径按内容等价兜底、来源标签不丢、计数与 mapCount 同口径；未在真实 R2 上跑过全量）、✅ R12（workflow 输入改 env + 数组传参、CLI 白名单校验、单类型区分「离线预览 / 发布」两态、两个发布 workflow 共用 concurrency 组、push 冲突保留本地结果；第 6 条已随版本键落地，未在真实 Actions 上跑过）。
+
+**仍待实施（2026-09-19）**：R23 的**发布验收**（只读核实已完成，见其完成记录）；R15 的**并发丢更新**仍在等强一致存储（Durable Object）。
+
+**本批（R19 + R20 + R21 + R22）已提交入库**：R19 = `eslint.config.mjs` + `scripts/serve-static.mjs` + 测试 + `package.json` scripts；R22 = `.gitignore` 加 `tsconfig.tsbuildinfo`（已 `git rm --cached`）、`roundLabelLayout.ts` 死算法与 `scripts/round-label-layout.test.mjs` 已删除；R20 = `detect-type-conflicts` / `backfill-bid` 重写为 `.mjs`（旧 `.js` 已 `git rm`）并各自带测试；R21 = `public/_headers` + 中间件的写请求 Origin 闸门 + API 响应统一 `private, no-store`（含 17 例测试）。提交时实测：`npm test` **495/495**、前后端 tsc 0 错、`npm run build` 成功；**`npm run lint` 因 25 条存量错误退出 1**（基线见 R19 完成记录）。
 
 | 编号 | 工作单元 | 主要依赖 |
 | --- | --- | --- |
@@ -1024,11 +1127,11 @@ if (builtName && !cur?.name) patch.name = builtName
 | ✅ R16 | 审计 metadata 字节上限 | 可独立 |
 | ✅ R17 | LN 参考回退 | 可独立 |
 | ✅ R18 | 常数样本 R² | 可独立 |
-| R19 | lint/启动与验证入口 | 可独立 |
-| R20 | 旧冲突脚本防串改 | 可独立 |
-| R21 | 安全头/Origin | 先核实部署 |
-| R22 | 构建与死代码清账 | 最后做 |
-| R23 | 包内容/部署核实及发布验收 | 只读核实可先做，发布等合包修复 |
+| ✅ R19 | lint/启动与验证入口 | 已实现：ESLint 9 flat config（core-web-vitals，无禁规则）+ `start` 改静态预览 + `dev:api`/`typecheck`/`verify`；**lint 仍有 25 条存量错误（全为 react-hooks v7 新规则），基线已记录**；未加 CI |
+| ✅ R20 | 旧冲突脚本防串改 | 已实现：`detect-type-conflicts` 重写为与后台体检同源的 CLI（默认只读、写回必须显式指定组与目标、保留 CRLF、定位不唯一即整组拒绝）、`backfill-bid` 判读统一到 `beatmapIds.ts` 并转 ESM；两者都新增测试（20 + 12 例），5 处变异全被抓到 |
+| ✅ R21 | 安全头/Origin | 已实现、**部署侧未验证**：`public/_headers` 给后台页加 frame-ancestors/X-Frame-Options；写请求按「Origin 完整 origin == 请求自身」放行、跨站 403 `BAD_ORIGIN`（无 Origin 放行、`null` 拒绝）；API 响应统一 `private, no-store`（raw/下载的差异保留）。线上只读核实过：`/admin` 此前无任何防嵌入头、API 无 `Cache-Control` |
+| ✅ R22 | 构建与死代码清账 | 已实现：tsbuildinfo 停止跟踪 + `.gitignore`；删 roundLabelLayout 死算法与其 9 例测试（保留 `RoundLayout` 类型）；auth 尾斜杠线上只读核实为「失败方向更严」，不改代码；常量不统一（理由见完成记录） |
+| ⚠️ R23 | 包内容/部署核实及发布验收 | **只读部分已完成**：清单/线上部署/R2 对象同一版本（55 个包全部可达、大小全吻合）、R2 自 2026-08-13 未被动过、数据侧 0 重复 round id 与 0 占位 ID、误标报告 31→25 只减不增。**发布验收（隔离样包 + 全量实跑）仍待** —— 需要 R2 凭据与 GitHub 权限 |
 | ✅ R24 | 下载路径网络重试（实施期间新增） | 无 |
 | ✅ R25 | 悬浮卡段位改用现算值（实施期间新增） | 无 |
 | ✅ R26 | 谱面"不参与难度统计" + 整场视图悬浮（站长需求） | 无 |
@@ -1056,11 +1159,11 @@ if (builtName && !cur?.name) patch.name = builtName
 
 - **R09 补充**：`scripts/upload-to-gdrive.js` 新增导出 `assertNonEmptyPacks()`，`main()` 在读取 manifest 后立即调用。原逻辑在 `packs` 为空时 `failed.length === 0` 成立，`computeOrphans(上一版, ∅)` 会把上一版**全部** fileId 判成孤儿并删除（R2 内仍有包可重跑恢复，但期间所有下载链接失效）。测试：`upload-to-gdrive.test.mjs` 新增「空 manifest 直接拒绝执行，绝不进入孤儿清理」，并顺带断言空本版确实会让上一版全部成为孤儿（证明守卫的必要性）。
 - **R08 补充**：`scripts/backup-r2.js` 中 `backupPrefix` / `backupAll` / `cleanupTrash` / `runBackupJob` 的 `redact` 默认值由恒等函数 `(m) => m` 改为 `redactSecrets`。此前 `main()` 未显式传参，本项自己声明的「失败日志不含密钥」验收条件其实没有落地（只有 `main().catch` 那条走了打码）。测试：`backup-r2.test.mjs` 新增「不传 redact 时默认打码」，并在 `require` 脚本之前注入假 `R2_SECRET_KEY`，否则默认 secrets 为 undefined 会使该用例假通过。
-- **R10 前置**：`scripts/generate-pack.js` 在 `allResults.length === 0` 时跳过 packs 孤儿清理（原逻辑 `producedKeys` 为空会让 packs 桶里所有 `.osz` 被判成孤儿）。这是该文件的既有形状，属 R10 范围内的一小块；R10 要求的发布完整性状态机（区分"槽位本来未上传"与"读取/上传失败"、runId 隔离键、manifest 成功后再清理）**仍未实施**。
+- **R10 前置**：`scripts/generate-pack.js` 在 `allResults.length === 0` 时跳过 packs 孤儿清理（原逻辑 `producedKeys` 为空会让 packs 桶里所有 `.osz` 被判成孤儿）。这是该文件的既有形状，属 R10 范围内的一小块；R10 要求的发布完整性状态机（区分"槽位本来未上传"与"读取/上传失败"、runId 隔离键、manifest 成功后再清理）**当时仍未实施 —— 已于 2026-09-18 随 `67ebdcf` 落地**（`scripts/pack-publish.js` 的 `summarizeRun` 门控，`runId` 改为内容寻址键）。
 
-复审另记的覆盖缺口（未修，留给后续任务）：两个脚本的 `main()` 接线均无测试覆盖（删掉非零退出那几行，现有测试仍全绿）；`upload-to-gdrive.test.mjs` 的 `existingNames` 从未被传入，`findExistingFileId` 命中后走 update 的分支零覆盖；`backup-r2` 的 Put 断言不校验 `Bucket/Key`，源/备份桶写反抓不到。
+复审另记的覆盖缺口（**2026-09-18 复核**）：`upload-to-gdrive.test.mjs` 的 `existingNames` **已补上覆盖**（「Drive 上已有同名文件 → 复用」一例，第 242 行起）；`backup-r2` 的 Put 断言**仍不校验 `Bucket/Key`**（源/备份桶写反抓不到）；两个脚本的 `main()` 接线也**仍无测试覆盖**（删掉非零退出那几行，现有测试仍全绿）。后两项留给后续任务。
 
-> 状态更新：本文件此前多处标注的"改动未提交"已过期——R01 / R08 / R09 / R18 的实现与谱面可视化、以及上述 3 处守卫，已随本次提交进入 `main`。R02 与 R03 的实现目前在工作区（未提交）。R04–R07、R10–R17、R19–R23 仍为待实施。
+> 状态更新（2026-09-19 重写）：本文件此前多处标注的"改动未提交"**全部过期**。R01–R18、R24–R33 的实现均已进入 `main` 并推送（一批：`2ca51d9`、`67ebdcf`、`cd8d96e`、`419c4b4`）；**R19–R22 也已随本批提交入库**。§9 第 3 条所记「R10 的发布完整性状态机仍未实施」同样过期 —— 已随 `67ebdcf` 落地。**目前 R01–R22、R24–R33 均已实施；R23 只读核实已完成、发布验收仍待实施**，另有 R11/R15 与合包链的验收缺口，见 §8 的「仍待实施」与 `HANDOFF-PACKS-AND-REMAINING-2026-09-18.md` §3。
 
 ## 10. 用户追加项（2026-09-13，非 R 编号）
 
@@ -1093,3 +1196,21 @@ if (builtName && !cur?.name) patch.name = builtName
 - 验证：新增 `scripts/generate-pack.test.mjs` 6 例 —— OD 低于旧下限（1 / 4.5 / 7 / 7.9 / 8.9 / 10）全部原样保留、高于旧下限不压低、HP（1 / 5 / 7 / 8 / 9.5 / 10）全部原样保留、**`[Difficulty]` 段逐字节不变**、其余改写字段逐一断言、`[TimingPoints]` 与 `[HitObjects]` 不被触碰且行数不变。测试用 `createRequire` + dummy `R2_*` 环境变量（顶部凭据检查会 `process.exit(1)`），跑完 `git status -- data/` 只有那对改名文件，确认无副作用（没碰 manifest）。`npm test` → 151/151。
 - ⚠️ 已写进 `CODEX-HANDOFF.md` §5.3 的提醒：**重新合包后包内 `.osu` 字节与旧包不同（OD/HP 变了）→ 玩家已下的成绩会断**，与 §5.4 是同一性质，别再单独推导。SV 类原本就不在 `OD_FLOOR` 里、但 HP 原来同样被写成 7，所以**所有类型的包在重新生成后都会变**。
 - 文档同步：`CODEX-HANDOFF.md` §5.3 的 OD/HP 条目（改为「[Difficulty] 段整体不干预」）、§10 红线第 6 条（不再说合包改 OD/HP）、§5.1 中 FCJ 段落里提到 `OD_FLOOR=8.5` 的历史注记（改为说明该表已删除）。realType 的注册点从「3 处 + OD_FLOOR」回到「3 处」。
+
+### 10.4 合包身份报告：新增「内容摘要相同、但身份来源不同」（只报告，不改包）
+
+依据：站长问「两个谱内容一样、但一个有 BID 一个没有（或都没有 BID），应该会被合并成一张吧？这关系到 bid 该不该清掉」，随后拍板**先只把这种情形从静默改成报告**，看清全库规模再决定要不要真的按内容合并。
+
+- 背景（实测确认）：合并键 = **候选键 + NSV + 内容摘要**，候选键三选一互斥（`bid:N` / `meta:artist|title|creator|version` / `solo:路径`）。所以**同内容但一张带 BID、一张不带**的图必定落在不同的道上 —— **既不合并，也不报冲突（静默）**；都无 BID 时元数据还必须**逐字相同**才会合并（标题有出入就不合并）。包内 `Version` 只差来源标签前缀，玩家会看到两张几乎同名的图。
+- 顺带确认的一条决策依据：**清 BID 并不能把这种情形救成合并**（只是把该条从 `bid:` 道挪到 `meta:` 道，而 `meta:` 道还要元数据逐字相同），反而丢掉「同 BID → 先用 R2 对象大小预筛、再核对内容」这条更可靠的路径。所以**保留正确的 BID 对合并更有利**。
+- `scripts/mapIdentity.js`：新增纯函数 `findSameContentDifferentIdentity(entries)` —— 按「内容摘要 + NSV」分组，组内再按候选键分组，**只有 ≥2 个不同候选键**才算一条（同一候选键属正常合并路径，不报）；`contentKey` 为空（读不到内容）的引用**不参与**；主图排在 NSV 前、再按摘要与候选键排（输出稳定，便于比对历次报告）。输入同时接受 `sources`（数组）与 `source`（单条）。
+- `scripts/generate-pack.js`：**零额外下载** —— 预取阶段本来就把每张 `.osu` 读在手上，现在顺手带出 `contentSignature`（`prefetchOne` 返回值新增 `contentKey`；原先只在需要校验备选时才算一次，现改为算一次两用），在包循环里收集成 `identitySeen`，最后算出 `identity.sameContent` 交给 `writeIdentityReport`。报告新增一节「内容摘要相同、但身份来源不同（N 组，只报告、未改动打包结果）」，逐组列出摘要、候选键与来源标签；旧调用方没给 `sameContent` 也不会崩。
+- **刻意不做的事**：不改任何合并/打包决策，不动 manifest 与 `mapCount`。要真的按内容合并，会改包内条目数与下载页计数，且合并后只打包一份、那份的音频/背景/曲绘就是最终结果（内容摘要看不见资源差异）—— 先量化规模再决定。
+- 验证：`map-identity.test.mjs` 新增 7 例（跨候选键成组、两个不同 BID 也报、同一候选键不报、摘要为空不参与、主图/NSV 不混、来源标签带出、排序稳定）；`generate-pack.test.mjs` 新增 4 例（报告小节渲染且含摘要/候选键/路径/来源、没有问题的类型不占节、旧调用方无 `sameContent` 不崩、**源码守门**断言「预取 → 报告」这段接线仍在 —— 它只在有 R2 凭据时执行，断了的话"报告为空"与"确实没有重复"外观完全一致）。`npm test` → **482/482**；`npx tsc --noEmit` → 0 错。**变异测试 5 处全被抓到**（不区分候选键 / 摘要为空也参与 / 预取不带出摘要 / 写死空数组 / 报告忽略该节），改完逐处还原并校验哈希。
+- **拿到数字的方式（2026-09-18 追加）**：本地没有 R2 凭据时跑不了，所以加了一条**只读 CLI 模式**与一个 **Action**。
+  - `node scripts/generate-pack.js --identity-report [--type=X]`：只读 R2 算身份写报告，**不打包、不上传、不改 manifest、不写 output/**；与 `--publish` / `--offline` 互斥，省略 `--type` = 全部类型（这一点与 single 模式相反，错误文案也单独写了，免得误以为"会全量发布"）。`parsePackCli` 里该分支**先于**打包/发布分支返回，并有源码守门测试锁住这个顺序 —— 顺序错了就会真的全量发布。
+  - 全部类型时只列一次 `maps/` 清单（38 个类型共用），报告开头加**逐类型汇总表**（槽位 / 可读引用 / 读取失败 / 三类计数）；某类型有读取失败会在该节里写明"**看不清 ≠ 没有重复**"。
+  - **体检有任何类型失败时不写报告文件**：那个文件会被提交进仓库，用残报告覆盖上次结果之后没法分辨。
+  - `.github/workflows/identity-report.yml`（第 4 个 workflow）：用仓库已有的 `R2_*` 三个 secret 只读跑，把报告提交回仓库 + 打进 job summary + 失败时留 artifact。它不参与 `packs-publish` 发布组（一个字节都不写线上）。⚠️ 提交报告会触发一次站点重建，属手动刻意动作。
+  - 验证：`pack-publish.test.mjs` 新增 7 例（模式不得为 `full`、与 type 合用、Pending 族只给警告、与 `--publish`/`--offline` 互斥、空 `--type=` 的文案不得说"全量发布"、未知类型只报一次、未知选项仍被拒）；`generate-pack.test.mjs` 再增 3 例（汇总表渲染与跳过类型不留假数字、失败提示、**源码守门**断言只读分支早于发布分支）。无凭据时实测仍以 `Missing R2 credentials` + exit 1 退出、**绝不落到发布**；假凭据时实测进入只读分支且报出类型失败、**不写报告文件**。`npm test` **493/493**。
+- 未完成 / 边界：**未在有 R2 凭据的环境跑过** —— 所以"全库到底有多少组这种重复"这个数字还没出来。本地跑 `node scripts/generate-pack.js --type=<类型>`（离线预览即可，无需 `--publish`）就会写进 `reports/pack-identity-report.md`；**没有本地凭据时走 Actions → Identity Report (read-only)**。报告只覆盖**本次处理过的类型**、且只覆盖**被真正打包/读到的条目**。

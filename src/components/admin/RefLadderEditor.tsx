@@ -33,10 +33,6 @@ export function RefLadderEditor() {
   const [addTn, setAddTn] = useState<string>('')
   const [addRound, setAddRound] = useState<string>('')
 
-  useEffect(() => {
-    fetchData()
-  }, [])
-
   const fetchData = async () => {
     setLoading(true)
     try {
@@ -52,6 +48,12 @@ export function RefLadderEditor() {
       setLoading(false)
     }
   }
+
+  // 取数函数必须先声明、再在 effect 里引用（否则命中 react-hooks/immutability
+  // 的 "Cannot access variable before it is declared"）。行为不变。
+  useEffect(() => {
+    fetchData()
+  }, [])
   const sortedTournaments = useMemo(
     () =>
       [...tournaments].sort((a, b) => {

@@ -331,6 +331,9 @@ const CLI_USAGE = [
   '  --publish                 与 --type 合用:完整更新该类型（上传 R2 + 只替换该类型的',
   '                            manifest 条目,其他类型与人工链接原样保留）',
   '  --offline                 显式声明离线预览（必须与 --type 合用，与 --publish 互斥）',
+  '  --identity-report         **只读身份体检**:只读 R2 算身份并写报告,不打包、不上传、',
+  '                            不改 manifest、不写 output/。可单独用（=全部类型）或与',
+  '                            --type 合用。与 --publish / --offline 互斥。',
   '  --help                    显示本说明',
   '',
   '孤儿清理不在这里:node scripts/gc-pack-objects.mjs（基于**已提交**的清单，默认只报告）。',
@@ -358,6 +361,7 @@ function parsePackCli(argv = [], { knownTypes = [], excludedTypes = [] } = {}) {
   }
   let offline = false
   let help = false
+  let identityReport = false
   let sawTypeFlag = false
 
   for (const arg of argv) {
@@ -365,6 +369,7 @@ function parsePackCli(argv = [], { knownTypes = [], excludedTypes = [] } = {}) {
     if (a === '--help' || a === '-h') { help = true; continue }
     if (a === '--publish') { opts.publish = true; continue }
     if (a === '--offline') { offline = true; continue }
+    if (a === '--identity-report') { identityReport = true; continue }
     if (a === '--clean-orphans') {
       // 孤儿清理已拆到独立命令：它必须基于**已提交/已部署**的清单来判，
       // 放在生成流程里会因为"重跑一次 hash 变了"而删掉线上正在引用的对象。
@@ -395,6 +400,27 @@ function parsePackCli(argv = [], { knownTypes = [], excludedTypes = [] } = {}) {
   }
 
   if (help) return { ok: true, ...opts, mode: 'help' }
+
+  // 只读身份体检：与打包/发布完全独立的模式。**必须先于下面各分支返回**，
+  // 否则「没给 --type」会被当成全量发布（那就真的要推 R2 了）。
+  if (identityReport) {
+    opts.identityReport = true
+    if (opts.publish) opts.errors.push({ arg: '--publish', error: 'identity-report-conflict' })
+    if (offline) opts.errors.push({ arg: '--offline', error: 'identity-report-conflict' })
+    // 参数循环里还不知道是不是本模式（`--identity-report` 可能写在 `--type=` 之后），
+    // 所以在这里把已经记下的 empty-type 改成**本模式的说法**：本模式下省略 --type 是
+    // "体检全部类型"，沿用 single 模式的"默认是全量发布"会误导人。
+    for (const e of opts.errors) if (e.error === 'empty-type') e.error = 'identity-report-empty-type'
+    const hasTypeError = opts.errors.some((e) =>
+      e.error === 'identity-report-empty-type' || e.error === 'unknown-type' || e.error === 'ambiguous-type')
+    if (sawTypeFlag && !opts.targetType && !hasTypeError) {
+      opts.errors.push({ arg: '--type=', error: 'identity-report-empty-type' })
+    }
+    if (opts.targetType && (opts.excludedTypes || []).includes(opts.targetType)) {
+      opts.warnings.push({ code: 'excluded-type', type: opts.targetType })
+    }
+    return { ok: opts.errors.length === 0, ...opts, mode: 'identity-report' }
+  }
 
   if (opts.publish && offline) {
     opts.errors.push({ arg: '--publish/--offline', error: 'conflicting-flags' })
@@ -435,6 +461,10 @@ function describeCliError(err) {
       return `${err.arg} —— --offline 必须与 --type=<realType> 合用。全量离线模式尚未实现，单用会被误当成全量发布，所以这里直接拒绝。`
     case 'clean-orphans-moved':
       return `${err.arg} —— 孤儿清理已拆成独立命令，请用 node scripts/gc-pack-objects.mjs（默认只报告）。生成流程里不再真删任何对象。`
+    case 'identity-report-conflict':
+      return `${err.arg} —— --identity-report 是只读体检，不能与发布/预览开关合用（它本来就不打包、不上传、不改 manifest）`
+    case 'identity-report-empty-type':
+      return `${err.arg} —— --identity-report 下 --type= 不能为空；想体检全部类型就直接省略 --type 参数（那是只读的，不会发布任何东西）`
     default:
       return `${err.arg} —— ${err.error}`
   }

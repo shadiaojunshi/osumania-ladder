@@ -6,50 +6,88 @@
 // 「同一 beatmapId 重复检测」和合包去重。本脚本把它们的 BID 从 R2 里捞回来。
 //
 // 严格只增不改：
-//   - 只对「缺 beatmapId」的 map 生效；
+//   - 只对「beatmapId 不可用」的 map 生效（缺失 **或占位** —— 见下）；
 //   - 只写 beatmapId / beatmapsetId；name 仅在当前为空时补真实曲名；
 //   - difficulty（人工评级）绝不触碰，其他字段也不动；
-//   - R2 无对应文件、或 .osu 里 BeatmapID<=0（未上传谱）→ 跳过并列进报告，不猜不删。
+//   - R2 无对应文件、或 .osu 里 BeatmapID 不可用（未上传谱）→ 跳过并列进报告，不猜不删。
+//
+// R20（2026-09-18）改了两件事：
+//   1. **ID 判读统一到 `src/lib/beatmapIds.ts`**。旧版到处写 `> 0`：占位
+//      `BeatmapSetID:1` 会被当成真 setId 写回去（MKTC 2025 那 36 张就是这么来的），
+//      而占位 `BeatmapID:1` 又会被当成"已有 BID"从而永远修不了。现在统一用
+//      `isUsableBeatmapId`（0/1/负数/非整数一律视为不可用）。
+//   2. 为了 import 那份共享实现（`src/lib/*.ts`）从 CJS 改成 ESM —— 与同目录的
+//      `find-suspect-realtypes.mjs` / `clear-placeholder-ids.mjs` 保持一致。
 //
 // 复用 generate-pack.js 相同的 R2 凭证：
 //   R2_ACCOUNT_ID / R2_ACCESS_KEY / R2_SECRET_KEY / R2_BUCKET
 //
 // 用法：
-//   node scripts/backfill-bid.js              # dry-run，只出报告，不写文件（默认）
-//   node scripts/backfill-bid.js --apply      # 实际写回 data/tournaments/*.json
+//   node scripts/backfill-bid.mjs              # dry-run，只出报告，不写文件（默认）
+//   node scripts/backfill-bid.mjs --apply      # 实际写回 data/tournaments/*.json
 
-const { S3Client, ListObjectsV2Command, GetObjectCommand } = require('@aws-sdk/client-s3')
-const JSZip = require('jszip')
-const fs = require('fs')
-const path = require('path')
+import { GetObjectCommand, ListObjectsV2Command, S3Client } from '@aws-sdk/client-s3'
+import fs from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath, pathToFileURL } from 'node:url'
+import JSZip from 'jszip'
 
-const R2_ACCOUNT_ID = process.env.R2_ACCOUNT_ID
-const R2_ACCESS_KEY = process.env.R2_ACCESS_KEY
-const R2_SECRET_KEY = process.env.R2_SECRET_KEY
-const R2_BUCKET = process.env.R2_BUCKET || 'osumania-ladder-maps'
+import { isUsableBeatmapId } from '../src/lib/beatmapIds.ts'
 
-const APPLY = process.argv.includes('--apply')
-const tournamentsDir = path.join(__dirname, '..', 'data', 'tournaments')
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
+const tournamentsDir = path.join(ROOT, 'data', 'tournaments')
 
-if (!R2_ACCOUNT_ID || !R2_ACCESS_KEY || !R2_SECRET_KEY) {
-  console.error('Missing R2 credentials. Set R2_ACCOUNT_ID, R2_ACCESS_KEY, R2_SECRET_KEY.')
-  process.exit(1)
+// ---------- 纯函数：这张图要不要回填、回填什么 ----------
+
+/**
+ * 决定单个 map 的回填内容。**不产生任何 I/O**，便于单测。
+ * @param {{beatmapId?: number, beatmapsetId?: number, slot: string, name?: string}} map 比赛 JSON 里的当前值
+ * @param {{beatmapId?: number, beatmapsetId?: number, artist?: string, title?: string, version?: string}} meta 从 .osu 读到的元数据
+ * @returns {{beatmapId: number, beatmapsetId?: number, name?: string, replacedPlaceholder: boolean} | null}
+ *          null = 不需要改（已有可用 BID 且名字也不需要补）
+ */
+export function decideFill(map, meta) {
+  const bidUsable = isUsableBeatmapId(meta?.beatmapId)
+  if (!bidUsable) return null
+  // 已经有可用 BID 的图不动（只增不改）。
+  if (isUsableBeatmapId(map?.beatmapId)) return null
+
+  const result = {
+    beatmapId: meta.beatmapId,
+    replacedPlaceholder: map?.beatmapId !== undefined && map?.beatmapId !== null,
+  }
+
+  // setId 同样按共享判读：占位 1 / 0 / 负数不写回。
+  if (isUsableBeatmapId(meta.beatmapSetId)) result.beatmapsetId = meta.beatmapSetId
+
+  // name 仅在为空 / 等于 slot 占位时补真实曲名，不覆盖已有真实名。
+  const curName = String(map?.name ?? '').trim()
+  if (!curName || curName === map?.slot) {
+    const artist = meta.artist || 'Unknown'
+    const title = meta.title || 'Unknown'
+    const version = meta.version || 'Normal'
+    result.name = `${artist} - ${title} [${version}]`
+  }
+
+  return result
 }
-
-const s3 = new S3Client({
-  region: 'auto',
-  endpoint: `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
-  credentials: { accessKeyId: R2_ACCESS_KEY, secretAccessKey: R2_SECRET_KEY },
-})
 
 // ---------- R2 工具 ----------
 
-async function listAllKeys(prefix) {
+function createClient(env) {
+  return new S3Client({
+    region: 'auto',
+    endpoint: `https://${env.accountId}.r2.cloudflarestorage.com`,
+    credentials: { accessKeyId: env.accessKey, secretAccessKey: env.secretKey },
+  })
+}
+
+async function listAllKeys(s3, bucket, prefix) {
   const keys = new Set()
   let token
   do {
     const res = await s3.send(
-      new ListObjectsV2Command({ Bucket: R2_BUCKET, Prefix: prefix, ContinuationToken: token }),
+      new ListObjectsV2Command({ Bucket: bucket, Prefix: prefix, ContinuationToken: token }),
     )
     if (res.Contents) for (const o of res.Contents) keys.add(o.Key)
     token = res.IsTruncated ? res.NextContinuationToken : undefined
@@ -57,15 +95,15 @@ async function listAllKeys(prefix) {
   return keys
 }
 
-async function downloadToBuffer(key) {
-  const res = await s3.send(new GetObjectCommand({ Bucket: R2_BUCKET, Key: key }))
+async function downloadToBuffer(s3, bucket, key) {
+  const res = await s3.send(new GetObjectCommand({ Bucket: bucket, Key: key }))
   const chunks = []
   for await (const chunk of res.Body) chunks.push(chunk)
   return Buffer.concat(chunks)
 }
 
 // 从 .osz 里解析 .osu 的 [Metadata] 段。返回 { beatmapId, beatmapSetId, artist, title, version }。
-async function parseOszMetadata(buffer) {
+export async function parseOszMetadata(buffer) {
   const zip = await JSZip.loadAsync(buffer)
   const osuName = Object.keys(zip.files).find((f) => f.toLowerCase().endsWith('.osu'))
   if (!osuName) return null
@@ -110,17 +148,23 @@ async function mapWithConcurrency(items, limit, fn) {
 // ---------- 主流程 ----------
 
 async function main() {
-  console.log(`模式: ${APPLY ? '实际写回 (--apply)' : 'DRY-RUN (只出报告，加 --apply 才写)'}\n`)
+  const apply = process.argv.includes('--apply')
+  const accountId = process.env.R2_ACCOUNT_ID
+  const accessKey = process.env.R2_ACCESS_KEY
+  const secretKey = process.env.R2_SECRET_KEY
+  const bucket = process.env.R2_BUCKET || 'osumania-ladder-maps'
+
+  console.log(`模式: ${apply ? '实际写回 (--apply)' : 'DRY-RUN (只出报告，加 --apply 才写)'}\n`)
 
   const files = fs.readdirSync(tournamentsDir).filter((f) => f.endsWith('.json'))
 
-  // 收集所有缺 beatmapId 的 map（带定位信息）
+  // 收集所有 beatmapId 不可用的 map（缺失或占位），带定位信息。
   const targets = []
   for (const file of files) {
     const data = JSON.parse(fs.readFileSync(path.join(tournamentsDir, file), 'utf-8'))
     for (const round of data.rounds || []) {
       for (const map of round.maps || []) {
-        if (map.beatmapId) continue
+        if (isUsableBeatmapId(map.beatmapId)) continue
         targets.push({
           file,
           tid: data.id,
@@ -132,31 +176,29 @@ async function main() {
     }
   }
 
-  console.log(`缺 beatmapId 的 map 共 ${targets.length} 张`)
+  console.log(`beatmapId 不可用（缺失/占位）的 map 共 ${targets.length} 张`)
 
-  // 先列出 R2 里实际存在的 maps/ 对象，避免为每张图单独 HEAD。
   console.log('列举 R2 maps/ 对象…')
-  const r2Keys = await listAllKeys('maps/')
+  const s3 = createClient({ accountId, accessKey, secretKey })
+  const r2Keys = await listAllKeys(s3, bucket, 'maps/')
   console.log(`R2 maps/ 下有 ${r2Keys.size} 个对象\n`)
 
-  // 拆成"有文件"和"R2 无文件"两组
   const withFile = targets.filter((t) => r2Keys.has(t.r2Key))
   const noFile = targets.filter((t) => !r2Keys.has(t.r2Key))
 
   console.log(`R2 里有文件、可尝试回填: ${withFile.length}`)
   console.log(`R2 里无文件、待手动处理: ${noFile.length}\n`)
 
-  // 下载 + 解析（4 并发）
   console.log('下载并解析 .osu 元数据…')
   let done = 0
   const resolved = await mapWithConcurrency(withFile, 4, async (t) => {
     try {
-      const buf = await downloadToBuffer(t.r2Key)
+      const buf = await downloadToBuffer(s3, bucket, t.r2Key)
       const meta = await parseOszMetadata(buf)
       done++
       if (done % 50 === 0) console.log(`  已处理 ${done}/${withFile.length}…`)
       if (!meta) return { ...t, status: 'no-osu' }
-      if (!meta.beatmapId || meta.beatmapId <= 0) return { ...t, status: 'unsubmitted', meta }
+      if (!isUsableBeatmapId(meta.beatmapId)) return { ...t, status: 'unsubmitted', meta }
       return { ...t, status: 'ok', meta }
     } catch (err) {
       return { ...t, status: 'error', error: err.message }
@@ -170,6 +212,7 @@ async function main() {
   // ---------- 写回（按文件分组，一次读写一个 JSON） ----------
   let filledBid = 0
   let filledName = 0
+  let replacedPlaceholder = 0
   const byFile = new Map()
   for (const r of ok) {
     if (!byFile.has(r.file)) byFile.set(r.file, [])
@@ -178,40 +221,40 @@ async function main() {
 
   for (const [file, entries] of byFile) {
     const fullPath = path.join(tournamentsDir, file)
-    const data = JSON.parse(fs.readFileSync(fullPath, 'utf-8'))
+    const raw = fs.readFileSync(fullPath, 'utf-8')
+    const data = JSON.parse(raw)
     let touched = false
     for (const e of entries) {
       const round = (data.rounds || []).find((rd) => rd.id === e.rid)
       if (!round) continue
-      const map = (round.maps || []).find((m) => m.slot === e.slot && !m.beatmapId)
+      const map = (round.maps || []).find((m) => m.slot === e.slot && !isUsableBeatmapId(m.beatmapId))
       if (!map) continue
 
-      map.beatmapId = e.meta.beatmapId
-      if (e.meta.beatmapSetId && e.meta.beatmapSetId > 0) {
-        map.beatmapsetId = e.meta.beatmapSetId
-      }
+      const fill = decideFill(map, e.meta)
+      if (!fill) continue
+
+      map.beatmapId = fill.beatmapId
+      if (fill.beatmapsetId !== undefined) map.beatmapsetId = fill.beatmapsetId
+      if (fill.replacedPlaceholder) replacedPlaceholder++
       filledBid++
       touched = true
-
-      // name 仅在为空 / 等于 slot 占位时补真实曲名，不覆盖已有真实名。
-      const curName = (map.name || '').trim()
-      if (!curName || curName === map.slot) {
-        const artist = e.meta.artist || 'Unknown'
-        const title = e.meta.title || 'Unknown'
-        const version = e.meta.version || 'Normal'
-        map.name = `${artist} - ${title} [${version}]`
+      if (fill.name !== undefined) {
+        map.name = fill.name
         filledName++
       }
     }
-    if (touched && APPLY) {
-      fs.writeFileSync(fullPath, JSON.stringify(data, null, 2) + '\n', 'utf-8')
+    if (touched && apply) {
+      // 保留原换行风格：比赛 JSON 实际是 CRLF，用 '\n' 写回会把整个文件重排。
+      const eol = raw.includes('\r\n') ? '\r\n' : '\n'
+      const body = JSON.stringify(data, null, 2).split('\n').join(eol)
+      fs.writeFileSync(fullPath, raw.endsWith(eol) ? body + eol : body, 'utf-8')
     }
   }
 
   // ---------- 报告 ----------
   console.log('\n═══════════════════════════════════════════')
-  console.log(`可回填 BID:        ${ok.length}  (name 补 ${filledName})`)
-  console.log(`未上传谱(BID<=0):  ${unsubmitted.length}  → 需手动处理`)
+  console.log(`可回填 BID:        ${ok.length}  (name 补 ${filledName}，覆盖占位 ${replacedPlaceholder})`)
+  console.log(`未上传谱(占位/缺 BID): ${unsubmitted.length}  → 需手动处理`)
   console.log(`R2 无文件:         ${noFile.length}  → 需重传或确认`)
   console.log(`解析出错/无.osu:   ${errored.length}`)
   console.log('═══════════════════════════════════════════')
@@ -221,17 +264,23 @@ async function main() {
     console.log(`\n--- ${label} (${arr.length}) ---`)
     for (const r of arr) console.log(`  ${r.tid} / ${r.rid} / ${r.slot}${extra ? extra(r) : ''}`)
   }
-  dump('未上传谱 (BeatmapID<=0)', unsubmitted)
+  dump('未上传谱 (BeatmapID 占位/缺失)', unsubmitted)
   dump('R2 无文件', noFile)
   dump('解析出错', errored, (r) => `  [${r.status}${r.error ? ': ' + r.error : ''}]`)
 
-  // 完整报告落盘，方便逐条核对
-  const report = { generatedAt: new Date().toISOString(), apply: APPLY, ok, unsubmitted, noFile, errored }
-  const reportPath = path.join(__dirname, '..', 'backfill-bid-report.json')
+  const report = {
+    generatedAt: new Date().toISOString(),
+    apply,
+    ok,
+    unsubmitted,
+    noFile,
+    errored,
+  }
+  const reportPath = path.join(ROOT, 'backfill-bid-report.json')
   fs.writeFileSync(reportPath, JSON.stringify(report, null, 2), 'utf-8')
   console.log(`\n详细报告: ${reportPath}`)
 
-  if (!APPLY) {
+  if (!apply) {
     console.log('\n这是 DRY-RUN，未写任何文件。确认无误后加 --apply 实际回填。')
   } else {
     console.log(`\n已写回 ${byFile.size} 个 JSON 文件，回填 ${filledBid} 个 beatmapId。`)
@@ -239,7 +288,17 @@ async function main() {
   }
 }
 
-main().catch((err) => {
-  console.error(err)
-  process.exit(1)
-})
+const isMain =
+  typeof process.argv[1] === 'string' && import.meta.url === pathToFileURL(process.argv[1]).href
+
+if (isMain) {
+  const missing = ['R2_ACCOUNT_ID', 'R2_ACCESS_KEY', 'R2_SECRET_KEY'].filter((k) => !process.env[k])
+  if (missing.length > 0) {
+    console.error(`Missing R2 credentials. Set ${missing.join(', ')}.`)
+    process.exit(1)
+  }
+  main().catch((err) => {
+    console.error(err)
+    process.exit(1)
+  })
+}

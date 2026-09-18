@@ -27,7 +27,7 @@ const DAY = 24 * 60 * 60 * 1000
 
 // pages: { '<bucket>|<prefix>': [ [objectsPerPage...] ] } —— 每页一个对象数组,
 // 除最后一页外都带 NextContinuationToken。
-function makeFakeClient({ pages = {}, getResults = {}, failGet = new Set(), failPut = new Set(), failDelete = new Set() } = {}) {
+function makeFakeClient({ pages = {}, getResults = {}, getResultsByBucket = {}, failGet = new Set(), failPut = new Set(), failDelete = new Set() } = {}) {
   const calls = { list: [], get: [], put: [], del: [] }
   const client = {
     async send(cmd) {
@@ -48,6 +48,9 @@ function makeFakeClient({ pages = {}, getResults = {}, failGet = new Set(), fail
       if (cmd instanceof GetObjectCommand) {
         calls.get.push(cmd.input)
         if (failGet.has(cmd.input.Key)) throw new Error(`get denied for ${cmd.input.Key}`)
+        // 按 bucket 区分：变更前存档要读**备份桶**里那份旧内容，键与源对象完全相同。
+        const byBucket = getResultsByBucket[`${cmd.input.Bucket}|${cmd.input.Key}`]
+        if (byBucket) return byBucket
         return getResults[cmd.input.Key] || { ContentType: 'text/plain', Body: [Buffer.from('x')] }
       }
       if (cmd instanceof PutObjectCommand) {
@@ -265,4 +268,189 @@ test('R08 复审:不传 redact 时默认打码(凭据不会进失败信息)', as
   const dumped = JSON.stringify(result)
   assert.ok(!dumped.includes(secret), '失败信息里不应出现凭据原文')
   assert.ok(dumped.includes('[redacted]'), '默认应打码成 [redacted]')
+})
+
+
+// ---------- 变更前存档（2026-09-18）：备份在覆盖镜像之前先留住旧内容 ----------
+//
+// 攻击路径：上传页对同一槽位连改两次（versions/ 每槽位只留一版，第 2 次就覆盖掉）
+// + 等一晚这个备份跑过 → 原图在所有地方都没有好副本了。有存档之后，攻击者改内容的那一晚，
+// 备份反而把"被改之前的那一份"存了下来。
+
+const dateKey = (now) => new Date(now).toISOString().slice(0, 10)
+
+test('变更前存档：覆盖镜像之前，先把备份桶里的旧内容写进当天快照', async () => {
+  const now = Date.now()
+  const today = dateKey(now)
+  const { client, calls } = makeFakeClient({
+    pages: {
+      'src|maps/': [[obj('maps/a.osz', 99, 'new-etag')]],
+      'backup|maps/': [[obj('maps/a.osz', 10, 'old-etag')]],
+      'src|trash/': [[]],
+      [`backup|snapshots/${today}/`]: [[]],
+      'backup|snapshots/': [[]],
+    },
+    getResultsByBucket: {
+      // 备份桶里那份是"被篡改前"的好内容
+      'backup|maps/a.osz': { ContentType: 'application/zip', Body: [Buffer.from('GOOD-OLD')] },
+      // 主桶里那份已经是新（可疑）内容
+      'src|maps/a.osz': { ContentType: 'application/zip', Body: [Buffer.from('TAMPERED')] },
+    },
+  })
+
+  const job = await runBackupJob(client, { sourceBucket: 'src', backupBucket: 'backup', now, log: silentLog })
+
+  const puts = calls.put.map((c) => `${c.Bucket}|${c.Key}`)
+  assert.deepEqual(
+    puts,
+    [`backup|snapshots/${today}/maps/a.osz`, 'backup|maps/a.osz'],
+    '顺序必须是"先存档、后覆盖镜像"',
+  )
+  const bodyOf = (b) => (Buffer.isBuffer(b) ? b.toString() : Buffer.concat(b).toString())
+  assert.equal(bodyOf(calls.put[0].Body), 'GOOD-OLD', '存档的必须是旧内容，不是新内容')
+  assert.equal(bodyOf(calls.put[1].Body), 'TAMPERED', '镜像随后被更新为新内容')
+  assert.equal(job.backupResults[0].archived, 1)
+  assert.equal(job.backupResults[0].copied, 1)
+  assert.equal(job.exitCode, 0)
+})
+
+test('变更前存档失败 → 该对象不覆盖镜像（宁可落后，也不换掉唯一的好副本）', async () => {
+  const now = Date.now()
+  const today = dateKey(now)
+  const { client, calls } = makeFakeClient({
+    pages: {
+      'src|maps/': [[obj('maps/a.osz', 99, 'new-etag')]],
+      'backup|maps/': [[obj('maps/a.osz', 10, 'old-etag')]],
+      'src|trash/': [[]],
+      [`backup|snapshots/${today}/`]: [[]],
+    },
+    getResultsByBucket: {
+      'backup|maps/a.osz': { ContentType: 'application/zip', Body: [Buffer.from('GOOD-OLD')] },
+      'src|maps/a.osz': { ContentType: 'application/zip', Body: [Buffer.from('TAMPERED')] },
+    },
+    failPut: new Set([`snapshots/${today}/maps/a.osz`]),
+  })
+
+  const job = await runBackupJob(client, { sourceBucket: 'src', backupBucket: 'backup', now, log: silentLog })
+
+  assert.deepEqual(
+    calls.put.map((c) => c.Key).filter((k) => k === 'maps/a.osz'),
+    [],
+    '存档失败时不得写镜像（存档本身的那次 PUT 会被 fake 记录，这里只看镜像 key）',
+  )
+  assert.equal(job.backupResults[0].failed, 1)
+  assert.equal(job.backupResults[0].status, 'failed')
+  assert.equal(job.cleanup, null, '不完整就不做任何删除')
+  assert.equal(job.snapshotPrune, null)
+  assert.equal(job.exitCode, 1)
+})
+
+test('变更前存档：当天快照已有同内容时不重复写（同一天重复触发是幂等的）', async () => {
+  const now = Date.now()
+  const today = dateKey(now)
+  const { client, calls } = makeFakeClient({
+    pages: {
+      'src|maps/': [[obj('maps/a.osz', 99, 'new-etag')]],
+      'backup|maps/': [[obj('maps/a.osz', 10, 'old-etag')]],
+      'src|trash/': [[]],
+      [`backup|snapshots/${today}/`]: [[obj(`snapshots/${today}/maps/a.osz`, 10, 'old-etag')]],
+    },
+  })
+
+  const job = await runBackupJob(client, { sourceBucket: 'src', backupBucket: 'backup', now, log: silentLog })
+
+  assert.equal(job.backupResults[0].archiveSkipped, 1)
+  assert.equal(job.backupResults[0].archived, 0)
+  assert.deepEqual(calls.put.map((c) => c.Key), ['maps/a.osz'], '只更新镜像，不重复写快照')
+})
+
+test('首次备份没有旧内容可存档：镜像里没有该对象时不产生快照写入', async () => {
+  const now = Date.now()
+  const today = dateKey(now)
+  const { client, calls } = makeFakeClient({
+    pages: {
+      'src|maps/': [[obj('maps/new.osz', 5, 'e1')]],
+      'backup|maps/': [[]],
+      'src|trash/': [[]],
+      [`backup|snapshots/${today}/`]: [[]],
+    },
+  })
+
+  const job = await runBackupJob(client, { sourceBucket: 'src', backupBucket: 'backup', now, log: silentLog })
+
+  assert.deepEqual(calls.put.map((c) => c.Key), ['maps/new.osz'])
+  assert.equal(job.backupResults[0].archived, 0)
+  assert.equal(job.exitCode, 0)
+})
+
+test('快照轮转：超期快照删除、当天的保留、非日期键不动', async () => {
+  const now = Date.now()
+  const today = dateKey(now)
+  const oldDate = dateKey(now - 8 * DAY)
+  const { client, calls } = makeFakeClient({
+    pages: {
+      'src|maps/': [[]],
+      'backup|maps/': [[]],
+      'src|trash/': [[]],
+      [`backup|snapshots/${today}/`]: [[]],
+      'backup|snapshots/': [[
+        obj(`snapshots/${oldDate}/maps/a.osz`, 1, 'e-old'),
+        obj(`snapshots/${today}/maps/a.osz`, 1, 'e-new'),
+        obj('snapshots/README.txt', 1, 'e-note'),
+      ]],
+    },
+  })
+
+  const job = await runBackupJob(client, { sourceBucket: 'src', backupBucket: 'backup', now, log: silentLog })
+
+  assert.deepEqual(calls.del.map((c) => `${c.Bucket}|${c.Key}`), [`backup|snapshots/${oldDate}/maps/a.osz`])
+  assert.equal(job.snapshotPrune.deleted, 1)
+  assert.equal(job.snapshotPrune.kept, 1)
+  assert.equal(job.snapshotPrune.ignored, 1, '非 snapshots/<日期>/ 形状的键不删')
+  assert.equal(job.exitCode, 0)
+})
+
+test('快照轮转：保留天数设成 0 → 关闭存档与轮转（退回纯镜像）', async () => {
+  const now = Date.now()
+  const oldDate = dateKey(now - 30 * DAY)
+  const { client, calls } = makeFakeClient({
+    pages: {
+      'src|maps/': [[obj('maps/a.osz', 99, 'new')]],
+      'backup|maps/': [[obj('maps/a.osz', 10, 'old')]],
+      'src|trash/': [[]],
+      'backup|snapshots/': [[obj(`snapshots/${oldDate}/maps/a.osz`, 1, 'e')]],
+    },
+    getResultsByBucket: {
+      'backup|maps/a.osz': { ContentType: 'application/zip', Body: [Buffer.from('OLD')] },
+      'src|maps/a.osz': { ContentType: 'application/zip', Body: [Buffer.from('NEW')] },
+    },
+  })
+
+  const job = await runBackupJob(client, {
+    sourceBucket: 'src', backupBucket: 'backup', now, snapshotRetentionDays: 0, log: silentLog,
+  })
+
+  assert.deepEqual(calls.put.map((c) => c.Key), ['maps/a.osz'], '关闭时不写快照')
+  assert.equal(job.snapshotPrune, null, '关闭时不做轮转')
+  assert.deepEqual(calls.del, [])
+  assert.equal(job.exitCode, 0)
+})
+
+test('快照轮转：删除失败计入非零退出', async () => {
+  const now = Date.now()
+  const oldDate = dateKey(now - 9 * DAY)
+  const { client } = makeFakeClient({
+    pages: {
+      'src|maps/': [[]],
+      'backup|maps/': [[]],
+      'src|trash/': [[]],
+      'backup|snapshots/': [[obj(`snapshots/${oldDate}/maps/a.osz`, 1, 'e')]],
+    },
+    failDelete: new Set([`snapshots/${oldDate}/maps/a.osz`]),
+  })
+
+  const job = await runBackupJob(client, { sourceBucket: 'src', backupBucket: 'backup', now, log: silentLog })
+
+  assert.equal(job.snapshotPrune.failed, 1)
+  assert.equal(job.exitCode, 1)
 })

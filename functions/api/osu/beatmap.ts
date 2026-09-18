@@ -17,7 +17,8 @@ function corsHeaders() {
 function jsonResponse(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
-    headers: { 'Content-Type': 'application/json', ...corsHeaders() },
+    // R21：本端点转发 osu! 元数据（可能带 key），不许被缓存留存。
+    headers: { 'Content-Type': 'application/json', 'Cache-Control': 'private, no-store', ...corsHeaders() },
   })
 }
 

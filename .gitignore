@@ -7,6 +7,15 @@ src/generated
 output
 data/packs-manifest.previous.json
 
+# TypeScript 的增量编译缓存：纯本地产物，且每跑一次 tsc 都会变，
+# 跟踪它只会让每次提交都多出一份噪声 diff（R22）。
+tsconfig.tsbuildinfo
+
+# 维护脚本生成的临时报告（跑一次内容就变，不该进版本库）：
+# detect-type-conflicts 的 type-conflicts-report.json、backfill-bid 的
+# backfill-bid-report.json 都写在仓库根目录（R20）。
+/*-report.json
+
 # 工作区自带的第三方工具与外部工具的笔记目录:留在磁盘上,只是不纳入版本管理。
 # 依据 docs/design/2026-09-homepage-implementation.md:30 —— 不修改、不提交、不删除。
 # 加进来是为了别让它们每次刷屏 git status,也免得手滑 git add -A 把 osu-toolbox 里

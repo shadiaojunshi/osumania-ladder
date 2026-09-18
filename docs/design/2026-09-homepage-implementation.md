@@ -135,6 +135,8 @@ type RoundLayout = {
 
 新增 `src/lib/roundLabelLayout.ts` 只处理像素标签的确定性布局。不要修改 `getLnDiff`、TB 排除规则或 difficulty JSON。先把现有 round 计算结果整理为 `RoundLayout[]`，既给框体也给标题使用。
 
+> 2026-09-18（R22）：上文设想的"标题层"最终没有做（`LadderView.tsx` 里已注明"用户已拍板：本视图不做独立标题层"）。因此 `roundLabelLayout.ts` 里的标签防碰撞算法（`buildRoundLabelPlacements` / `LabelPlacement` / `LabelLayoutResult` / `LABEL_*`）与 `scripts/round-label-layout.test.mjs` 已作为"无生产调用的死代码"删除，只保留 `RoundLayout` 类型（框体层在用）。要取回：`git show 419c4b4:src/lib/roundLabelLayout.ts`。
+
 每列内部层次：
 
 | 层 | z-index | 行为 |

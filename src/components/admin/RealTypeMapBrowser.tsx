@@ -106,6 +106,18 @@ export function RealTypeMapBrowser({ canStage = false, stagedCount = 0, onStageM
       || a.slot.localeCompare(b.slot, undefined, { numeric: true })),
   [allRows, overrides, selectedRealType, selectedTournamentId])
 
+  // 警告横幅里要列出**真正触发**的比赛，不能写死某个历史事故的名字。
+  // 按「比赛 + 涉及的轮次集合」去重，这样一行代表一组复用，而不是每张图一行。
+  const duplicateGroups = useMemo(() => {
+    const seen = new Map<string, { abbr: string; rounds: string[] }>()
+    for (const row of visibleRows) {
+      if (!row.duplicateRounds || row.duplicateRounds.length < 2) continue
+      const key = `${row.tournamentId}:${row.duplicateRounds.join('&')}`
+      if (!seen.has(key)) seen.set(key, { abbr: row.tournamentAbbr, rounds: row.duplicateRounds })
+    }
+    return [...seen.values()]
+  }, [visibleRows])
+
   const handleRealTypeChange = (realType: string) => {
     setSelectedRealType(realType)
     setSelectedTournamentId('all')
@@ -194,9 +206,19 @@ export function RealTypeMapBrowser({ canStage = false, stagedCount = 0, onStageM
         )}
       </div>
 
-      {visibleRows.some((row) => row.duplicateRounds?.length) && (
+      {duplicateGroups.length > 0 && (
         <div className="mx-4 mt-3 rounded border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-200">
-          {t('realTypeMaps.duplicateWarning')}
+          <div>{t('realTypeMaps.duplicateWarning')}</div>
+          <ul className="mt-1 list-inside list-disc">
+            {duplicateGroups.slice(0, 6).map((group) => (
+              <li key={`${group.abbr}:${group.rounds.join('&')}`}>
+                {group.abbr} — {group.rounds.join(' & ')}
+              </li>
+            ))}
+          </ul>
+          {duplicateGroups.length > 6 && (
+            <div className="mt-1">+{duplicateGroups.length - 6}</div>
+          )}
         </div>
       )}
 

@@ -34,8 +34,6 @@ export function PackLinksEditor() {
   const [submitting, setSubmitting] = useState(false)
   const [status, setStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
 
-  useEffect(() => { fetchManifest() }, [])
-
   const fetchManifest = async () => {
     setLoading(true)
     try {
@@ -50,6 +48,10 @@ export function PackLinksEditor() {
       setLoading(false)
     }
   }
+
+  // 取数函数必须先声明、再在 effect 里引用（否则命中 react-hooks/immutability
+  // 的 "Cannot access variable before it is declared"）。行为不变。
+  useEffect(() => { fetchManifest() }, [])
 
   const updateLink = (realType: string, part: number | undefined, linkKey: string, url: string) => {
     if (!manifest) return

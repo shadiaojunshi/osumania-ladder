@@ -24,6 +24,7 @@ const {
   pathsNeedingContentCheck,
   pickExistingPath,
   tryPathsInOrder,
+  findSameContentDifferentIdentity,
 } = require('./mapIdentity.js')
 
 const osu = ({ artist = 'A', title = 'T', creator = 'C', version = 'V', mode = 3, od = 8, points = '0,500,4,1,0,100,1,0', notes = '256,192,0,128,0,500:0:0:0:0:', bg = 'bg.jpg', audio = 'audio.mp3' } = {}) => [
@@ -288,3 +289,90 @@ test('R11 备选内容与身份不符时不能被采用', async () => {
   const out = await tryPathsInOrder(['maps/a.osz', 'maps/b.osz'], attempt)
   assert.equal(out.ok, false, '内容不符的备选必须被拒绝')
 })
+
+// ---------- 跨身份来源的同内容（只报告，不参与合并）----------
+
+test('R11 报告：同内容但一个有 BID、一个没有 → 列为一组（当前既不合并不报冲突）', () => {
+  const sig = contentSignature(osu())
+  const groups = findSameContentDifferentIdentity([
+    entry({ r2Key: 'maps/a/r1/RC1.osz', beatmapId: 500, contentKey: sig, source: src('A', 'r1', 'RC1') }),
+    entry({ r2Key: 'maps/b/r2/RC2.osz', beatmapId: null, metadataKey: 'x|t|c|v', contentKey: sig, source: src('B', 'r2', 'RC2') }),
+  ])
+  assert.equal(groups.length, 1, '应报出 1 组')
+  assert.equal(groups[0].contentKey, sig)
+  assert.equal(groups[0].isNsv, false)
+  assert.deepEqual(
+    groups[0].groups.map((g) => g.candidateKey).sort(),
+    ['bid:500', 'meta:x|t|c|v'],
+    '两条不同的候选键都要列出来',
+  )
+})
+
+test('R11 报告：同内容但两个不同 BID → 也报（同一张图被重复上传）', () => {
+  const sig = contentSignature(osu())
+  const groups = findSameContentDifferentIdentity([
+    entry({ r2Key: 'maps/a/r1/RC1.osz', beatmapId: 500, contentKey: sig }),
+    entry({ r2Key: 'maps/b/r2/RC2.osz', beatmapId: 700, contentKey: sig }),
+  ])
+  assert.equal(groups.length, 1)
+  assert.deepEqual(groups[0].groups.map((g) => g.candidateKey).sort(), ['bid:500', 'bid:700'])
+})
+
+test('R11 报告：只有同一个候选键 → 不算跨道（那是正常合并路径，不进这份报告）', () => {
+  const sig = contentSignature(osu())
+  const groups = findSameContentDifferentIdentity([
+    entry({ r2Key: 'maps/a.osz', beatmapId: 500, contentKey: sig }),
+    entry({ r2Key: 'maps/b.osz', beatmapId: 500, contentKey: sig }),
+  ])
+  assert.deepEqual(groups, [], '同 BID 同内容本来就该合并，不应作为"重复"报出来')
+})
+
+test('R11 报告：读不到内容（摘要为空）不参与，不能因为"都读不到"就判成重复', () => {
+  const groups = findSameContentDifferentIdentity([
+    entry({ r2Key: 'maps/a.osz', beatmapId: 500, contentKey: null }),
+    entry({ r2Key: 'maps/b.osz', beatmapId: null, metadataKey: 'x|t|c|v', contentKey: null }),
+  ])
+  assert.deepEqual(groups, [])
+})
+
+test('R11 报告：主图与 NSV 内容相同也不混成一组', () => {
+  const sig = contentSignature(osu())
+  const groups = findSameContentDifferentIdentity([
+    entry({ r2Key: 'maps/a/r1/RC1.osz', beatmapId: 500, contentKey: sig, isNsv: false }),
+    entry({ r2Key: 'maps/b/r2/RC2.nsv.osz', beatmapId: 700, contentKey: sig, isNsv: true }),
+  ])
+  assert.deepEqual(groups, [], 'NSV 与主图本来就是两种东西')
+
+  const both = findSameContentDifferentIdentity([
+    entry({ r2Key: 'maps/a/r1/RC1.nsv.osz', beatmapId: 500, contentKey: sig, isNsv: true }),
+    entry({ r2Key: 'maps/b/r2/RC2.nsv.osz', beatmapId: 700, contentKey: sig, isNsv: true }),
+  ])
+  assert.equal(both.length, 1, '两个 NSV 之间照样要报')
+  assert.equal(both[0].isNsv, true)
+})
+
+test('R11 报告：带出来源标签（比赛/轮次/槽位），便于人工核对', () => {
+  const sig = contentSignature(osu())
+  const groups = findSameContentDifferentIdentity([
+    entry({ r2Key: 'maps/a/r1/RC1.osz', beatmapId: 500, contentKey: sig, source: src('T1', 'r1', 'RC1') }),
+    entry({ r2Key: 'maps/b/r2/RC2.osz', beatmapId: null, metadataKey: 'x', contentKey: sig, source: src('T2', 'r2', 'RC2') }),
+  ])
+  const all = groups[0].groups.flatMap((g) => g.members.flatMap((m) => m.sources))
+  assert.deepEqual(
+    all.map((s) => `${s.tournamentAbbr}${s.roundAbbr} ${s.slot}`).sort(),
+    ['T1r1 RC1', 'T2r2 RC2'],
+  )
+})
+
+test('R11 报告：主图排在 NSV 前面（稳定顺序，方便人工比对历次报告）', () => {
+  const sig = contentSignature(osu())
+  const groups = findSameContentDifferentIdentity([
+    entry({ r2Key: 'maps/n1.osz', beatmapId: 1, contentKey: sig, isNsv: true }),
+    entry({ r2Key: 'maps/n2.osz', beatmapId: 2, contentKey: sig, isNsv: true }),
+    entry({ r2Key: 'maps/m1.osz', beatmapId: 3, contentKey: sig, isNsv: false }),
+    entry({ r2Key: 'maps/m2.osz', beatmapId: 4, contentKey: sig, isNsv: false }),
+  ])
+  assert.equal(groups.length, 2)
+  assert.deepEqual(groups.map((g) => g.isNsv), [false, true])
+})
+

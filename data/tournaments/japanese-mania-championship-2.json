@@ -114,17 +114,19 @@
           "slot": "RC3",
           "type": "RC",
           "realType": "PDRC",
-          "name": "",
+          "name": "Owata-P - Paradichlorobenzene [CrewK's C6H4Cl2]",
           "difficulty": 0,
-          "beatmapId": 4597415
+          "beatmapId": 4597415,
+          "beatmapsetId": 177102
         },
         {
           "slot": "RC4",
           "type": "RC",
           "realType": "PDRC",
-          "name": "",
+          "name": "12insomnia - Gravity Blast [Bacon Haniwa's Gravitational Collapse (JMC edit)]",
           "difficulty": 0,
-          "beatmapId": 4597440
+          "beatmapId": 4597440,
+          "beatmapsetId": 177113
         },
         {
           "slot": "RC5",
@@ -222,9 +224,10 @@
           "slot": "RC2",
           "type": "RC",
           "realType": "PDRC",
-          "name": "",
+          "name": "PRIDASK feat. Sennzai - Not a God [CrewK's Dependence]",
           "difficulty": 0,
-          "beatmapId": 4616998
+          "beatmapId": 4616998,
+          "beatmapsetId": 184344
         },
         {
           "slot": "RC3",
@@ -239,17 +242,19 @@
           "slot": "RC4",
           "type": "RC",
           "realType": "PDRC",
-          "name": "",
+          "name": "xi - Azalea [CrewK's Pure]",
           "difficulty": 0,
-          "beatmapId": 4617003
+          "beatmapId": 4617003,
+          "beatmapsetId": 184347
         },
         {
           "slot": "RC5",
           "type": "RC",
           "realType": "PDRC",
-          "name": "",
+          "name": "Lime - 8bit Adventurer [CrewK's Voyage]",
           "difficulty": 0,
-          "beatmapId": 4617000
+          "beatmapId": 4617000,
+          "beatmapsetId": 184345
         },
         {
           "slot": "RC6",
@@ -300,9 +305,10 @@
           "slot": "LN2",
           "type": "LN",
           "realType": "PDLN",
-          "name": "",
+          "name": "kanone - CO5M1C R4ILR0AD [CrewK's Densha]",
           "difficulty": 0,
-          "beatmapId": 4617002
+          "beatmapId": 4617002,
+          "beatmapsetId": 184346
         },
         {
           "slot": "LN3",
@@ -355,25 +361,28 @@
           "slot": "RC2",
           "type": "RC",
           "realType": "PDRC",
-          "name": "",
+          "name": "Haraguchi Sasuke - Igaku [Med]",
           "difficulty": 0,
-          "beatmapId": 4625618
+          "beatmapId": 4625618,
+          "beatmapsetId": 187713
         },
         {
           "slot": "RC3",
           "type": "RC",
           "realType": "PDRC",
-          "name": "",
+          "name": "Hisui Chazuke - Bomb Bang Bound!!! [Oceanus' Smiling (JMC edit)]",
           "difficulty": 0,
-          "beatmapId": 4625441
+          "beatmapId": 4625441,
+          "beatmapsetId": 187706
         },
         {
           "slot": "RC4",
           "type": "RC",
           "realType": "PDRC",
-          "name": "",
+          "name": "w_tre - FIONA [Carefree]",
           "difficulty": 0,
-          "beatmapId": 4625593
+          "beatmapId": 4625593,
+          "beatmapsetId": 832244
         },
         {
           "slot": "RC5",
@@ -451,9 +460,10 @@
           "slot": "LN2",
           "type": "LN",
           "realType": "PDLN",
-          "name": "",
+          "name": "-45 - A c i - L [CrewK's aLNother]",
           "difficulty": 0,
-          "beatmapId": 4625430
+          "beatmapId": 4625430,
+          "beatmapsetId": 187631
         },
         {
           "slot": "LN3",
@@ -515,9 +525,10 @@
           "slot": "RC3",
           "type": "RC",
           "realType": "PDRC",
-          "name": "",
+          "name": "Unknown Artist - Iwashi ga Tsuchi kara Haete Kurunda [Tera's ... .- .-. -.. .. -. . (edit)]",
           "difficulty": 0,
-          "beatmapId": 4635654
+          "beatmapId": 4635654,
+          "beatmapsetId": 191536
         },
         {
           "slot": "RC4",
@@ -568,9 +579,10 @@
           "slot": "HB1",
           "type": "HB",
           "realType": "PDHB",
-          "name": "",
+          "name": "Kaitendaentai - Soutou no Rei [Crysarlene's Numb (OD8)]",
           "difficulty": 0,
-          "beatmapId": 4635650
+          "beatmapId": 4635650,
+          "beatmapsetId": 191533
         },
         {
           "slot": "HB2",
@@ -668,9 +680,10 @@
           "slot": "RC1",
           "type": "RC",
           "realType": "PDRC",
-          "name": "",
+          "name": "ELECTR - Black Light [Pray]",
           "difficulty": 0,
-          "beatmapId": 4653983
+          "beatmapId": 4653983,
+          "beatmapsetId": 199125
         },
         {
           "slot": "RC2",
@@ -739,9 +752,10 @@
           "slot": "HB1",
           "type": "HB",
           "realType": "PDHB",
-          "name": "",
+          "name": "Billain & Kodin - Feed For Speed [Rapidity (Edit)]",
           "difficulty": 0,
-          "beatmapId": 4653981
+          "beatmapId": 4653981,
+          "beatmapsetId": 199124
         },
         {
           "slot": "HB2",
@@ -801,9 +815,10 @@
           "slot": "LN4",
           "type": "LN",
           "realType": "PDLN",
-          "name": "",
+          "name": "Se-U-Ra - Houyou no Hakobune Six [Challenge]",
           "difficulty": 0,
-          "beatmapId": 4654005
+          "beatmapId": 4654005,
+          "beatmapsetId": 199137
         },
         {
           "slot": "TB",
@@ -892,9 +907,10 @@
           "slot": "RC7",
           "type": "RC",
           "realType": "PDRC",
-          "name": "",
+          "name": "Buta Otome - Fantasy Satellite [Gensou]",
           "difficulty": 0,
-          "beatmapId": 4672800
+          "beatmapId": 4672800,
+          "beatmapsetId": 206800
         },
         {
           "slot": "RC8",
@@ -936,9 +952,10 @@
           "slot": "HB4",
           "type": "HB",
           "realType": "PDHB",
-          "name": "",
+          "name": "Camellia - Parallel Universe Shifter [Nova (cut)]",
           "difficulty": 0,
-          "beatmapId": 4671476
+          "beatmapId": 4671476,
+          "beatmapsetId": 206436
         },
         {
           "slot": "LN1",

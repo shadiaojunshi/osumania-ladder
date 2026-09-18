@@ -37,7 +37,7 @@ export const useViewStore = create<ViewStore>((set) => ({
   mode: 'round',
   zoom: 2,
   rowHeight: 100,
-  columnWidth: 160,
+  columnWidth: 140,
   rfLnOffset: 0,
   activeFilter: null,
   searchQuery: '',
@@ -46,8 +46,9 @@ export const useViewStore = create<ViewStore>((set) => ({
   hideQualifiers: false,
   yearFilter: null,
   roundFilter: null,
-  // 默认白边;本轮不持久化,刷新回到默认,页面内手动开关仍有效。
-  roundBorderAlways: true,
+  // 默认关闭（站长 2026-09-18：默认常驻白边太吵）。本轮不持久化，
+  // 刷新回到默认，页面内手动开关仍有效。
+  roundBorderAlways: false,
 
   setMode: (mode) => set({ mode }),
   setZoom: (zoom) => set({ zoom }),

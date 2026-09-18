@@ -544,6 +544,7 @@ export function validatePathId(value: unknown): Validation<string> {
 // 参数类型故意放松:测试里的 stub 只需要实现 json()/headers.get()。
 export interface JsonBodyRequest {
   json: () => Promise<unknown>
+  body?: ReadableStream<Uint8Array> | null
   headers?: { get: (name: string) => string | null | undefined }
 }
 
@@ -556,6 +557,33 @@ export async function readJsonBody(
     return { ok: false, error: `请求体超过 ${maxBytes} 字节上限` }
   }
   try {
+    // Content-Length 只是快速拒绝；实际流必须计数，否则分块传输可绕过上限。
+    // 无 body 的轻量测试 stub 保持兼容；真实 Request 始终提供 body 属性。
+    if (request.body) {
+      const reader = request.body.getReader()
+      const decoder = new TextDecoder('utf-8', { fatal: true })
+      let size = 0
+      let text = ''
+      try {
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+          size += value.byteLength
+          if (size > maxBytes) {
+            await reader.cancel().catch(() => {})
+            return { ok: false, error: `请求体超过 ${maxBytes} 字节上限` }
+          }
+          text += decoder.decode(value, { stream: true })
+        }
+        text += decoder.decode()
+        return { ok: true, value: JSON.parse(text) }
+      } catch (error) {
+        await reader.cancel().catch(() => {})
+        throw error
+      } finally {
+        reader.releaseLock()
+      }
+    }
     return { ok: true, value: await request.json() }
   } catch {
     return { ok: false, error: '请求体不是合法 JSON' }

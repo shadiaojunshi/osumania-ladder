@@ -13,7 +13,7 @@ import { createTournamentSearchIndex, searchTournaments } from '@/lib/tournament
 import { LadderSearchResults } from './LadderSearchResults'
 import { useT } from '@/lib/i18n'
 import type { RoundLayout } from '@/lib/roundLabelLayout'
-import { ORIGIN_Y, yForDifficulty, computeRangeGeometry, computeScalarGeometry } from '@/lib/ladderGeometry'
+import { COLUMN_HEADER_HEIGHT, OVERFLOW_BAND_HEIGHT, ORIGIN_Y, yForDifficulty, computeRangeGeometry, computeScalarGeometry } from '@/lib/ladderGeometry'
 
 const searchIndex = createTournamentSearchIndex(tournaments)
 
@@ -635,6 +635,9 @@ function TournamentColumn({
     if (!geometry) return null
     const lastRound = visibleRounds[visibleRounds.length - 1]
     const height = Math.max(geometry.paintBottom - geometry.paintTop, 40)
+    const surfaceTop = geometry.above ? COLUMN_HEADER_HEIGHT : geometry.paintTop
+    const bodyVisible = geometry.paintBottom - geometry.paintTop >= 2
+    const surfaceHeight = geometry.above ? OVERFLOW_BAND_HEIGHT + (bodyVisible ? height : 0) : height
     // 悬浮/点击按"指针所在高度"决定指哪一轮:整个比赛只有一个框(最低→最高),
     // 固定绑最后一轮会让任何位置都显示决赛(站长反馈)。这里把指针 y 反解成难度,
     // 再取难度区间离它最近的那一轮。
@@ -652,7 +655,7 @@ function TournamentColumn({
     const pickRoundAtPointer = (clientY: number, rectTop: number, rectHeight: number) => {
       if (perUnit <= 0) return lastRound
       const ratio = rectHeight > 0 ? (clientY - rectTop) / rectHeight : 0
-      const yContent = geometry.paintTop + ratio * height
+      const yContent = surfaceTop + ratio * surfaceHeight
       const diff = Math.min(
         DIFFICULTY_RANGE.max,
         Math.max(DIFFICULTY_RANGE.min, DIFFICULTY_RANGE.max - (yContent - ORIGIN_Y) / perUnit),
@@ -670,35 +673,36 @@ function TournamentColumn({
       return best ? best.round : lastRound
     }
 
-    const bandItems: BandItem[] = geometry.above
-      ? [{ key: `${tournament.id}-band`, round: lastRound, sortValue: maxDiff, displayValue: null, dimmed: false }]
-      : []
-
     return (
       <div className="relative shrink-0" style={{ width: columnWidth }}>
         {columnHeader}
-        {/* 超界带:随内容滚动不 sticky——只滚回顶部附近可见;z-35 低于列头,滚过时被盖住 */}
-        <div className="absolute top-8 left-0 right-0 h-8 pointer-events-none" style={{ zIndex: 35 }}>
-          <OverflowBand items={bandItems} bordered={roundBorderAlways} onHover={onHover} onLeave={onLeave} onOpenDetail={onOpenDetail} />
-        </div>
-        {/* 框体层:z-10 独立层叠上下文,hover 白边不会越过列头/超界带/标题层 */}
+        {/* 熔岩头和范围框共用一个按钮、背景和外边框，避免接缝及两套 hover。 */}
         <div className="absolute inset-0" style={{ zIndex: 10 }}>
-          {geometry.paintBottom - geometry.paintTop >= 2 && (
+          {(geometry.above || bodyVisible) && (
             <button
               type="button"
-              className={`round-box absolute ${geometry.above ? 'left-1 right-1 overflow-cropped-top' : 'left-0 right-0'} ${geometry.below ? 'overflow-cropped-bottom' : ''} ${roundBorderAlways ? 'always-border' : ''}`}
-              style={{ top: geometry.paintTop, height, background: getGradientForRange(minDiff, maxDiff) }}
+              className={`round-box absolute ${geometry.above ? 'left-1 right-1 overflow-range' : 'left-0 right-0'} ${geometry.below ? 'overflow-cropped-bottom' : ''} ${roundBorderAlways ? 'always-border' : ''}`}
+              style={{ top: surfaceTop, height: surfaceHeight, paddingTop: geometry.above && bodyVisible ? OVERFLOW_BAND_HEIGHT : undefined, background: getGradientForRange(minDiff, maxDiff) }}
               onMouseEnter={(e) => {
                 const rect = e.currentTarget.getBoundingClientRect()
                 onHover(pickRoundAtPointer(e.clientY, rect.top, rect.height), e.clientX, e.clientY)
               }}
               onMouseLeave={onLeave}
+              onFocus={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect()
+                onHover(lastRound, rect.left + rect.width / 2, rect.bottom)
+              }}
+              onBlur={onLeave}
               onClick={(e) => {
                 const rect = e.currentTarget.getBoundingClientRect()
-                onOpenDetail(pickRoundAtPointer(e.clientY, rect.top, rect.height), e.currentTarget)
+                onOpenDetail(e.detail === 0 ? lastRound : pickRoundAtPointer(e.clientY, rect.top, rect.height), e.currentTarget)
               }}
             >
-              {tournament.abbreviation}
+              {geometry.above && <span aria-hidden className="overflow-range-heat" />}
+              <span className="relative">
+                {geometry.above && <span aria-hidden className="overflow-marker-arrow mr-1">↑</span>}
+                {tournament.abbreviation}
+              </span>
               {geometry.below && <span aria-hidden className="overflow-edge-bottom" />}
             </button>
           )}
@@ -918,6 +922,8 @@ function TournamentColumn({
       {/* 框体层:z-10 独立层叠上下文。 */}
       <div className="absolute inset-0" style={{ zIndex: 10 }}>
         {allTypeBoxes.map(({ round, type, label, adjustedAvg, roundKey }) => {
+          // 超界标量完全由顶部熔岩按钮承担；裁切后的残片会被 min-height 撑成第二个框。
+          if (adjustedAvg > DIFFICULTY_RANGE.max) return null
           const anchorY = yForDifficulty(adjustedAvg, plotHeight, DIFFICULTY_RANGE)
           const boxH = BOX_HEIGHT_TYPE
           const scalar = computeScalarGeometry(anchorY, boxH, plotHeight)
@@ -940,7 +946,7 @@ function TournamentColumn({
             <button
               type="button"
               key={key}
-              className={`round-box absolute ${isDimmed ? 'dimmed' : ''} ${roundBorderAlways ? 'always-border' : ''} ${adjustedAvg > DIFFICULTY_RANGE.max ? 'overflow-cropped-top' : ''} ${adjustedAvg < DIFFICULTY_RANGE.min ? 'overflow-cropped-bottom' : ''}`}
+              className={`round-box absolute ${isDimmed ? 'dimmed' : ''} ${roundBorderAlways ? 'always-border' : ''} ${adjustedAvg < DIFFICULTY_RANGE.min ? 'overflow-cropped-bottom' : ''}`}
               style={{
                 top: scalar.paintTop,
                 // 最小点击高度只改绘制外观,不改变锚点。
@@ -955,9 +961,7 @@ function TournamentColumn({
               // type 分支左键打开该框所属轮次的详情(不改变原始数据)。
               onClick={(e) => onOpenDetail(round, e.currentTarget)}
             >
-              {/* 顶部被裁切的框:可见部分只剩窄条,名称由上方熔岩头承担,
-                  框内文字改 sr-only,避免同一张图出现两个同名框(用户反馈)。 */}
-              <span className={adjustedAvg > DIFFICULTY_RANGE.max ? 'sr-only' : 'truncate block w-full text-center'}>
+              <span className="truncate block w-full text-center">
                 {tournament.abbreviation} {round.abbreviation} {label}
               </span>
               {adjustedAvg < DIFFICULTY_RANGE.min && <span aria-hidden className="overflow-edge-bottom" />}

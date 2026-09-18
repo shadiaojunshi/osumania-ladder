@@ -193,36 +193,93 @@ async function deleteOrphans(drive, orphans, log = console) {
   }
 }
 
-// 上传所有 pack。返回 { failed, orphans }。
+/**
+ * 把一个包同步到 Drive。
+ *
+ * **版本化上传**：R2 对象键是内容寻址的 `{realType}_{part}.{hash8}.osz`，Drive 侧用**同一个名字**。
+ *   · 同名即同内容 → 清单里已记着"这个内容键"对应的文件 id、或 Drive 上已有同名文件，
+ *     就直接复用，**不必再传一遍**（重跑能省下整轮流量）。
+ *   · 内容变了 → 新键 → Drive 上新建文件，旧文件原地不动。旧文件只是"不再被清单引用"，
+ *     由孤儿报告列出。这样两个镜像要么都指旧版、要么都指新版，不会半新半旧。
+ *   · 历史条目（没有 objectKey）沿用按名字覆盖的老行为 —— 否则 Drive 里会多出同名副本，
+ *     而线上旧清单的链接还指向老 id。
+ */
+async function syncOnePack(drive, entry, makeBody, delay, log = console) {
+  // pendingMirrors 与人工核查用的是这个稳定键（不带哈希）
+  const manifestKey = `${entry.realType}_${entry.part}.osz`
+  const versioned = typeof entry.objectKey === 'string' && entry.objectKey.length > 0
+  const driveName = versioned ? entry.objectKey : manifestKey
+  const getBody = makeBody(manifestKey, entry.objectKey)
+
+  if (!versioned) {
+    const fileId = await withRetry(
+      () => uploadOrUpdate(drive, getBody, driveName, entry.gdriveFileId || null),
+      { label: `上传 ${driveName}`, delay },
+    )
+    entry.gdriveObjectKey = null
+    return { fileId, skipped: false }
+  }
+
+  // ① 清单里已经记着这个内容键对应的文件 → 复用
+  if (entry.gdriveObjectKey === entry.objectKey && entry.gdriveFileId) {
+    await ensureAnyoneReader(drive, entry.gdriveFileId)
+    entry.gdriveObjectKey = entry.objectKey
+    return { fileId: entry.gdriveFileId, skipped: true }
+  }
+  // ② Drive 上已有同名文件（上次跑到一半、或清单被回滚过）→ 同一份内容
+  const existing = await findExistingFileId(drive, driveName)
+  if (existing) {
+    await ensureAnyoneReader(drive, existing)
+    entry.gdriveObjectKey = entry.objectKey
+    return { fileId: existing, skipped: true }
+  }
+  // ③ 新建
+  const created = await withRetry(async () => {
+    const res = await drive.files.create({
+      requestBody: { name: driveName, parents: [FOLDER_ID] },
+      media: { mimeType: 'application/octet-stream', body: await getBody() },
+      fields: 'id',
+    })
+    return res.data.id
+  }, { label: `上传 ${driveName}`, delay })
+  await ensureAnyoneReader(drive, created)
+  entry.gdriveObjectKey = entry.objectKey
+  return { fileId: created, skipped: false }
+}
+
+// 上传所有 pack。返回 { failed, succeeded, skipped, orphans }。
 // 只写内存中的 entry,不做任何删除——删除决定留给调用方,确保失败时不误删。
 async function runDriveSync({ drive, packs, prevPacks, makeBody, log = console, delay }) {
   const failed = []
+  const succeeded = []
+  let skipped = 0
   for (const entry of packs) {
-    // manifest 里每个 pack 的文件名统一是 <realType>_<part>.osz,与 R2 键一致
-    const fileName = `${entry.realType}_${entry.part}.osz`
-    const getBody = makeBody(fileName)
-    const knownFileId = entry.gdriveFileId || null
-
+    const manifestKey = `${entry.realType}_${entry.part}.osz`
     try {
-      const fileId = await withRetry(
-        async () => uploadOrUpdate(drive, getBody, fileName, knownFileId),
-        { label: `上传 ${fileName}`, delay },
-      )
+      const { fileId, skipped: wasSkipped } = await syncOnePack(drive, entry, makeBody, delay, log)
+      if (wasSkipped) {
+        skipped++
+        log.log(`  Skipped ${entry.objectKey || manifestKey}（内容已在 Drive 上）`)
+      }
       entry.gdriveFileId = fileId
       entry.links = entry.links || {}
       entry.links.googleDrive = `https://drive.google.com/uc?id=${fileId}&export=download`
+      succeeded.push(manifestKey)
     } catch (err) {
       // 认证失效不可恢复,直接抛给 main 做 fail-fast。
       if (isFatalAuthError(err)) throw err
-      failed.push({ fileName, message: err && err.message })
-      log.error(`  Failed ${fileName}: ${err && err.message}`)
+      failed.push({ fileName: manifestKey, message: err && err.message })
+      // 注意:失败时**不动** entry.links.googleDrive —— 那个链接此刻指向的是旧内容。
+      // 链接不删(人工维护的镜像不能凭空消失),但包名会留在 manifest 顶层的
+      // pendingMirrors 里,供下载页与人工核查识别"这个镜像还没同步"。
+      log.error(`  Failed ${manifestKey}: ${err && err.message}`)
     }
   }
 
   const referencedIds = collectReferencedFileIds(packs)
   // 任一失败 → 本次不做任何孤儿清理(保留旧文件,便于重跑恢复)。
   const orphans = failed.length === 0 ? computeOrphans(prevPacks, referencedIds) : []
-  return { failed, referencedIds, orphans }
+  return { failed, succeeded, skipped, referencedIds, orphans }
 }
 
 function assertDriveEnv() {
@@ -261,9 +318,10 @@ async function main() {
 
   // 来源:有 R2 凭据 → 从 R2 拉流;否则回退本地 output/(手动跑,generate 未删本地)。
   // 返回一个"每次调用都重新创建 body 的工厂"——重试时流是一次性的,必须重新获取。
-  const makeBody = (fileName) => {
+  // R2 键用清单里的 `objectKey`（内容寻址，带哈希）；历史条目没有这个字段时回退旧命名。
+  const makeBody = (fileName, objectKey) => {
     if (hasR2) {
-      const r2Key = fileName
+      const r2Key = objectKey || fileName
       return async () => {
         const getRes = await s3.send(new GetObjectCommand({ Bucket: R2_PACKS_BUCKET, Key: r2Key }))
         return getRes.Body
@@ -290,20 +348,50 @@ async function main() {
     throw err
   }
 
-  const { failed, orphans } = result
+  const { failed, orphans, succeeded, skipped } = result
+
+  // pendingMirrors 清账：本次成功同步的包划掉；失败 / 未涉及的保留标记。
+  // 失败包的镜像链接此刻仍指向旧内容，标记不能撤 —— 一撤就等于宣称"镜像已更新"。
+  if (Array.isArray(manifest.pendingMirrors)) {
+    const done = new Set(succeeded)
+    const stillPending = manifest.pendingMirrors.filter((k) => !done.has(k))
+    if (stillPending.length > 0) manifest.pendingMirrors = stillPending
+    else delete manifest.pendingMirrors
+  }
 
   // 先落盘进度(失败包保留上一版的旧链接,manifest 不会指向坏对象),再决定是否清理。
   fs.writeFileSync(MANIFEST_PATH, JSON.stringify(manifest, null, 2) + '\n')
   console.log('Manifest updated with Google Drive links')
+  if (skipped > 0) {
+    console.log(`${skipped} 个包的内容已在 Drive 上（同名即同内容），本次跳过上传。`)
+  }
 
   if (failed.length > 0) {
     console.error(`\n${failed.length} pack(s) failed to upload — orphan cleanup skipped, no Drive file was deleted.`)
     for (const f of failed) console.error(`  - ${f.fileName}: ${f.message}`)
+    if (Array.isArray(manifest.pendingMirrors) && manifest.pendingMirrors.length > 0) {
+      console.error('以下包的镜像链接仍指向旧内容（已记在 manifest 的 pendingMirrors 里）：')
+      console.error(`  ${manifest.pendingMirrors.join(', ')}`)
+    }
     console.error('packs-manifest.previous.json kept; re-run this job to resume.')
     process.exit(1)
   }
 
-  await deleteOrphans(drive, orphans)
+  // Drive 的孤儿清理**默认只报告**（另一条线的审查 P1）：
+  // 本脚本无法知道 workflow 的 git push 是否成功，而线上**旧** manifest 仍可能引用这些
+  // fileId —— push 失败时删掉它们，下载页会立刻断链。所以真删要显式开关，且必须在
+  // 确认线上 manifest 已是新版之后。
+  if (orphans.length > 0) {
+    const clean = process.argv.slice(2).includes('--clean-orphans')
+    if (clean) {
+      await deleteOrphans(drive, orphans)
+    } else {
+      console.warn(`\n发现 ${orphans.length} 个 Drive 孤儿文件（旧清单引用、新清单不再引用）:`)
+      for (const o of orphans) console.warn(`  - ${o.label} (id=${o.id})`)
+      console.warn('本次**不删除**。确认线上 manifest 已经是新版（git push 成功、Pages 已部署）之后，')
+      console.warn('再单独跑一次并加 --clean-orphans。')
+    }
+  }
 
   // .previous 是过程产物,全部成功后才清掉避免被 commit
   if (fs.existsSync(PREV_MANIFEST_PATH)) fs.unlinkSync(PREV_MANIFEST_PATH)

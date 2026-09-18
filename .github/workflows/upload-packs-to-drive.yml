@@ -9,6 +9,12 @@ on:
         description: '已生成 packs 的 Generate Map Packs run ID(仅作记录,实际从 R2 读)'
         required: false
 
+# 与 generate-packs.yml **共用同一个发布组**：两边都要改 R2 / manifest，
+# 并发时 Drive 侧会照一份中间态的清单去算孤儿（甚至删掉仍在被引用的文件）。
+concurrency:
+  group: packs-publish
+  cancel-in-progress: false
+
 jobs:
   upload:
     runs-on: ubuntu-latest
@@ -26,6 +32,7 @@ jobs:
       - name: Upload to Google Drive
         run: node scripts/upload-to-gdrive.js
         env:
+          RUN_ID: ${{ github.event.inputs.run_id }}
           GDRIVE_CLIENT_ID: ${{ secrets.GDRIVE_CLIENT_ID }}
           GDRIVE_CLIENT_SECRET: ${{ secrets.GDRIVE_CLIENT_SECRET }}
           GDRIVE_REFRESH_TOKEN: ${{ secrets.GDRIVE_REFRESH_TOKEN }}
@@ -38,7 +45,28 @@ jobs:
 
       - name: Commit manifest
         run: |
+          set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add data/packs-manifest.json
-          git diff --cached --quiet || git commit -m "Update packs manifest (drive re-upload)" && git push
+          if git diff --cached --quiet; then
+            echo "manifest 没有变化，跳过提交。"
+            exit 0
+          fi
+          git commit -m "Update packs manifest (drive re-upload)"
+          # 同上：push 冲突时先 rebase 再试，**不 force push、不回滚**；
+          # 冲突就保留本地结果并报错（人工处理），绝不用旧 manifest 覆盖人工链接。
+          for i in 1 2 3; do
+            if git push; then
+              exit 0
+            fi
+            echo "push 失败（第 $i 次），先同步远端再试"
+            git fetch origin "${GITHUB_REF_NAME}"
+            if ! git rebase "origin/${GITHUB_REF_NAME}"; then
+              git rebase --abort || true
+              echo "::error::manifest 与远端冲突（可能有人工修改）。已保留本地结果，请人工合并；不要用旧 manifest 覆盖。"
+              exit 1
+            fi
+          done
+          echo "::error::push 连续失败，已保留本地提交与生成结果。"
+          exit 1

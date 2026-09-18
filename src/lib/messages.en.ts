@@ -2,6 +2,8 @@ import type { messagesZh } from './messages.zh'
 
 // 类型保证 en 和 zh 的 key 完全一致;漏一个 TS 就报错。
 export const messagesEn: Record<keyof typeof messagesZh, string> = {
+  'roundDetail.realType': 'Pattern type',
+  'roundDetail.pendingType': 'Pending',
   // ---------- Header ----------
   'header.brand': 'osu!mania',
   'header.titleFull': ' Tournament Ladder',
@@ -37,6 +39,7 @@ export const messagesEn: Record<keyof typeof messagesZh, string> = {
   'control.year': 'Year',
   'control.round': 'Round',
   'control.year.all': 'All',
+  'control.round.all': 'All',
   'control.theme.toLight': 'Switch to light',
   'control.theme.toDark': 'Switch to dark',
   'control.theme.aria': 'Toggle theme',

@@ -352,12 +352,12 @@ test('PUT 单场比赛：正常保存仍是 200（含 sha 回传）', async () =
   }
 })
 
-test('DELETE 单场比赛：上游 401 → 502 UPSTREAM_AUTH，且不写回收站', async () => {
+test('DELETE 单场比赛：已备份后上游 401 → 502 UPSTREAM_AUTH', async () => {
   const fetch = installFetch([
     {
       method: 'GET',
       match: contentsPath('t'),
-      reply: () => json({ content: Buffer.from('{}').toString('base64') }),
+      reply: () => json({ sha: 'sha-1', content: Buffer.from('{}').toString('base64') }),
     },
     { method: 'DELETE', match: contentsPath('t'), reply: () => json({ message: 'Bad credentials' }, 401) },
   ])

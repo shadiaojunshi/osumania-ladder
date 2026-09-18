@@ -1,10 +1,33 @@
-const { S3Client, ListObjectsV2Command, GetObjectCommand, PutObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3')
+const { S3Client, ListObjectsV2Command, GetObjectCommand, PutObjectCommand } = require('@aws-sdk/client-s3')
 const JSZip = require('jszip')
 const { formatSources } = require('./source-label')
 const { ZipArchive } = require('archiver')
 const fs = require('fs')
 const path = require('path')
 const crypto = require('crypto')
+const {
+  STATUS_OK,
+  STATUS_FAILED,
+  STATUS_SKIPPED,
+  evaluatePack,
+  summarizeRun,
+  labelOf,
+  buildManifestPacks,
+  findOrphanKeys,
+  objectKeyFor,
+  parsePackCli,
+  describeCliError,
+  CLI_USAGE,
+} = require('./pack-publish')
+const {
+  contentSignature,
+  metadataCandidateKey,
+  pathsNeedingContentCheck,
+  clusterEntries,
+  slotTotalOf,
+  pickExistingPath,
+  tryPathsInOrder,
+} = require('./mapIdentity')
 
 const REAL_TYPE_ALIASES = { WC: 'LNWC' }
 function normalizeRealType(realType) {
@@ -21,9 +44,13 @@ const R2_BUCKET = process.env.R2_BUCKET || 'osumania-ladder-maps'
 const R2_PACKS_BUCKET = process.env.R2_PACKS_BUCKET || 'osumania-ladder-packs'
 const R2_PACKS_PUBLIC_URL = (process.env.R2_PACKS_PUBLIC_URL || '').replace(/\/+$/, '')
 
-if (!R2_ACCOUNT_ID || !R2_ACCESS_KEY || !R2_SECRET_KEY) {
-  console.error('Missing R2 credentials. Set R2_ACCOUNT_ID, R2_ACCESS_KEY, R2_SECRET_KEY.')
-  process.exit(1)
+// 凭据检查放到 main 里（解析完 CLI、处理完 --help 之后）—— 否则 `--help` / 参数写错
+// 都会先被一句"缺少凭据"挡住，看不到用法。
+function assertR2Env() {
+  if (!R2_ACCOUNT_ID || !R2_ACCESS_KEY || !R2_SECRET_KEY) {
+    console.error('Missing R2 credentials. Set R2_ACCOUNT_ID, R2_ACCESS_KEY, R2_SECRET_KEY.')
+    process.exit(1)
+  }
 }
 
 const s3 = new S3Client({
@@ -194,6 +221,18 @@ async function listR2Objects(prefix) {
   return objects
 }
 
+/** packs 桶的对象列表（分页 —— 对象数可能超过单页 1000，不分页会漏判孤儿）。 */
+async function listPackBucketObjects() {
+  const objects = []
+  let token
+  do {
+    const res = await s3.send(new ListObjectsV2Command({ Bucket: R2_PACKS_BUCKET, ContinuationToken: token }))
+    if (res.Contents) objects.push(...res.Contents)
+    token = res.IsTruncated ? res.NextContinuationToken : undefined
+  } while (token)
+  return objects
+}
+
 async function uploadToR2(key, buffer) {
   const cmd = new PutObjectCommand({
     Bucket: R2_BUCKET, Key: key, Body: buffer,
@@ -261,28 +300,41 @@ async function mapWithConcurrency(items, limit, fn) {
   return results
 }
 
-// 为 .osu 文件生成指纹 (Artist + Title + Creator + Version)
-// 用于没有 beatmapId 的谱面去重
-async function generateMapFingerprint(oszBuffer) {
+// 读一个引用的"身份"：元数据（只当候选键用）+ 内容摘要（真正的等价依据）。
+// 一次下载同时拿两样，避免为同一张图下载两次。
+async function readIdentity(r2Key) {
   try {
+    const oszBuffer = await downloadFromR2(r2Key)
     const zip = await JSZip.loadAsync(oszBuffer)
     const osuFileName = Object.keys(zip.files).find(f => f.endsWith('.osu'))
-    if (!osuFileName) return null
-
+    if (!osuFileName) return { ok: false, error: '压缩包里没有 .osu 文件' }
     const osuContent = await zip.files[osuFileName].async('string')
-    const meta = parseOsu(osuContent)
-
-    // 使用 Artist + Title + Creator + Version 组合作为指纹
-    // 这些字段组合在一起足以唯一标识一张谱面
-    const fingerprint = `${meta.artist || ''}|${meta.title || ''}|${meta.creator || ''}|${meta.version || ''}`
-    return fingerprint.toLowerCase().trim()
+    return { ok: true, meta: parseOsu(osuContent), contentKey: contentSignature(osuContent) }
   } catch (err) {
-    console.warn(`  Error generating fingerprint: ${err.message}`)
-    return null
+    return { ok: false, error: err.message }
   }
 }
 
+/**
+ * 预取一个条目：按候选路径依次尝试。
+ *
+ * R11 第 3 条：过去只按 `r2Keys.has()` 挑一个路径，首选文件损坏就直接丢图 ——
+ * 明明还有一份内容等价的副本可用。现在首选失败（下载/解压/没 .osu/内容不符）时
+ * 逐个换备选，全部失败才算是这张图这次拿不到（于是 R10 的门控会拦住发布）。
+ */
 async function prefetchMap(map, packName) {
+  const paths = (map.alternatePaths && map.alternatePaths.length) ? map.alternatePaths : [map.r2Key]
+  const outcome = await tryPathsInOrder(paths, (key) => prefetchOne({ ...map, r2Key: key }, packName))
+  if (outcome.ok) {
+    if (outcome.usedPath !== paths[0]) {
+      console.warn(`  备选路径命中:${paths[0]} → ${outcome.usedPath}（共试 ${outcome.attempts} 个）`)
+    }
+    return outcome
+  }
+  return outcome.last || { ok: false, key: map.r2Key, reason: 'read-failed', error: 'unknown' }
+}
+
+async function prefetchOne(map, packName) {
   try {
     const oszBuffer = await downloadFromR2(map.r2Key)
     const zip = await JSZip.loadAsync(oszBuffer)
@@ -290,9 +342,23 @@ async function prefetchMap(map, packName) {
     const osuFileName = Object.keys(zip.files).find((f) => f.endsWith('.osu'))
     if (!osuFileName) {
       console.warn(`  Skip ${map.r2Key}: no .osu file`)
-      return null
+      return { ok: false, key: map.r2Key, reason: 'no-osu', error: '压缩包里没有 .osu 文件' }
     }
     const osuContent = await zip.files[osuFileName].async('string')
+
+    // 身份校验:备选路径的内容摘要必须与簇的基准一致 —— 否则就是拿别的图冒充(R11 第 3 条)。
+    if (map.contentKey) {
+      const sig = contentSignature(osuContent)
+      if (sig !== map.contentKey) {
+        return {
+          ok: false,
+          key: map.r2Key,
+          reason: 'content-mismatch',
+          error: `内容摘要不一致（期望 ${map.contentKey}，实际 ${sig || '空'}）`,
+        }
+      }
+    }
+
     const meta = parseOsu(osuContent)
 
     // sources 里第一条永远是"第一次出现"(mapsToProcess 已按年份+id 排过序,
@@ -376,18 +442,23 @@ async function prefetchMap(map, packName) {
     }
 
     return {
-      osu: Buffer.from(rewritten, 'utf-8'),
-      osuName: safeVersion + '.osu',
-      audio: audioBuf,
-      audioName: newAudioName,
-      bg: bgBuf,
-      bgName: newBgName,
-      audioFromMain,
-      bgFromMain,
+      ok: true,
+      payload: {
+        osu: Buffer.from(rewritten, 'utf-8'),
+        osuName: safeVersion + '.osu',
+        audio: audioBuf,
+        audioName: newAudioName,
+        bg: bgBuf,
+        bgName: newBgName,
+        audioFromMain,
+        bgFromMain,
+      },
     }
   } catch (err) {
     console.warn(`  Error processing ${map.r2Key}: ${err.message}`)
-    return null
+    // 不再吞成 null 让外层静默 continue —— 见 R10:一张读不出来的图过去只会少一张,
+    // 包照样上传、manifest 照样换成新统计,线上就变成"统计说有 100 张、包里只有 99 张"。
+    return { ok: false, key: map.r2Key, reason: 'read-failed', error: err.message }
   }
 }
 
@@ -451,11 +522,11 @@ function packSizeFor(total, index, parts) {
   return base + (index < total % parts ? 1 : 0)
 }
 
-async function generatePack(targetType) {
+async function generatePack(targetType, { publish = true } = {}) {
   targetType = normalizeRealType(targetType)
   if (PACK_EXCLUDED_REAL_TYPES.has(targetType)) {
     console.log(`[${targetType}] Skipped: pending classification types are not downloadable packs`)
-    return []
+    return { realType: targetType, status: STATUS_SKIPPED, reason: 'excluded-type', plannedSlots: 0, packs: [] }
   }
   const tournamentsDir = path.join(__dirname, '..', 'data', 'tournaments')
   const files = fs.readdirSync(tournamentsDir).filter(f => f.endsWith('.json'))
@@ -511,140 +582,98 @@ async function generatePack(targetType) {
 
   console.log(`[${targetType}] Found ${mapsToProcess.length} maps total`)
 
-  // 按 beatmapId 数唯一槽位数(缺 beatmapId 的老数据用 r2Key 兜底):
-  // 用作 manifest.totalMaps,下载页的分母(不再重复计数被多个比赛复用的图)。
-  const uniqueSlotKeys = new Set(
-    mapsToProcess.map(m => (m.beatmapId ? `bid:${m.beatmapId}` : `raw:${m.r2Key}`))
-  )
-  const uniqueSlotTotal = uniqueSlotKeys.size
+  // JSON 里这个类型一个槽位都没有 → 视作"本次数据里没有该类型",保留旧包与旧清单项。
+  // 必须与"有槽位但读不到文件"分开:后者是本次生成失败(见下面 available.length === 0),
+  // 混为一谈的话,一次数据滞后就会把线上包当孤儿删掉(R10 第 1、2 条)。
+  if (mapsToProcess.length === 0) {
+    console.log(`[${targetType}] No slots in current data — keeping previously published packs`)
+    return { realType: targetType, status: STATUS_SKIPPED, reason: 'no-slots', plannedSlots: 0, packs: [] }
+  }
 
   const r2Objects = await listR2Objects('maps/')
   const r2Keys = new Set(r2Objects.map(o => o.Key))
+  // 对象大小:用于给"同 BID 多路径"预筛 —— 大小不同必然不是同一份内容,
+  // 不必各下载一次(R2 的 list 会带 Size)。
+  const r2Sizes = new Map(r2Objects.map(o => [o.Key, o.Size]))
 
-  // 收集所有实际存在的物理条目(SV + NSV);同时为没有 bid 的谱面生成指纹
+  // ---- 身份判定（R11）----
+  // 过去按 `Artist|Title|Creator|Version` 指纹合并：同元数据不同音符会被判成同一张
+  // （只打包一张，另一个槽位拿到的是别的曲子），元数据全空时全库并成一张。
+  // 现在：元数据只用来**收窄候选**，等价性由**内容摘要**（Mode + 难度 + 时间轴 + 音符）决定。
+  //
+  // 一、收集所有物理引用。主图**即使 R2 里没有**也收进来 —— 它的来源标签不能丢，
+  //     身份能确认时要挂到别的副本上（过去这里直接 continue，标签就没了）。
   const rawEntries = []
-  const needFingerprint = []
   for (const m of mapsToProcess) {
-    if (!r2Keys.has(m.r2Key)) continue
-    rawEntries.push({ ...m, isNsv: false, fingerprint: null })
-    if (!m.beatmapId) {
-      needFingerprint.push({ ...m, isNsv: false })
-    }
+    const src = { tournamentAbbr: m.tournamentAbbr, roundAbbr: m.roundAbbr, slot: m.slot }
+    rawEntries.push({
+      ...m, isNsv: false, source: src,
+      exists: r2Keys.has(m.r2Key), metadataKey: null, contentKey: null,
+    })
     const nsvKey = m.r2Key.replace(/\.osz$/, '.nsv.osz')
     if (r2Keys.has(nsvKey)) {
-      rawEntries.push({ ...m, r2Key: nsvKey, isNsv: true, fingerprint: null })
-      if (!m.beatmapId) {
-        needFingerprint.push({ ...m, r2Key: nsvKey, isNsv: true })
-      }
-    }
-  }
-
-  // 批量并发生成指纹 (4个并发)
-  if (needFingerprint.length > 0) {
-    console.log(`[${targetType}] Generating fingerprints for ${needFingerprint.length} maps without beatmapId...`)
-
-    const fingerprints = await mapWithConcurrency(needFingerprint, 4, async (m) => {
-      try {
-        const oszBuffer = await downloadFromR2(m.r2Key)
-        const fp = await generateMapFingerprint(oszBuffer)
-        return { r2Key: m.r2Key, fingerprint: fp }
-      } catch (err) {
-        console.warn(`  Failed to fingerprint ${m.r2Key}: ${err.message}`)
-        return { r2Key: m.r2Key, fingerprint: null }
-      }
-    })
-
-    // 将指纹写回 rawEntries
-    const fpMap = new Map(fingerprints.map(f => [f.r2Key, f.fingerprint]))
-    for (const entry of rawEntries) {
-      if (!entry.beatmapId && fpMap.has(entry.r2Key)) {
-        entry.fingerprint = fpMap.get(entry.r2Key)
-      }
-    }
-
-    console.log(`[${targetType}] Fingerprint generation complete`)
-  }
-
-  // 改进的去重逻辑: 支持指纹匹配 + 多路径选择
-  const bySignature = new Map()
-  for (const m of rawEntries) {
-    // 优先使用 beatmapId，其次使用指纹，最后才用 r2Key
-    let key
-    if (m.beatmapId) {
-      key = `bid:${m.beatmapId}|${m.isNsv ? 1 : 0}`
-    } else if (m.fingerprint) {
-      key = `fp:${m.fingerprint}|${m.isNsv ? 1 : 0}`
-    } else {
-      key = `raw:${m.r2Key}`
-    }
-
-    const src = {
-      tournamentAbbr: m.tournamentAbbr,
-      roundAbbr: m.roundAbbr,
-      slot: m.slot
-    }
-
-    const existing = bySignature.get(key)
-    if (existing) {
-      existing.sources.push(src)
-      // 记录所有可能的文件路径，后续会选择最优的
-      if (!existing.alternatePaths) {
-        existing.alternatePaths = [existing.r2Key]
-      }
-      existing.alternatePaths.push(m.r2Key)
-    } else {
-      bySignature.set(key, {
-        ...m,
-        sources: [src],
-        alternatePaths: [m.r2Key]  // 记录所有引用此谱面的路径
+      rawEntries.push({
+        ...m, r2Key: nsvKey, isNsv: true, source: src,
+        exists: true, metadataKey: null, contentKey: null,
       })
     }
   }
 
-  // 为每个合并后的条目选择最佳的文件路径
-  // 策略: 选择文件确实存在且最新的路径
-  const available = []
-  for (const entry of bySignature.values()) {
-    if (entry.alternatePaths && entry.alternatePaths.length > 1) {
-      // 有多个路径，选择最优的
-      let bestPath = entry.r2Key
-      let pathExists = r2Keys.has(bestPath)
-
-      // 如果当前路径不存在，尝试其他路径
-      if (!pathExists) {
-        for (const altPath of entry.alternatePaths) {
-          if (r2Keys.has(altPath)) {
-            bestPath = altPath
-            pathExists = true
-            break
-          }
-        }
-      }
-
-      if (!pathExists) {
-        console.warn(`  Warning: No valid file path found for merged entry with ${entry.sources.length} sources:`)
-        console.warn(`    Sources: ${entry.sources.map(s => `${s.tournamentAbbr}${s.roundAbbr} ${s.slot}`).join(', ')}`)
-        console.warn(`    Tried paths: ${entry.alternatePaths.join(', ')}`)
-        continue  // 跳过这个条目
-      }
-
-      // 使用找到的最佳路径
-      entry.r2Key = bestPath
-
-      if (entry.sources.length > 1) {
-        console.log(`  Merged ${entry.sources.length} references to same map, using path: ${bestPath}`)
-        console.log(`    Sources: ${entry.sources.map(s => `${s.tournamentAbbr}${s.roundAbbr} ${s.slot}`).join(', ')}`)
-      }
-    } else {
-      // 单一路径，检查是否存在
-      if (!r2Keys.has(entry.r2Key)) {
-        console.warn(`  Skip non-existent file: ${entry.r2Key}`)
-        continue
+  // 二、需要读内容的引用只有两类：
+  //     a) 没有 BID 的（要元数据当候选键，顺带算内容摘要）
+  //     b) 同一个 BID 出现在多个物理路径上的（要核对内容是否真的一样）
+  //     其余不必多花一次下载 —— 单一路径的 BID 本身就是身份。
+  const ambiguousPaths = pathsNeedingContentCheck(rawEntries, r2Sizes)
+  const needRead = rawEntries.filter(e => e.exists && (!e.beatmapId || ambiguousPaths.has(e.r2Key)))
+  if (needRead.length > 0) {
+    console.log(`[${targetType}] 身份核对:读取 ${needRead.length} 个引用（无 BID 或同 BID 多路径）...`)
+    const infos = await mapWithConcurrency(needRead, 4, (e) => readIdentity(e.r2Key))
+    const byKey = new Map(needRead.map((e, i) => [e.r2Key, infos[i]]))
+    for (const e of needRead) {
+      const info = byKey.get(e.r2Key)
+      if (info && info.ok) {
+        e.metadataKey = metadataCandidateKey(info.meta)
+        e.contentKey = info.contentKey
+      } else {
+        // 读不出来 → 不给候选键也不给摘要 → 它只与自身相等（绝不与别人合并）。
+        e.identityError = (info && info.error) || 'read-failed'
+        console.warn(`  身份核对失败 ${e.r2Key}: ${e.identityError}`)
       }
     }
-
-    available.push(entry)
   }
+
+  // 三、聚簇 + 选路
+  const { clusters, conflicts, unresolved } = clusterEntries(rawEntries)
+  const available = []
+  for (const c of clusters) {
+    const best = pickExistingPath(c.alternatePaths, r2Keys)
+    if (!best) {
+      console.warn(`  跳过（所有候选路径都不在 R2）: ${c.alternatePaths.join(', ')}`)
+      continue
+    }
+    c.r2Key = best
+    available.push(c)
+  }
+
+  const identity = { conflicts, unresolved }
+  for (const c of conflicts) {
+    console.warn(
+      `  ⚠ 同${c.candidateKey.startsWith('bid:') ? ' BID' : '元数据'}但内容不同 —— 未合并，各自打包: ` +
+        c.members.map((m) => m.paths[0]).join(' vs '),
+    )
+  }
+  if (unresolved.length > 0) {
+    console.warn(`  ⚠ ${unresolved.length} 个引用指向的文件不存在、且身份无法确认（来源标签未挂靠）`)
+    for (const u of unresolved.slice(0, 5)) console.warn(`    ${u.r2Key}（${u.reason}）`)
+  }
+  const mergedGroups = available.filter((c) => c.memberKeys.length > 1)
+  if (mergedGroups.length > 0) {
+    console.log(`[${targetType}] 按内容摘要合并了 ${mergedGroups.length} 组等价引用`)
+  }
+
+  // 计数口径:只数主图簇 —— 与包内 mapCount(非 NSV 条目数)同口径。
+  // 过去按 `bid:xxx` / `raw:r2Key` 去重,合并后的簇会被算成多份,分母永远追不上分子。
+  const uniqueSlotTotal = slotTotalOf(available)
 
   const dupCollapsed = rawEntries.length - available.length
   const nsvCount = available.filter(m => m.isNsv).length
@@ -653,8 +682,17 @@ async function generatePack(targetType) {
   )
 
   if (available.length === 0) {
-    console.log(`[${targetType}] No files available, skipping`)
-    return []
+    // 有槽位却一张可读文件都没有 = 本次生成失败(疑似谱面未上传 / 本地数据滞后),
+    // **不能**当成"这个类型没图了":过去返回 [] 会让该类型从新 manifest 里整段消失,
+    // 紧接着的孤儿清理就会把线上包删掉(R10)。
+    console.error(`[${targetType}] ${mapsToProcess.length} slots in data but no available files in R2 — treating as FAILED`)
+    return {
+      realType: targetType,
+      status: STATUS_FAILED,
+      reason: 'no-available-files',
+      plannedSlots: mapsToProcess.length,
+      packs: [],
+    }
   }
 
   const outputDir = path.join(__dirname, '..', 'output')
@@ -681,10 +719,14 @@ async function generatePack(targetType) {
     // 并发预取:4 个并发跑 R2 下载 + JSZip 解压 + parseOsu。
     // 失败/缺 .osu 的返回 null,prefetch 内部已经 warn 过了。
     let prefetched
+    let prefetchError = null
     try {
       prefetched = await mapWithConcurrency(chunk, 4, (m) => prefetchMap(m, packName))
     } catch (err) {
+      // mapWithConcurrency 只在 fn 抛异常时才抛;prefetchMap 自己已把失败包成对象,
+      // 所以走到这里属于意外错误 —— 整包作废(下面会判成 failed)。
       console.warn(`  [Pack ${partNum}] prefetch error: ${err.message}`)
+      prefetchError = err.message
       prefetched = chunk.map(() => null)
     }
 
@@ -694,14 +736,25 @@ async function generatePack(targetType) {
     let audioFromMainCount = 0
     let audioMissingCount = 0
     const audioMissingKeys = []
+    const skippedMaps = []
     for (let i = 0; i < chunk.length; i++) {
       const item = prefetched[i]
-      if (!item) continue
-      if (item.audioFromMain) audioFromMainCount++
-      if (!item.audio) { audioMissingCount++; audioMissingKeys.push(chunk[i].r2Key) }
-      archive.append(item.osu, { name: item.osuName })
-      if (item.audio) archive.append(item.audio, { name: item.audioName })
-      if (item.bg) archive.append(item.bg, { name: item.bgName })
+      if (!item || !item.ok) {
+        // 计划里的这张没进来 —— 记下来交给 evaluatePack 判失败。
+        // 过去这里是裸 `continue`,一张坏图只表现为"包里少一张",没人会发现。
+        skippedMaps.push({
+          key: (item && item.key) || chunk[i].r2Key,
+          reason: (item && item.reason) || 'prefetch-failed',
+          error: (item && item.error) || prefetchError || '',
+        })
+        continue
+      }
+      const p = item.payload
+      if (p.audioFromMain) audioFromMainCount++
+      if (!p.audio) { audioMissingCount++; audioMissingKeys.push(chunk[i].r2Key) }
+      archive.append(p.osu, { name: p.osuName })
+      if (p.audio) archive.append(p.audio, { name: p.audioName })
+      if (p.bg) archive.append(p.bg, { name: p.bgName })
       processed++
       if (!chunk[i].isNsv) processedSlots++
       if (processed % 10 === 0) console.log(`  [Pack ${partNum}] Appended ${processed}/${chunk.length}`)
@@ -712,13 +765,16 @@ async function generatePack(targetType) {
     await new Promise(resolve => output.on('close', resolve))
 
     const stats = fs.statSync(outputPath)
+    const plannedSlots = chunk.filter((e) => !e.isNsv).length
+    const contentVerdict = evaluatePack({
+      plannedEntries: chunk.length,
+      processedEntries: processed,
+      plannedSlots,
+      processedSlots,
+    })
     console.log(`[${targetType} ${partNum}] Pack generated: ${(stats.size / 1024 / 1024).toFixed(1)}MB, ${processed} entries (${processedSlots} slots)`)
-    // 音频体检:借主图补上的、以及**仍然没有音频**的(后者在游戏里没声音,要人补传)。
-    if (audioFromMainCount > 0 || audioMissingCount > 0) {
-      console.warn(`  [${targetType} ${partNum}] 音频:借用主图 ${audioFromMainCount} 张;仍缺 ${audioMissingCount} 张${audioMissingCount > 0 ? ' → ' + audioMissingKeys.slice(0, 5).join(', ') + (audioMissingKeys.length > 5 ? ' …' : '') : ''}`)
-    }
 
-    results.push({
+    const packEntry = {
       realType: targetType,
       name: packName,
       part: partNum,
@@ -728,7 +784,35 @@ async function generatePack(targetType) {
       totalMaps: uniqueSlotTotal,
       sizeMB: Math.round(stats.size / 1024 / 1024),
       outputPath,
-    })
+      key: outputFileName,
+      // 内容寻址的对象键（上传成功后才填）
+      objectKey: null,
+      status: contentVerdict.status,
+      reason: contentVerdict.reason,
+      detail: contentVerdict.detail || '',
+      skippedMaps,
+    }
+    // 音频体检:借主图补上的、以及**仍然没有音频**的(后者在游戏里没声音,要人补传)。
+    if (audioFromMainCount > 0 || audioMissingCount > 0) {
+      console.warn(`  [${targetType} ${partNum}] 音频:借用主图 ${audioFromMainCount} 张;仍缺 ${audioMissingCount} 张${audioMissingCount > 0 ? ' → ' + audioMissingKeys.slice(0, 5).join(', ') + (audioMissingKeys.length > 5 ? ' …' : '') : ''}`)
+    }
+
+    // 内容层面就不完整(有图没进来 / 整包只有占位图)→ **不上传、不进清单**(R10)。
+    // 过去是继续走:少几张的包覆盖掉桶里的旧包,而 manifest 却写着新的 mapCount。
+    if (contentVerdict.status === STATUS_FAILED) {
+      console.error(
+        `  [${targetType} ${partNum}] 不发布该包:${labelOf(contentVerdict.reason)}` +
+          (contentVerdict.detail ? `(${contentVerdict.detail})` : '') +
+          (skippedMaps.length
+            ? ` — 未进来:${skippedMaps.slice(0, 5).map((s) => s.key).join(', ')}${skippedMaps.length > 5 ? ' …' : ''}`
+            : ''),
+      )
+      try {
+        fs.unlinkSync(outputPath)
+      } catch { /* 删不掉只是磁盘垃圾,不影响结论 */ }
+      results.push(packEntry)
+      continue
+    }
 
     // 生成完立即上传 R2 packs 桶并删本地副本。关键:删除必须发生在生成阶段,
     // 不能等所有包都生成完再一起删——否则 output/ 会堆满全部 52 个包
@@ -738,26 +822,40 @@ async function generatePack(targetType) {
     // 而 R2 的 S3 API 不支持 chunked(会 403 签名错误),Buffer + Content-Length
     // 才是 R2 验证过的上传方式。每包 Buffer(~几百MB)+ 前面 prefetch/archive
     // 的缓冲仍远在 8GB 内存内,不是瓶颈。
-    if (R2_PACKS_PUBLIC_URL) {
-      const key = outputFileName
-      const entry = results[results.length - 1]
+    // publish=false（单类型离线预览）时连 R2 都不碰 —— 不留旧计数、也不覆盖线上对象。
+    if (!publish && R2_PACKS_PUBLIC_URL) {
+      // 离线预览:不传,但把"假如发布会用哪个键"算出来打日志,方便比对。
       const buf = fs.readFileSync(outputPath)
+      const hash = crypto.createHash('sha256').update(buf).digest('hex').slice(0, 8)
+      console.log(`  [${targetType} ${partNum}] 预览（未上传）对象键会是 ${objectKeyFor(targetType, partNum, hash)}`)
+    }
+    if (R2_PACKS_PUBLIC_URL && publish) {
+      const buf = fs.readFileSync(outputPath)
+      // 内容寻址:键里带内容哈希。新内容 = 新键 → 传到一半失败也只有新键是坏的,
+      // 线上清单仍指向旧键(旧对象原地不动),不会出现"同一个键一半新一半旧"(R10 第 3 条)。
+      const hash = crypto.createHash('sha256').update(buf).digest('hex').slice(0, 8)
+      const objectKey = objectKeyFor(targetType, partNum, hash)
       try {
         await withRetry(() => s3.send(new PutObjectCommand({
           Bucket: R2_PACKS_BUCKET,
-          Key: key,
+          Key: objectKey,
           Body: buf,
           ContentType: 'application/x-osu-archive',
-        })), { label: `上传 ${key}` })
-        entry.links = entry.links || {}
-        entry.links.r2 = `${R2_PACKS_PUBLIC_URL}/${key}`
-        console.log(`  [${targetType} ${partNum}] Uploaded ${key} (${(stats.size / 1024 / 1024).toFixed(1)}MB)`)
+        })), { label: `上传 ${objectKey}` })
+        packEntry.objectKey = objectKey
+        packEntry.links = { r2: `${R2_PACKS_PUBLIC_URL}/${objectKey}` }
+        console.log(`  [${targetType} ${partNum}] Uploaded ${objectKey} (${(stats.size / 1024 / 1024).toFixed(1)}MB)`)
       } catch (err) {
-        console.warn(`  Failed to upload ${key}: ${err.message} (local copy kept)`)
+        // 上传失败 = 这个包本次没更新成功 → 标成 failed,整次发布会被取消。
+        // 这样就不会出现"manifest 说更新了、桶里还是旧包"的半发布。
+        packEntry.status = STATUS_FAILED
+        packEntry.reason = 'r2-upload'
+        packEntry.detail = err.message
+        console.warn(`  Failed to upload ${objectKey}: ${err.message} (local copy kept)`)
       }
       // 只在上传成功后才删本地:失败时保留(单包几百MB可接受),避免这张包
       // 从 R2 里静默消失、下载页直接断链。
-      if (entry.links && entry.links.r2) {
+      if (packEntry.links && packEntry.links.r2) {
         try {
           fs.unlinkSync(outputPath)
         } catch (unlinkErr) {
@@ -765,107 +863,236 @@ async function generatePack(targetType) {
         }
       }
     }
+
+    results.push(packEntry)
   }
 
-  return results
+  return {
+    realType: targetType,
+    status: STATUS_OK,
+    // JSON 里引用的槽位数（不是 R2 里存在的数量）——用来识别"有槽位却一个包都没产出"。
+    plannedSlots: mapsToProcess.length,
+    packs: results,
+    // 身份判定的产出（同 BID/同元数据但内容不同、缺文件且身份无法确认），
+    // 由 main 汇总成 reports/pack-identity-report.md 供人工核对。
+    identity,
+  }
+}
+
+const IDENTITY_REPORT_PATH = path.join(__dirname, '..', 'reports', 'pack-identity-report.md')
+const MANIFEST_PATH = path.join(__dirname, '..', 'data', 'packs-manifest.json')
+const PREV_MANIFEST_PATH = path.join(__dirname, '..', 'data', 'packs-manifest.previous.json')
+
+/**
+ * 把"需要人工核对"的身份问题写成报告（R11 要求输出核对项，而不是静默合并/静默丢弃）。
+ * 内容等价的多路径引用属于正常合并，不进这份报告（在运行日志里）。
+ */
+function writeIdentityReport(typeResults, outPath = IDENTITY_REPORT_PATH) {
+  const lines = [
+    '# 合包身份核对报告',
+    '',
+    `生成时间：${new Date().toISOString()}`,
+    '',
+    '只列**需要人工核对**的项：同一个 BID / 同一组元数据下内容不同的谱面（已阻止合并，各自打包），',
+    '以及指向的文件缺失、身份无法确认的引用（来源标签未挂靠）。内容等价的多路径引用属正常合并，只在运行日志里。',
+    '',
+  ]
+  let total = 0
+  for (const t of typeResults) {
+    const id = t && t.identity
+    if (!id) continue
+    const conflicts = id.conflicts || []
+    const unresolved = id.unresolved || []
+    if (conflicts.length === 0 && unresolved.length === 0) continue
+    total += conflicts.length + unresolved.length
+    lines.push(`## ${t.realType}`, '')
+    if (conflicts.length) {
+      lines.push('### 同 BID / 同元数据但内容不同（已阻止合并）', '')
+      for (const c of conflicts) {
+        lines.push(`- **${c.candidateKey}**（${c.reason}）`)
+        for (const m of c.members) {
+          const from = m.sources.map((s) => `${s.tournamentAbbr}${s.roundAbbr} ${s.slot}`).join('、')
+          lines.push(`  - 内容摘要 \`${m.contentKey || '无'}\`：\`${m.paths.join('` / `')}\` ← ${from}`)
+        }
+      }
+      lines.push('')
+    }
+    if (unresolved.length) {
+      lines.push(`### 文件缺失且身份无法确认（${unresolved.length} 条）`, '')
+      for (const u of unresolved) {
+        const from = `${u.source.tournamentAbbr}${u.source.roundAbbr} ${u.source.slot}`
+        lines.push(`- \`${u.r2Key}\`（${u.reason}，beatmapId=${u.beatmapId || '无'}）← ${from}`)
+      }
+      lines.push('')
+    }
+  }
+  if (total === 0) lines.push('（本次没有任何需要人工核对的项）', '')
+  fs.mkdirSync(path.dirname(outPath), { recursive: true })
+  fs.writeFileSync(outPath, lines.join('\n') + '\n')
 }
 
 async function main() {
-  const args = process.argv.slice(2)
-  let targetType = null
-  for (const arg of args) {
-    if (arg.startsWith('--type=')) targetType = arg.split('=')[1]
+  const cli = parsePackCli(process.argv.slice(2), {
+    knownTypes: Object.keys(REAL_TYPE_NAMES),
+    excludedTypes: [...PACK_EXCLUDED_REAL_TYPES],
+  })
+
+  if (cli.mode === 'help') {
+    console.log(CLI_USAGE)
+    return
+  }
+  if (!cli.ok) {
+    for (const e of cli.errors) console.error(`参数错误:${describeCliError(e)}`)
+    console.error(`\n${CLI_USAGE}`)
+    console.error(`\n可用的 realType:${Object.keys(REAL_TYPE_NAMES).join(', ')}`)
+    process.exit(2)
   }
 
-  if (targetType) {
-    const results = await generatePack(targetType)
-    if (results.length > 0) console.log('\nDone:', JSON.stringify(results, null, 2))
-  } else {
-    const allTypes = new Set()
-    const tournamentsDir = path.join(__dirname, '..', 'data', 'tournaments')
-    const files = fs.readdirSync(tournamentsDir).filter(f => f.endsWith('.json'))
-    for (const file of files) {
-      const t = JSON.parse(fs.readFileSync(path.join(tournamentsDir, file), 'utf-8'))
-      for (const r of t.rounds) for (const m of r.maps) {
-        const realType = normalizeRealType(m.realType)
-        if (!PACK_EXCLUDED_REAL_TYPES.has(realType)) allTypes.add(realType)
-      }
+  assertR2Env()
+  for (const w of cli.warnings) {
+    if (w.code === 'excluded-type') {
+      console.warn(`注意:${w.type} 属于 Pending 族,不产出下载包。`)
+    }
+  }
+
+  if (cli.mode === 'single-preview' || cli.mode === 'single-publish') {
+    // 单类型有两种明确语义（R12 第 3 条）:
+    //   · 预览（默认）—— 只生成到 output/,不上传 R2、不动 manifest
+    //   · 发布（--publish）—— 上传 R2 + **只替换该类型**的清单条目（其他类型与人工链接原样保留）
+    // 过去是"更新对象却不更新清单",于是线上会出现旧计数/旧 part 列表。
+    const publish = cli.mode === 'single-publish'
+    console.log(`单类型模式:${cli.targetType} —— ${publish ? '发布（上传 R2 + 更新该类型清单条目）' : '仅离线预览（不碰 R2 与 manifest）'}`)
+    const result = await generatePack(cli.targetType, { publish })
+
+    console.log('\nDone:', JSON.stringify(result.packs.map((p) => ({
+      key: p.key, mapCount: p.mapCount, sizeMB: p.sizeMB, status: p.status, outputPath: p.outputPath,
+    })), null, 2))
+
+    const summary = summarizeRun([result])
+    if (!summary.publishable) {
+      console.error('\n本次生成失败(未更新任何清单):')
+      for (const f of summary.failures) console.error(`  - ${f.label}${f.detail ? ' — ' + f.detail : ''}`)
+      process.exit(1)
     }
 
-    console.log(`Generating packs for ${allTypes.size} types: ${[...allTypes].join(', ')}`)
-    const allResults = []
-    for (const type of allTypes) {
-      const results = await generatePack(type)
-      allResults.push(...results)
-    }
-
-    const manifestPath = path.join(__dirname, '..', 'data', 'packs-manifest.json')
-    const prevManifestPath = path.join(__dirname, '..', 'data', 'packs-manifest.previous.json')
-    let oldManifest = { packs: [], lastGenerated: '' }
-    if (fs.existsSync(manifestPath)) {
-      oldManifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'))
-    }
-    // 把旧 manifest 写到 .previous,让 upload-to-gdrive.js 用它来判断哪些
-    // fileId 是上一版的孤儿(本次不再生成),好同步删 Drive。
-    fs.writeFileSync(prevManifestPath, JSON.stringify(oldManifest, null, 2) + '\n')
-
-    // 全量重建:本次没生成的 entry 直接消失,避免分包数变化时残留孤儿。
-    const manifest = { packs: [], lastGenerated: '' }
-    for (const result of allResults) {
-      const previous = (oldManifest.packs || []).find(p =>
-        p.realType === result.realType && (p.part || undefined) === result.part
-      )
-      manifest.packs.push({
-        realType: result.realType,
-        name: result.name,
-        part: result.part,
-        mapCount: result.mapCount,
-        totalMaps: result.totalMaps,
-        lastUpdated: new Date().toISOString().split('T')[0],
-        // links 优先取本趟生成时逐包上传写好的新 r2 链接;上传失败时回退旧 manifest
-        links: result.links && Object.keys(result.links).length ? result.links : (previous?.links || {}),
-        gdriveFileId: previous?.gdriveFileId,
-        sizeMB: result.sizeMB,
-      })
-    }
-    manifest.lastGenerated = new Date().toISOString()
-
-    // 上传已内联进 generatePack 的每包循环(生成完立即传 R2 packs 桶并删本地,
-    // 磁盘峰值只占一个包,不会再被全量 12.6GB 撑爆)。这里只做孤儿清理:
-    // packs 桶里有但本次没产出的 .osz(分包数缩了 / type 删了)。
-    // 注意用 producedKeys(本次产出的全部包)而非 uploadedKeys:若某包本趟上传
-    // 失败,桶里旧文件仍是最后一版有效副本,不能当孤儿删。
-    if (R2_PACKS_PUBLIC_URL) {
-      const producedKeys = new Set(allResults.map(r => `${r.realType}_${r.part}.osz`))
-      if (allResults.length === 0) {
-        // 本趟一个包都没产出 → producedKeys 为空,桶里所有 .osz 都会被判成孤儿。
-        // 这种情况一律跳过清理(桶内容原样保留),由人工核对为什么没有产出。
-        console.warn('  本次没有任何产出，跳过 packs 孤儿清理（避免把桶里的包全部删除）。')
-      } else {
-        try {
-          const cmd = new ListObjectsV2Command({ Bucket: R2_PACKS_BUCKET })
-          const res = await s3.send(cmd)
-          const orphans = (res.Contents || [])
-            .map(o => o.Key)
-            .filter(k => k && k.endsWith('.osz') && !producedKeys.has(k))
-          for (const k of orphans) {
-            try {
-              await s3.send(new DeleteObjectCommand({ Bucket: R2_PACKS_BUCKET, Key: k }))
-              console.log(`  Deleted orphan ${k}`)
-            } catch (err) {
-              console.warn(`  Failed to delete orphan ${k}: ${err.message}`)
-            }
-          }
-        } catch (err) {
-          console.warn(`Orphan cleanup skipped: ${err.message}`)
-        }
-      }
+    if (result.status === STATUS_SKIPPED) {
+      console.log(`\n${cli.targetType} 在当前数据里没有槽位（或属于不产包的类型）—— 没有做任何改动。`)
+    } else if (!publish) {
+      console.log('\n离线预览完成:包在 output/ 下,未上传 R2、未改动 manifest。要发布请加 --publish。')
     } else {
-      console.log('\nR2_PACKS_PUBLIC_URL not set, skipping R2 packs upload')
+      let oldManifest = { packs: [], lastGenerated: '' }
+      if (fs.existsSync(MANIFEST_PATH)) oldManifest = JSON.parse(fs.readFileSync(MANIFEST_PATH, 'utf-8'))
+      const { packs, pendingMirrors } = buildManifestPacks({
+        typeResults: [result], oldManifest, preserveOtherTypes: true,
+      })
+      const manifest = { packs, lastGenerated: new Date().toISOString() }
+      if (pendingMirrors.length > 0) manifest.pendingMirrors = pendingMirrors
+      fs.writeFileSync(MANIFEST_PATH, JSON.stringify(manifest, null, 2) + '\n')
+      console.log(`\n已更新 manifest 里 ${cli.targetType} 的条目（其他类型与人工链接原样保留）。`)
+      console.log('注意:单类型发布**不写** packs-manifest.previous.json、**不清理**孤儿 —— 这两件只有全量发布才做。')
+      if (pendingMirrors.length > 0) {
+        console.warn(`该类型的镜像链接仍指向旧内容:${pendingMirrors.join(', ')}（Drive 需整套重跑）`)
+      }
     }
 
-    fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + '\n')
-    console.log('\nManifest updated:', manifestPath)
+    // 身份核对报告（只含本次这个类型）
+    writeIdentityReport([result])
+    if (result.identity && (result.identity.conflicts || []).length + (result.identity.unresolved || []).length > 0) {
+      console.warn(`身份核对报告（只含 ${cli.targetType}）: ${path.relative(path.join(__dirname, '..'), IDENTITY_REPORT_PATH)}`)
+    }
+    return
+  }
+
+  const allTypes = new Set()
+  const tournamentsDir = path.join(__dirname, '..', 'data', 'tournaments')
+  const files = fs.readdirSync(tournamentsDir).filter(f => f.endsWith('.json'))
+  for (const file of files) {
+    const t = JSON.parse(fs.readFileSync(path.join(tournamentsDir, file), 'utf-8'))
+    for (const r of t.rounds) for (const m of r.maps) {
+      const realType = normalizeRealType(m.realType)
+      if (!PACK_EXCLUDED_REAL_TYPES.has(realType)) allTypes.add(realType)
+    }
+  }
+
+  console.log(`Generating packs for ${allTypes.size} types: ${[...allTypes].join(', ')}`)
+  const typeResults = []
+  for (const type of allTypes) {
+    typeResults.push(await generatePack(type))
+  }
+
+  const manifestPath = MANIFEST_PATH
+  const prevManifestPath = PREV_MANIFEST_PATH
+  let oldManifest = { packs: [], lastGenerated: '' }
+  if (fs.existsSync(manifestPath)) {
+    oldManifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'))
+  }
+
+  const summary = summarizeRun(typeResults)
+
+  // 有任何失败 → **整次发布取消**:不写 manifest、不写 .previous、不做任何清理。
+  // 线上仍是上一次那套完整可用的版本 —— 这是 R10 要的核心保证:
+  // 宁可什么都不更新,也不能出现"新统计配旧对象链接"或半新半旧。
+  if (!summary.publishable) {
+    console.error(`\n本次生成失败(${summary.failures.length} 项),已取消发布:`)
+    for (const f of summary.failures) console.error(`  - ${f.label}${f.detail ? ' — ' + f.detail : ''}`)
+    console.error('data/packs-manifest.json 未被改动,也没有删除任何对象 —— 线上仍指向上一版完整包。')
+    console.error('修掉上面的问题后重跑;若确认是数据侧确实该删,请先处理数据再重跑。')
+    process.exit(1)
+  }
+  const { packs, pendingMirrors } = buildManifestPacks({ typeResults, oldManifest })
+  const manifest = { packs, lastGenerated: new Date().toISOString() }
+  if (pendingMirrors.length > 0) manifest.pendingMirrors = pendingMirrors
+
+  // .previous 是给 upload-to-gdrive.js 判断 Drive 孤儿用的过程文件。
+  // 只在确定要发布(没有任何失败)时才写它,否则 Drive 侧会照一份没被采用的清单去算孤儿。
+  fs.writeFileSync(prevManifestPath, JSON.stringify(oldManifest, null, 2) + '\n')
+  fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + '\n')
+  console.log('\nManifest updated:', manifestPath)
+
+  writeIdentityReport(typeResults)
+  const identityIssues = typeResults.reduce(
+    (n, t) => n + ((t.identity && ((t.identity.conflicts || []).length + (t.identity.unresolved || []).length)) || 0),
+    0,
+  )
+  if (identityIssues > 0) {
+    console.warn(`\n身份核对:${identityIssues} 项需要人工看 → ${path.relative(path.join(__dirname, '..'), IDENTITY_REPORT_PATH)}`)
+  }
+
+  if (summary.skippedTypes.length) {
+    console.warn(`\n注意:${summary.skippedTypes.join(', ')} 在当前数据里没有任何槽位,其旧包与旧清单项已原样保留。`)
+    console.warn('  若这些类型确实已废弃,请人工从 packs-manifest.json 删掉对应条目、再清理 R2 桶。')
+  }
+  if (pendingMirrors.length) {
+    console.warn(`\n注意:${pendingMirrors.length} 个包的内容本次有更新,其镜像链接此刻仍指向旧内容:`)
+    console.warn(`  ${pendingMirrors.join(', ')}`)
+    console.warn('  跑 upload-to-gdrive 后会同步;清单顶层的 pendingMirrors 就是给那一步与人工核查用的。')
+  }
+
+  // 桶里"本次清单没引用"的对象：这里**只报告，绝不删**。
+  //
+  // 真删挪到了独立命令 `node scripts/gc-pack-objects.mjs`，原因有两条（另一条线的审查 P1）：
+  //   ① 它必须基于**已提交/已部署**的清单来判。生成流程里手上这份清单还没提交，
+  //      而重跑一次若 ZIP hash 变了，新键与被线上引用的旧键不同 → 会把线上正在引用的对象删掉。
+  //   ② 刚上传、清单还没提交的那批对象此刻正是"没人引用"的状态，必须有保留期兜着。
+  if (!R2_PACKS_PUBLIC_URL) {
+    console.log('\nR2_PACKS_PUBLIC_URL not set, skipping R2 packs upload')
+    return
+  }
+  try {
+    const bucketObjects = await listPackBucketObjects()
+    const orphanKeys = findOrphanKeys({ bucketKeys: bucketObjects.map(o => o.Key).filter(Boolean), packs })
+    if (orphanKeys.length === 0) {
+      console.log('\n桶里没有未被清单引用的对象。')
+      return
+    }
+    console.warn(`\n桶里有 ${orphanKeys.length} 个对象未被本次清单引用（多数是上一版的旧键）:`)
+    for (const k of orphanKeys.slice(0, 20)) console.warn(`  - ${k}`)
+    if (orphanKeys.length > 20) console.warn(`  … 还有 ${orphanKeys.length - 20} 个`)
+    console.warn('本次**不会删除任何对象**。确认新清单已提交并部署之后再跑:')
+    console.warn('  node scripts/gc-pack-objects.mjs                   # 先看（默认只报告）')
+    console.warn('  node scripts/gc-pack-objects.mjs --clean-orphans   # 确认后真删（带保留期）')
+  } catch (err) {
+    console.warn(`孤儿报告跳过: ${err.message}`)
   }
 }
 

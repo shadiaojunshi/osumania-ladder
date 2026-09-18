@@ -145,7 +145,7 @@ export function AuditLog() {
               </div>
               {e.key && expanded[e.key] && (
                 <div className="px-4 pb-3 text-xs text-gray-600 dark:text-neutral-300">
-                  {expanded[e.key] === 'loading' && <span className="text-gray-400">{t('admin.loading')}</span>}
+                  {expanded[e.key] === 'loading' && <span className="text-gray-400 dark:text-neutral-500">{t('admin.loading')}</span>}
                   {expanded[e.key] === 'error' && <span className="text-red-500 dark:text-red-300">{t('audit.loadFailed')}</span>}
                   {expanded[e.key] !== 'loading' && expanded[e.key] !== 'error' && (
                     <div className="rounded border border-gray-200 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-800/60 p-2 space-y-1">

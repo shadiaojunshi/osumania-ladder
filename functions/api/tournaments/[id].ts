@@ -206,12 +206,35 @@ export const onRequestDelete: PagesFunction<Env> = async ({ params, request, env
   }
   const path = `/contents/data/tournaments/${id}.json`
 
-  // 删除前抓取完整 JSON，存进回收站以便恢复。
-  let payload: string | undefined
+  // 读取和备份必须成功，且副本必须对应请求删除的那个 blob。
   const getRes = await githubFetch(path, env)
-  if (getRes.ok) {
-    const file = (await getRes.json()) as { content: string }
+  if (!getRes.ok) return upstreamFailureResponse(await classifyGithubFailure(getRes, env))
+  let payload: string
+  try {
+    const file = (await getRes.json()) as { content?: string; sha?: string; encoding?: string }
+    if (typeof file.sha !== 'string' || typeof file.content !== 'string' || !file.content || (file.encoding && file.encoding !== 'base64')) {
+      throw new Error('Incomplete GitHub response')
+    }
+    if (file.sha !== sha) {
+      return jsonResponse({ error: '比赛已被更新，请刷新后重新确认删除。', code: 'EDIT_CONFLICT' }, 409)
+    }
     payload = decodeURIComponent(escape(atob(file.content.replace(/\n/g, ''))))
+  } catch {
+    return jsonResponse({ error: '无法读取完整比赛副本，本次未删除。', code: 'BACKUP_FAILED' }, 503)
+  }
+
+  let trashId: string
+  try {
+    const entry = await addTrash(env.LADDER_KV, {
+      kind: 'tournament',
+      label: id,
+      deletedByUid: user!.uid,
+      deletedByName: user!.username,
+      payload,
+    })
+    trashId = entry.id
+  } catch {
+    return jsonResponse({ error: '回收站备份失败，本次未删除，请稍后重试。', code: 'BACKUP_FAILED' }, 503)
   }
 
   const res = await githubFetch(path, env, {
@@ -220,6 +243,10 @@ export const onRequestDelete: PagesFunction<Env> = async ({ params, request, env
   })
 
   if (!res.ok) {
+    // 失败或超时也保留副本：不能确定上游是否已执行删除。
+    if (res.status === 409) {
+      return jsonResponse({ error: '比赛已被更新，本次未删除，请刷新后重新确认。', code: 'EDIT_CONFLICT', trashId }, 409)
+    }
     // 同上:DELETE 也不再把 GitHub 的 401/403 透传给前端(R14)。
     const failure = await classifyGithubFailure(res, env)
     if (!isGenericUpstreamFailure(failure)) return upstreamFailureResponse(failure)
@@ -227,30 +254,12 @@ export const onRequestDelete: PagesFunction<Env> = async ({ params, request, env
     return jsonResponse({ error: 'Failed to delete', details: err }, failure.status)
   }
 
-  // 进回收站（带 TTL，到期自动清理）。即便此步失败也不回滚删除——
-  // 因为 GitHub commit 历史本身就是兜底，随时可 revert。
-  let trashId: string | undefined
-  if (payload) {
-    try {
-      const entry = await addTrash(env.LADDER_KV, {
-        kind: 'tournament',
-        label: id,
-        deletedByUid: user!.uid,
-        deletedByName: user!.username,
-        payload,
-      })
-      trashId = entry.id
-    } catch {
-      // 回收站写入失败不阻塞删除
-    }
-  }
-
   await writeAudit(env.LADDER_KV, {
     actorUid: user!.uid,
     actorName: user!.username,
     action: 'tournament.delete',
     target: id,
-    detail: trashId ? `trashId=${trashId}` : '未存入回收站',
+    detail: `trashId=${trashId}; blobSha=${sha}`,
     ip: request.headers.get('CF-Connecting-IP') ?? undefined,
   })
 

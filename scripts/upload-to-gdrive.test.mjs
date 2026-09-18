@@ -217,3 +217,74 @@ test('R09 复审:空 manifest 直接拒绝执行,绝不进入孤儿清理', () =
 function silentLog() {
   return { log: () => {}, error: () => {}, warn: () => {} }
 }
+
+// ---------- 版本化上传（A 方案）----------
+// 对象键是内容寻址的，Drive 用同一个名字 → "同名即同内容"：已存在就跳过上传（重跑省整轮流量），
+// 内容变了就新建（旧文件原地不动，只会进孤儿报告）。这样两个镜像不会半新半旧。
+
+test('版本化：清单里已记着同一内容键 → 跳过上传，但仍确保可读', async () => {
+  const packed = makeBodyFactory()
+  const { drive, calls } = makeFakeDrive()
+  const packs = [{ realType: 'SS', part: 1, objectKey: 'SS_1.aaaa1111.osz', gdriveFileId: 'f-1', gdriveObjectKey: 'SS_1.aaaa1111.osz' }]
+
+  const result = await runDriveSync({ drive, packs, prevPacks: [], makeBody: packed.factory, log: silentLog(), delay: noDelay })
+
+  assert.deepEqual(calls.create, [], '同内容不该重新上传')
+  assert.deepEqual(calls.update, [], '版本化路径不该走 update')
+  assert.deepEqual(calls.permissions, ['f-1'], '复用也要确保 anyone-reader')
+  assert.equal(result.skipped, 1)
+  assert.ok(result.succeeded.includes('SS_1.osz'), 'pendingMirrors 用的是不带哈希的稳定键')
+  assert.match(packs[0].links.googleDrive, /f-1/)
+})
+
+test('版本化：Drive 上已有同名文件 → 复用（上次跑到一半也能接上）', async () => {
+  const packed = makeBodyFactory()
+  const { drive, calls } = makeFakeDrive({ existingNames: { 'SS_1.bbbb2222.osz': 'f-2' } })
+  const packs = [{ realType: 'SS', part: 1, objectKey: 'SS_1.bbbb2222.osz' }]
+
+  const result = await runDriveSync({ drive, packs, prevPacks: [], makeBody: packed.factory, log: silentLog(), delay: noDelay })
+
+  assert.deepEqual(calls.create, [])
+  assert.equal(packs[0].gdriveFileId, 'f-2')
+  assert.equal(packs[0].gdriveObjectKey, 'SS_1.bbbb2222.osz')
+  assert.equal(result.skipped, 1)
+})
+
+test('版本化：内容变了 → 新建文件（名字 = 对象键），绝不覆盖旧文件', async () => {
+  const packed = makeBodyFactory()
+  const { drive, calls } = makeFakeDrive()
+  const packs = [{ realType: 'SS', part: 1, objectKey: 'SS_1.cccc3333.osz', gdriveFileId: 'old-ss1', gdriveObjectKey: 'SS_1.old00000.osz' }]
+
+  const result = await runDriveSync({ drive, packs, prevPacks: [], makeBody: packed.factory, log: silentLog(), delay: noDelay })
+
+  assert.deepEqual(calls.create, ['SS_1.cccc3333.osz'], '新内容要新文件，不是覆盖')
+  assert.deepEqual(calls.update, [], '不该碰旧文件')
+  assert.deepEqual(calls.permissions, ['created-1'])
+  assert.equal(result.skipped, 0)
+  assert.equal(packs[0].gdriveObjectKey, 'SS_1.cccc3333.osz')
+})
+
+test('版本化：旧文件不再被引用 → 进孤儿报告，但本次不删', async () => {
+  const packed = makeBodyFactory()
+  const { drive, calls } = makeFakeDrive()
+  const packs = [{ realType: 'SS', part: 1, objectKey: 'SS_1.new00000.osz', gdriveObjectKey: 'SS_1.old00000.osz', gdriveFileId: 'drive-old' }]
+  const prevPacks = [{ realType: 'SS', part: 1, gdriveFileId: 'drive-old', links: { googleDrive: 'https://drive.google.com/uc?id=drive-old' } }]
+
+  const result = await runDriveSync({ drive, packs, prevPacks, makeBody: packed.factory, log: silentLog(), delay: noDelay })
+
+  assert.equal(result.orphans.length, 1, '旧版本文件应进孤儿报告')
+  assert.equal(result.orphans[0].id, 'drive-old')
+  assert.deepEqual(calls.delete, [], '报告不等于删除')
+})
+
+test('历史条目（没有 objectKey）仍按名字覆盖，不产生同名副本', async () => {
+  const packed = makeBodyFactory()
+  const { drive, calls } = makeFakeDrive()
+  const packs = [{ realType: 'TB', part: 2, gdriveFileId: 'f-tb' }]
+
+  await runDriveSync({ drive, packs, prevPacks: [], makeBody: packed.factory, log: silentLog(), delay: noDelay })
+
+  assert.deepEqual(calls.create, [], '老条目新建会产生同名副本，而旧链接还指着老 id')
+  assert.deepEqual(calls.update, ['f-tb'])
+  assert.equal(packs[0].gdriveObjectKey, null)
+})

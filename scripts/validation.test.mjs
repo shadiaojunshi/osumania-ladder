@@ -429,7 +429,7 @@ test('R03 PUT 的兼容路径:已经是「文件名≠内部 id」的文件还�
 
 test('R03 DELETE 需要 path id 与 sha,但不要求 body.id 也不看 round 数据好坏', async () => {
   await withRoute([
-    { method: 'GET', path: '/contents/data/tournaments/cet-2026.json', reply: jsonRes(200, { content: b64('{}') }) },
+    { method: 'GET', path: '/contents/data/tournaments/cet-2026.json', reply: jsonRes(200, { sha: 's', content: b64('{}') }) },
     { method: 'DELETE', path: '/contents/data/tournaments/cet-2026.json', reply: jsonRes(200, {}) },
   ], async (fetch) => {
     // 坏 round 数据(rounds 是字符串)不阻止删除

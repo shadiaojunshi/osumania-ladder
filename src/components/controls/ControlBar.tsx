@@ -51,7 +51,7 @@ export function ControlBar() {
         >
           -
         </button>
-        <span className="text-xs w-10 text-center font-mono">{Math.round(zoom * 100)}%</span>
+        <span className="text-xs w-10 text-center font-mono text-gray-600 dark:text-neutral-300">{Math.round(zoom * 100)}%</span>
         <button
           onClick={() => setZoom(Math.min(3, +(zoom + 0.1).toFixed(1)))}
           className="w-6 h-6 rounded bg-gray-200 dark:bg-neutral-700 dark:text-neutral-100 text-sm flex items-center justify-center hover:bg-gray-300 dark:hover:bg-neutral-600"
@@ -130,7 +130,7 @@ export function ControlBar() {
         {hideQualifiers ? t('control.qual.hide') : t('control.qual.show')}
       </button>
 
-      {/* 白边默认开启且作用于三种视图,开关全视图可见。 */}
+      {/* 白边开关作用于三种视图，开关全视图可见。默认**关**（站长 2026-09-18）。 */}
       <button
         onClick={() => setRoundBorderAlways(!roundBorderAlways)}
         className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
@@ -174,7 +174,7 @@ export function ControlBar() {
               : 'bg-white border-gray-300 text-gray-600 dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-300'
           }`}
         >
-          <option value="">{t('control.year.all')}</option>
+          <option value="">{t('control.round.all')}</option>
           {availableRounds.map((r) => (
             <option key={r} value={r}>{r}</option>
           ))}

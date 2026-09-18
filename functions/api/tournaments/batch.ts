@@ -25,7 +25,7 @@ import {
 } from '../_lib/github'
 import { isMatchingTournamentId } from '../_lib/tournamentId'
 import { findDuplicateRoundIds } from '../_lib/roundIds'
-import { LIMITS, validateTournament } from '../_lib/validation'
+import { LIMITS, readJsonBody, validateTournament } from '../_lib/validation'
 import {
   evaluateBatchConflicts,
   headMovedConflicts,
@@ -111,12 +111,9 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, data }) 
     return jsonResponse({ error: '需要 contributor 及以上权限', code: 'FORBIDDEN' }, 403)
   }
 
-  let payload: unknown
-  try {
-    payload = await request.json()
-  } catch {
-    return jsonResponse({ error: '请求体不是合法 JSON', code: 'INVALID_BATCH' }, 400)
-  }
+  const body = await readJsonBody(request)
+  if (!body.ok) return jsonResponse({ error: body.error, code: 'INVALID_BATCH' }, 400)
+  const payload = body.value
 
   const parsed = parseBatchItems(payload)
   if (!parsed.items) {

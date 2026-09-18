@@ -4,9 +4,20 @@ on:
   workflow_dispatch:
     inputs:
       realType:
-        description: '指定 realType（留空=全部类型）'
+        description: '指定 realType（留空=全部类型）。只处理该类型；默认仅离线预览，不碰 R2 与清单'
         required: false
         default: ''
+      publish:
+        description: '指定 realType 时是否发布（true=上传 R2 并更新该类型的清单条目；false=仅离线预览）'
+        required: false
+        default: 'false'
+
+# 与 upload-packs-to-drive.yml **共用同一个发布组**：两个 workflow 同时改 R2 / manifest
+# 会互相打架（生成与 Drive 重传并发时，后者会照一份中间态的清单去算 Drive 孤儿）。
+# cancel-in-progress: false → 后来的排队而不是取消；取消会留下"包已传、清单没更新"的中间态。
+concurrency:
+  group: packs-publish
+  cancel-in-progress: false
 
 jobs:
   generate:
@@ -23,16 +34,30 @@ jobs:
       - run: npm ci
 
       - name: Generate packs
-        run: node scripts/generate-pack.js --type=${{ github.event.inputs.realType }}
+        # 输入经 env 传入，再用**双引号包住的变量**作为完整参数，绝不把 `${{ }}` 表达式
+        # 直接插进 shell 代码（过去写成 `--type=${{ github.event.inputs.realType }}`，
+        # 含空格 / 分号 / 反引号的输入会变成额外的 shell 语法）。
+        # 这里用数组逐个传参，输入只会成为**某个参数的值**；再由脚本按 realType 白名单
+        # 校验（非法直接 exit 2，且不会执行任何东西）。
         env:
+          REAL_TYPE: ${{ github.event.inputs.realType }}
+          PUBLISH: ${{ github.event.inputs.publish }}
           R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
           R2_ACCESS_KEY: ${{ secrets.R2_ACCESS_KEY }}
           R2_SECRET_KEY: ${{ secrets.R2_SECRET_KEY }}
           R2_BUCKET: osumania-ladder-maps
           R2_PACKS_BUCKET: ${{ secrets.R2_PACKS_BUCKET }}
           R2_PACKS_PUBLIC_URL: ${{ secrets.R2_PACKS_PUBLIC_URL }}
+        run: |
+          set -euo pipefail
+          args=()
+          if [ -n "$REAL_TYPE" ]; then args+=("--type=$REAL_TYPE"); fi
+          if [ "$PUBLISH" = "true" ]; then args+=("--publish"); fi
+          node scripts/generate-pack.js "${args[@]}"
 
       - name: Upload to Google Drive
+        # 只在全量发布时跑。单类型发布(--type + --publish)不更新 Drive，
+        # 该类型的镜像会在下一次整套 Drive 重传时补上（清单里的 pendingMirrors 标了这件事）。
         if: github.event.inputs.realType == ''
         run: node scripts/upload-to-gdrive.js
         env:
@@ -47,9 +72,46 @@ jobs:
           R2_PACKS_BUCKET: ${{ secrets.R2_PACKS_BUCKET }}
 
       - name: Commit manifest
-        if: github.event.inputs.realType == ''
+        # 全量发布，或单类型发布（--publish）才会改到 manifest；纯预览不该产生提交。
+        if: github.event.inputs.realType == '' || github.event.inputs.publish == 'true'
         run: |
+          set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add data/packs-manifest.json
-          git diff --cached --quiet || git commit -m "Update packs manifest" && git push
+          if git diff --cached --quiet; then
+            echo "manifest 没有变化，跳过提交。"
+            exit 0
+          fi
+          git commit -m "Update packs manifest"
+          # push 撞上远端新提交时先 rebase 再试，重试次数有上限。
+          # **禁止 force push、禁止回滚**：生成结果与错误都保留，由人工处理；
+          # 也绝不"用旧 manifest 覆盖" —— 那会把人工维护的链接冲掉。
+          for i in 1 2 3; do
+            if git push; then
+              exit 0
+            fi
+            echo "push 失败（第 $i 次），先同步远端再试"
+            git fetch origin "${GITHUB_REF_NAME}"
+            if ! git rebase "origin/${GITHUB_REF_NAME}"; then
+              git rebase --abort || true
+              echo "::error::manifest 与远端冲突（可能有人工修改）。已保留本地生成结果与提交，请人工合并；不要用旧 manifest 覆盖。"
+              exit 1
+            fi
+          done
+          echo "::error::push 连续失败，已保留本地提交与生成结果。"
+          exit 1
+
+      - name: Keep failure artifacts
+        # runner 一退出，工作区就没了 —— 上面那句「已保留本地结果」必须靠这个动作兜住
+        # （另一条线的审查 P2）。只上传清单与报告，不含任何凭据。
+        if: failure() || cancelled()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pack-publish-debug
+          path: |
+            data/packs-manifest.json
+            data/packs-manifest.previous.json
+            reports/pack-identity-report.md
+          if-no-files-found: ignore
+          retention-days: 7

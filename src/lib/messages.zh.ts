@@ -1,6 +1,8 @@
 // 中文文案。所有 UI 字符串集中在此;新增 key 同步加到 messages.en.ts(类型会强制要求一致)。
 // 规则: {var} 占位符;命名按 area.subarea.key,扁平化方便查找。
 export const messagesZh = {
+  'roundDetail.realType': '实际键型',
+  'roundDetail.pendingType': '待分类',
   // ---------- Header ----------
   'header.brand': 'osu!mania',
   'header.titleFull': ' 比赛谱面天梯榜',
@@ -36,6 +38,7 @@ export const messagesZh = {
   'control.year': '年份',
   'control.round': '轮次',
   'control.year.all': '全部',
+  'control.round.all': '全部',
   'control.theme.toLight': '切到浅色',
   'control.theme.toDark': '切到深色',
   'control.theme.aria': '切换主题',

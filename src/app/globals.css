@@ -103,8 +103,7 @@ button.round-box:focus-visible {
 /* 红色只表示超出当前绘图区,不代表数据非法。动效全部限定在标记与边缘条内部,
    不整屏渲染;prefers-reduced-motion 下全部静态(动画都在 no-preference 块内)。 */
 .overflow-marker {
-  /* 顶边平齐贴住超界带上缘,与被裁切框体直角衔接成一个框;
-     常驻边框开启时由 ::before 在内侧描 1.5px 白线(只画上/左/右,底边留给框体)。 */
+  /* 标量超界是一个独立按钮，四边闭合。范围超界用下方 overflow-range。 */
   top: 0;
   height: 32px;
   max-height: 32px;
@@ -113,7 +112,7 @@ button.round-box:focus-visible {
   gap: 5px;
   padding: 0 10px;
   border: none;
-  border-radius: 0;
+  border-radius: 8px;
   /* 双层背景:顶部高光 + 熔岩横纹(0deg 条带,瓦片 26px,动画向上漂移) */
   background-image:
     linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0) 45%),
@@ -134,19 +133,44 @@ button.round-box:focus-visible {
   appearance: none;
 }
 
-/* 常驻边框开启时:熔岩牌带白描边,但只画上/左/右——底边留给框体,
-   接缝处不出现横线;两半拼成围绕"熔岩头 + 框体"的一条连续白框。 */
+/* 独立熔岩按钮完整描边。 */
 .overflow-marker.always-border::before {
   content: '';
   position: absolute;
   inset: 0;
   border: 1.5px solid #ffffff;
-  border-bottom: none;
+  border-radius: inherit;
   pointer-events: none;
 }
 
 .dark .overflow-marker {
   color: #fecaca;
+}
+
+/* 范围超界共用 round-box 的完整外框、hover 和暗色滤镜。
+   熔岩纹理在同一表面内渐隐，没有独立牌子的外投影或接缝横线。 */
+.round-box.overflow-range {
+  isolation: isolate;
+}
+
+.overflow-range-heat {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 88px;
+  max-height: 100%;
+  background:
+    linear-gradient(180deg, rgba(254, 202, 202, 0.18), transparent 32px),
+    repeating-linear-gradient(0deg, #7f1d1d 0 8px, #b91c1c 8px 13px, #991b1b 13px 26px);
+  mask-image: linear-gradient(180deg, #000 0 24px, rgba(0, 0, 0, 0.75) 38px, transparent 100%);
+  pointer-events: none;
+}
+
+.overflow-range-heat + span {
+  padding-bottom: 4px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .overflow-range-heat { animation: lava-pan 5s linear infinite; }
 }
 
 .overflow-marker-arrow {

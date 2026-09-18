@@ -378,7 +378,7 @@ export function DifficultyFitTool() {
                   className="w-full px-2 py-1.5 text-xs tabular-nums border border-gray-200 dark:border-neutral-700 rounded bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100"
                 />
               </label>
-              <span className="pb-1.5 text-center text-gray-400">→</span>
+              <span className="pb-1.5 text-center text-gray-400 dark:text-neutral-500">→</span>
               <label className="min-w-0">
                 <span className="block text-[10px] text-gray-400 dark:text-neutral-500 mb-1">
                   {t('difficultyFit.gap.upper')}

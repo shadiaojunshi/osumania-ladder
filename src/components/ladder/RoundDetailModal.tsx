@@ -17,6 +17,10 @@ import {
 import type { BeatmapMeta, Round, Tournament } from '@/lib/types'
 import { useT } from '@/lib/i18n'
 import { ManiaChartButton } from '@/components/chart/ManiaChartButton'
+import { normalizeRealType, isPendingRealType } from '@/lib/realType'
+import { REAL_TYPES } from '@/lib/realTypeCatalog'
+
+const realTypeNames = new Map(Object.values(REAL_TYPES).flat().map(({ id, name }) => [id, name]))
 
 // 槽位排序:RC/SV 按数字, LN/HB 同理, TB/FS-TB 沉底。
 const TYPE_ORDER: Record<string, number> = { RC: 0, SV: 1, HB: 2, LN: 3, TB: 9 }
@@ -169,6 +173,16 @@ function MapRow({
 }) {
   const t = useT()
   const label = map.name || map.slot
+  const realType = normalizeRealType(map.realType)
+  const patternLabel = !realType || isPendingRealType(realType) ? t('roundDetail.pendingType') : realType
+  const pattern = (
+    <span
+      title={`${t('roundDetail.realType')}: ${realTypeNames.get(realType) ?? patternLabel}`}
+      className="inline-block max-w-full rounded bg-purple-50 px-1.5 py-0.5 text-[10px] font-medium text-purple-700 dark:bg-purple-900/30 dark:text-purple-200"
+    >
+      {patternLabel}
+    </span>
+  )
   // 只有有效正整数 BID 才渲染 osu! 链接;没有 BID 的是普通文本,不伪装成可点击。
   const hasBID = typeof map.beatmapId === 'number' && Number.isInteger(map.beatmapId) && map.beatmapId > 0
   const slot = (
@@ -191,7 +205,10 @@ function MapRow({
     return (
       <div className="py-1.5 flex items-center gap-2">
         {slot}
-        <span className="min-w-0 flex-1 text-sm break-words line-clamp-2 text-gray-800 dark:text-neutral-200">{label}</span>
+        <div className="min-w-0 flex-1 text-gray-800 dark:text-neutral-200">
+          <span className="block text-sm break-words line-clamp-2">{label}</span>
+          {pattern}
+        </div>
         {diff}
         {chartButton}
       </div>
@@ -209,8 +226,9 @@ function MapRow({
       >
         {slot}
         {/* 歌名继承链接颜色;下划线 + hover/focus 加深,保证链接可辨认。 */}
-        <span className="min-w-0 flex-1 text-sm break-words line-clamp-2 underline underline-offset-4 decoration-1 group-hover:decoration-2 group-focus-visible:decoration-2">
-          {label}
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm break-words line-clamp-2 underline underline-offset-4 decoration-1 group-hover:decoration-2 group-focus-visible:decoration-2">{label}</span>
+          {pattern}
         </span>
         {diff}
       </a>

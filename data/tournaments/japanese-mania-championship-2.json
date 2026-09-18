@@ -1064,7 +1064,7 @@
         {
           "slot": "LN3",
           "type": "LN",
-          "realType": "PDLN",
+          "realType": "JW",
           "name": "Foodbot - TAKEOFF [FINALPROJECT]",
           "difficulty": 12.7,
           "beatmapId": 4672787,

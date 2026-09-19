@@ -230,8 +230,10 @@
           "slot": "RC3",
           "type": "RC",
           "realType": "SS",
-          "name": "",
-          "difficulty": 6.11
+          "name": "DAISHI DANCE/Cecile Corbel - Take me hand [hold my speed]",
+          "difficulty": 6.11,
+          "beatmapId": 4807599,
+          "beatmapsetId": 2259127
         },
         {
           "slot": "RC4",

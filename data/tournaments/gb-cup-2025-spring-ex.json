@@ -134,7 +134,9 @@
           "realType": "TB",
           "name": "TB1",
           "difficulty": 9.4,
-          "difficultyLn": 9.6
+          "difficultyLn": 9.6,
+          "beatmapId": 5111024,
+          "beatmapsetId": 2368972
         }
       ],
       "bestOf": 11,
@@ -172,7 +174,9 @@
           "type": "RC",
           "realType": "SS",
           "name": "RC1",
-          "difficulty": 10.53
+          "difficulty": 10.53,
+          "beatmapId": 5124128,
+          "beatmapsetId": 2373115
         },
         {
           "slot": "RC2",
@@ -367,7 +371,9 @@
           "type": "RC",
           "realType": "MX",
           "name": "RC6",
-          "difficulty": 11.33
+          "difficulty": 11.33,
+          "beatmapId": 5134948,
+          "beatmapsetId": 2376896
         },
         {
           "slot": "RC7",

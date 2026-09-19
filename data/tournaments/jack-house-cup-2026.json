@@ -920,9 +920,10 @@
           "slot": "MD1",
           "type": "RC",
           "realType": "FCJ",
-          "name": "",
+          "name": "ETIA. - MVURBD [MetroPrt‘s Move Your Body]",
           "difficulty": 13.18,
-          "beatmapId": 5804656
+          "beatmapId": 5804656,
+          "beatmapsetId": 2597665
         },
         {
           "slot": "MD2",
@@ -937,9 +938,10 @@
           "slot": "LT1",
           "type": "RC",
           "realType": "SJ",
-          "name": "",
+          "name": "Yuta Imai feat. Kasane Teto - G.L.I.T.C.H. [MetroPrt's G.A.R.B.L.E.]",
           "difficulty": 13.34,
-          "beatmapId": 5804649
+          "beatmapId": 5804649,
+          "beatmapsetId": 2597661
         },
         {
           "slot": "LT2",

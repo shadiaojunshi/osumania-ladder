@@ -700,8 +700,10 @@
           "slot": "LN3",
           "type": "LN",
           "realType": "LNTC",
-          "name": "",
-          "difficulty": 6.58
+          "name": "Mili - RTRT [UrMyO0Rt (edit ver.)]",
+          "difficulty": 6.58,
+          "beatmapId": 5727382,
+          "beatmapsetId": 486763
         },
         {
           "slot": "EX1",

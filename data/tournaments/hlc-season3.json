@@ -22,8 +22,10 @@
           "slot": "ST1",
           "type": "SV",
           "realType": "SI",
-          "name": "",
-          "difficulty": 0
+          "name": "ARForest - Aoba [Mystify (SV)]",
+          "difficulty": 0,
+          "beatmapId": 3054755,
+          "beatmapsetId": 1490287
         },
         {
           "slot": "ST2",

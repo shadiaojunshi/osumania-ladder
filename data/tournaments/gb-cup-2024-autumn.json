@@ -957,8 +957,10 @@
           "slot": "RC2",
           "type": "RC",
           "realType": "JS",
-          "name": "",
-          "difficulty": 10.7
+          "name": "Lime - Stellaria [Expert (edit) (250bpm)]",
+          "difficulty": 10.7,
+          "beatmapId": 4916156,
+          "beatmapsetId": 2300510
         },
         {
           "slot": "RC3",

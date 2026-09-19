@@ -760,8 +760,10 @@
           "slot": "MD2",
           "type": "RC",
           "realType": "FCJ",
-          "name": "",
-          "difficulty": 13.42
+          "name": "C-Show - My My My [kusb123's Mr.C (edit) x0.97]",
+          "difficulty": 13.42,
+          "beatmapId": 5234545,
+          "beatmapsetId": 2410703
         },
         {
           "slot": "LT1",

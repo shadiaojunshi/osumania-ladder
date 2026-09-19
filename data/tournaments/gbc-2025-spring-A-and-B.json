@@ -546,9 +546,11 @@
           "slot": "TB",
           "type": "TB",
           "realType": "TB",
-          "name": "",
+          "name": "Laur - SYSTEM ERROR [STRUCTURAL FLAW | HYPER]",
           "difficulty": 3.6,
-          "difficultyLn": 5
+          "difficultyLn": 5,
+          "beatmapId": 5077057,
+          "beatmapsetId": 1986822
         }
       ],
       "typeDifficulties": {

@@ -183,7 +183,9 @@
           "realType": "HB4",
           "name": "HB2",
           "difficulty": 4,
-          "difficultyLn": 4
+          "difficultyLn": 4,
+          "beatmapId": 5475138,
+          "beatmapsetId": 2491936
         },
         {
           "slot": "HB3",
@@ -333,7 +335,9 @@
           "type": "RC",
           "realType": "JTC",
           "name": "RC7",
-          "difficulty": 7.7
+          "difficulty": 7.7,
+          "beatmapId": 5582163,
+          "beatmapsetId": 2526770
         },
         {
           "slot": "HB1",

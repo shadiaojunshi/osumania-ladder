@@ -13,9 +13,9 @@
       "order": 1,
       "isQualifier": true,
       "difficulty": {
-        "min": 0,
-        "max": 0,
-        "average": 0
+        "min": 4.83,
+        "max": 7.6,
+        "average": 5.81
       },
       "maps": [
         {
@@ -30,7 +30,7 @@
           "type": "RC",
           "realType": "JS",
           "name": "Shiena Nishizawa - Meaning [Battle Start!]",
-          "difficulty": 0,
+          "difficulty": 4.83,
           "beatmapId": 5186069,
           "beatmapsetId": 2394535
         },
@@ -39,7 +39,7 @@
           "type": "RC",
           "realType": "TC",
           "name": "Wen Ren Ting Shu_ - Yi Xiao Jiang Hu (DJ Bounce Version) [Sword]",
-          "difficulty": 0,
+          "difficulty": 5.53,
           "beatmapId": 4656791,
           "beatmapsetId": 2200372
         },
@@ -48,7 +48,7 @@
           "type": "LN",
           "realType": "RE",
           "name": "DJ OKAWARI ft. Rem (CV: Minase Inori) - I Love You [Love]",
-          "difficulty": 0,
+          "difficulty": 5.2,
           "beatmapId": 4214786,
           "beatmapsetId": 2023460
         },
@@ -57,16 +57,17 @@
           "type": "HB",
           "realType": "RCmainHB",
           "name": "NayutalieN - Ray Tuning [Chuningu!]",
-          "difficulty": 0,
+          "difficulty": 5,
           "beatmapId": 4446768,
-          "beatmapsetId": 2117391
+          "beatmapsetId": 2117391,
+          "difficultyLn": 5.2
         },
         {
           "slot": "ST6",
           "type": "RC",
           "realType": "SS",
           "name": "Yun Xi - Zhe Yi Chu Hao Xi [Abyss 1.05x (137bpm) OD8]",
-          "difficulty": 0,
+          "difficulty": 7.16,
           "beatmapId": 4832826,
           "beatmapsetId": 2269235
         },
@@ -75,15 +76,23 @@
           "type": "HB",
           "realType": "RCmainHB",
           "name": "Qlarabelle/Yuta Imai - Acid Rain [Stage Boss: Niar Dica]",
-          "difficulty": 0,
+          "difficulty": 7.2,
           "beatmapId": 5186074,
-          "beatmapsetId": 2394537
+          "beatmapsetId": 2394537,
+          "difficultyLn": 7.6
         }
       ],
       "typeDifficulties": {
-        "RC": {},
-        "HB": {},
-        "LN": {},
+        "RC": {
+          "rf": 5.84
+        },
+        "HB": {
+          "rf": 6.1,
+          "ln": 6.4
+        },
+        "LN": {
+          "ln": 5.2
+        },
         "SV": {},
         "TB": {}
       }
@@ -94,9 +103,9 @@
       "abbreviation": "R1",
       "order": 2,
       "difficulty": {
-        "min": 0,
-        "max": 0,
-        "average": 0
+        "min": 3.47,
+        "max": 5.2,
+        "average": 4.68
       },
       "maps": [
         {
@@ -113,7 +122,7 @@
           "type": "RC",
           "realType": "JS",
           "name": "DECO*27 feat. Hatsune Miku - Monitoring (oksuu flip) [Menhera]",
-          "difficulty": 0,
+          "difficulty": 4.96,
           "beatmapId": 4971629,
           "beatmapsetId": 2320726
         },
@@ -122,7 +131,7 @@
           "type": "RC",
           "realType": "SJ",
           "name": "Laura Shigihara - Graze the Roof (Cut Ver.) [Zombies]",
-          "difficulty": 0,
+          "difficulty": 3.47,
           "beatmapId": 5201851,
           "beatmapsetId": 2399780
         },
@@ -131,7 +140,7 @@
           "type": "RC",
           "realType": "SS",
           "name": "Feint - Sky Dance [Fly]",
-          "difficulty": 0,
+          "difficulty": 5,
           "beatmapId": 5201828,
           "beatmapsetId": 2399768
         },
@@ -140,7 +149,7 @@
           "type": "RC",
           "realType": "TC",
           "name": "Sasuke Haraguchi feat. Kasane Teto - Igaku [Saemitsu's Insane]",
-          "difficulty": 0,
+          "difficulty": 4.37,
           "beatmapId": 4756701,
           "beatmapsetId": 2178391
         },
@@ -149,7 +158,7 @@
           "type": "LN",
           "realType": "RE",
           "name": "Fractal Dreamers - Kingdom of Silence [King of Release]",
-          "difficulty": 0,
+          "difficulty": 5,
           "beatmapId": 5201910,
           "beatmapsetId": 2399804
         },
@@ -158,7 +167,7 @@
           "type": "LN",
           "realType": "DE",
           "name": "MYUKKE. - TOKAKU=ALMiRAJ [MEOWKKE.]",
-          "difficulty": 0,
+          "difficulty": 5,
           "beatmapId": 4471298,
           "beatmapsetId": 2126969
         },
@@ -167,35 +176,48 @@
           "type": "HB",
           "realType": "RCmainHB",
           "name": "Akiri - Void Of Altair [Alptraum's Insane]",
-          "difficulty": 0,
+          "difficulty": 4.6,
           "beatmapId": 4822719,
-          "beatmapsetId": 2246375
+          "beatmapsetId": 2246375,
+          "difficultyLn": 4
         },
         {
           "slot": "HB2",
           "type": "HB",
           "realType": "LNmainHB",
           "name": "PinocchioP feat. Hatsune Miku - Non-breath oblige [noblesse]",
-          "difficulty": 0,
+          "difficulty": 5,
           "beatmapId": 3948708,
-          "beatmapsetId": 1852295
+          "beatmapsetId": 1852295,
+          "difficultyLn": 5.2
         },
         {
           "slot": "TB",
           "type": "TB",
           "realType": "TB",
           "name": "earthmind - Another Heaven [Heaven's Fall]",
-          "difficulty": 0,
+          "difficulty": 5.6,
           "beatmapId": 5201846,
-          "beatmapsetId": 2399778
+          "beatmapsetId": 2399778,
+          "difficultyLn": 6
         }
       ],
       "typeDifficulties": {
-        "RC": {},
-        "HB": {},
-        "LN": {},
+        "RC": {
+          "rf": 4.45
+        },
+        "HB": {
+          "rf": 4.8,
+          "ln": 4.6
+        },
+        "LN": {
+          "ln": 5
+        },
         "SV": {},
-        "TB": {}
+        "TB": {
+          "rf": 5.6,
+          "ln": 6
+        }
       }
     },
     {
@@ -204,9 +226,9 @@
       "abbreviation": "R2",
       "order": 3,
       "difficulty": {
-        "min": 0,
-        "max": 0,
-        "average": 0
+        "min": 4,
+        "max": 7,
+        "average": 5.32
       },
       "maps": [
         {
@@ -223,7 +245,7 @@
           "type": "RC",
           "realType": "JS",
           "name": "ARForest - Metheus [Rebirth]",
-          "difficulty": 0,
+          "difficulty": 6,
           "beatmapId": 2060202,
           "beatmapsetId": 984642
         },
@@ -232,7 +254,7 @@
           "type": "RC",
           "realType": "CJ",
           "name": "Cheetah Mobile - Varying Christmas [Merry Jackmas!]",
-          "difficulty": 0,
+          "difficulty": 5.44,
           "beatmapId": 5211840,
           "beatmapsetId": 2403076
         },
@@ -241,7 +263,7 @@
           "type": "RC",
           "realType": "SS",
           "name": "Cheetah Mobile - Fairy Tale [Speedy tale(nerfed)]",
-          "difficulty": 0,
+          "difficulty": 5.78,
           "beatmapId": 5211843,
           "beatmapsetId": 2403078
         },
@@ -250,7 +272,7 @@
           "type": "RC",
           "realType": "TC",
           "name": "AAAA - w = addict [Typing]",
-          "difficulty": 0,
+          "difficulty": 4.45,
           "beatmapId": 5211828,
           "beatmapsetId": 2403070
         },
@@ -259,7 +281,7 @@
           "type": "RC",
           "realType": "MX",
           "name": "NIWASHI - Sapphire On Fire [Insane]",
-          "difficulty": 0,
+          "difficulty": 4.77,
           "beatmapId": 3950647,
           "beatmapsetId": 1775437
         },
@@ -268,7 +290,7 @@
           "type": "LN",
           "realType": "CO",
           "name": "RADWIMPS - Tokyo Zyoku [Unclouded sky.]",
-          "difficulty": 0,
+          "difficulty": 5,
           "beatmapId": 5211825,
           "beatmapsetId": 2403067
         },
@@ -277,7 +299,7 @@
           "type": "LN",
           "realType": "DE",
           "name": "DJ TOTTO - DORNWALD ~Junge~ [Anima]",
-          "difficulty": 0,
+          "difficulty": 7,
           "beatmapId": 3391262,
           "beatmapsetId": 1660098
         },
@@ -286,7 +308,7 @@
           "type": "LN",
           "realType": "LNMX",
           "name": "REOL - Give me a break Stop now [ler's Insane]",
-          "difficulty": 0,
+          "difficulty": 5,
           "beatmapId": 4679219,
           "beatmapsetId": 2207305
         },
@@ -295,44 +317,58 @@
           "type": "HB",
           "realType": "RCmainHB",
           "name": "Tezuka x Qayo - NINI [Slowpoke104's Insane]",
-          "difficulty": 0,
+          "difficulty": 4.8,
           "beatmapId": 4086154,
-          "beatmapsetId": 1969618
+          "beatmapsetId": 1969618,
+          "difficultyLn": 4
         },
         {
           "slot": "HB2",
           "type": "HB",
           "realType": "LNmainHB",
           "name": "YOASOBI - Idol [Truthful Lie]",
-          "difficulty": 0,
+          "difficulty": 5.6,
           "beatmapId": 4135093,
-          "beatmapsetId": 1990406
+          "beatmapsetId": 1990406,
+          "difficultyLn": 6
         },
         {
           "slot": "HB3",
           "type": "HB",
           "realType": "MNTB",
           "name": "kotono - friend ship [Starlight New World]",
-          "difficulty": 0,
+          "difficulty": 5,
           "beatmapId": 5078292,
-          "beatmapsetId": 2357684
+          "beatmapsetId": 2357684,
+          "difficultyLn": 5
         },
         {
           "slot": "TB",
           "type": "TB",
           "realType": "TB",
           "name": "ReeK - Okashi Rave Party (feat. L4hee) [Sweet Loving Cakes (HLC edit)]",
-          "difficulty": 0,
+          "difficulty": 5.8,
           "beatmapId": 5211829,
-          "beatmapsetId": 2403071
+          "beatmapsetId": 2403071,
+          "difficultyLn": 6.6
         }
       ],
       "typeDifficulties": {
-        "RC": {},
-        "HB": {},
-        "LN": {},
+        "RC": {
+          "rf": 5.29
+        },
+        "HB": {
+          "rf": 5.13,
+          "ln": 5
+        },
+        "LN": {
+          "ln": 5.67
+        },
         "SV": {},
-        "TB": {}
+        "TB": {
+          "rf": 5.8,
+          "ln": 6.6
+        }
       }
     },
     {
@@ -341,9 +377,9 @@
       "abbreviation": "F",
       "order": 4,
       "difficulty": {
-        "min": 0,
-        "max": 0,
-        "average": 0
+        "min": 4.2,
+        "max": 8.4,
+        "average": 6.18
       },
       "maps": [
         {
@@ -360,7 +396,7 @@
           "type": "RC",
           "realType": "JS",
           "name": "beatMARIO - Night of Knights [THE WORLD(edit.) 1.05x]",
-          "difficulty": 0,
+          "difficulty": 7.44,
           "beatmapId": 5223782,
           "beatmapsetId": 2406965
         },
@@ -369,7 +405,7 @@
           "type": "RC",
           "realType": "SJ",
           "name": "Redside - beachball! [Sunshine!]",
-          "difficulty": 0,
+          "difficulty": 4.8,
           "beatmapId": 5223790,
           "beatmapsetId": 2206767
         },
@@ -378,7 +414,7 @@
           "type": "RC",
           "realType": "SS",
           "name": "Tatsh - IMAGE -MATERIAL- <REFLEC BEAT Edition> [YuEast's Imagine the Future (edit)]",
-          "difficulty": 0,
+          "difficulty": 6.44,
           "beatmapId": 4682349,
           "beatmapsetId": 2210493
         },
@@ -387,7 +423,7 @@
           "type": "RC",
           "realType": "ADP",
           "name": "Yunomi - Jellyfish (feat. Roller Girl) (Cut Ver.) [floating... x1.05]",
-          "difficulty": 0,
+          "difficulty": 5.8,
           "beatmapId": 4671089,
           "beatmapsetId": 2206235
         },
@@ -396,7 +432,7 @@
           "type": "RC",
           "realType": "MX",
           "name": "Otonose Kanade & Mori Calliope - Beyond the way [BREAK THE WAY!]",
-          "difficulty": 0,
+          "difficulty": 5.91,
           "beatmapId": 5223804,
           "beatmapsetId": 2406971
         },
@@ -405,7 +441,7 @@
           "type": "LN",
           "realType": "RE",
           "name": "Fu Yan - Me(machine) [Principle]",
-          "difficulty": 0,
+          "difficulty": 6,
           "beatmapId": 5224121,
           "beatmapsetId": 2407087
         },
@@ -414,7 +450,7 @@
           "type": "LN",
           "realType": "DE",
           "name": "High Speed Music Team Sharpnel - M.A.M.A. [LN Master]",
-          "difficulty": 0,
+          "difficulty": 8.4,
           "beatmapId": 5224117,
           "beatmapsetId": 2407085
         },
@@ -423,7 +459,7 @@
           "type": "LN",
           "realType": "LNMX",
           "name": "Tsukuyomi - Byakuya [White Night]",
-          "difficulty": 0,
+          "difficulty": 6,
           "beatmapId": 5224123,
           "beatmapsetId": 2407089
         },
@@ -432,44 +468,58 @@
           "type": "HB",
           "realType": "RCmainHB",
           "name": "OISHII - ONIGIRI FREEWAY [Ikura Onigiri \"SC\"]",
-          "difficulty": 0,
+          "difficulty": 6.2,
           "beatmapId": 1504982,
-          "beatmapsetId": 663098
+          "beatmapsetId": 663098,
+          "difficultyLn": 6.6
         },
         {
           "slot": "HB2",
           "type": "HB",
           "realType": "LNmainHB",
           "name": "Mameyudoufu - I HATE MY PUTER (ALL MY ENEMIES ARE INSIDE IT) [e.printStackTrace()]",
-          "difficulty": 0,
+          "difficulty": 4.2,
           "beatmapId": 4919586,
-          "beatmapsetId": 2301881
+          "beatmapsetId": 2301881,
+          "difficultyLn": 5
         },
         {
           "slot": "HB3",
           "type": "HB",
           "realType": "MNTB",
           "name": "YOASOBI - UNDEAD [[HAPPY ENDING] PEACEFUL PRESENT]",
-          "difficulty": 0,
+          "difficulty": 5.2,
           "beatmapId": 4791075,
-          "beatmapsetId": 2252594
+          "beatmapsetId": 2252594,
+          "difficultyLn": 5.4
         },
         {
           "slot": "TB",
           "type": "TB",
           "realType": "TB",
           "name": "Camellia feat. Camellia - Achromatic City -Lost Palette- [#000000 AND #FFFFFF]",
-          "difficulty": 0,
+          "difficulty": 6.2,
           "beatmapId": 5223860,
-          "beatmapsetId": 2406986
+          "beatmapsetId": 2406986,
+          "difficultyLn": 6.8
         }
       ],
       "typeDifficulties": {
-        "RC": {},
-        "HB": {},
-        "LN": {},
+        "RC": {
+          "rf": 6.08
+        },
+        "HB": {
+          "rf": 5.2,
+          "ln": 5.67
+        },
+        "LN": {
+          "ln": 6.8
+        },
         "SV": {},
-        "TB": {}
+        "TB": {
+          "rf": 6.2,
+          "ln": 6.8
+        }
       }
     },
     {
@@ -478,9 +528,9 @@
       "abbreviation": "GF",
       "order": 5,
       "difficulty": {
-        "min": 0,
-        "max": 0,
-        "average": 0
+        "min": 5.4,
+        "max": 8.61,
+        "average": 6.95
       },
       "maps": [
         {
@@ -497,7 +547,7 @@
           "type": "RC",
           "realType": "JS",
           "name": "DJ Myosuke & Gram & t+pazolite - Sigma [Mysterious]",
-          "difficulty": 0,
+          "difficulty": 8.61,
           "beatmapId": 5235797,
           "beatmapsetId": 2411168
         },
@@ -506,7 +556,7 @@
           "type": "RC",
           "realType": "FCJ",
           "name": "Hanatan - Wave [IMA]",
-          "difficulty": 0,
+          "difficulty": 6.81,
           "beatmapId": 5235830,
           "beatmapsetId": 2411182
         },
@@ -515,7 +565,7 @@
           "type": "RC",
           "realType": "SS",
           "name": "Seren Azuma - Kami no Manimani (Cut Ver.) [Kamisama]",
-          "difficulty": 0,
+          "difficulty": 6.3,
           "beatmapId": 5235791,
           "beatmapsetId": 2411164
         },
@@ -524,7 +574,7 @@
           "type": "RC",
           "realType": "TC",
           "name": "Tong Ke Ke - Wu Yi Bu Shi Ni [Love 1.1x (106bpm) OD8]",
-          "difficulty": 0,
+          "difficulty": 7.63,
           "beatmapId": 5235794,
           "beatmapsetId": 2411166
         },
@@ -533,7 +583,7 @@
           "type": "RC",
           "realType": "MX",
           "name": "ONER - Jiu Tian Kuang Long [Ye Yue Wan Wo Yue Hai]",
-          "difficulty": 0,
+          "difficulty": 6.95,
           "beatmapId": 4487838,
           "beatmapsetId": 2133338
         },
@@ -542,7 +592,7 @@
           "type": "LN",
           "realType": "RE",
           "name": "Iyowa feat.Kafu - Kyu-kurarin(yuigot Remix) [Anxiety]",
-          "difficulty": 0,
+          "difficulty": 6,
           "beatmapId": 4617023,
           "beatmapsetId": 2184354
         },
@@ -551,7 +601,7 @@
           "type": "LN",
           "realType": "DE",
           "name": "Bowling for Soup - Today is Gonna be a Great Day [Best Day Ever!!!(Nerfed)]",
-          "difficulty": 0,
+          "difficulty": 8,
           "beatmapId": 5226781,
           "beatmapsetId": 2408054
         },
@@ -560,7 +610,7 @@
           "type": "LN",
           "realType": "LNMX",
           "name": "Hanon x Kotoha - Fuwari [fuwafuwa]",
-          "difficulty": 0,
+          "difficulty": 7.2,
           "beatmapId": 5235838,
           "beatmapsetId": 2411186
         },
@@ -569,44 +619,58 @@
           "type": "HB",
           "realType": "RCmainHB",
           "name": "Lite Show Magic - TRICKL4SH 220 [055 H54LKCIRT]",
-          "difficulty": 0,
+          "difficulty": 6.8,
           "beatmapId": 5235837,
-          "beatmapsetId": 2411185
+          "beatmapsetId": 2411185,
+          "difficultyLn": 7
         },
         {
           "slot": "HB2",
           "type": "HB",
           "realType": "LNmainHB",
           "name": "Ayo - Brain Rigid Girl [Myon]",
-          "difficulty": 0,
+          "difficulty": 6.2,
           "beatmapId": 4336025,
-          "beatmapsetId": 2072061
+          "beatmapsetId": 2072061,
+          "difficultyLn": 6.8
         },
         {
           "slot": "HB3",
           "type": "HB",
           "realType": "MNTB",
           "name": "Camellia - The Cat Evolved Into The Microwave-proof Cat! [M-E-O-W]",
-          "difficulty": 0,
+          "difficulty": 5.4,
           "beatmapId": 3775723,
-          "beatmapsetId": 1838586
+          "beatmapsetId": 1838586,
+          "difficultyLn": 5.8
         },
         {
           "slot": "TB",
           "type": "TB",
           "realType": "TB",
           "name": "Camellia - Parallel Universe Shifter [First Cosmic Velocity]",
-          "difficulty": 0,
+          "difficulty": 7.4,
           "beatmapId": 5235801,
-          "beatmapsetId": 2411172
+          "beatmapsetId": 2411172,
+          "difficultyLn": 8
         }
       ],
       "typeDifficulties": {
-        "RC": {},
-        "HB": {},
-        "LN": {},
+        "RC": {
+          "rf": 7.26
+        },
+        "HB": {
+          "rf": 6.13,
+          "ln": 6.53
+        },
+        "LN": {
+          "ln": 7.07
+        },
         "SV": {},
-        "TB": {}
+        "TB": {
+          "rf": 7.4,
+          "ln": 8
+        }
       }
     }
   ],

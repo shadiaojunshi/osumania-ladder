@@ -13,9 +13,9 @@
       "order": 1,
       "isQualifier": true,
       "difficulty": {
-        "min": 0,
-        "max": 0,
-        "average": 0
+        "min": 1,
+        "max": 3.55,
+        "average": 2.04
       },
       "maps": [
         {
@@ -23,7 +23,7 @@
           "type": "RC",
           "realType": "SS",
           "name": "HyuN - Infinity Heaven [Seraphim]",
-          "difficulty": 0,
+          "difficulty": 2.59,
           "beatmapId": 5007411,
           "beatmapsetId": 2333424
         },
@@ -32,7 +32,7 @@
           "type": "RC",
           "realType": "TC",
           "name": "The Flashbulb - EZ God Library [Hard]",
-          "difficulty": 0,
+          "difficulty": 1,
           "beatmapId": 4230964,
           "beatmapsetId": 2029742
         },
@@ -41,7 +41,7 @@
           "type": "RC",
           "realType": "MX",
           "name": "LeaF - Calamity Fortune [Spy's Hyper]",
-          "difficulty": 0,
+          "difficulty": 3.55,
           "beatmapId": 4884646,
           "beatmapsetId": 2288990
         },
@@ -50,7 +50,7 @@
           "type": "LN",
           "realType": "CO",
           "name": "HowToPlayLN - remembrance; image of him before departure [polarin vs. lott's advanced]",
-          "difficulty": 0,
+          "difficulty": 2,
           "beatmapId": 4262161,
           "beatmapsetId": 2042525
         },
@@ -59,7 +59,7 @@
           "type": "LN",
           "realType": "DE",
           "name": "TERRA - ever snow [which is cold]",
-          "difficulty": 0,
+          "difficulty": 2,
           "beatmapId": 4965201,
           "beatmapsetId": 2318258
         },
@@ -68,18 +68,20 @@
           "type": "HB",
           "realType": "HB1",
           "name": "Kanade Hayami - Hotel Moonside(kors k Bootleg) [edit]",
-          "difficulty": 0,
+          "difficulty": 1.8,
           "beatmapId": 3959732,
-          "beatmapsetId": 903360
+          "beatmapsetId": 903360,
+          "difficultyLn": 2
         },
         {
           "slot": "HB2",
           "type": "HB",
           "realType": "HB1",
           "name": "Frums - sing sing red indigo [zircon's hard]",
-          "difficulty": 0,
+          "difficulty": 1.2,
           "beatmapId": 4105380,
-          "beatmapsetId": 1977616
+          "beatmapsetId": 1977616,
+          "difficultyLn": 1.5
         },
         {
           "slot": "SV",
@@ -92,9 +94,16 @@
         }
       ],
       "typeDifficulties": {
-        "RC": {},
-        "HB": {},
-        "LN": {},
+        "RC": {
+          "rf": 2.38
+        },
+        "HB": {
+          "rf": 1.5,
+          "ln": 1.75
+        },
+        "LN": {
+          "ln": 2
+        },
         "SV": {},
         "TB": {}
       }
@@ -106,9 +115,9 @@
       "order": 2,
       "isQualifier": true,
       "difficulty": {
-        "min": 0,
-        "max": 0,
-        "average": 0
+        "min": 2.59,
+        "max": 3.6,
+        "average": 3.07
       },
       "maps": [
         {
@@ -125,7 +134,7 @@
           "type": "RC",
           "realType": "SS",
           "name": "Miyolophone - Amoris [Stage 2: Love]",
-          "difficulty": 0,
+          "difficulty": 2.59,
           "beatmapId": 4606408,
           "beatmapsetId": 2180630
         },
@@ -134,7 +143,7 @@
           "type": "RC",
           "realType": "TC",
           "name": "Camellia - This Future (we didn't expect) (Cut Ver.) [Stage 3: Continuation]",
-          "difficulty": 0,
+          "difficulty": 3.04,
           "beatmapId": 5375794,
           "beatmapsetId": 2458385
         },
@@ -143,33 +152,42 @@
           "type": "HB",
           "realType": "HB1",
           "name": "Noah - Deadly Force [Stage 4: Eratic Desolation (\"feat. Lott\")]",
-          "difficulty": 0,
+          "difficulty": 3.6,
           "beatmapId": 5377882,
-          "beatmapsetId": 2458989
+          "beatmapsetId": 2458989,
+          "difficultyLn": 3.6
         },
         {
           "slot": "HB2",
           "type": "HB",
           "realType": "HB3",
           "name": "yuki. - daft [Stage 5: Illusional]",
-          "difficulty": 0,
+          "difficulty": 3.2,
           "beatmapId": 5377720,
-          "beatmapsetId": 2458996
+          "beatmapsetId": 2458996,
+          "difficultyLn": 3.2
         },
         {
           "slot": "LN",
           "type": "LN",
           "realType": "RE",
           "name": "Kotoha - Sekai (Cut Ver.) [Stage 6: Confidence]",
-          "difficulty": 0,
+          "difficulty": 3,
           "beatmapId": 5375795,
           "beatmapsetId": 2458386
         }
       ],
       "typeDifficulties": {
-        "RC": {},
-        "HB": {},
-        "LN": {},
+        "RC": {
+          "rf": 2.81
+        },
+        "HB": {
+          "rf": 3.4,
+          "ln": 3.4
+        },
+        "LN": {
+          "ln": 3
+        },
         "SV": {},
         "TB": {}
       }
@@ -619,9 +637,9 @@
       "abbreviation": "SF",
       "order": 6,
       "difficulty": {
-        "min": 0,
-        "max": 0,
-        "average": 0
+        "min": 2.55,
+        "max": 4,
+        "average": 3.18
       },
       "maps": [
         {
@@ -629,7 +647,7 @@
           "type": "RC",
           "realType": "SA",
           "name": "LV.4 - Neo Genesis [Reincarnation 1.05x]",
-          "difficulty": 0,
+          "difficulty": 2.93,
           "beatmapId": 5417028,
           "beatmapsetId": 2472394
         },
@@ -638,7 +656,7 @@
           "type": "RC",
           "realType": "SS",
           "name": "Musical Masterpiece - M-A [The 6th Revolution]",
-          "difficulty": 0,
+          "difficulty": 3.49,
           "beatmapId": 5417695,
           "beatmapsetId": 2472603
         },
@@ -647,7 +665,7 @@
           "type": "RC",
           "realType": "TC",
           "name": "sakuraburst - sha (cut ver.) [fluctuation]",
-          "difficulty": 0,
+          "difficulty": 2.59,
           "beatmapId": 5417037,
           "beatmapsetId": 2472396
         },
@@ -656,7 +674,7 @@
           "type": "RC",
           "realType": "DP",
           "name": "Shakira - Sera Sera (Hips Don't Lie \"Spanish Ver.\") [Feel the conga]",
-          "difficulty": 0,
+          "difficulty": 3.23,
           "beatmapId": 5417080,
           "beatmapsetId": 2472415
         },
@@ -665,7 +683,7 @@
           "type": "RC",
           "realType": "MX",
           "name": "Waterflame - Ricochet Love [Amethyst with Aquamarine]",
-          "difficulty": 0,
+          "difficulty": 2.55,
           "beatmapId": 5417114,
           "beatmapsetId": 2472427
         },
@@ -674,7 +692,7 @@
           "type": "LN",
           "realType": "RE",
           "name": "sana & Nayugorou - Love Potion [Together feat. Lumi]",
-          "difficulty": 0,
+          "difficulty": 3,
           "beatmapId": 5417058,
           "beatmapsetId": 2472406
         },
@@ -683,7 +701,7 @@
           "type": "LN",
           "realType": "DE",
           "name": "FAKE TYPE. - Volstead Bar (feat. MAXBET) (Cut Ver.) [Drunken]",
-          "difficulty": 0,
+          "difficulty": 3,
           "beatmapId": 5417057,
           "beatmapsetId": 2472405
         },
@@ -692,36 +710,40 @@
           "type": "HB",
           "realType": "HB1",
           "name": "Melorikka feat. Ethereal_Winter - Umapyoi Legend (English Ver.) [Do your best, Power up, and Don't stop!!!!]",
-          "difficulty": 0,
+          "difficulty": 3.6,
           "beatmapId": 5417063,
-          "beatmapsetId": 2472408
+          "beatmapsetId": 2472408,
+          "difficultyLn": 3.6
         },
         {
           "slot": "HB2",
           "type": "HB",
           "realType": "LNmainHB",
           "name": "SHK - Abyss of Destiny [The chosen one]",
-          "difficulty": 0,
+          "difficulty": 3.6,
           "beatmapId": 5141886,
-          "beatmapsetId": 2379452
+          "beatmapsetId": 2379452,
+          "difficultyLn": 3.6
         },
         {
           "slot": "HB3",
           "type": "HB",
           "realType": "HB3",
           "name": "James Landino - Anti Hero [epic's Hard]",
-          "difficulty": 0,
+          "difficulty": 3.2,
           "beatmapId": 5417065,
-          "beatmapsetId": 2472409
+          "beatmapsetId": 2472409,
+          "difficultyLn": 3.2
         },
         {
           "slot": "HB4",
           "type": "HB",
           "realType": "MNTB",
           "name": "m4titann - Your voice leads me everlasting future! [[<3 <3]]",
-          "difficulty": 0,
+          "difficulty": 3.8,
           "beatmapId": 5416873,
-          "beatmapsetId": 2472313
+          "beatmapsetId": 2472313,
+          "difficultyLn": 4
         },
         {
           "slot": "SV",
@@ -737,24 +759,35 @@
           "type": "TB",
           "realType": "TB",
           "name": "Ardolf - Tales of the Dungeon [Stronghold Conquest]",
-          "difficulty": 0,
+          "difficulty": 4.6,
           "beatmapId": 5417039,
-          "beatmapsetId": 2472398
+          "beatmapsetId": 2472398,
+          "difficultyLn": 5
         },
         {
           "slot": "RC4",
           "type": "RC",
           "realType": "FCJ",
           "name": "RC6",
-          "difficulty": 0
+          "difficulty": 2.77
         }
       ],
       "typeDifficulties": {
-        "RC": {},
-        "HB": {},
-        "LN": {},
+        "RC": {
+          "rf": 2.93
+        },
+        "HB": {
+          "rf": 3.55,
+          "ln": 3.6
+        },
+        "LN": {
+          "ln": 3
+        },
         "SV": {},
-        "TB": {}
+        "TB": {
+          "rf": 4.6,
+          "ln": 5
+        }
       }
     },
     {
@@ -763,9 +796,9 @@
       "abbreviation": "F",
       "order": 7,
       "difficulty": {
-        "min": 0,
-        "max": 0,
-        "average": 0
+        "min": 3.51,
+        "max": 8.2,
+        "average": 4.79
       },
       "maps": [
         {
@@ -773,7 +806,7 @@
           "type": "RC",
           "realType": "JS",
           "name": "ginkiha - Silver Eclipse [NMWC ver]",
-          "difficulty": 0,
+          "difficulty": 4.9,
           "beatmapId": 5427765,
           "beatmapsetId": 2475821
         },
@@ -782,7 +815,7 @@
           "type": "RC",
           "realType": "SS",
           "name": "69 de 74 - Grievous Fate [Destined Suffering 1.1x]",
-          "difficulty": 0,
+          "difficulty": 4.4,
           "beatmapId": 5427716,
           "beatmapsetId": 2475798
         },
@@ -791,7 +824,7 @@
           "type": "RC",
           "realType": "TC",
           "name": "Sobrem - ANDORXOR [4K // NULLMEMORYWEBCACHE (nerf)]",
-          "difficulty": 0,
+          "difficulty": 4.23,
           "beatmapId": 5427742,
           "beatmapsetId": 2475808
         },
@@ -800,7 +833,7 @@
           "type": "RC",
           "realType": "FCJ",
           "name": "2hollis - poster boy [222222 222]",
-          "difficulty": 0,
+          "difficulty": 3.51,
           "beatmapId": 5427793,
           "beatmapsetId": 2475840
         },
@@ -809,7 +842,7 @@
           "type": "RC",
           "realType": "DP",
           "name": "Outsider - loner [Isolaton(full)]",
-          "difficulty": 0,
+          "difficulty": 4.53,
           "beatmapId": 5427761,
           "beatmapsetId": 2475817
         },
@@ -818,7 +851,7 @@
           "type": "RC",
           "realType": "MX",
           "name": "Ardolf - Tomb Raider [Artifact]",
-          "difficulty": 0,
+          "difficulty": 4.52,
           "beatmapId": 5427748,
           "beatmapsetId": 2475810
         },
@@ -827,7 +860,7 @@
           "type": "RC",
           "realType": "MX",
           "name": "Miyolophone/BilliumMoto - Faster Than You!!! [Envi VS BAMUPRI]",
-          "difficulty": 0,
+          "difficulty": 4.22,
           "beatmapId": 5427799,
           "beatmapsetId": 2475841
         },
@@ -836,7 +869,7 @@
           "type": "LN",
           "realType": "RE",
           "name": "KikuoHana - Nobore! Susume! Takai Tou (Cut Ver.) [March]",
-          "difficulty": 0,
+          "difficulty": 4.5,
           "beatmapId": 5427755,
           "beatmapsetId": 2475813
         },
@@ -845,7 +878,7 @@
           "type": "LN",
           "realType": "DE",
           "name": "HyuN feat. Aerial - Exodus [Moses(NMWC.ver)]",
-          "difficulty": 0,
+          "difficulty": 4.5,
           "beatmapId": 5427409,
           "beatmapsetId": 2475673
         },
@@ -854,7 +887,7 @@
           "type": "LN",
           "realType": "LNMX",
           "name": "Ardolf - Varcolac [wasup yall today i teach how to avoid teh antisigma pathowogen]",
-          "difficulty": 0,
+          "difficulty": 4.5,
           "beatmapId": 5427762,
           "beatmapsetId": 2475818
         },
@@ -863,27 +896,30 @@
           "type": "HB",
           "realType": "HB1",
           "name": "SiLiS - Harmonia Macrocosmica [Universum In Ordine]",
-          "difficulty": 0,
+          "difficulty": 5,
           "beatmapId": 5427769,
-          "beatmapsetId": 2475823
+          "beatmapsetId": 2475823,
+          "difficultyLn": 5
         },
         {
           "slot": "HB2",
           "type": "HB",
           "realType": "LNmainHB",
           "name": "USAO - The Commanders [World Conquerer 1.1x (165bpm)]",
-          "difficulty": 0,
+          "difficulty": 4.4,
           "beatmapId": 5427738,
-          "beatmapsetId": 2475806
+          "beatmapsetId": 2475806,
+          "difficultyLn": 4.5
         },
         {
           "slot": "HB3",
           "type": "HB",
           "realType": "HB3",
           "name": "SiLiS - Hebe [the prime of life]",
-          "difficulty": 0,
+          "difficulty": 4.4,
           "beatmapId": 5427768,
-          "beatmapsetId": 2475822
+          "beatmapsetId": 2475822,
+          "difficultyLn": 4.5
         },
         {
           "slot": "SV1",
@@ -908,24 +944,36 @@
           "type": "TB",
           "realType": "TB",
           "name": "jeko - Journey to Windswept Scarlet Sands [Escape from the Crimson Deserted Land]",
-          "difficulty": 0,
+          "difficulty": 5.6,
           "beatmapId": 5427792,
-          "beatmapsetId": 2475839
+          "beatmapsetId": 2475839,
+          "difficultyLn": 6.2
         },
         {
           "slot": "HB4",
           "type": "HB",
           "realType": "MNTB",
           "name": "HB4",
-          "difficulty": 0
+          "difficulty": 7.6,
+          "difficultyLn": 8.2
         }
       ],
       "typeDifficulties": {
-        "RC": {},
-        "HB": {},
-        "LN": {},
+        "RC": {
+          "rf": 4.33
+        },
+        "HB": {
+          "rf": 5.35,
+          "ln": 5.55
+        },
+        "LN": {
+          "ln": 4.5
+        },
         "SV": {},
-        "TB": {}
+        "TB": {
+          "rf": 5.6,
+          "ln": 6.2
+        }
       }
     },
     {
@@ -934,9 +982,9 @@
       "abbreviation": "GF",
       "order": 8,
       "difficulty": {
-        "min": 0,
-        "max": 0,
-        "average": 0
+        "min": 4.2,
+        "max": 5.99,
+        "average": 5.13
       },
       "maps": [
         {
@@ -944,7 +992,7 @@
           "type": "RC",
           "realType": "SA",
           "name": "Yooh - Seraphim (Long Ver.) [Angel[1.05](NMWC.ver)]",
-          "difficulty": 0,
+          "difficulty": 5.99,
           "beatmapId": 5454956,
           "beatmapsetId": 2485279
         },
@@ -953,7 +1001,7 @@
           "type": "RC",
           "realType": "SS",
           "name": "LeaF - neo tinnitus [earbleep.wav]",
-          "difficulty": 0,
+          "difficulty": 5.3,
           "beatmapId": 5456964,
           "beatmapsetId": 2485852
         },
@@ -962,7 +1010,7 @@
           "type": "RC",
           "realType": "TC",
           "name": "Gigi Murin - Hitomania [T3CH]",
-          "difficulty": 0,
+          "difficulty": 5.4,
           "beatmapId": 5457167,
           "beatmapsetId": 2485918
         },
@@ -971,7 +1019,7 @@
           "type": "RC",
           "realType": "FCJ",
           "name": "Triodust - FINALE [Extermination]",
-          "difficulty": 0,
+          "difficulty": 4.51,
           "beatmapId": 5457027,
           "beatmapsetId": 2485869
         },
@@ -980,7 +1028,7 @@
           "type": "RC",
           "realType": "DP",
           "name": "SHarK/Rapeter - SHUFFLE THE CARD [We rise(NMWC.ver)]",
-          "difficulty": 0,
+          "difficulty": 4.44,
           "beatmapId": 5454955,
           "beatmapsetId": 2485278
         },
@@ -989,7 +1037,7 @@
           "type": "RC",
           "realType": "MX",
           "name": "Leo/need x KAITO - Regulus [omnia causa fiunt 1.05x]",
-          "difficulty": 0,
+          "difficulty": 4.98,
           "beatmapId": 5367969,
           "beatmapsetId": 2456008
         },
@@ -998,7 +1046,7 @@
           "type": "RC",
           "realType": "MX",
           "name": "Dustvoxx, Loctek - Labyrinth of Mind [Convoluted Disintegration]",
-          "difficulty": 0,
+          "difficulty": 5.27,
           "beatmapId": 5457321,
           "beatmapsetId": 2485980
         },
@@ -1007,7 +1055,7 @@
           "type": "LN",
           "realType": "CO",
           "name": "Sewerslvt - Cute Panties Soaked In Arizona Iced Tea [Another Night of Pure Rain As It Makes That Ever So Familiar Sound]",
-          "difficulty": 0,
+          "difficulty": 5,
           "beatmapId": 5445608,
           "beatmapsetId": 2481907
         },
@@ -1016,7 +1064,7 @@
           "type": "LN",
           "realType": "DE",
           "name": "Ardolf - Kaleidoscope [The Ebb and Flow of Fragmented Memories (w/ Lott)]",
-          "difficulty": 0,
+          "difficulty": 5.2,
           "beatmapId": 5457326,
           "beatmapsetId": 2485983
         },
@@ -1025,7 +1073,7 @@
           "type": "LN",
           "realType": "LNMX",
           "name": "mitsukiyo & Lee Jin-ah - Target for Love [Edit]",
-          "difficulty": 0,
+          "difficulty": 5.6,
           "beatmapId": 5457001,
           "beatmapsetId": 2485861
         },
@@ -1034,36 +1082,40 @@
           "type": "HB",
           "realType": "HB1",
           "name": "Melorikka - MULTIGENECRYSTAL://ALL_FOR_ONE [[[BL00M1NG.]]]",
-          "difficulty": 0,
+          "difficulty": 4.6,
           "beatmapId": 5457349,
-          "beatmapsetId": 2485996
+          "beatmapsetId": 2485996,
+          "difficultyLn": 5
         },
         {
           "slot": "HB2",
           "type": "HB",
           "realType": "LNmainHB",
           "name": "Zekk - The Moving Fortress (Cut Ver.) [Megastructure]",
-          "difficulty": 0,
+          "difficulty": 4.8,
           "beatmapId": 5454563,
-          "beatmapsetId": 2485110
+          "beatmapsetId": 2485110,
+          "difficultyLn": 5
         },
         {
           "slot": "HB3",
           "type": "HB",
           "realType": "HB3",
           "name": "Haraguchi Sasuke - Igaku [Nasty Cure]",
-          "difficulty": 0,
+          "difficulty": 4.2,
           "beatmapId": 5456721,
-          "beatmapsetId": 2485800
+          "beatmapsetId": 2485800,
+          "difficultyLn": 4.4
         },
         {
           "slot": "HB4",
           "type": "HB",
           "realType": "MNTB",
           "name": "Xyris - CLOVERFLUX [Everlasting Memory]",
-          "difficulty": 0,
+          "difficulty": 5.4,
           "beatmapId": 5457365,
-          "beatmapsetId": 2486003
+          "beatmapsetId": 2486003,
+          "difficultyLn": 5.6
         },
         {
           "slot": "SV1",
@@ -1088,17 +1140,28 @@
           "type": "TB",
           "realType": "TB",
           "name": "sugosugiii vs. 11784492 vs. THE BEAT WIZARD feat. Ethereal_Winter - Eternal Ember [Twilight's Final Vigil]",
-          "difficulty": 0,
+          "difficulty": 6.2,
           "beatmapId": 5457381,
-          "beatmapsetId": 2486011
+          "beatmapsetId": 2486011,
+          "difficultyLn": 6.8
         }
       ],
       "typeDifficulties": {
-        "RC": {},
-        "HB": {},
-        "LN": {},
+        "RC": {
+          "rf": 5.13
+        },
+        "HB": {
+          "rf": 4.75,
+          "ln": 5
+        },
+        "LN": {
+          "ln": 5.27
+        },
         "SV": {},
-        "TB": {}
+        "TB": {
+          "rf": 6.2,
+          "ln": 6.8
+        }
       }
     }
   ],

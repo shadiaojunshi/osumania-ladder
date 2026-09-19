@@ -12,9 +12,9 @@
       "abbreviation": "Qual",
       "order": 1,
       "difficulty": {
-        "min": 6,
-        "max": 8,
-        "average": 7
+        "min": 4.4,
+        "max": 7.6,
+        "average": 6.08
       },
       "maps": [
         {
@@ -22,7 +22,7 @@
           "type": "SV",
           "realType": "SV1",
           "name": "Au5 - Spyre (Cut Ver.) [Stage 1: Ascension]",
-          "difficulty": 8,
+          "difficulty": 6,
           "beatmapId": 5521681,
           "beatmapsetId": 2507234
         },
@@ -31,7 +31,7 @@
           "type": "RC",
           "realType": "MX",
           "name": "Terminal 11 - Sparkle Downer [Stage 2: Killjoy]",
-          "difficulty": 6,
+          "difficulty": 4.71,
           "beatmapId": 5521805,
           "beatmapsetId": 2507276
         },
@@ -40,7 +40,7 @@
           "type": "RC",
           "realType": "SA",
           "name": "Kenshi Yonezu - KICK BACK [Stage 5: Shogayaki]",
-          "difficulty": 6,
+          "difficulty": 6.24,
           "beatmapId": 5521831,
           "beatmapsetId": 2507287
         },
@@ -49,7 +49,7 @@
           "type": "RC",
           "realType": "TC",
           "name": "Kyiku/KAFU/SEKAI/Kazehiki - Tada Byoumei ga Hoshika tta [Stage 7: Naming the Unseen]",
-          "difficulty": 6,
+          "difficulty": 5.66,
           "beatmapId": 5521640,
           "beatmapsetId": 2507220
         },
@@ -58,7 +58,7 @@
           "type": "LN",
           "realType": "RE",
           "name": "inabakumori - Yoyuyoku (Vo. nagib & Kazehikib) [Stage 4: Composure]",
-          "difficulty": 6.5,
+          "difficulty": 6,
           "beatmapId": 5521988,
           "beatmapsetId": 2507347
         },
@@ -67,7 +67,7 @@
           "type": "LN",
           "realType": "DE",
           "name": "seatrus - Full Density [Stage 6: Fulfill]",
-          "difficulty": 6.5,
+          "difficulty": 7,
           "beatmapId": 5521925,
           "beatmapsetId": 2507317
         },
@@ -76,8 +76,8 @@
           "type": "HB",
           "realType": "HB2",
           "name": "Sephid - The Next Arcady [Stage 3: Horizon]",
-          "difficulty": 7.5,
-          "difficultyLn": 7.5,
+          "difficulty": 4.4,
+          "difficultyLn": 5,
           "beatmapId": 5521986,
           "beatmapsetId": 2507346
         },
@@ -86,8 +86,8 @@
           "type": "HB",
           "realType": "HB1",
           "name": "D-D-Dice vs. Tanchiky - SPOOKY BADBALL [Stage 8: BOO!]",
-          "difficulty": 7.5,
-          "difficultyLn": 7.5,
+          "difficulty": 7.2,
+          "difficultyLn": 7.6,
           "beatmapId": 5521830,
           "beatmapsetId": 2507286
         }
@@ -96,17 +96,17 @@
       "bestOf": 8,
       "typeDifficulties": {
         "RC": {
-          "rf": 6
+          "rf": 5.54
         },
         "HB": {
-          "rf": 7.5,
-          "ln": 7.5
+          "rf": 5.8,
+          "ln": 6.3
         },
         "LN": {
           "ln": 6.5
         },
         "SV": {
-          "rf": 8
+          "rf": 6
         },
         "TB": {}
       }
@@ -236,7 +236,7 @@
           "type": "TB",
           "realType": "TB",
           "name": "Imy feat. Natsume Itsuki - Lies playing Truth [Truth in hundreds lies]",
-          "difficulty": 4.4,
+          "difficulty": 4.7,
           "difficultyLn": 5,
           "beatmapId": 5548144,
           "beatmapsetId": 2515840
@@ -629,7 +629,7 @@
       "abbreviation": "SF",
       "order": 5,
       "difficulty": {
-        "min": 6.6,
+        "min": 5.47,
         "max": 8,
         "average": 7.4
       },
@@ -639,7 +639,7 @@
           "type": "RC",
           "realType": "SS",
           "name": "DJ He Peng - Da Dong Bei Wo De Jia Xiang [DaiPai (CUC Edit)]",
-          "difficulty": 6.6,
+          "difficulty": 7.37,
           "beatmapId": 5571389,
           "beatmapsetId": 2522958
         },
@@ -648,7 +648,7 @@
           "type": "RC",
           "realType": "SA",
           "name": "DJ Sharpnel - G.K.Surviver [Easy 1.1x]",
-          "difficulty": 6.6,
+          "difficulty": 7,
           "beatmapId": 5571252,
           "beatmapsetId": 2522945
         },
@@ -657,7 +657,7 @@
           "type": "RC",
           "realType": "FCJ",
           "name": "Plutian - Until the Blue Moon Rises [Luna]",
-          "difficulty": 6.6,
+          "difficulty": 5.47,
           "beatmapId": 5571354,
           "beatmapsetId": 2522982
         },
@@ -666,7 +666,7 @@
           "type": "RC",
           "realType": "MX",
           "name": "Sven Noon - The Map [THE MODERATE TURMOIL x1.1]",
-          "difficulty": 6.6,
+          "difficulty": 5.7,
           "beatmapId": 5570721,
           "beatmapsetId": 2522760
         },
@@ -675,7 +675,7 @@
           "type": "RC",
           "realType": "DP",
           "name": "dj-Jo - Gourmet Race (dj-Jo Remix) [LET HIM COOK (ft. Znow) (cut)]",
-          "difficulty": 6.6,
+          "difficulty": 5.98,
           "beatmapId": 4864129,
           "beatmapsetId": 2199368
         },
@@ -693,8 +693,8 @@
           "type": "HB",
           "realType": "HB1",
           "name": "Halv & kuro - Arkhe [cut+edit]",
-          "difficulty": 7.5,
-          "difficultyLn": 7.5,
+          "difficulty": 6.6,
+          "difficultyLn": 7,
           "beatmapId": 5571248,
           "beatmapsetId": 2522942
         },
@@ -703,8 +703,8 @@
           "type": "HB",
           "realType": "HB2",
           "name": "School Food Punishment - Y/N [Mayhaps]",
-          "difficulty": 7.5,
-          "difficultyLn": 7.5,
+          "difficulty": 5.6,
+          "difficultyLn": 6.2,
           "beatmapId": 4985448,
           "beatmapsetId": 2325795
         },
@@ -713,8 +713,8 @@
           "type": "HB",
           "realType": "HB3",
           "name": "MEMODEMO X AQUASINE - Point and Click [Confusion and 69.]",
-          "difficulty": 7.5,
-          "difficultyLn": 7.5,
+          "difficulty": 6.4,
+          "difficultyLn": 6.8,
           "beatmapId": 4703808,
           "beatmapsetId": 2219116
         },
@@ -723,7 +723,7 @@
           "type": "LN",
           "realType": "CO",
           "name": "sekai - Doctorine [live well, mr. \"greatest\" with your \"perfect cure-all\"!]",
-          "difficulty": 7.5,
+          "difficulty": 6.2,
           "beatmapId": 4471161,
           "beatmapsetId": 2126901
         },
@@ -732,7 +732,7 @@
           "type": "LN",
           "realType": "DE",
           "name": "Hommarju - Crazy Jackpot [GambLiNg Feast 1.05x]",
-          "difficulty": 7.5,
+          "difficulty": 6.8,
           "beatmapId": 4109550,
           "beatmapsetId": 1979429
         },
@@ -741,7 +741,7 @@
           "type": "LN",
           "realType": "LNTC",
           "name": "Iyowa feat. Hatsune Miku - The Peachy Key (Cut Ver.) [Weep And Will]",
-          "difficulty": 7.5,
+          "difficulty": 6.2,
           "beatmapId": 5246578,
           "beatmapsetId": 2414552
         },

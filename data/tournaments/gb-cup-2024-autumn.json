@@ -909,10 +909,10 @@
           "type": "TB",
           "realType": "TB",
           "name": "ATOLS - ZOMBIE MAKER feat. Hatsune Miku [Long Version] [Lust for Life]",
-          "difficulty": 9.2,
+          "difficulty": 10,
           "beatmapId": 4906820,
           "beatmapsetId": 2297184,
-          "difficultyLn": 9.2
+          "difficultyLn": 10
         }
       ],
       "typeDifficulties": {
@@ -1094,9 +1094,10 @@
           "type": "TB",
           "realType": "TB",
           "name": "seatrus - The Princess was gills breathing. [Grace Beneath Corals]",
-          "difficulty": 0,
+          "difficulty": 11.4,
           "beatmapId": 4916169,
-          "beatmapsetId": 2300517
+          "beatmapsetId": 2300517,
+          "difficultyLn": 11.4
         }
       ],
       "typeDifficulties": {
@@ -1111,7 +1112,10 @@
           "ln": 10.7
         },
         "SV": {},
-        "TB": {}
+        "TB": {
+          "rf": 11.4,
+          "ln": 11.4
+        }
       }
     }
   ],

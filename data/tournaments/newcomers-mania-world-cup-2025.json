@@ -310,7 +310,9 @@
           "type": "RC",
           "realType": "FCJ",
           "name": "RC5",
-          "difficulty": 0.8
+          "difficulty": 0.8,
+          "beatmapId": 5384454,
+          "beatmapsetId": 2461328
         }
       ],
       "typeDifficulties": {
@@ -769,7 +771,9 @@
           "type": "RC",
           "realType": "FCJ",
           "name": "RC6",
-          "difficulty": 2.77
+          "difficulty": 2.77,
+          "beatmapId": 5417029,
+          "beatmapsetId": 2472395
         }
       ],
       "typeDifficulties": {
@@ -955,7 +959,9 @@
           "realType": "MNTB",
           "name": "HB4",
           "difficulty": 7.6,
-          "difficultyLn": 8.2
+          "difficultyLn": 8.2,
+          "beatmapId": 5444405,
+          "beatmapsetId": 2400659
         }
       ],
       "typeDifficulties": {

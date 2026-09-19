@@ -206,9 +206,10 @@
           "slot": "TB",
           "type": "TB",
           "realType": "TB",
-          "name": "",
+          "name": "Camellia - overcomplexification (\"Quaternion\" Long ver.) [disambiguation (edit)]",
           "difficulty": 0,
-          "beatmapId": 4952628
+          "beatmapId": 4952628,
+          "beatmapsetId": 314301
         }
       ],
       "typeDifficulties": {
@@ -352,9 +353,10 @@
           "slot": "LN3",
           "type": "LN",
           "realType": "LNMX",
-          "name": "",
+          "name": "Pizuya's Cell - Let me be your cure [Hazel 1.05x (202bpm)]",
           "difficulty": 8.13,
-          "beatmapId": 4964356
+          "beatmapId": 4964356,
+          "beatmapsetId": 318013
         },
         {
           "slot": "LN4",
@@ -427,9 +429,10 @@
           "slot": "RC3",
           "type": "RC",
           "realType": "CJ",
-          "name": "",
+          "name": "SHIKI - Angelic Layer [Lapis (cut)]",
           "difficulty": 10.26,
-          "beatmapId": 4962381
+          "beatmapId": 4962381,
+          "beatmapsetId": 196883
         },
         {
           "slot": "RC4",
@@ -613,15 +616,16 @@
           "slot": "RC5",
           "type": "RC",
           "realType": "DP",
-          "name": "",
+          "name": "Camellia feat. Nana Takahashi - Mushi no Sumu Tokoro [Trapped Within the Spider's Web 1.05x (edit)]",
           "difficulty": 11.18,
-          "beatmapId": 4984351
+          "beatmapId": 4984351,
+          "beatmapsetId": 325362
         },
         {
           "slot": "RC6",
           "type": "RC",
           "realType": "STC",
-          "name": "",
+          "name": "Chesss Galea - Al Fine -Whispers of Destiny- [ocean blue [1.05x Rate]]",
           "difficulty": 11.18,
           "beatmapId": 4984345
         },
@@ -638,18 +642,20 @@
           "slot": "RC8",
           "type": "RC",
           "realType": "DP",
-          "name": "",
+          "name": "Sheena Ringo - Tsumi to batsu [Sympathy x1.05 (edit)]",
           "difficulty": 11.18,
-          "beatmapId": 4984352
+          "beatmapId": 4984352,
+          "beatmapsetId": 325363
         },
         {
           "slot": "HB1",
           "type": "HB",
           "realType": "HB1",
-          "name": "",
+          "name": "Nanahira - Shakunetsu? Candle Master? Tomoshi [Edit 1.05x]",
           "difficulty": 10.5,
           "beatmapId": 4981878,
-          "difficultyLn": 10.45
+          "difficultyLn": 10.45,
+          "beatmapsetId": 313824
         },
         {
           "slot": "HB2",

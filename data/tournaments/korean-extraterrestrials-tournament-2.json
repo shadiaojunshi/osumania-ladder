@@ -197,8 +197,10 @@
           "slot": "LN3",
           "type": "LN",
           "realType": "LNMX",
-          "name": "",
-          "difficulty": 10.8
+          "name": "DJ TOTTO - Crystalia [Begin's Quartz 1.05x]",
+          "difficulty": 10.8,
+          "beatmapId": 4942671,
+          "beatmapsetId": 2310411
         },
         {
           "slot": "TB",
@@ -253,15 +255,19 @@
           "slot": "RC2",
           "type": "RC",
           "realType": "JS",
-          "name": "",
-          "difficulty": 12.76
+          "name": "goreshit - slavik goblins [hna's goremaniac 1.05x (284bpm)]",
+          "difficulty": 12.76,
+          "beatmapId": 4953424,
+          "beatmapsetId": 2314627
         },
         {
           "slot": "RC3",
           "type": "RC",
           "realType": "SA",
-          "name": "",
-          "difficulty": 12.98
+          "name": "t+pazolite - Cheatreal [remity's Extraneous (edit) (266bpm)]",
+          "difficulty": 12.98,
+          "beatmapId": 4953431,
+          "beatmapsetId": 2314629
         },
         {
           "slot": "RC4",
@@ -294,9 +300,11 @@
           "slot": "HB1",
           "type": "HB",
           "realType": "HB1",
-          "name": "",
+          "name": "Kobaryo - Radical Jinja [Suiten Ippeki feat. Tera (KET2 Edit)]",
           "difficulty": 12.6,
-          "difficultyLn": 13
+          "difficultyLn": 13,
+          "beatmapId": 4953382,
+          "beatmapsetId": 2314605
         },
         {
           "slot": "HB2",
@@ -349,9 +357,11 @@
           "slot": "TB",
           "type": "TB",
           "realType": "TB",
-          "name": "",
+          "name": "Mono. - Galaxy Reload [Looking for unseen new stars (NSV)]",
           "difficulty": 13.2,
-          "difficultyLn": 13.4
+          "difficultyLn": 13.4,
+          "beatmapId": 4953423,
+          "beatmapsetId": 2314626
         }
       ],
       "typeDifficulties": {
@@ -387,8 +397,10 @@
           "slot": "RC1",
           "type": "RC",
           "realType": "SS",
-          "name": "",
-          "difficulty": 13.11
+          "name": "SHIKI - Pure Ruby [Hylotl's Red (edit) x1.05]",
+          "difficulty": 13.11,
+          "beatmapId": 4965964,
+          "beatmapsetId": 2318523
         },
         {
           "slot": "RC2",
@@ -412,15 +424,19 @@
           "slot": "RC4",
           "type": "RC",
           "realType": "SJ",
-          "name": "",
-          "difficulty": 12.93
+          "name": "void - Just Hold On (Cut Ver.) [TAPE's Promise (edit) (175bpm)]",
+          "difficulty": 12.93,
+          "beatmapId": 4965128,
+          "beatmapsetId": 2318235
         },
         {
           "slot": "RC5",
           "type": "RC",
           "realType": "CJ",
-          "name": "",
-          "difficulty": 12.99
+          "name": "MitiS & MaHi - Blu [Lynessa's Jack]",
+          "difficulty": 12.99,
+          "beatmapId": 4965126,
+          "beatmapsetId": 2318234
         },
         {
           "slot": "RC6",
@@ -501,8 +517,10 @@
           "slot": "LN4",
           "type": "LN",
           "realType": "LNMX",
-          "name": "",
-          "difficulty": 13.2
+          "name": "Laur - Cyber Attack [Abandonment of Peace (cut) x1.05]",
+          "difficulty": 13.2,
+          "beatmapId": 4965909,
+          "beatmapsetId": 1892814
         },
         {
           "slot": "TB",
@@ -548,8 +566,10 @@
           "slot": "RC1",
           "type": "RC",
           "realType": "SS",
-          "name": "",
-          "difficulty": 13.86
+          "name": "ryo (supercell) feat.chelly - Great Distance [Bacon Haniwa's Adventure (edit) (cut)]",
+          "difficulty": 13.86,
+          "beatmapId": 4974288,
+          "beatmapsetId": 2321786
         },
         {
           "slot": "RC2",
@@ -573,8 +593,10 @@
           "slot": "RC4",
           "type": "RC",
           "realType": "SJ",
-          "name": "",
-          "difficulty": 13.87
+          "name": "Soleily - Eternal Prayer [Peace Blessing]",
+          "difficulty": 13.87,
+          "beatmapId": 4203502,
+          "beatmapsetId": 2018603
         },
         {
           "slot": "RC5",
@@ -598,8 +620,10 @@
           "slot": "RC7",
           "type": "RC",
           "realType": "DP",
-          "name": "",
-          "difficulty": 13.8
+          "name": "nowisee - Ego-Rhythm (Cut Ver.) [MatchaLatte's Empirical 1.22x (207bpm)]",
+          "difficulty": 13.8,
+          "beatmapId": 4974289,
+          "beatmapsetId": 2321787
         },
         {
           "slot": "HB1",
@@ -625,23 +649,29 @@
           "slot": "HB3",
           "type": "HB",
           "realType": "HB3",
-          "name": "",
+          "name": "Billain - NEWGROOVEORDER [elexire's \\ \\ \\ \\ \\ \\ \\ \\ \\ 1.1x]",
           "difficulty": 13.4,
-          "difficultyLn": 13.8
+          "difficultyLn": 13.8,
+          "beatmapId": 4974306,
+          "beatmapsetId": 2321789
         },
         {
           "slot": "LN1",
           "type": "LN",
           "realType": "TE",
-          "name": "",
-          "difficulty": 13
+          "name": "C-ta (CV:Terashima Takuma) - Kanzen Hanzai Love Letter [[GB]sherweifa's Series 1 [1.15x Rate]]",
+          "difficulty": 13,
+          "beatmapId": 4974286,
+          "beatmapsetId": 2321784
         },
         {
           "slot": "LN2",
           "type": "LN",
           "realType": "DE",
-          "name": "",
-          "difficulty": 13.6
+          "name": "YONEDA - KAERU (Edit) [[GS]hina & Hylotl's x1.05 (edit)]",
+          "difficulty": 13.6,
+          "beatmapId": 4974357,
+          "beatmapsetId": 2321794
         },
         {
           "slot": "LN3",
@@ -656,8 +686,10 @@
           "slot": "LN4",
           "type": "LN",
           "realType": "LNTC",
-          "name": "",
-          "difficulty": 13.8
+          "name": "Supa7onyz pres. 5-let - Unsynchronized Rhythms [Polytetral's Chaotically Unsynced 1.05x]",
+          "difficulty": 13.8,
+          "beatmapId": 4974282,
+          "beatmapsetId": 2321780
         },
         {
           "slot": "TB",
@@ -712,8 +744,10 @@
           "slot": "RC2",
           "type": "RC",
           "realType": "JS",
-          "name": "",
-          "difficulty": 14.7
+          "name": "Kotone - Konkai no Soudou ni Tsukimashite. [AelSan's Regret 1.03x (320bpm)]",
+          "difficulty": 14.7,
+          "beatmapId": 4985334,
+          "beatmapsetId": 2325757
         },
         {
           "slot": "RC3",
@@ -728,15 +762,19 @@
           "slot": "RC4",
           "type": "RC",
           "realType": "SJ",
-          "name": "",
-          "difficulty": 14.7
+          "name": "Ryu - AO-Infinity [Nixo's (edit)]",
+          "difficulty": 14.7,
+          "beatmapId": 4985340,
+          "beatmapsetId": 2325760
         },
         {
           "slot": "RC5",
           "type": "RC",
           "realType": "CJ",
-          "name": "",
-          "difficulty": 14.7
+          "name": "brz1128 - Alexandrite [Ena's x_x 1.03x (160bpm)]",
+          "difficulty": 14.7,
+          "beatmapId": 4985327,
+          "beatmapsetId": 2325752
         },
         {
           "slot": "RC6",
@@ -751,8 +789,10 @@
           "slot": "RC7",
           "type": "RC",
           "realType": "DP",
-          "name": "",
-          "difficulty": 14.7
+          "name": "Powerless feat. Sennzai - Lost Desire [Hanmu's Desires Conflict (edit) 1.1x]",
+          "difficulty": 14.7,
+          "beatmapId": 4985331,
+          "beatmapsetId": 2325755
         },
         {
           "slot": "RC8",
@@ -767,9 +807,11 @@
           "slot": "HB1",
           "type": "HB",
           "realType": "HB1",
-          "name": "",
+          "name": "LeaF - Doppelganger [Selbstzerstorung 1.2x]",
           "difficulty": 14,
-          "difficultyLn": 14.9
+          "difficultyLn": 14.9,
+          "beatmapId": 4761645,
+          "beatmapsetId": 2240452
         },
         {
           "slot": "HB2",
@@ -785,9 +827,11 @@
           "slot": "HB3",
           "type": "HB",
           "realType": "MNTB",
-          "name": "",
+          "name": "Mono. - Everlasting Game [CrewK's Checkmate 1.05x (223bpm)]",
           "difficulty": 14,
-          "difficultyLn": 14.9
+          "difficultyLn": 14.9,
+          "beatmapId": 4985330,
+          "beatmapsetId": 2325754
         },
         {
           "slot": "HB4",

@@ -40,9 +40,10 @@
           "slot": "HB1",
           "type": "HB",
           "realType": "HB4",
-          "name": "",
+          "name": "xi - Tenimuhou (Cut Ver.) [Stage 3: Absolute]",
           "difficulty": 0,
-          "beatmapId": 4253493
+          "beatmapId": 4253493,
+          "beatmapsetId": 39240
         },
         {
           "slot": "LN1",
@@ -131,9 +132,10 @@
           "slot": "RC3",
           "type": "RC",
           "realType": "MX",
-          "name": "",
+          "name": "cosMo@BousouP - Hopeful Frontier!!! [bmah's Challenge]",
           "difficulty": 7.48,
-          "beatmapId": 4266250
+          "beatmapId": 4266250,
+          "beatmapsetId": 44090
         },
         {
           "slot": "RC4",
@@ -157,19 +159,21 @@
           "slot": "HB1",
           "type": "HB",
           "realType": "HB2",
-          "name": "",
+          "name": "ARM - Water Lily [Lotus (cut) 1.05x]",
           "difficulty": 6.67,
           "beatmapId": 4266313,
-          "difficultyLn": 7.5
+          "difficultyLn": 7.5,
+          "beatmapsetId": 44117
         },
         {
           "slot": "HB2",
           "type": "HB",
           "realType": "MXHB",
-          "name": "",
+          "name": "Jun Kuroda - Cybernetics [Risky Algorithm 1.1x]",
           "difficulty": 6.67,
           "beatmapId": 4266311,
-          "difficultyLn": 7.5
+          "difficultyLn": 7.5,
+          "beatmapsetId": 44116
         },
         {
           "slot": "LN1",
@@ -287,9 +291,10 @@
           "slot": "RC4",
           "type": "RC",
           "realType": "MTC",
-          "name": "",
+          "name": "OSTER project - innocent revolver [WirryWoo & bmah's Challenge 1.05x (163bpm)]",
           "difficulty": 8.94,
-          "beatmapId": 4276109
+          "beatmapId": 4276109,
+          "beatmapsetId": 48077
         },
         {
           "slot": "RC5",
@@ -624,9 +629,10 @@
           "slot": "RC4",
           "type": "RC",
           "realType": "FCJ",
-          "name": "",
+          "name": "Remo-con - Matt Silver [Vermillion 1.05x (153bpm)]",
           "difficulty": 11.3,
-          "beatmapId": 4294670
+          "beatmapId": 4294670,
+          "beatmapsetId": 55306
         },
         {
           "slot": "RC5",
@@ -1043,10 +1049,11 @@
           "slot": "HB2",
           "type": "HB",
           "realType": "HB3",
-          "name": "",
+          "name": "Silentroom Remixed by Frums - Angel Echo -L'appel du vide- [le mot]",
           "difficulty": 12.65,
           "beatmapId": 4311937,
-          "difficultyLn": 12.95
+          "difficultyLn": 12.95,
+          "beatmapsetId": 62240
         },
         {
           "slot": "HB3",
@@ -1098,9 +1105,10 @@
           "slot": "SV1",
           "type": "SV",
           "realType": "SV1",
-          "name": "",
+          "name": "Eliminate - MULA (Cut & Sped Up Ver.) [Patcat's Root of All Evil]",
           "difficulty": 0,
-          "beatmapId": 4311956
+          "beatmapId": 4311956,
+          "beatmapsetId": 62251
         },
         {
           "slot": "SV2",

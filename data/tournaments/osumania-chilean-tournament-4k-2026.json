@@ -131,8 +131,10 @@
           "slot": "RC6",
           "type": "RC",
           "realType": "MX",
-          "name": "",
-          "difficulty": 0
+          "name": "Calliope Mori - Excuse me, RIP (3R2 Remix) [Fxxk It x1.05]",
+          "difficulty": 0,
+          "beatmapId": 3079056,
+          "beatmapsetId": 1502865
         },
         {
           "slot": "HB1",
@@ -156,8 +158,10 @@
           "slot": "LN1",
           "type": "LN",
           "realType": "CO",
-          "name": "",
-          "difficulty": 0
+          "name": "MEMODEMO - Showoff Showdown [Rock 1.1x Tonight!]",
+          "difficulty": 0,
+          "beatmapId": 5416972,
+          "beatmapsetId": 2472366
         },
         {
           "slot": "LN2",
@@ -408,8 +412,10 @@
           "slot": "RC5",
           "type": "RC",
           "realType": "WTC",
-          "name": "",
-          "difficulty": 0
+          "name": "leroy - DILF repellent [1.05x | S4 E5a: DILF-Free zone]",
+          "difficulty": 0,
+          "beatmapId": 5528131,
+          "beatmapsetId": 2509473
         },
         {
           "slot": "RC6",

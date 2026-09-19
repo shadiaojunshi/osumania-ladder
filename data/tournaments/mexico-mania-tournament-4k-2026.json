@@ -357,10 +357,11 @@
           "slot": "HB3",
           "type": "HB",
           "realType": "HB3",
-          "name": "",
+          "name": "Kenshi Yonezu - IRIS OUT [BOOM, DARLING!!!]",
           "difficulty": 8.25,
           "beatmapId": 5624202,
-          "difficultyLn": 9.19
+          "difficultyLn": 9.19,
+          "beatmapsetId": 461103
         },
         {
           "slot": "TB",
@@ -593,9 +594,10 @@
           "slot": "RC4",
           "type": "RC",
           "realType": "DP",
-          "name": "",
+          "name": "plenka - When You Find Me (Bonus Track) (Cut Ver.) [Defeated]",
           "difficulty": 11.08,
-          "beatmapId": 5592600
+          "beatmapId": 5592600,
+          "beatmapsetId": 530313
         },
         {
           "slot": "RC5",

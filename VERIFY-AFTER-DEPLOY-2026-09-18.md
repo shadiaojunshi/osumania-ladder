@@ -28,7 +28,7 @@
 ## 2. 本地检查（不需要部署，随时可跑）
 
 ```bash
-npm test                                     # 期望 536/536
+npm test                                     # 期望 551/551
 npx tsc --noEmit                             # 期望 0 错（前端）
 npm run typecheck:functions                  # 期望 0 错（Functions）
 npm run lint                                 # ⚠️ 会退出 1：25 条存量错误，见下

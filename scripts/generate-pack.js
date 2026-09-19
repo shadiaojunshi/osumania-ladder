@@ -563,6 +563,171 @@ function compareTournamentsForSources(a, b) {
   return a.id.localeCompare(b.id)
 }
 
+/**
+ * 分包方案(2026-09-19 站长:「不喜欢第一个包里全是 MWC」)。
+ *
+ * 顺序数组本身没变(仍由上面 compareTournamentsForSources 决定),变的只是**怎么切成包**:
+ *   · `sequence` —— 原来的行为:按累计张数连续切。于是最高优先级、年份最早的那批比赛
+ *     会整批落进第 1 包(DE 实测第 1 包 = MWC 四届 + 4DM2023 + …)。
+ *   · `tournament`(默认) —— 以**整场比赛**为单位轮流发牌:第 1 场进第 1 包、第 2 场进第 2 包……
+ *     于是 MWC 四届被分散到四个包,每个包都同时拿到高/中/低 priority 的比赛(实测"平均
+ *     priority 极差" 0.00~0.09,而连续切是 1.3~2.0)。两条例外:
+ *       ① 一场比赛在目标包里**装不下**时会被切开,余量继续发给下一个最空的包(站长:不要紧);
+ *       ② 张数超过"一个包的 1/8"的**大场**先摊成 P 段再轮流发 —— 否则一场 30 张的比赛会
+ *          独占某个包的三分之一(DE 实测"最大单场占比" 34% → 10%)。实测只有 3~5 场会被切开。
+ *   · `entry` —— 混沌版:逐张轮流发牌,每个包都拿到每场比赛的 1/P,包与包几乎无法区分;
+ *     代价是**每一场**都会被切碎(实测 52/52 场)。
+ *
+ * 三种方案共同保证:
+ *   ① 每包条目数 ≈ packSizes(均分,偏差 ≤ 2 条);
+ *   ② **确定性** —— 同一份数据每次得到同样的划分。绝不用随机数:随机种子会让每次发布都
+ *      重排包成员,而包名(含 `Pack N`)写进了每张图的 Title,等于每次发布都动玩家的成绩身份;
+ *   ③ 不把一张图的 NSV 变体拆到主图之外(见 buildAtoms)。
+ *
+ * ⚠️ 换方案 = 换包成员 = 换包号 → 换每张图的 Title/Version → **已下载旧包的玩家会断成绩**。
+ * 要换就一次换定。改这一处之前先确认站长知情(与 compareTournamentsForSources 同一个坑)。
+ */
+const SPLIT_MODES = new Set(['sequence', 'tournament', 'entry'])
+const DEFAULT_SPLIT_MODE = 'tournament'
+// 大场阈值:单场比赛超过"一个包的 1/8"时先摊成 P 段再轮流发(见 splitIntoPacks)
+const BIG_BLOCK_DIVISOR = 8
+function resolveSplitMode(raw = process.env.PACK_SPLIT_MODE) {
+  const value = String(raw == null ? '' : raw).trim()
+  return SPLIT_MODES.has(value) ? value : DEFAULT_SPLIT_MODE
+}
+const SPLIT_MODE = resolveSplitMode()
+
+/**
+ * 这张 NSV 是不是这张主图的变体?比对时带上 alternatePaths —— 主图被合并(被多个比赛复用)时,
+ * 簇里留下的代表路径未必是这条 NSV 旁边的那个路径。
+ */
+function isNsvOf(nsv, main) {
+  const nsvKey = String((nsv && nsv.r2Key) || '')
+  if (!nsvKey.endsWith('.nsv.osz')) return false
+  const paths = [main.r2Key, ...(main.alternatePaths || [])]
+  return paths.some((p) => String(p || '').replace(/\.osz$/, '.nsv.osz') === nsvKey)
+}
+
+/**
+ * 切成"原子":普通条目自己一个原子;NSV 紧跟在它的主图后面时并入同一个原子。
+ * 切包只在原子之间落刀 —— 任何方案都不会出现"主图在包 1、它的 NSV 在包 2"。
+ */
+function buildAtoms(entries) {
+  const atoms = []
+  for (const e of entries) {
+    const prev = atoms[atoms.length - 1]
+    const prevTail = prev && prev[prev.length - 1]
+    if (e && e.isNsv && prevTail && !prevTail.isNsv && isNsvOf(e, prevTail)) prev.push(e)
+    else atoms.push([e])
+  }
+  return atoms
+}
+
+/**
+ * 一个原子占几条条目(1 条,或"主图 + 它的 NSV"2 条)。
+ * 写成函数是为了防御:一旦原子的形状不对,`undefined` 会让下面的容量计算变成 NaN,
+ * 而 NaN 比较恒为 false → 所有条目会静默堆进第 1 包(2026-09-19 踩过这个坑)。
+ */
+function atomSize(atom) {
+  return Array.isArray(atom) ? atom.length : 1
+}
+
+/**
+ * 相邻、同一场比赛的条目归成一组。
+ * `available` 的顺序保证同场比赛的条目连续(簇落在"第一次出现"的位置,而遍历是比赛优先的)。
+ */
+function groupByTournament(atoms) {
+  const groups = []
+  for (const atom of atoms) {
+    const id = (atom[0] && atom[0].tournamentId) || ''
+    const last = groups[groups.length - 1]
+    if (last && last.id === id) last.atoms.push(atom)
+    else groups.push({ id, atoms: [atom] })
+  }
+  return groups
+}
+
+/**
+ * 按 packSizes 把条目分到各包。返回长度 = packSizes.length,每项是该包的条目,
+ * **保持输入顺序**(难度排序由调用方在包内再做)。
+ * packSizes 之和必须等于条目数(由 packSizeFor 保证),否则末尾会丢条目 —— 这里会直接抛。
+ */
+function splitIntoPacks(entries, packSizes, mode = SPLIT_MODE) {
+  const sizes = Array.isArray(packSizes) ? packSizes : []
+  const packs = sizes.map(() => [])
+  const list = Array.isArray(entries) ? entries : []
+  const expected = sizes.reduce((s, n) => s + n, 0)
+  if (list.length !== expected) {
+    throw new Error(`分包容量与条目数不符:${list.length} 条 vs 容量和 ${expected}`)
+  }
+  if (packs.length === 0 || list.length === 0) return packs
+  const parts = packs.length
+  const atoms = buildAtoms(list)
+
+  if (mode === 'entry') {
+    let cursor = 0
+    for (const atom of atoms) {
+      packs[cursor % parts].push(...atom)
+      cursor++
+    }
+    return packs
+  }
+
+  if (mode === 'sequence') {
+    // 与旧行为等价(按累计张数连续切),只是不再从原子中间落刀。
+    let packIdx = 0
+    for (const atom of atoms) {
+      while (packIdx < parts - 1 && packs[packIdx].length >= sizes[packIdx]) packIdx++
+      packs[packIdx].push(...atom)
+    }
+    return packs
+  }
+
+  // tournament(默认):整场优先,装不下才切,切下来的余量给下一个最空的包。
+  // "大场"(超过一个包 1/8)先摊成 P 段再轮流发 —— 否则一场三四十张的比赛会独占一个包。
+  const remaining = sizes.slice()
+  const bigThreshold = parts > 1 ? Math.max(2, Math.floor(Math.max(...sizes) / BIG_BLOCK_DIVISOR)) : Infinity
+  for (const group of groupByTournament(atoms)) {
+    // "牌"的粒度:未超阈值的比赛整场是一张牌([group.atoms] 是"一张牌,里面 N 个原子"),
+    // 超阈值的先摊成 P 段,每段一张牌。⚠️ 这里必须是"牌的数组" —— 直接把 group.atoms 当 blocks
+    // 会退化成"每个原子一张牌",整场比赛就被拆碎了(2026-09-19 踩过)。
+    let blocks = [group.atoms]
+    if (group.atoms.length > bigThreshold) {
+      const per = Math.ceil(group.atoms.length / parts)
+      blocks = []
+      for (let i = 0; i < group.atoms.length; i += per) blocks.push(group.atoms.slice(i, i + per))
+    }
+    for (const block of blocks) {
+      // 一张"牌" = 整场比赛(或大场摊开后的其中一段)。装不下就切,余量留给下一个最空的包。
+      let rest = block
+      while (rest.length > 0) {
+        let best = -1
+        for (let i = 0; i < parts; i++) {
+          if (remaining[i] <= 0) continue
+          if (best < 0 || remaining[i] > remaining[best]) best = i
+        }
+        // 容量全被占满在理论上不会发生(容量和 = 条目数);兜底成"堆进第 1 包"也绝不丢条目。
+        if (best < 0) best = 0
+        let take = 0
+        let used = 0
+        while (take < rest.length && used + atomSize(rest[take]) <= remaining[best]) {
+          used += atomSize(rest[take])
+          take++
+        }
+        if (take === 0) {
+          // 连一个原子(≤2 条)都放不下 → 允许这个包超出容量 1 条,而不是把原子切开。
+          take = 1
+          used = atomSize(rest[0])
+        }
+        packs[best].push(...rest.slice(0, take).flat())
+        remaining[best] -= used
+        rest = rest.slice(take)
+      }
+    }
+  }
+  return packs
+}
+
 async function generatePack(targetType, { publish = true } = {}) {
   targetType = normalizeRealType(targetType)
   if (PACK_EXCLUDED_REAL_TYPES.has(targetType)) {
@@ -733,17 +898,18 @@ async function generatePack(targetType, { publish = true } = {}) {
 
   const totalPacks = packCountFor(available.length)
   const packSizes = Array.from({ length: totalPacks }, (_, i) => packSizeFor(available.length, i, totalPacks))
-  console.log(`[${targetType}] 分包:${available.length} 张 → ${totalPacks} 包 (${packSizes.join(' / ')})`)
+  // 切包方案见 SPLIT_MODE:默认"以整场比赛为单位轮流发牌",避免第一个包把最高优先级的比赛
+  // 整批吞下;旧的连续切仍可用 PACK_SPLIT_MODE=sequence 复现(见 splitIntoPacks)。
+  const packChunks = splitIntoPacks(available, packSizes)
+  console.log(`[${targetType}] 分包:${available.length} 张 → ${totalPacks} 包 (${packSizes.join(' / ')}) 方案=${SPLIT_MODE}`)
   const results = []
-  let cursor = 0
 
   // 「跨身份来源的同内容」报告用：预取阶段每个条目本来就下载+解析过了，这里只是把
   // 已经算好的内容摘要收集起来。**零额外下载**，也不影响任何打包/合并决策。
   const identitySeen = []
 
   for (let packIdx = 0; packIdx < totalPacks; packIdx++) {
-    const chunk = available.slice(cursor, cursor + packSizes[packIdx])
-    cursor += packSizes[packIdx]
+    const chunk = packChunks[packIdx]
     chunk.sort((a, b) => (a.difficulty || 0) - (b.difficulty || 0))
     const partNum = packIdx + 1
     const packName = `4K Tournament ${REAL_TYPE_NAMES[targetType] || targetType} Pack ${partNum}`
@@ -1351,6 +1517,13 @@ module.exports = {
   packSizeFor,
   // 包内来源标签的顺序唯一实现（含 priority/year/缩写/id 四级）
   compareTournamentsForSources,
+  // 切包方案：纯函数，导出给单测（三种方案的分布 / 原子不被切开 / 容量守恒）
+  splitIntoPacks,
+  buildAtoms,
+  groupByTournament,
+  resolveSplitMode,
+  SPLIT_MODE,
+  DEFAULT_SPLIT_MODE,
   PACK_EXCLUDED_REAL_TYPES,
   // 报告渲染是纯函数式的（给一个类型结果数组 + 输出路径），导出来是为了能单测
   writeIdentityReport,

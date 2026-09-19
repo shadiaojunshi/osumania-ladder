@@ -203,6 +203,14 @@ d:/osumania ladder/              ← 注意路径带空格，bash 里用引号
 - **每包生成完立即上传 R2 公开桶并删本地副本**（磁盘防爆，`d6afbf7`/`8b6fd1c` 的修复）。上传 Body 必须用 **Buffer 而非流**（R2 不支持 chunked 上传）。R2 上传失败时保留本地副本。
 - **manifest 全量重建**：全量跑时旧 manifest 转储 `.previous.json` → 用本次输出重建 → `(realType, part)` 匹配找回旧 `links`/`gdriveFileId` → 清理 R2 桶孤儿（本次没产出的 `.osz`）→ Drive 孤儿同步删 → 清 `.previous.json`。
 
+- **切包方案 = `PACK_SPLIT_MODE`**（默认 `tournament`，非法值回退默认）。排序、包数、每包张数都不变，只换成员：
+  `sequence` 旧行为（连续切，第 1 包会把最高优先级的比赛整批吞下）、`tournament` **默认**（整场比赛为一张牌，
+  发给剩余容量最大的包；超过一个包 1/8 的「大场」先摊成 P 段；装不下就切开、余量给下一个最空的包）、
+  `entry` 逐张轮转（混沌版，每场都被切碎）。不变量：容量守恒（不符**直接抛**，绝不静默丢图）、
+  NSV 与其主图同包（`buildAtoms`，比对带 `alternatePaths`）、**确定性**（同一份数据每次同样划分）。
+  ⚠️ **绝不要引入随机数**：`Pack N` 写进每张图的 `Title`，随机种子 = 每次发布都动玩家成绩身份。
+  ⚠️ 换方案 = 换包号 = 换 `Title`/`Version` = **已下载旧包的玩家断成绩**（线上 55 包用的是旧切块 + 旧顺序，
+  首次用新链发布本来就会大面积变）。与下面 `compareTournamentsForSources` 同一个坑，要换就一次换定。
 ### 5.4 osu! 成绩绑定机制（用户已拍板的结论，别再推导）
 
 **osu! 本地成绩绑 .osu 文件 md5 hash，不绑 set ID。** 所以改谱面任何字节（名称/OD/HP/sourcesLabel 括号）→ hash 变 → 玩家已下成绩断。`Version` 里 sourcesLabel 括号 n→n+1 也是一个固有断点。**已知悉、接受、三方案（A 冻结名/B 去掉来源/C 维持现状）用户"先不改"，搁置。**

@@ -20,7 +20,7 @@ process.env.R2_ACCESS_KEY = 'test-key'
 process.env.R2_SECRET_KEY = 'test-secret'
 
 const require = createRequire(import.meta.url)
-const { rewriteOsu, packCountFor, packSizeFor, compareTournamentsForSources, writeIdentityReport, countIdentityIssues, resolveDownloadConcurrency, DEFAULT_DOWNLOAD_CONCURRENCY, MAX_DOWNLOAD_CONCURRENCY } = require('./generate-pack.js')
+const { rewriteOsu, packCountFor, packSizeFor, compareTournamentsForSources, writeIdentityReport, countIdentityIssues, resolveDownloadConcurrency, DEFAULT_DOWNLOAD_CONCURRENCY, MAX_DOWNLOAD_CONCURRENCY, splitIntoPacks, resolveSplitMode, DEFAULT_SPLIT_MODE } = require('./generate-pack.js')
 
 const sampleOsu = (od, hp = 5) => [
   'osu file format v14',
@@ -161,6 +161,115 @@ test('实测规模下的分包(不再出现十几张的小尾包)', () => {
     assert.ok(Math.min(...sizes) >= 60, `${total}: 最小包不应小于 60 张`)
     assert.ok(Math.max(...sizes) <= 120, `${total}: 最大包不应超过 120 张`)
   }
+})
+
+// ---------- 切包方案(2026-09-19 站长:「不喜欢第一个包里全是 MWC」)----------
+//
+// 顺序数组没变(仍由 compareTournamentsForSources 决定),变的只是"怎么切成包":
+//   默认 tournament = 以整场比赛为一张牌轮流发,超过一个包 1/8 的"大场"先摊开。
+
+const mkEntry = (tid, i, extra = {}) => ({
+  tournamentId: tid,
+  r2Key: `maps/${tid}/r1/m${i}.osz`,
+  difficulty: i,
+  ...extra,
+})
+const mkBlock = (tid, n) => Array.from({ length: n }, (_, i) => mkEntry(tid, i))
+const sizesFor = (total) => {
+  const parts = packCountFor(total)
+  return Array.from({ length: parts }, (_, i) => packSizeFor(total, i, parts))
+}
+const packTids = (packs) => packs.map((p) => [...new Set(p.map((e) => e.tournamentId))])
+const splitTournaments = (packs) => {
+  const seen = new Map()
+  packs.forEach((p, idx) => p.forEach((e) => {
+    if (!seen.has(e.tournamentId)) seen.set(e.tournamentId, new Set())
+    seen.get(e.tournamentId).add(idx)
+  }))
+  return [...seen.values()].filter((s) => s.size > 1).length
+}
+
+test('切包:三种方案都容量守恒,且每包条目数不超过配额', () => {
+  const entries = [].concat(mkBlock('A', 40), mkBlock('B', 30), mkBlock('C', 25), mkBlock('D', 20), mkBlock('E', 15), mkBlock('F', 10))
+  const sizes = sizesFor(entries.length)
+  for (const mode of ['sequence', 'tournament', 'entry']) {
+    const packs = splitIntoPacks(entries.map((e) => ({ ...e })), sizes, mode)
+    assert.equal(packs.length, sizes.length, mode)
+    const flat = packs.flat()
+    assert.equal(flat.length, entries.length, `${mode}: 条目数守恒`)
+    assert.equal(new Set(flat.map((e) => e.r2Key)).size, entries.length, `${mode}: 不重不漏`)
+    packs.forEach((p, i) => {
+      assert.ok(p.length > 0, `${mode}: 第 ${i + 1} 包不能是空包`)
+      assert.ok(p.length <= sizes[i], `${mode}: 第 ${i + 1} 包 ${p.length} 条 > 配额 ${sizes[i]}`)
+    })
+  }
+})
+
+test('切包:整场轮转 —— 第一包不再只是顺序最靠前的那几场', () => {
+  // 17 场各 8 张 = 136 → 2 包(68/68)。阈值 = floor(68/8) = 8,所以 8 张的场一张都不该被切开。
+  const entries = [].concat(...Array.from({ length: 17 }, (_, i) => mkBlock(`T${String(i).padStart(2, '0')}`, 8)))
+  const sizes = sizesFor(entries.length)
+  const packs = splitIntoPacks(entries.map((e) => ({ ...e })), sizes, 'tournament')
+  assert.equal(packs.map((p) => p.length).join('/'), sizes.join('/'), '每包精确装满')
+  assert.ok(splitTournaments(packs) <= 2, `只有容量边界上的比赛才会被切开,实际 ${splitTournaments(packs)} 场`)
+  // 人话版断言:连续切时第 1 包 = 输入最靠前的 9 场;整场轮转必须把它们打散。
+  const first = packTids(packs)[0]
+  assert.ok(first.length >= 8, `第 1 包应包含多场比赛,实际 ${first.length} 场`)
+  assert.ok(first.includes('T16'), `第 1 包要拿到靠后的比赛,实际 ${first.join(',')}`)
+})
+
+test('切包:大场(超过一个包 1/8)会摊开,不再独占一个包', () => {
+  // BIG 40 张 + 12 场各 9 张 = 148 → 2 包(74/74)。阈值 = floor(74/8) = 9。
+  const entries = [].concat(mkBlock('BIG', 40), ...Array.from({ length: 12 }, (_, i) => mkBlock(`S${i}`, 9)))
+  const sizes = sizesFor(entries.length)
+  const packs = splitIntoPacks(entries.map((e) => ({ ...e })), sizes, 'tournament')
+  const bigCounts = packs.map((p) => p.filter((e) => e.tournamentId === 'BIG').length)
+  assert.deepEqual(bigCounts, [20, 20], 'BIG 应摊成两半、每包一半')
+  assert.equal(packs.map((p) => p.length).join('/'), sizes.join('/'))
+  assert.ok(splitTournaments(packs) <= 1, '9 张的小场不该被切开')
+})
+
+test('切包:NSV 变体永远和它的主图同包(三种方案)', () => {
+  const entries = []
+  for (let i = 0; i < 40; i++) {
+    const main = `maps/T${i}/r1/RC${i}.osz`
+    entries.push(mkEntry(`T${i}`, i, { r2Key: main }))
+    entries.push(mkEntry(`T${i}`, i, {
+      r2Key: main.replace(/\.osz$/, '.nsv.osz'),
+      isNsv: true,
+      alternatePaths: [main],
+    }))
+  }
+  for (const mode of ['sequence', 'tournament', 'entry']) {
+    const packs = splitIntoPacks(entries.map((e) => ({ ...e })), [28, 26, 26], mode)
+    assert.equal(packs.flat().length, 80, mode)
+    for (let i = 0; i < 40; i++) {
+      const main = `maps/T${i}/r1/RC${i}.osz`
+      const nsv = main.replace(/\.osz$/, '.nsv.osz')
+      const mainPack = packs.findIndex((p) => p.some((e) => e.r2Key === main))
+      const nsvPack = packs.findIndex((p) => p.some((e) => e.r2Key === nsv))
+      assert.equal(nsvPack, mainPack, `${mode}: T${i} 的主图与 NSV 被分到了不同的包`)
+    }
+  }
+})
+
+test('切包:容量和与条目数不符 → 直接抛,绝不静默丢条目', () => {
+  assert.throws(() => splitIntoPacks(mkBlock('A', 3), [2], 'sequence'), /分包容量与条目数不符/)
+})
+
+test('切包:未知方案名回退到默认;同一输入两次结果一致', () => {
+  assert.equal(DEFAULT_SPLIT_MODE, 'tournament', '默认方案由站长定稿,改它要先问过再改这条断言')
+  assert.equal(resolveSplitMode('sequence'), 'sequence')
+  assert.equal(resolveSplitMode('tournament'), 'tournament')
+  assert.equal(resolveSplitMode('entry'), 'entry')
+  assert.equal(resolveSplitMode('nonsense'), DEFAULT_SPLIT_MODE)
+  assert.equal(resolveSplitMode(''), DEFAULT_SPLIT_MODE)
+
+  const entries = [].concat(mkBlock('A', 40), mkBlock('B', 30), mkBlock('C', 25), mkBlock('D', 20), mkBlock('E', 15), mkBlock('F', 10))
+  const sizes = sizesFor(entries.length)
+  const once = splitIntoPacks(entries.map((e) => ({ ...e })), sizes)
+  const twice = splitIntoPacks(entries.map((e) => ({ ...e })), sizes)
+  assert.deepEqual(once.map((p) => p.map((e) => e.r2Key)), twice.map((p) => p.map((e) => e.r2Key)))
 })
 
 // ---------- 身份报告：渲染「同内容、不同身份来源」（只报告，不改包）----------

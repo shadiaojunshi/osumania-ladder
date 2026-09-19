@@ -820,8 +820,10 @@
           "slot": "RC6",
           "type": "RC",
           "realType": "TC",
-          "name": "",
-          "difficulty": 0
+          "name": "Cynthoni - The Fucking Apocalypse [We're Already Fucking Dead]",
+          "difficulty": 0,
+          "beatmapId": 5628779,
+          "beatmapsetId": 2467699
         },
         {
           "slot": "RC7",
@@ -938,112 +940,144 @@
           "type": "RC",
           "realType": "SA",
           "name": "RC2",
-          "difficulty": 0
+          "difficulty": 0,
+          "beatmapId": 5654103,
+          "beatmapsetId": 2549552
         },
         {
           "slot": "RC3",
           "type": "RC",
           "realType": "DP",
           "name": "RC3",
-          "difficulty": 0
+          "difficulty": 0,
+          "beatmapId": 5644451,
+          "beatmapsetId": 2546994
         },
         {
           "slot": "RC4",
           "type": "RC",
           "realType": "ADP",
           "name": "RC4",
-          "difficulty": 0
+          "difficulty": 0,
+          "beatmapId": 3598248,
+          "beatmapsetId": 1758267
         },
         {
           "slot": "RC5",
           "type": "RC",
           "realType": "FCJ",
           "name": "RC5",
-          "difficulty": 0
+          "difficulty": 0,
+          "beatmapId": 5654024,
+          "beatmapsetId": 2549526
         },
         {
           "slot": "RC6",
           "type": "RC",
           "realType": "TC",
           "name": "RC6",
-          "difficulty": 0
+          "difficulty": 0,
+          "beatmapId": 5649344,
+          "beatmapsetId": 2516811
         },
         {
           "slot": "RC7",
           "type": "RC",
           "realType": "WTC",
           "name": "RC7",
-          "difficulty": 0
+          "difficulty": 0,
+          "beatmapId": 4115207,
+          "beatmapsetId": 1981760
         },
         {
           "slot": "RC8",
           "type": "RC",
           "realType": "MX",
           "name": "RC8",
-          "difficulty": 0
+          "difficulty": 0,
+          "beatmapId": 5654645,
+          "beatmapsetId": 2549730
         },
         {
           "slot": "HB1",
           "type": "HB",
           "realType": "HB1",
           "name": "HB1",
-          "difficulty": 0
+          "difficulty": 0,
+          "beatmapId": 5641608,
+          "beatmapsetId": 2240452
         },
         {
           "slot": "HB2",
           "type": "HB",
           "realType": "HB2",
           "name": "HB2",
-          "difficulty": 0
+          "difficulty": 0,
+          "beatmapId": 5654191,
+          "beatmapsetId": 2225821
         },
         {
           "slot": "HB3",
           "type": "HB",
           "realType": "HB3",
           "name": "HB3",
-          "difficulty": 0
+          "difficulty": 0,
+          "beatmapId": 5256894,
+          "beatmapsetId": 2417835
         },
         {
           "slot": "LN1",
           "type": "LN",
           "realType": "TE",
           "name": "LN1",
-          "difficulty": 0
+          "difficulty": 0,
+          "beatmapId": 3023777,
+          "beatmapsetId": 1473182
         },
         {
           "slot": "LN2",
           "type": "LN",
           "realType": "DE",
           "name": "LN2",
-          "difficulty": 0
+          "difficulty": 0,
+          "beatmapId": 5654066,
+          "beatmapsetId": 2549541
         },
         {
           "slot": "LN3",
           "type": "LN",
           "realType": "LNTC",
           "name": "LN3",
-          "difficulty": 0
+          "difficulty": 0,
+          "beatmapId": 4439621,
+          "beatmapsetId": 2114310
         },
         {
           "slot": "LN4",
           "type": "LN",
           "realType": "LNMX",
           "name": "LN4",
-          "difficulty": 0
+          "difficulty": 0,
+          "beatmapId": 3826914,
+          "beatmapsetId": 1861302
         },
         {
           "slot": "LN5",
           "type": "LN",
           "realType": "LNMX",
           "name": "LN5",
-          "difficulty": 0
+          "difficulty": 0,
+          "beatmapId": 5654092,
+          "beatmapsetId": 2549550
         },
         {
           "slot": "TB1",
           "type": "TB",
           "realType": "TB",
           "name": "TB1",
-          "difficulty": 0
+          "difficulty": 0,
+          "beatmapId": 5442136,
+          "beatmapsetId": 2480617
         }
       ],
       "typeDifficulties": {

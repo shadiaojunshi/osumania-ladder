@@ -523,8 +523,10 @@
           "slot": "LN4",
           "type": "LN",
           "realType": "JW",
-          "name": "",
-          "difficulty": 9.6
+          "name": "Dreamcatcher - Scream [LovelyN's Devil Eyes Come (edit)]",
+          "difficulty": 9.6,
+          "beatmapId": 4377691,
+          "beatmapsetId": 2088993
         },
         {
           "slot": "HB1",
@@ -974,9 +976,11 @@
           "slot": "TB",
           "type": "TB",
           "realType": "TB",
-          "name": "",
+          "name": "Coal & Lesitia. & KreScent - PRiSMBREAKER :: dispersion.POINT [SPECTRUMSHATTERER :: diffusion.ZONE]",
           "difficulty": 12.8,
-          "difficultyLn": 13.2
+          "difficultyLn": 13.2,
+          "beatmapId": 5651529,
+          "beatmapsetId": 2425955
         }
       ],
       "typeDifficulties": {
@@ -1075,8 +1079,10 @@
           "slot": "LN2",
           "type": "LN",
           "realType": "DE",
-          "name": "",
-          "difficulty": 13
+          "name": "Lime - Cynosure [Stella illa quae Polaris dicitur (Edit)]",
+          "difficulty": 13,
+          "beatmapId": 5288107,
+          "beatmapsetId": 2421360
         },
         {
           "slot": "LN3",
@@ -1120,9 +1126,11 @@
           "slot": "HB3",
           "type": "HB",
           "realType": "HB3",
-          "name": "",
+          "name": "Billain - Mekanize You [An Unmanned Expendable (feat. Lott)]",
           "difficulty": 13,
-          "difficultyLn": 13.4
+          "difficultyLn": 13.4,
+          "beatmapId": 5517109,
+          "beatmapsetId": 2429948
         },
         {
           "slot": "SV1",

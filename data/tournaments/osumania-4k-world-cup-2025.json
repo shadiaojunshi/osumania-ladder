@@ -198,8 +198,10 @@
           "slot": "LN1",
           "type": "LN",
           "realType": "CO",
-          "name": "",
-          "difficulty": 7.2
+          "name": "Three - Kuuchuu Bunkai (Long Ver.) [Dissolution]",
+          "difficulty": 7.2,
+          "beatmapId": 5267305,
+          "beatmapsetId": 2421253
         },
         {
           "slot": "LN2",
@@ -432,8 +434,10 @@
           "slot": "RC3",
           "type": "RC",
           "realType": "SA",
-          "name": "",
-          "difficulty": 9.9
+          "name": "Ariabl'eyeS - Romanesque Romancia [Kanjou]",
+          "difficulty": 9.9,
+          "beatmapId": 5416488,
+          "beatmapsetId": 2428522
         },
         {
           "slot": "RC4",
@@ -532,8 +536,10 @@
           "slot": "LN4",
           "type": "LN",
           "realType": "LNMX",
-          "name": "",
-          "difficulty": 10
+          "name": "Camellia - The Cat Evolved Into The Microwave-proof Cat! [Crazy Genetics (edit) 1.05x]",
+          "difficulty": 10,
+          "beatmapId": 5298044,
+          "beatmapsetId": 2431872
         },
         {
           "slot": "TB",
@@ -748,8 +754,10 @@
           "slot": "RC1",
           "type": "RC",
           "realType": "SS",
-          "name": "",
-          "difficulty": 12.6
+          "name": "black midi - Sugar/Tzu [1.05]",
+          "difficulty": 12.6,
+          "beatmapId": 5308399,
+          "beatmapsetId": 2435325
         },
         {
           "slot": "RC2",
@@ -764,8 +772,10 @@
           "slot": "RC3",
           "type": "RC",
           "realType": "SA",
-          "name": "",
-          "difficulty": 12.7
+          "name": "Saitama Saisyu Heiki - Surface Tension [Testimony (cut edit) 1.05x]",
+          "difficulty": 12.7,
+          "beatmapId": 5308441,
+          "beatmapsetId": 2435344
         },
         {
           "slot": "RC4",
@@ -826,9 +836,11 @@
           "slot": "HB2",
           "type": "HB",
           "realType": "HB2",
-          "name": "",
+          "name": "Camellia - shadows of cats [penumbrae]",
           "difficulty": 11,
-          "difficultyLn": 11.7
+          "difficultyLn": 11.7,
+          "beatmapId": 5356482,
+          "beatmapsetId": 2435368
         },
         {
           "slot": "HB3",
@@ -957,8 +969,10 @@
           "slot": "RC4",
           "type": "RC",
           "realType": "FCJ",
-          "name": "",
-          "difficulty": 13.2
+          "name": "Camellia feat. chiisana - re:||VERSE [in:||VERSION]",
+          "difficulty": 13.2,
+          "beatmapId": 5318866,
+          "beatmapsetId": 2438731
         },
         {
           "slot": "RC5",

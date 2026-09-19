@@ -123,9 +123,10 @@
           "slot": "RC3",
           "type": "RC",
           "realType": "TC",
-          "name": "",
+          "name": "Oceanlab - Satellite (Sewerslvt Edit) [Spacial Tension 1.05x (183bpm) OD8]",
           "difficulty": 4.1,
-          "beatmapId": 4856819
+          "beatmapId": 4856819,
+          "beatmapsetId": 278655
         },
         {
           "slot": "RC4",
@@ -460,9 +461,10 @@
           "slot": "SV1",
           "type": "SV",
           "realType": "SI",
-          "name": "",
+          "name": "Eliminate - TWISTED (MOREPWR) [Distortion]",
           "difficulty": 0,
-          "beatmapId": 4985080
+          "beatmapId": 4985080,
+          "beatmapsetId": 325631
         },
         {
           "slot": "SV2",
@@ -1102,10 +1104,11 @@
           "slot": "HB1",
           "type": "HB",
           "realType": "HB1",
-          "name": "",
+          "name": "Sakuzyo - Ultimate Force [Total Destruction till the WORLD'S END (edit)]",
           "difficulty": 12.5,
           "beatmapId": 5190657,
-          "difficultyLn": 12.8
+          "difficultyLn": 12.8,
+          "beatmapsetId": 318291
         },
         {
           "slot": "HB2",
@@ -1121,10 +1124,11 @@
           "slot": "HB3",
           "type": "HB",
           "realType": "HB3",
-          "name": "",
+          "name": "Frums + nitro - overdead. [%underflow_error]",
           "difficulty": 12.5,
           "beatmapId": 5200301,
-          "difficultyLn": 12.8
+          "difficultyLn": 12.8,
+          "beatmapsetId": 105220
         },
         {
           "slot": "SV1",

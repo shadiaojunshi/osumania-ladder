@@ -22,8 +22,10 @@
           "slot": "SV1",
           "type": "SV",
           "realType": "SI",
-          "name": "",
-          "difficulty": 0
+          "name": "Eliminate - THOUGHT EXPERIMENT (thinkaboutit) (Sped up Ver.) [Stage 1: Consciousness]",
+          "difficulty": 0,
+          "beatmapId": 5199863,
+          "beatmapsetId": 2399218
         },
         {
           "slot": "RC1",
@@ -130,8 +132,10 @@
           "slot": "RC4",
           "type": "RC",
           "realType": "MTC",
-          "name": "",
-          "difficulty": 4.5
+          "name": "Aire - Get Down [Velvet glitch]",
+          "difficulty": 4.5,
+          "beatmapId": 5211857,
+          "beatmapsetId": 2403088
         },
         {
           "slot": "RC5",
@@ -218,8 +222,10 @@
           "slot": "SV1",
           "type": "SV",
           "realType": "SI",
-          "name": "",
-          "difficulty": 0
+          "name": "Virtual Riot - Touhou Riddim (The Broken Skyline Colour Edit) [Chroma]",
+          "difficulty": 0,
+          "beatmapId": 5211854,
+          "beatmapsetId": 2403087
         },
         {
           "slot": "TB",
@@ -325,8 +331,10 @@
           "slot": "LN3",
           "type": "LN",
           "realType": "LNMX",
-          "name": "",
-          "difficulty": 0
+          "name": "CTCT - To Where the Stars Align [PTCT : Stellar Chaser]",
+          "difficulty": 0,
+          "beatmapId": 5224124,
+          "beatmapsetId": 2407090
         },
         {
           "slot": "HB1",
@@ -386,8 +394,10 @@
           "slot": "TB",
           "type": "TB",
           "realType": "TB",
-          "name": "",
-          "difficulty": 0
+          "name": "Sad Keyboard Guy & Gardens - Illusory Truth [Synthetic Mirage (Edit)]",
+          "difficulty": 0,
+          "beatmapId": 5223899,
+          "beatmapsetId": 2407003
         }
       ],
       "typeDifficulties": {
@@ -431,8 +441,10 @@
           "slot": "RC3",
           "type": "RC",
           "realType": "SS",
-          "name": "",
-          "difficulty": 0
+          "name": "Lime - BEYOND [Chronosia]",
+          "difficulty": 0,
+          "beatmapId": 5234329,
+          "beatmapsetId": 2410621
         },
         {
           "slot": "RC4",
@@ -555,8 +567,10 @@
           "slot": "TB",
           "type": "TB",
           "realType": "TB",
-          "name": "",
-          "difficulty": 0
+          "name": "USAO & Kobaryo - WACCA ULTRA DREAM MEGAMIX [Echoes of Fragment]",
+          "difficulty": 0,
+          "beatmapId": 5234332,
+          "beatmapsetId": 2410624
         }
       ],
       "typeDifficulties": {
@@ -1010,8 +1024,10 @@
           "slot": "LN2",
           "type": "LN",
           "realType": "DE",
-          "name": "",
-          "difficulty": 0
+          "name": "Gram - Knights of the Round Table [Sanctum of the End 1.05x]",
+          "difficulty": 0,
+          "beatmapId": 5268016,
+          "beatmapsetId": 2421540
         },
         {
           "slot": "LN3",

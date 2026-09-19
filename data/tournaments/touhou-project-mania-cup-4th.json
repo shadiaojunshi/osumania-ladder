@@ -105,8 +105,10 @@
           "slot": "RC1",
           "type": "RC",
           "realType": "JS",
-          "name": "",
-          "difficulty": 5
+          "name": "KISIDA KYODAN & THE AKEBOSI ROCKETS - Akebosi Rocket [PORTTAYER's Retrospective x1.1]",
+          "difficulty": 5,
+          "beatmapId": 4953189,
+          "beatmapsetId": 2314529
         },
         {
           "slot": "RC2",
@@ -195,9 +197,11 @@
           "slot": "CHB1",
           "type": "HB",
           "realType": "HB2",
-          "name": "",
+          "name": "ARM - Water Lily [elexire's Lotus (cut) 1.15x]",
           "difficulty": 8,
-          "difficultyLn": 8
+          "difficultyLn": 8,
+          "beatmapId": 4953193,
+          "beatmapsetId": 2314532
         },
         {
           "slot": "CLN1",
@@ -316,9 +320,11 @@
           "slot": "HB2",
           "type": "HB",
           "realType": "HB2",
-          "name": "",
+          "name": "Shibayan feat. yana - Oznei Haman wa Mou Iranai (Cut Ver.) [YuEast & Micleak's Gulp2]",
           "difficulty": 5,
-          "difficultyLn": 6.5
+          "difficultyLn": 6.5,
+          "beatmapId": 4985048,
+          "beatmapsetId": 2325617
         },
         {
           "slot": "LN1",
@@ -620,9 +626,11 @@
           "slot": "HB2",
           "type": "HB",
           "realType": "HB2",
-          "name": "",
+          "name": "Para Dot. - Kage-Tech [Werewolf]",
           "difficulty": 8.6,
-          "difficultyLn": 9.2
+          "difficultyLn": 9.2,
+          "beatmapId": 5007680,
+          "beatmapsetId": 2333496
         },
         {
           "slot": "HB3",
@@ -949,9 +957,11 @@
           "slot": "HB1",
           "type": "HB",
           "realType": "HB1",
-          "name": "",
+          "name": "Kobaryo - Destructive Little Sister [CS' Catastrophic]",
           "difficulty": 11.2,
-          "difficultyLn": 11.7
+          "difficultyLn": 11.7,
+          "beatmapId": 5027189,
+          "beatmapsetId": 2340182
         },
         {
           "slot": "HB2",
@@ -1107,7 +1117,10 @@
           "slot": "RC6",
           "type": "RC",
           "realType": "WTC",
-          "difficulty": 12.7
+          "difficulty": 12.7,
+          "name": "IOSYS - Bow Down, You Ignorant Fools! - The Princess' Insane All Night Hourai Live - [Kaguya-sama]",
+          "beatmapId": 5049765,
+          "beatmapsetId": 2347713
         },
         {
           "slot": "RC7",
@@ -1142,7 +1155,10 @@
           "type": "HB",
           "realType": "HB2",
           "difficulty": 12.3,
-          "difficultyLn": 12.8
+          "difficultyLn": 12.8,
+          "name": "beatMARIO - Saishuu Kichiku Imouto Flandre-S (Camellia Remix) (Cut Ver.) [Calamity at the Scarlet Mansion]",
+          "beatmapId": 5035386,
+          "beatmapsetId": 2342737
         },
         {
           "slot": "HB3",

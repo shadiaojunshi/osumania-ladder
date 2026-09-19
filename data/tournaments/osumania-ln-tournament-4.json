@@ -116,8 +116,10 @@
           "slot": "CO2",
           "type": "LN",
           "realType": "CO",
-          "name": "",
-          "difficulty": 6.8
+          "name": "Kagetora. - Reimei [Dergo's Remei (OD 8)]",
+          "difficulty": 6.8,
+          "beatmapId": 5308658,
+          "beatmapsetId": 2435461
         },
         {
           "slot": "CO3",
@@ -168,8 +170,10 @@
           "slot": "WC2",
           "type": "LN",
           "realType": "LNTC",
-          "name": "",
-          "difficulty": 6.4
+          "name": "loqto - 90(2) [RuleBlazing's Elegance ( OD 7.5)]",
+          "difficulty": 6.4,
+          "beatmapId": 5308685,
+          "beatmapsetId": 2435471
         },
         {
           "slot": "WC3",
@@ -317,8 +321,10 @@
           "slot": "WC3",
           "type": "LN",
           "realType": "LNWC",
-          "name": "",
-          "difficulty": 8.8
+          "name": "Dr. Dre & Snoop Dogg - The Next Episode (San Holo Remix) (Cut Ver.) [Noodle It Like It's Hot]",
+          "difficulty": 8.8,
+          "beatmapId": 5328503,
+          "beatmapsetId": 2442151
         },
         {
           "slot": "DE1",
@@ -466,8 +472,10 @@
           "slot": "DE1",
           "type": "LN",
           "realType": "DE",
-          "name": "",
-          "difficulty": 8.4
+          "name": "Endorfin. - Luminous Rage [Patu Rage]",
+          "difficulty": 8.4,
+          "beatmapId": 5318899,
+          "beatmapsetId": 2438744
         },
         {
           "slot": "DE2",
@@ -579,8 +587,10 @@
           "slot": "WC1",
           "type": "LN",
           "realType": "LNMX",
-          "name": "",
-          "difficulty": 8.8
+          "name": "Banzoin Hakka Ch. HOLOSTARS-EN - KiLLiNG ME [THE NOODLES ARE KiL[LN]G ME]",
+          "difficulty": 8.8,
+          "beatmapId": 5338172,
+          "beatmapsetId": 2445645
         },
         {
           "slot": "WC2",
@@ -613,8 +623,10 @@
           "slot": "DE1",
           "type": "LN",
           "realType": "SW",
-          "name": "",
-          "difficulty": 9.8
+          "name": "Hachi - Rinne (Chorus) [Sorrow]",
+          "difficulty": 9.8,
+          "beatmapId": 5338192,
+          "beatmapsetId": 2445653
         },
         {
           "slot": "DE2",
@@ -699,8 +711,10 @@
           "slot": "CO3",
           "type": "LN",
           "realType": "CO",
-          "name": "",
-          "difficulty": 10.8
+          "name": "ANTHEM - Snake Eyes [You're Going Down (1.05x)]",
+          "difficulty": 10.8,
+          "beatmapId": 5347406,
+          "beatmapsetId": 2448994
         },
         {
           "slot": "TE1",
@@ -1071,8 +1085,10 @@
           "slot": "TE4",
           "type": "LN",
           "realType": "LNTC",
-          "name": "",
-          "difficulty": 15
+          "name": "Supire - Dead Aire [Boundless]",
+          "difficulty": 15,
+          "beatmapId": 5573593,
+          "beatmapsetId": 2455636
         },
         {
           "slot": "WC1",
@@ -1159,9 +1175,11 @@
           "slot": "TB",
           "type": "TB",
           "realType": "TB",
-          "name": "",
+          "name": "o!mLN4 Sound Team - Illusion's End ~ Reflection's Awakening [Dilemma of Inverse Worlds: Sin's Absolution]",
           "difficulty": 0,
-          "difficultyLn": 15.2
+          "difficultyLn": 15.2,
+          "beatmapId": 5609748,
+          "beatmapsetId": 2455633
         }
       ],
       "typeDifficulties": {

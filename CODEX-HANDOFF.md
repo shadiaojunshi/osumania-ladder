@@ -253,6 +253,26 @@ d:/osumania ladder/              ← 注意路径带空格，bash 里用引号
   调用方（如 `RealTypeMapBrowser` 的横幅/行内 `!`）**不得再拿 `rounds.length > 1` 当门槛**。
 - 已知边界（刻意保留）：name 是**真实曲名**时身份只看「名字+难度」、不看 BID —— 同 BID 但两轮曲名写法不同**不报**。
 
+### 5.7 MapUploader 的元数据暂存（跨比赛，2026-09-19 起）
+
+补丁池**按比赛分组**：`StagedGroups = Map<tournamentId, StagedPatchMap>`（`src/lib/mapPatchCommit.ts`）。
+单场那层（`applyStagedPatches` / `fill` 不覆盖远端 / 快照只清"本次写进去且期间没被改写"的条目）没变，
+外面套了一层分组。三条契约：
+
+- **换比赛不清池**（`loadTournament` 里那句 `setPendingPatches(new Map())` 已删）→ 也**不再弹**
+  「切换会丢失暂存」的确认；切回某场比赛时把它自己那份暂存回放到行上。
+- **统一保存走 `POST /api/tournaments/batch`**：每场各自 `GET` 权威 JSON + blob sha（R01 基准）→
+  各自 `applyStagedPatches` → **一个**请求 = 一次 commit = 一次重建。
+  任一场读不到就**整次不写**（batch 的原子语义，不给「哪几场进了」的糊涂账）；
+  **409 → 全部重读最新 sha 自动重投一次**（`fill` 本来就不覆盖远端，重放安全，
+  因此**不需要**像整份草稿那样做三方合并）；仍冲突则一个文件都不写、暂存全留、把冲突的比赛点名给用户。
+- **落盘 `localStorage`**（key `osumania-ladder:map-uploader-staged:v1`）：暂存要跨比赛就不能只活在
+  `useState` 里（切 tab 卸载、刷新清空）。**读盘完成前不许写盘**，否则首次 effect 会拿空池把存档清掉。
+  读取一律走 `parseStagedGroups` 清洗：形状不对的条目逐条丢、`origin` 只认 `explicit` 其余退成 `fill`
+  （猜错的代价必须是「不覆盖远端」）。
+
+注意与 §9 的 **`JsonPreview`「暂存到本浏览器」不是一回事**：那是整份比赛 JSON 草稿（key 前缀
+`osumania-ladder:staged-tournaments:v1`），这是元数据补丁；两者最后都汇到同一个 batch 端点。
 ## 6. 运行命令
 
 > 注意：仓库路径 `d:/osumania ladder` 带空格。bash 里 `cd "/d/osumania ladder"` 或全程用绝对路径。
@@ -338,7 +358,7 @@ Tabs（`src/app/admin/page.tsx` 的 `Tab` 类型）：
 | 参考点 | `ReferencesEditor` | 维护 `data/references.json`（难度标尺上的显式锚点） |
 | 难度标尺 | `RefLadderEditor` | 维护 `data/ref-ladder.json`（易→难轮次链，可加 step） |
 | 拟合预测 | `DifficultyFitTool` | 按标尺轮位做散点/线性拟合。RF 侧默认启用 `14→15 = 1.5` 的“段位跨度倍率”（LN 默认关闭），输出会还原为原始段位；可手动调斜率，直线固定穿过样本中心 |
-| 谱面上传 | `MapUploader` | 自动下载+上传（一键下载上传 N）；贴 BID 补传（三阶段：粘贴→review→执行；TB↔TB1 自动匹配；未匹配 slot 手动指派；"包含已上传"=覆盖 R2）。浏览器侧 JSZip 切单难度+去 storyboard+保留打击音效，`POST /api/maps/upload` |
+| 谱面上传 | `MapUploader` | 自动下载+上传（一键下载上传 N）；贴 BID 补传（三阶段：粘贴→review→执行；TB↔TB1 自动匹配；未匹配 slot 手动指派；"包含已上传"=覆盖 R2）。浏览器侧 JSZip 切单难度+去 storyboard+保留打击音效，`POST /api/maps/upload`；元数据暂存**跨比赛累计**、最后统一走 batch（§5.7）|
 | 下载链接 | `PackLinksEditor` | 按 `(realType, part)` 复合键逐包填各盘链接 |
 | realType 体检 | `RealTypeConflictChecker` | 批量体检同谱面 realType 冲突，admin 可保存（GitHub Git Data 单 commit 批量写回） |
 | 键型谱面 | `RealTypeMapBrowser` | 按 realType 浏览全库谱面 + 跨轮重复报警。判读唯一实现在 `src/lib/tournamentDiagnostics.ts`（§5.6）|

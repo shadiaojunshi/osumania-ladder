@@ -9,14 +9,20 @@ import {
   applyPatches,
   applyStagedPatches,
   buildSlotBaseline,
-  dropStagedSlot,
-  entriesToClear,
-  mergeStagedPatch,
+  clearCommittedGroups,
+  countStagedGroups,
+  dropSlotFromGroups,
+  parseStagedGroups,
+  serializeStagedGroups,
   slotPatchKey,
+  stageIntoGroups,
+  stagedPatchMap,
+  stagedTournamentIds,
   type MapPatch,
   type PatchMap,
   type PatchOrigin,
-  type StagedPatchMap,
+  type PatchRound,
+  type StagedGroups,
 } from '@/lib/mapPatchCommit'
 
 interface MapInfo {
@@ -52,6 +58,66 @@ interface BackfillSummary {
   errors: string[]
 }
 
+// 暂存的持久化位置。站长 2026-09-19:暂存要跨比赛,就不能只活在组件的 useState 里 ——
+// 切 tab 会卸载组件、刷新会清空,于是又退化成"必须一个比赛存一次"。
+const STAGED_STORAGE_KEY = 'osumania-ladder:map-uploader-staged:v1'
+
+// ---------- 跨比赛统一保存 ----------
+// 每一场比赛各自"读权威 JSON + 应用自己的补丁",最后打成**一个** batch 请求:
+// N 场比赛 = 1 次 commit = 1 次 Pages 重建(R01 的编辑基准照旧逐文件校验)。
+// 任一场读不到(凭据失效 / 限流 / 真不存在)就整次不写 —— 那正是 batch 端点的原子语义,
+// 免得用户面对"哪几场进了、哪几场没进"的糊涂账。纯函数放模块级,不依赖组件状态。
+interface PreparedCommit {
+  items: { id: string; tournament: Record<string, unknown>; baseSha: string }[]
+  /** 每场比赛各自真正写进去的 key(清池要逐场判定)。 */
+  appliedByTournament: Map<string, string[]>
+  unmatched: number
+  skippedRemote: number
+  /** 读不到 / 缺 sha 的比赛 id。 */
+  failed: string[]
+}
+
+async function prepareCommit(snapshot: StagedGroups, ids: string[]): Promise<PreparedCommit> {
+  const prepared: PreparedCommit = {
+    items: [],
+    appliedByTournament: new Map(),
+    unmatched: 0,
+    skippedRemote: 0,
+    failed: [],
+  }
+  for (const id of ids) {
+    const staged = snapshot.get(id)
+    if (!staged || staged.size === 0) continue
+    let payload: { tournament?: unknown; sha?: unknown } | null = null
+    try {
+      const res = await fetch(`/api/tournaments/${id}`)
+      if (!res.ok) {
+        prepared.failed.push(id)
+        continue
+      }
+      payload = await res.json()
+    } catch {
+      prepared.failed.push(id)
+      continue
+    }
+    const tournament = payload?.tournament as { rounds?: unknown } | undefined
+    const sha = payload?.sha
+    // 没有 sha 就没有编辑基准 —— batch 要求 baseSha 显式存在,不能拿"最新 HEAD"顶替。
+    if (!tournament || !Array.isArray(tournament.rounds) || typeof sha !== 'string' || sha === '') {
+      prepared.failed.push(id)
+      continue
+    }
+    const result = applyStagedPatches(tournament.rounds as PatchRound[], staged)
+    prepared.unmatched += result.unmatchedKeys.length
+    prepared.skippedRemote += result.skippedRemote.length
+    // 一条都写不进去(远端已有值 / slot 找不到)就不必把这个文件放进这次提交。
+    if (result.appliedKeys.length === 0) continue
+    prepared.appliedByTournament.set(id, result.appliedKeys)
+    prepared.items.push({ id, tournament: tournament as Record<string, unknown>, baseSha: sha })
+  }
+  return prepared
+}
+
 export function MapUploader({ onDirtyChange }: { onDirtyChange?: (dirty: boolean) => void } = {}) {
   const t = useT()
   const [tournaments, setTournaments] = useState<{ id: string }[]>([])
@@ -67,13 +133,22 @@ export function MapUploader({ onDirtyChange }: { onDirtyChange?: (dirty: boolean
   const [uploading, setUploading] = useState<Record<string, boolean>>({})
   const [status, setStatus] = useState<Record<string, 'success' | 'error'>>({})
   const [errorMsg, setErrorMsg] = useState<Record<string, string>>({})
-  // 跨轮暂存的元数据补丁池:逐轮"暂存本轮"往这里攒,最后"保存全部"一次 PUT/一次重建。
-  const [pendingPatches, setPendingPatches] = useState<StagedPatchMap>(new Map())
+  // 跨轮、跨比赛暂存的元数据补丁池:key = 比赛 id,value = 那场比赛的补丁池。
+  // 过去这里只有"当前这场比赛"的一份,切比赛就清空 → 必须一场一存。
+  // 现在按比赛分组攒着,最后"保存全部"走一个 batch 请求 = 一次 commit / 一次重建。
+  const [pendingPatches, setPendingPatches] = useState<StagedGroups>(new Map())
+  // 读盘完成之前不能写盘,否则首次 effect 会拿空池把上次的存档清掉。
+  const [stagedLoaded, setStagedLoaded] = useState(false)
+  // 这次打开页面从存档里捞回来的条数(只做提示,dirty 判定不看它)。
+  const [restoredCount, setRestoredCount] = useState(0)
   const [savingMeta, setSavingMeta] = useState(false)
   const [saveMsg, setSaveMsg] = useState<{ kind: 'ok' | 'err'; text: string } | null>(null)
   // 异步回调里用 ref 读"现在还在不在看同一场比赛",避免把 A 的结果写进 B。
   const selectedTournamentRef = useRef(selectedTournament)
   selectedTournamentRef.current = selectedTournament
+  // 异步回调(loadTournament / commitPending)里要用**最新**的暂存池,不能吃渲染闭包。
+  const stagedGroupsRef = useRef(pendingPatches)
+  stagedGroupsRef.current = pendingPatches
   // 切换比赛的请求令牌:只有令牌仍是最新那次切换,才允许写 UI 状态。
   const loadTokenRef = useRef(0)
   // 存档里每个 slot 的 name/BID(删除文件后把本地回显退回去用,见 buildSlotBaseline)。
@@ -99,24 +174,51 @@ export function MapUploader({ onDirtyChange }: { onDirtyChange?: (dirty: boolean
 
   useEffect(() => { void loadTournamentList() }, [loadTournamentList])
 
+  // 读盘:localStorage 只在浏览器里有,所以放在 mount 之后(SSR 首帧不碰 window)。
+  // 内容坏掉 / 被禁用一律当作"没有暂存" —— 上传页不能因为一份脏存档打不开。
+  useEffect(() => {
+    let restored = 0
+    try {
+      const raw = window.localStorage.getItem(STAGED_STORAGE_KEY)
+      if (raw) {
+        const groups = parseStagedGroups(JSON.parse(raw))
+        restored = countStagedGroups(groups)
+        if (restored > 0) setPendingPatches((current) => (countStagedGroups(current) > 0 ? current : groups))
+      }
+    } catch {
+      /* storage 被禁用 / 存档坏掉 */
+    }
+    setRestoredCount(restored)
+    setStagedLoaded(true)
+  }, [])
+
+  // 写盘:暂存一变就落盘,刷页 / 关掉再回来都还在(这就是"跨比赛"的底气)。
+  useEffect(() => {
+    if (!stagedLoaded) return
+    try {
+      if (pendingPatches.size === 0) window.localStorage.removeItem(STAGED_STORAGE_KEY)
+      else window.localStorage.setItem(STAGED_STORAGE_KEY, JSON.stringify(serializeStagedGroups(pendingPatches)))
+    } catch {
+      /* 配额满 / 隐私模式:存不下也不能影响页面,页内暂存照旧 */
+    }
+  }, [pendingPatches, stagedLoaded])
+
   // 有未保存暂存时上报 dirty,让 admin 外壳在切 tab 时拦截。
   useEffect(() => {
-    onDirtyChange?.(pendingPatches.size > 0)
+    onDirtyChange?.(countStagedGroups(pendingPatches) > 0)
   }, [pendingPatches, onDirtyChange])
 
-  // 关/刷浏览器时,若有未保存暂存则拦。
+  // 关/刷浏览器时,若有未保存暂存则拦。写盘失败(隐私模式)时它是最后一道保护。
   useEffect(() => {
-    if (pendingPatches.size === 0) return
+    if (countStagedGroups(pendingPatches) === 0) return
     const handler = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = '' }
     window.addEventListener('beforeunload', handler)
     return () => window.removeEventListener('beforeunload', handler)
   }, [pendingPatches])
 
   const loadTournament = async (id: string) => {
-    // 切换比赛会丢掉当前比赛的暂存,先确认。
-    if (pendingPatches.size > 0 && id !== selectedTournament) {
-      if (!confirm(t('mapUpload.stage.switchConfirm', { n: pendingPatches.size }))) return
-    }
+    // 注:切比赛**不再**丢暂存(2026-09-19)—— 池子按比赛分组,每场比赛自己的补丁
+    // 挂在 stagedGroupsRef 里,所以这里不需要再 confirm 一次"切换会丢失"。
     // 有写操作在飞时不允许换比赛:A 的完成回调会往 B 的状态里写。
     const busy = savingMeta || backfillRunning || Object.values(uploading).some(Boolean)
     if (id !== selectedTournament && busy) {
@@ -125,9 +227,9 @@ export function MapUploader({ onDirtyChange }: { onDirtyChange?: (dirty: boolean
     }
 
     // 每次切换换一个令牌,并清掉上一场的上传/勾选/错误/进度 —— 不把 A 的状态留在 B。
+    // 注意:这里**不动**暂存池 —— 它是跨比赛的,切走再切回来还要接着攒。
     const token = loadTokenRef.current + 1
     loadTokenRef.current = token
-    setPendingPatches(new Map())
     setSaveMsg(null)
     setSelectedTournament(id)
     setUploadedSlots(new Set())
@@ -158,6 +260,10 @@ export function MapUploader({ onDirtyChange }: { onDirtyChange?: (dirty: boolean
       slotBaselineRef.current = buildSlotBaseline(
         (tournament.rounds || []) as { id: string; maps: Record<string, unknown>[] }[],
       )
+      // 这场比赛自己那份暂存要回放出来:切走再切回来,行上仍然是"我刚补的信息",
+      // 而不是被远端旧值盖回去。用 ref 读最新池子(这个函数在 await 之后才走到这里)。
+      const staged = stagedPatchMap(stagedGroupsRef.current.get(id))
+      if (staged.size > 0) applyPatchesLocal(staged)
       if (statusRes.ok) {
         const { uploaded, uploadedNsv } = await statusRes.json()
         if (token !== loadTokenRef.current) return
@@ -200,16 +306,16 @@ export function MapUploader({ onDirtyChange }: { onDirtyChange?: (dirty: boolean
     })
   }, [])
 
-  // 暂存本轮:合进待提交池 + 本地回显。不触网、不重建。
+  // 暂存本轮:合进**当前这场比赛**那一组 + 本地回显。不触网、不重建。
   // origin='fill'(默认)只补"原本缺失"的字段,提交时不会覆盖远端已有的值;
   // 'explicit' 表示用户明确指定(如贴 BID 补传),照写。
+  // 攒哪一场按 ref 取(异步补全回调里也要落到"发起时那场比赛")。
   const stagePatches = useCallback((patches: PatchMap, origin: PatchOrigin = 'fill') => {
     if (patches.size === 0) return
-    setPendingPatches((prev) => {
-      const next = new Map(prev)
-      for (const [k, v] of patches) next.set(k, mergeStagedPatch(next.get(k), v, origin))
-      return next
-    })
+    const tournamentId = selectedTournamentRef.current
+    if (!tournamentId) return
+    setPendingPatches((prev) => stageIntoGroups(prev, tournamentId, patches, origin))
+    setRestoredCount(0)
     applyPatchesLocal(patches)
     setSaveMsg(null)
   }, [applyPatchesLocal])
@@ -398,92 +504,126 @@ export function MapUploader({ onDirtyChange }: { onDirtyChange?: (dirty: boolean
     await uploadFile(roundId, slot, oszFile, isNsv, meta)
   }, [uploadFile])
 
-  // 统一保存:把整个待提交池一次 PUT(一次 commit / 一次重建)。
-  // 补丁解析的纯逻辑在 @/lib/mapPatchCommit(可单测)。
+  // 统一保存:把**所有比赛**的待提交补丁打成一次 batch(一次 commit / 一次重建)。
+  // 补丁解析的纯逻辑在 @/lib/mapPatchCommit(可单测),批量写入契约见
+  // functions/api/tournaments/batch.ts。
   const commitPending = useCallback(async () => {
-    if (savingMeta || pendingPatches.size === 0) return
-    if (!selectedTournament) return
-    // 绑定这次保存属于哪场比赛;提交快照用于"只清掉本次真正写进去、且期间没被改写的条目"。
-    const opTournament = selectedTournament
-    const snapshot: StagedPatchMap = new Map(pendingPatches)
+    if (savingMeta) return
+    // 哪些比赛有暂存(插入序 = 攒进来的先后,提交顺序稳定)。
+    const ids = stagedTournamentIds(pendingPatches)
+    if (ids.length === 0) return
+    const fileCount = countStagedGroups(pendingPatches)
+    // 提交快照:只有"本次提交过 + 期间没被改写 + 真的写进去了"的条目才清(逐场判定)。
+    const snapshot: StagedGroups = new Map(pendingPatches)
     setSavingMeta(true)
     setSaveMsg(null)
+    setRestoredCount(0)
     try {
-      const getRes = await fetch(`/api/tournaments/${opTournament}`)
-      if (!getRes.ok) throw new Error(`GET failed: ${getRes.status}`)
-      const { tournament, sha } = await getRes.json() as { tournament: { id: string; rounds: { id: string; maps: Record<string, unknown>[] }[]; [k: string]: unknown }; sha: string }
-
-      // fill 补丁不会覆盖远端刚填进去的值;真正写入的 key 才允许从池里移除。
-      const result = applyStagedPatches(tournament.rounds, snapshot)
-      if (result.appliedKeys.length === 0) {
-        // 一条都没写进去(全部被远端已有值挡住,或 key 在数据里找不到):
+      let prepared = await prepareCommit(snapshot, ids)
+      if (prepared.failed.length > 0) {
+        // 读不到比赛就不能当编辑基准 —— 整次不写,免得"哪几场进了"变成糊涂账。
+        setSaveMsg({ kind: 'err', text: t('mapUpload.stage.readFailed', { ids: prepared.failed.join(', ') }) })
+        return
+      }
+      if (prepared.items.length === 0) {
+        // 一条都没写进去(全部被远端已有值挡住,或 slot 在数据里找不到):
         // 保留暂存池让用户手动处理,绝不擅自清空。
         setSaveMsg({ kind: 'err', text: t('mapUpload.stage.saveNoMatch') })
         return
       }
 
-      const putRes = await fetch(`/api/tournaments/${opTournament}`, {
-        method: 'PUT',
+      const send = (items: PreparedCommit['items']) => fetch('/api/tournaments/batch', {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tournament, sha }),
+        body: JSON.stringify({ items, summary: `Backfill map metadata (${items.length} files)` }),
       })
-      if (!putRes.ok) {
-        const body = await putRes.json().catch(() => ({})) as { error?: string }
-        throw new Error(body.error || `PUT failed: ${putRes.status}`)
+
+      let res = await send(prepared.items)
+      let payload = (await res.json().catch(() => ({}))) as {
+        error?: string
+        conflicts?: { id: string; reason: string }[]
       }
 
-      // 期间切了比赛 → 不写界面状态(池已在切换时清过),只把结果落到返回值之外。
-      if (selectedTournamentRef.current !== opTournament) return
+      // 整批被 409 挡下 → 多半只是"读完到提交之间又有人推进了 HEAD"。
+      // 全部重读一次最新版(拿新 sha)再投一次就够:fill 补丁本来就不覆盖远端已有的值,
+      // 重放是安全的,不必像后台的整份草稿那样做三方合并。
+      if (res.status === 409) {
+        const retried = await prepareCommit(snapshot, ids)
+        if (retried.failed.length === 0 && retried.items.length > 0) {
+          res = await send(retried.items)
+          payload = (await res.json().catch(() => ({}))) as typeof payload
+          if (res.ok) prepared = retried
+        }
+      }
 
-      // 用 GitHub 权威版刷新前端 state。
-      setTournamentData({
-        id: tournament.id,
-        rounds: tournament.rounds.map((r) => ({
-          id: r.id,
-          abbreviation: (r as unknown as { abbreviation: string }).abbreviation,
-          maps: r.maps.map((m) => ({
-            slot: m.slot as string,
-            type: m.type as string,
-            name: m.name as string | undefined,
-            beatmapId: m.beatmapId as number | undefined,
-            beatmapsetId: m.beatmapsetId as number | undefined,
+      if (res.status === 409) {
+        // 还是冲突:整批一个文件都没写,暂存全留着,把冲突的比赛点名给用户。
+        const names = (payload.conflicts || []).map((conflict) => conflict.id).join(', ')
+        setSaveMsg({ kind: 'err', text: t('mapUpload.stage.conflict', { ids: names || '—' }) })
+        return
+      }
+      if (!res.ok) throw new Error(payload.error || `HTTP ${res.status}`)
+
+      // 只移除"本次提交过 + 期间没被改写 + 真的写进去了"的条目(逐场比赛判定):
+      // 提交期间新加/改写的补丁、以及这场没写进去的条目,都保留在池里。
+      setPendingPatches((current) => clearCommittedGroups(snapshot, current, prepared.appliedByTournament))
+
+      // 正在看的那场比赛若是本次提交的一部分,就用权威版刷新回显 +
+      // 重置"存档值"(下一次删除文件要退回的基准)。
+      const committed = prepared.items.find((item) => item.id === selectedTournamentRef.current)
+      if (committed) {
+        const rounds = (committed.tournament.rounds || []) as {
+          id: string
+          abbreviation?: string
+          maps: Record<string, unknown>[]
+        }[]
+        setTournamentData({
+          id: committed.id,
+          rounds: rounds.map((round) => ({
+            id: round.id,
+            abbreviation: round.abbreviation as string,
+            maps: round.maps.map((map) => ({
+              slot: map.slot as string,
+              type: map.type as string,
+              name: map.name as string | undefined,
+              beatmapId: map.beatmapId as number | undefined,
+              beatmapsetId: map.beatmapsetId as number | undefined,
+            })),
           })),
-        })),
-      })
-      // 权威版已经写进仓库了 → 重新记一次存档值(下一次删除要退回的基准)。
-      slotBaselineRef.current = buildSlotBaseline(
-        (tournament.rounds || []) as { id: string; maps: Record<string, unknown>[] }[],
-      )
-      // 只移除"本次提交过 + 期间没被改写 + 真的写进去了"的条目:
-      // 提交期间新加/改写的补丁保留在池里。
-      setPendingPatches((current) => {
-        const clear = new Set(entriesToClear(snapshot, current, result.appliedKeys))
-        const next = new Map(current)
-        for (const key of clear) next.delete(key)
-        return next
-      })
-      const parts = [t('mapUpload.stage.saved', { n: result.appliedKeys.length })]
-      if (result.skippedRemote.length > 0) {
-        parts.push(t('mapUpload.stage.skippedRemote', { n: result.skippedRemote.length }))
+        })
+        slotBaselineRef.current = buildSlotBaseline(rounds)
+        // 池里还留着这场比赛**没写进去**的条目(远端已有值 / slot 找不到)→ 回显照旧挂上,
+        // 免得刚提交完行上的信息突然退回成权威值,让人以为补丁丢了(与切回来时的回放一致)。
+        const stillStaged = stagedPatchMap(stagedGroupsRef.current.get(committed.id))
+        if (stillStaged.size > 0) applyPatchesLocal(stillStaged)
       }
-      if (result.unmatchedKeys.length > 0) {
-        parts.push(t('mapUpload.stage.unmatched', { n: result.unmatchedKeys.length }))
+
+      let applied = 0
+      for (const keys of prepared.appliedByTournament.values()) applied += keys.length
+      const parts = [t('mapUpload.stage.saved', { n: applied, tournaments: prepared.items.length })]
+      if (prepared.skippedRemote > 0) {
+        parts.push(t('mapUpload.stage.skippedRemote', { n: prepared.skippedRemote }))
       }
-      setSaveMsg({ kind: result.unmatchedKeys.length > 0 ? 'err' : 'ok', text: parts.join(' ') })
+      if (prepared.unmatched > 0) {
+        parts.push(t('mapUpload.stage.unmatched', { n: prepared.unmatched }))
+      }
+      setSaveMsg({ kind: prepared.unmatched > 0 ? 'err' : 'ok', text: parts.join(' ') })
     } catch (err) {
-      if (selectedTournamentRef.current === opTournament) {
-        setSaveMsg({ kind: 'err', text: t('mapUpload.stage.saveFailed', { msg: err instanceof Error ? err.message : String(err) }) })
-      }
+      setSaveMsg({ kind: 'err', text: t('mapUpload.stage.saveFailed', { msg: err instanceof Error ? err.message : String(err) }) })
     } finally {
       setSavingMeta(false)
     }
-  }, [savingMeta, pendingPatches, selectedTournament, t])
+  }, [savingMeta, pendingPatches, t, applyPatchesLocal])
 
-  // 手动清空暂存池(未被写进去的补丁不会被自动丢掉,所以需要一个出口)。
+  // 手动清空暂存池(未被写进去的补丁不会被自动丢掉,所以需要一个出口)。清的是全部比赛。
   const clearPending = useCallback(() => {
     if (pendingPatches.size === 0) return
-    if (!confirm(t('mapUpload.stage.clearConfirm', { n: pendingPatches.size }))) return
+    if (!confirm(t('mapUpload.stage.clearConfirm', {
+      n: countStagedGroups(pendingPatches),
+      tournaments: pendingPatches.size,
+    }))) return
     setPendingPatches(new Map())
+    setRestoredCount(0)
     setSaveMsg(null)
   }, [pendingPatches, t])
 
@@ -529,7 +669,8 @@ export function MapUploader({ onDirtyChange }: { onDirtyChange?: (dirty: boolean
       // 只处理**主文件**:name/BID 是从主图读出来的,删 NSV 变体不该动它们。
       const patchKey = slotPatchKey(roundId, slot)
       if (!isNsv) {
-        setPendingPatches((prev) => dropStagedSlot(prev, patchKey))
+        // 只丢**这场比赛**这个 slot 的暂存 —— 别的比赛的暂存一动不动。
+        setPendingPatches((prev) => dropSlotFromGroups(prev, opTournament, patchKey))
         const baseline = slotBaselineRef.current.get(patchKey)
         if (baseline) applyPatchesLocal(new Map([[patchKey, baseline]]))
       }
@@ -574,6 +715,15 @@ export function MapUploader({ onDirtyChange }: { onDirtyChange?: (dirty: boolean
               {t('mapUpload.retry')}
             </button>
           </p>
+        )}
+        {/* 暂存是跨比赛的:换比赛接着攒、刷新也不丢,最后统一保存一次。
+            站长 2026-09-19 —— 过去切比赛会清空,所以必须一场一存。 */}
+        {restoredCount > 0 ? (
+          <p className="mt-2 text-xs text-amber-700 dark:text-amber-300">
+            {t('mapUpload.stage.restored', { n: restoredCount, tournaments: pendingPatches.size })}
+          </p>
+        ) : (
+          <p className="mt-2 text-xs text-gray-400 dark:text-neutral-500">{t('mapUpload.stage.hint')}</p>
         )}
       </div>
 
@@ -638,12 +788,12 @@ export function MapUploader({ onDirtyChange }: { onDirtyChange?: (dirty: boolean
         </div>
       )}
 
-      {/* 待保存栏:逐轮暂存的元数据攒这里,统一保存一次 = 一次 commit / 一次重建。 */}
+      {/* 待保存栏:所有比赛攒下来的元数据补丁,统一保存一次 = 一次 commit / 一次重建。 */}
       {(pendingPatches.size > 0 || saveMsg) && (
         <div className="sticky bottom-3 bg-amber-50 dark:bg-amber-900/30 border border-amber-300 dark:border-amber-700 rounded-lg shadow-sm p-3 flex items-center justify-between gap-3">
           <div className="text-xs text-amber-800 dark:text-amber-200">
             {pendingPatches.size > 0
-              ? t('mapUpload.stage.pendingCount', { n: pendingPatches.size })
+              ? t('mapUpload.stage.pendingCount', { n: countStagedGroups(pendingPatches), tournaments: pendingPatches.size })
               : saveMsg && <span className={saveMsg.kind === 'ok' ? 'text-green-700 dark:text-green-300' : 'text-red-700 dark:text-red-300'}>{saveMsg.text}</span>}
           </div>
           <div className="flex items-center gap-2">
@@ -663,7 +813,7 @@ export function MapUploader({ onDirtyChange }: { onDirtyChange?: (dirty: boolean
                 disabled={savingMeta}
                 className="px-3 py-1.5 text-xs bg-amber-600 text-white rounded hover:bg-amber-700 disabled:opacity-40 font-medium"
               >
-                {t('mapUpload.stage.saveAll', { n: pendingPatches.size })}
+                {t('mapUpload.stage.saveAll', { n: countStagedGroups(pendingPatches) })}
               </button>
             )}
           </div>

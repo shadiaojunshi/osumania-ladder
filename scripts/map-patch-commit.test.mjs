@@ -5,11 +5,21 @@ import {
   applyPatches,
   applyStagedPatches,
   buildSlotBaseline,
+  clearCommittedGroups,
+  clearStagedGroups,
+  countStagedGroups,
+  dropSlotFromGroups,
   dropStagedSlot,
   entriesToClear,
   isCurrentRequest,
   mergeStagedPatch,
+  parseStagedGroups,
+  serializeStagedGroups,
+  sameStagedPatch,
   slotPatchKey,
+  stageIntoGroups,
+  stagedPatchMap,
+  stagedTournamentIds,
 } from '../src/lib/mapPatchCommit.ts'
 
 // R05:补丁池的纯逻辑。关键点:fill 补丁不覆盖远端已有的值;提交用快照,
@@ -189,4 +199,148 @@ test('删除回滚:完整时序 —— 手传 → 删除 → BID 补传后,池�
   assert.equal(data[0].maps[0].name, 'new title', '补传后的信息必须覆盖旧值')
   assert.equal(data[0].maps[0].beatmapId, 999)
   assert.equal(data[0].maps[0].beatmapsetId, 888)
+})
+
+// ---------- 跨比赛暂存（站长 2026-09-19）----------
+// 站长原话:"我重传 BID 的时候会暂存,但是目前是我必须一个比赛保存一次,我想搞成跨比赛的"。
+// 根因:池子只有一份,loadTournament 里 setPendingPatches(new Map()) 一切比赛就清空。
+
+test('跨比赛:stageIntoGroups 按比赛分组,互不干扰', () => {
+  let groups = new Map()
+  groups = stageIntoGroups(groups, 'AAA', new Map([['r1/A', { name: 'a' }]]), 'fill')
+  groups = stageIntoGroups(groups, 'BBB', new Map([['r1/A', { name: 'b' }]]), 'explicit')
+
+  assert.deepEqual(stagedTournamentIds(groups), ['AAA', 'BBB'])
+  assert.equal(countStagedGroups(groups), 2)
+  assert.equal(groups.get('AAA').get('r1/A').origin, 'fill')
+  assert.equal(groups.get('BBB').get('r1/A').origin, 'explicit', '同名 slot 在不同比赛里各算一条')
+  assert.deepEqual([...stagedPatchMap(groups.get('BBB')).values()], [{ name: 'b' }])
+})
+
+test('跨比赛:同一场比赛再攒一次是合并不是覆盖,explicit 不被降级', () => {
+  let groups = new Map()
+  groups = stageIntoGroups(groups, 'AAA', new Map([['r1/A', { name: 'first' }]]), 'fill')
+  groups = stageIntoGroups(groups, 'AAA', new Map([['r1/A', { beatmapId: 42 }]]), 'explicit')
+  groups = stageIntoGroups(groups, 'AAA', new Map([['r1/B', { name: 'other' }]]), 'fill')
+
+  assert.deepEqual(groups.get('AAA').get('r1/A'), { patch: { name: 'first', beatmapId: 42 }, origin: 'explicit' })
+  assert.equal(countStagedGroups(groups), 2)
+})
+
+test('跨比赛:无实际变化时返回同一个对象(跳过重渲染 + 保住快照同一性)', () => {
+  const first = new Map([['r1/A', { patch: { name: 'x' }, origin: 'fill' }]])
+  let groups = stageIntoGroups(new Map(), 'AAA', first, 'fill')
+  const before = groups.get('AAA').get('r1/A')
+
+  assert.equal(stageIntoGroups(groups, 'AAA', first, 'fill'), groups, '重复攒同样的补丁不该产生新对象')
+  assert.equal(groups.get('AAA').get('r1/A'), before, '条目对象引用必须保住')
+
+  // 来源升级(fill → explicit)算变化
+  const upgraded = stageIntoGroups(groups, 'AAA', first, 'explicit')
+  assert.notEqual(upgraded, groups)
+  assert.equal(upgraded.get('AAA').get('r1/A').origin, 'explicit')
+
+  // 空补丁 / 空比赛 id 直接忽略
+  assert.equal(stageIntoGroups(groups, 'AAA', new Map([['r1/A', {}]]), 'fill'), groups)
+  assert.equal(stageIntoGroups(groups, '', first, 'fill'), groups)
+})
+
+test('跨比赛:dropSlotFromGroups 只动那一场,空组被摘掉', () => {
+  let groups = new Map()
+  groups = stageIntoGroups(groups, 'AAA', new Map([['r1/A', { name: 'a' }], ['r1/B', { name: 'b' }]]), 'fill')
+  groups = stageIntoGroups(groups, 'BBB', new Map([['r1/A', { name: 'c' }]]), 'fill')
+
+  const dropped = dropSlotFromGroups(groups, 'AAA', 'r1/A')
+  assert.deepEqual([...dropped.get('AAA').keys()], ['r1/B'])
+  assert.equal(dropped.get('BBB').size, 1, '别的比赛一个条目都不许动')
+  assert.equal(groups.get('AAA').has('r1/A'), true, '原对象不被就地修改')
+  assert.equal(dropSlotFromGroups(dropped, 'AAA', 'r1/MISSING'), dropped, '没有该 key 返回同一个对象')
+
+  const emptied = dropSlotFromGroups(dropped, 'BBB', 'r1/A')
+  assert.equal(emptied.has('BBB'), false, '清空的比赛要整组摘掉,别在池里留空壳')
+})
+
+test('跨比赛:clearStagedGroups 支持清一场与清全部', () => {
+  let groups = new Map()
+  groups = stageIntoGroups(groups, 'AAA', new Map([['r1/A', { name: 'a' }]]), 'fill')
+  groups = stageIntoGroups(groups, 'BBB', new Map([['r1/A', { name: 'b' }]]), 'fill')
+
+  const onlyB = clearStagedGroups(groups, 'AAA')
+  assert.deepEqual(stagedTournamentIds(onlyB), ['BBB'])
+  assert.equal(clearStagedGroups(onlyB, 'ZZZ'), onlyB, '没有这场比赛时返回同一个对象')
+  assert.equal(countStagedGroups(clearStagedGroups(groups)), 0)
+})
+
+test('跨比赛:清池逐场判定 —— 没写进去的那场整场保留', () => {
+  let snapshot = new Map()
+  snapshot = stageIntoGroups(snapshot, 'AAA', new Map([['r1/A', { name: 'a' }]]), 'fill')
+  snapshot = stageIntoGroups(snapshot, 'BBB', new Map([['r1/A', { name: 'b' }]]), 'fill')
+  // 提交期间用户又改了 BBB 的 r1/A(新对象)
+  const current = new Map(snapshot)
+  current.set('BBB', new Map([['r1/A', { patch: { name: 'b2' }, origin: 'fill' }]]))
+  // 结果:AAA 写进去了,BBB 没有(远端已有值被跳过)
+  const applied = new Map([['AAA', ['r1/A']]])
+
+  const cleared = clearCommittedGroups(snapshot, current, applied)
+  assert.equal(cleared.has('AAA'), false, '写进去的那场清空并摘组')
+  assert.equal(cleared.get('BBB').get('r1/A').patch.name, 'b2', '没写进去的那场原样留着')
+})
+
+test('跨比赛:期间被改写的条目不会被清掉;无变化时返回 current 本身', () => {
+  const entry = { patch: { name: 'a' }, origin: 'fill' }
+  const snapshot = new Map([['AAA', new Map([['r1/A', entry]])]])
+  const rewritten = new Map([['AAA', new Map([['r1/A', { patch: { name: 'a2' }, origin: 'fill' }]])]])
+
+  const kept = clearCommittedGroups(snapshot, rewritten, new Map([['AAA', ['r1/A']]]))
+  assert.equal(kept.get('AAA').get('r1/A').patch.name, 'a2', '提交期间被改写的条目必须保留')
+
+  const appliedNothing = clearCommittedGroups(snapshot, snapshot, new Map([['AAA', []]]))
+  assert.equal(appliedNothing, snapshot, '一场都没写进去 → 返回同一个对象')
+})
+
+test('跨比赛:serialize → parse 往返一致', () => {
+  let groups = new Map()
+  groups = stageIntoGroups(groups, 'AAA', new Map([['r1/A', { name: 'x', beatmapId: 7 }]]), 'explicit')
+  groups = stageIntoGroups(groups, 'BBB', new Map([['r2/B', { beatmapId: null, beatmapsetId: 8 }]]), 'fill')
+
+  const json = JSON.parse(JSON.stringify(serializeStagedGroups(groups)))
+  const restored = parseStagedGroups(json)
+
+  assert.deepEqual(stagedTournamentIds(restored), ['AAA', 'BBB'])
+  assert.deepEqual(restored.get('AAA').get('r1/A'), { patch: { name: 'x', beatmapId: 7 }, origin: 'explicit' })
+  assert.deepEqual(restored.get('BBB').get('r2/B'), { patch: { beatmapId: null, beatmapsetId: 8 }, origin: 'fill' })
+  assert.equal(countStagedGroups(restored), 2)
+})
+
+test('跨比赛:parseStagedGroups 清洗脏数据,永不抛异常', () => {
+  // null / 数组 / 字符串 / 数字都不能让上传页崩掉
+  for (const junk of [null, undefined, [], 'oops', 42]) {
+    assert.equal(countStagedGroups(parseStagedGroups(junk)), 0)
+  }
+
+  const parsed = parseStagedGroups({
+    AAA: {
+      'r1/A': { patch: { name: 'ok' }, origin: 'explicit' },
+      'r1/B': { patch: { name: 123 } },          // name 类型不对 → 丢
+      'r1/C': { patch: { beatmapId: NaN } },      // 非有限数 → 丢
+      'r1/D': { patch: {} },                      // 空补丁 → 丢
+      'r1/E': { patch: { name: 'x' }, origin: 'junk' }, // 来源不认识 → 退成 fill(绝不猜成覆盖)
+      'r1/F': 'not an object',
+      '': { patch: { name: 'nost' } },
+    },
+    BBB: { 'r1/A': { patch: { beatmapId: -3 } } }, // 负数 BID 是脏数据,但形状合法,照收
+    CCC: [],
+  })
+
+  assert.deepEqual(stagedTournamentIds(parsed), ['AAA', 'BBB'])
+  assert.equal(parsed.get('AAA').get('r1/E').origin, 'fill')
+  assert.deepEqual([...parsed.get('AAA').keys()], ['r1/A', 'r1/E'])
+  assert.deepEqual(parsed.get('BBB').get('r1/A').patch, { beatmapId: -3 })
+})
+
+test('跨比赛:sameStagedPatch 比较来源与字段', () => {
+  assert.equal(sameStagedPatch(undefined, undefined), true)
+  assert.equal(sameStagedPatch({ patch: { name: 'a' }, origin: 'fill' }, { patch: { name: 'a' }, origin: 'fill' }), true)
+  assert.equal(sameStagedPatch({ patch: { name: 'a' }, origin: 'fill' }, { patch: { name: 'a' }, origin: 'explicit' }), false)
+  assert.equal(sameStagedPatch({ patch: { name: 'a' }, origin: 'fill' }, { patch: { name: 'a', beatmapId: 1 }, origin: 'fill' }), false)
 })

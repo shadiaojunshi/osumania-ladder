@@ -2,8 +2,14 @@
 
 import { useState } from 'react'
 import { useT } from '@/lib/i18n'
-import type { Round, Tournament } from '@/lib/types'
+import type { BeatmapMeta, Round, Tournament } from '@/lib/types'
 import type { TournamentSearchResult } from '@/lib/tournamentSearch'
+
+// 一条结果要么是"整轮"(搜到了比赛+轮次),要么是"单张谱面"。
+// 轮次命中排在前:先给宽的目标,再给具体的图。
+type SearchRow =
+  | { kind: 'round'; tournament: Tournament; round: Round }
+  | { kind: 'map'; tournament: Tournament; round: Round; map: BeatmapMeta }
 
 export function LadderSearchResults({ results, onSelect }: {
   results: TournamentSearchResult[]
@@ -11,34 +17,50 @@ export function LadderSearchResults({ results, onSelect }: {
 }) {
   const t = useT()
   const [limit, setLimit] = useState(5)
-  const matches = results.flatMap(({ tournament, maps }) => maps.map((match) => ({ tournament, ...match })))
+  const roundRows: SearchRow[] = results.flatMap(({ tournament, rounds }) =>
+    rounds.map(({ round }) => ({ kind: 'round' as const, tournament, round })))
+  const mapRows: SearchRow[] = results.flatMap(({ tournament, maps }) =>
+    maps.map(({ round, map }) => ({ kind: 'map' as const, tournament, round, map })))
+  const rows = [...roundRows, ...mapRows]
 
   return (
     <section aria-label={t('search.results')} className="max-h-[35vh] shrink-0 overflow-auto border-b border-gray-200 bg-white px-3 py-2 dark:border-neutral-800 dark:bg-neutral-950">
       <p role="status" className="text-xs text-gray-500 dark:text-neutral-400">
-        {results.length ? t('search.summary', { tournaments: results.length, maps: matches.length }) : t('search.empty')}
+        {results.length
+          ? t('search.summary', { tournaments: results.length, rounds: roundRows.length, maps: mapRows.length })
+          : t('search.empty')}
       </p>
-      {matches.length > 0 && (
+      {rows.length > 0 && (
         <ul className="mt-1 divide-y divide-gray-100 dark:divide-neutral-800">
-          {matches.slice(0, limit).map(({ tournament, round, map }, i) => (
-            <li className="ladder-search-result" key={`${tournament.id}/${round.id}/${map.slot}/${i}`}>
+          {rows.slice(0, limit).map((row, i) => (
+            <li className="ladder-search-result" key={row.kind === 'round'
+              ? `round:${row.tournament.id}/${row.round.id}`
+              : `map:${row.tournament.id}/${row.round.id}/${row.map.slot}/${i}`}>
               <button
                 type="button"
-                onClick={(e) => onSelect(tournament, round, e.currentTarget)}
+                onClick={(e) => onSelect(row.tournament, row.round, e.currentTarget)}
                 className="flex w-full flex-wrap items-baseline gap-x-3 gap-y-0.5 rounded px-2 py-2 text-left text-sm transition-colors hover:bg-purple-50 focus-visible:outline-2 focus-visible:outline-purple-500 dark:hover:bg-purple-950/40 motion-reduce:transition-none"
               >
-                <span className="shrink-0 font-medium text-purple-700 dark:text-purple-300">{tournament.abbreviation} · {round.abbreviation} · {map.slot}</span>
-                <span className="min-w-0 break-words text-gray-700 dark:text-neutral-200">{map.name || t('search.unnamed')}</span>
-                {map.beatmapId && <span className="text-xs text-gray-400 dark:text-neutral-500">BID {map.beatmapId}</span>}
+                <span className="shrink-0 font-medium text-purple-700 dark:text-purple-300">
+                  {row.tournament.abbreviation} · {row.round.abbreviation || row.round.name}{row.kind === 'map' ? ` · ${row.map.slot}` : ''}
+                </span>
+                <span className="min-w-0 break-words text-gray-700 dark:text-neutral-200">
+                  {row.kind === 'round'
+                    ? t('search.roundPool', { n: row.round.maps.length })
+                    : (row.map.name || t('search.unnamed'))}
+                </span>
+                {row.kind === 'map' && row.map.beatmapId && (
+                  <span className="text-xs text-gray-400 dark:text-neutral-500">BID {row.map.beatmapId}</span>
+                )}
                 <span className="ml-auto shrink-0 text-xs text-gray-500 dark:text-neutral-400">{t('search.openRound')} →</span>
               </button>
             </li>
           ))}
         </ul>
       )}
-      {matches.length > limit && (
+      {rows.length > limit && (
         <button type="button" onClick={() => setLimit((value) => value + 20)} className="mt-1 rounded px-2 py-2 text-xs text-purple-700 hover:bg-purple-50 dark:text-purple-300 dark:hover:bg-purple-950/40">
-          {t('search.more', { count: matches.length - limit })}
+          {t('search.more', { count: rows.length - limit })}
         </button>
       )}
     </section>

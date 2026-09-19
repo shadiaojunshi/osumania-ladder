@@ -20,12 +20,22 @@ const searchIndex = createTournamentSearchIndex(tournaments)
 
 const DIFFICULTY_RANGE = { min: 0.5, max: 16.5 }
 const BOX_HEIGHT_TYPE = 28
+const TOURNAMENT_GRADIENT = getGradientForRange(DIFFICULTY_RANGE.min, DIFFICULTY_RANGE.max)
+type RegisterRangeHover = (element: HTMLButtonElement, update: (x: number, y: number) => void) => () => void
 
 export function LadderView() {
   const { mode, zoom, columnWidth, rowHeight, rfLnOffset, activeFilter, searchQuery, sortMode, customOrder, hideQualifiers, yearFilter, roundFilter, roundBorderAlways } = useViewStore()
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const leftRef = useRef<HTMLDivElement>(null)
   const rightRef = useRef<HTMLDivElement>(null)
+  const pointerRef = useRef<{ x: number; y: number } | null>(null)
+  const rangeHoverRef = useRef(new WeakMap<Element, (x: number, y: number) => void>())
+  const scrollFrameRef = useRef<number | null>(null)
+
+  const registerRangeHover: RegisterRangeHover = useCallback((element, update) => {
+    rangeHoverRef.current.set(element, update)
+    return () => { rangeHoverRef.current.delete(element) }
+  }, [])
 
   // slot = 被悬浮的那个框的槽位名(多 TB/HB 拆框时才有);有它才能按"那张图的实际难度"出段位。
   const [hoveredRound, setHoveredRound] = useState<{ round: Round; tournament: Tournament; x: number; y: number; type?: string; slot?: string } | null>(null)
@@ -69,14 +79,27 @@ export function LadderView() {
     const scrollTop = el.scrollTop
     if (leftRef.current) leftRef.current.scrollTop = scrollTop
     if (rightRef.current) rightRef.current.scrollTop = scrollTop
-  }, [])
+    if (mode !== 'tournament' || scrollFrameRef.current !== null) return
+    // 滚动不会触发 mousemove；用静止指针和最新布局重新命中框及轮次。
+    scrollFrameRef.current = requestAnimationFrame(() => {
+      scrollFrameRef.current = null
+      const pointer = pointerRef.current
+      if (!pointer) return
+      const target = document.elementFromPoint(pointer.x, pointer.y)?.closest('[data-range-hover]')
+      const update = target && el.contains(target) ? rangeHoverRef.current.get(target) : undefined
+      if (update) update(pointer.x, pointer.y)
+      else setHoveredRound(null)
+    })
+  }, [mode])
 
   const showHover = useCallback((round: Round, tournament: Tournament, x: number, y: number, type?: string, slot?: string) => {
     if (hideTimeoutRef.current) {
       clearTimeout(hideTimeoutRef.current)
       hideTimeoutRef.current = null
     }
-    setHoveredRound({ round, tournament, x, y, type, slot })
+    setHoveredRound((current) => current?.round === round && current.tournament === tournament &&
+      current.x === x && current.y === y && current.type === type && current.slot === slot
+      ? current : { round, tournament, x, y, type, slot })
   }, [])
 
   const scheduleHide = useCallback(() => {
@@ -93,7 +116,10 @@ export function LadderView() {
   }, [])
 
   useEffect(() => {
-    return () => { if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current) }
+    return () => {
+      if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current)
+      if (scrollFrameRef.current !== null) cancelAnimationFrame(scrollFrameRef.current)
+    }
   }, [])
 
   // 详情统一入口:框体左键、悬浮卡"详细信息"、搜索结果都走这里。
@@ -142,6 +168,8 @@ export function LadderView() {
           className="flex-1 overflow-auto"
           ref={scrollContainerRef}
           onScroll={handleScroll}
+          onMouseMove={(e) => { pointerRef.current = { x: e.clientX, y: e.clientY } }}
+          onMouseLeave={() => { pointerRef.current = null }}
         >
           <div
             className="relative flex gap-2 px-2"
@@ -162,6 +190,7 @@ export function LadderView() {
                 hideQualifiers={hideQualifiers}
                 roundFilter={roundFilter}
                 roundBorderAlways={roundBorderAlways}
+                registerRangeHover={registerRangeHover}
                 onHover={(round, x, y, type, slot) => showHover(round, tournament, x, y, type, slot)}
                 onLeave={scheduleHide}
                 onOpenDetail={(round, trigger) => openRoundDetail(tournament, round, trigger)}
@@ -468,7 +497,7 @@ function OverflowBand({ items, bordered, onHover, onLeave, onOpenDetail }: {
       <button
         type="button"
         className={`overflow-marker overflow-marker-summary pointer-events-auto absolute ${bordered ? 'always-border' : ''}`}
-        style={{ left: 4 }}
+        style={{ left: 4, right: 4 }}
         aria-expanded={open}
         onClick={() => setOpen(!open)}
       >
@@ -503,6 +532,7 @@ function TournamentColumn({
   hideQualifiers,
   roundFilter,
   roundBorderAlways,
+  registerRangeHover,
   onHover,
   onLeave,
   onOpenDetail,
@@ -516,6 +546,7 @@ function TournamentColumn({
   hideQualifiers: boolean
   roundFilter: string | null
   roundBorderAlways: boolean
+  registerRangeHover: RegisterRangeHover
   onHover: (round: Round, x: number, y: number, type?: string, slot?: string) => void
   onLeave: () => void
   onOpenDetail: (round: Round, trigger?: HTMLElement | null) => void
@@ -669,9 +700,30 @@ function TournamentColumn({
           {(geometry.above || bodyVisible) && (
             <button
               type="button"
-              className={`round-box absolute ${geometry.above ? 'left-1 right-1 overflow-range' : 'left-0 right-0'} ${geometry.below ? 'overflow-cropped-bottom' : ''} ${roundBorderAlways ? 'always-border' : ''}`}
-              style={{ top: surfaceTop, height: surfaceHeight, paddingTop: geometry.above && bodyVisible ? OVERFLOW_BAND_HEIGHT : undefined, background: getGradientForRange(minDiff, maxDiff) }}
+              className={`round-box absolute left-0 right-0 ${geometry.above ? 'overflow-range' : ''} ${geometry.below ? 'overflow-cropped-bottom' : ''} ${roundBorderAlways ? 'always-border' : ''}`}
+              data-range-hover
+              ref={(element) => {
+                if (!element) return
+                return registerRangeHover(element, (x, y) => {
+                  const rect = element.getBoundingClientRect()
+                  onHover(pickRoundAtPointer(y, rect.top, rect.height), x, y)
+                })
+              }}
+              style={{
+                top: surfaceTop,
+                height: surfaceHeight,
+                paddingTop: geometry.above && bodyVisible ? OVERFLOW_BAND_HEIGHT : undefined,
+                backgroundColor: getDifficultyColor(geometry.above ? DIFFICULTY_RANGE.max : minDiff),
+                backgroundImage: TOURNAMENT_GRADIENT,
+                backgroundSize: `100% ${plotHeight}px`,
+                backgroundPosition: `0 ${ORIGIN_Y - surfaceTop}px`,
+                backgroundRepeat: 'no-repeat',
+              }}
               onMouseEnter={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect()
+                onHover(pickRoundAtPointer(e.clientY, rect.top, rect.height), e.clientX, e.clientY)
+              }}
+              onMouseMove={(e) => {
                 const rect = e.currentTarget.getBoundingClientRect()
                 onHover(pickRoundAtPointer(e.clientY, rect.top, rect.height), e.clientX, e.clientY)
               }}

@@ -10,6 +10,8 @@ import {
   computeRangeGeometry,
   computeScalarGeometry,
 } from '../src/lib/ladderGeometry.ts'
+import { scopeToFilter, isLnBased, getLnDiff, LN_REAL_TYPES, HB_REAL_TYPES } from '../src/lib/ladderScope.ts'
+import { REAL_TYPES, PENDING_REAL_TYPE_BY_CATEGORY } from '../src/lib/realTypeCatalog.ts'
 
 // 与 src/lib/difficulty.ts 的 difficultyToY 相同的公式(该文件因 @data 别名无法在
 // node --test 下导入,这里锁定两处实现一致;改动 difficultyToY 必须同步)。
@@ -139,4 +141,34 @@ test('scalar geometry: a center exactly at the boundary keeps a clickable area',
   assert.equal(s.paintTop, ORIGIN_Y)
   assert.equal(s.fullyOutside, false)
   assert.ok(s.paintBottom - s.paintTop >= 14)
+})
+
+// ---------- 键型筛选收敛（切 RC/LN/HB/TB 时框高要跟着变）----------
+
+const maps = [
+  { type: 'RC', difficulty: 12 },
+  { type: 'RC', difficulty: 14 },
+  { type: 'LN', difficulty: 9 },
+  { type: 'TB', difficulty: 11 },
+]
+
+test('筛选收敛：不筛选时原样返回（连数组都不换）', () => {
+  assert.equal(scopeToFilter(maps, null), maps)
+})
+
+test('筛选收敛：有该大类的图时只返回它们（框高/标题高度据此计算）', () => {
+  assert.deepEqual(scopeToFilter(maps, 'RC'), [maps[0], maps[1]])
+  assert.deepEqual(scopeToFilter(maps, 'LN'), [maps[2]])
+  assert.deepEqual(scopeToFilter(maps, 'TB'), [maps[3]])
+})
+
+test('筛选收敛：该轮没有这个大类时原样返回整轮（该轮本就会 dimmed，别让列的高度乱跳）', () => {
+  assert.equal(scopeToFilter(maps, 'HB'), maps, '没有 HB 的轮次保留整轮区间')
+  assert.equal(scopeToFilter([], 'RC').length, 0, '空列表不能炸')
+})
+
+test('筛选收敛：不修改入参', () => {
+  const snapshot = maps.map((m) => m.type).join(',')
+  scopeToFilter(maps, 'RC')
+  assert.equal(maps.map((m) => m.type).join(','), snapshot)
 })

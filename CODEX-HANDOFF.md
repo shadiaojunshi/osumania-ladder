@@ -95,7 +95,7 @@ d:/osumania ladder/              ← 注意路径带空格，bash 里用引号
   "abbreviation": "MWC 2025",
   "keyCount": 4,
   "year": 2025,
-  "priority": 5,                        // 1-5，合包排序：priority 降序 → 年份降序 → id 升序
+  "priority": 5,                        // 1-5，合包排序：priority 降序 → 年份升序 → 缩写升序 → id 升序（2026-09-19 定稿）
   "forumUrl": "…", "wikiUrl": "…", "sheetUrl": "…",
   "rounds": [ /* Round[] */ ],
   "customTypes": []                     // 自定义大键型定义（一般空）
@@ -193,9 +193,12 @@ d:/osumania ladder/              ← 注意路径带空格，bash 里用引号
 - 按 `realType` 聚合所有比赛谱面 → 去重 → 分包。**分包规则（2026-09-17 站长定，`packCountFor()` / `packSizeFor()`）**：≤120 张 1 包、≤200 张 2 包、≤270 张 3 包、≤360 张 4 包，再往上按 90 步进（451→6 包）；份数定了之后**均分**，各包只差 ≤1 张。旧的"固定 80 张切块"（`MAX_MAPS_PER_PACK`）已删除 —— 尾包会小到十几张（DP 只剩 13、CO 25、TB 31）。⚠️ 改分包会改变包内 `.osu` 的 `Title`（=包名）→ 玩家已下成绩会断，与 §5.4 同性质。
 - **改写 `.osu` 一律用函数式 replacement**：`String.replace` 的**字符串** replacement 会把值里的 `$'` / `$&` / `$1` 当特殊模式展开（实测 `$'` 把 Title 行之后整份文件注入该行，谱面直接坏掉）。值来自曲名/作者/版本，`sanitizeFileName` 并不清 `$`。
 - **NSV 变体缺音频/曲绘时借用同槽主图**：`.nsv.osz`（NSV 变体）常常只带 `.osu`，直接打包会让这个难度在游戏里**没声音**。现在发现音频/曲绘缺失且是 NSV 时，回退去读同槽的 `<slot>.osz` 借同一首歌的音频/曲绘；每个包的日志里会打印体检行 `音频:借用主图 x 张;仍缺 y 张 → <keys>`（"仍缺"的那些要人补传）。
-- **去重签名（R11，2026-09-12 起，**别再按旧的"元数据指纹"理解**）**：合并键 = **候选键 + NSV + 内容摘要**。候选键三选一互斥：有 BID → `bid:<id>`；无 BID 用 `.osu` **内部**元数据 → `meta:artist|title|creator|version`（不是 JSON 的 `name`）；都没有 → `solo:<r2Key>`（永不合并）。**等价性只看内容摘要**（`Mode` + `[Difficulty]`/`[TimingPoints]`/`[HitObjects]`；标题/背景/音频名不算差异，**OD/HP 算**）。⚠️ **两条道互不相通** —— 同内容但一个有 BID 一个没有 → **不合并也不报冲突（静默）**；都无 BID 时元数据必须**逐字相同**才合并。反过来：**清 BID 救不回这种情形**，保留正确的 BID 对合并更有利。多源复用同一谱面时合并，来源写进 osu! `Version` 的括号标签 `(MWC 2025 F HB3 & VNMC …)`；顺序 = 比赛排序（`priority` 降序 → `year` 降序 → `id` 升序）。
+- **去重签名（R11，2026-09-12 起，**别再按旧的"元数据指纹"理解**）**：合并键 = **候选键 + NSV + 内容摘要**。候选键三选一互斥：有 BID → `bid:<id>`；无 BID 用 `.osu` **内部**元数据 → `meta:artist|title|creator|version`（不是 JSON 的 `name`）；都没有 → `solo:<r2Key>`（永不合并）。**等价性只看内容摘要**（`Mode` + `[Difficulty]`/`[TimingPoints]`/`[HitObjects]`；标题/背景/音频名不算差异，**OD/HP 算**）。⚠️ **两条道互不相通** —— 同内容但一个有 BID 一个没有 → **不合并也不报冲突（静默）**；都无 BID 时元数据必须**逐字相同**才合并。反过来：**清 BID 救不回这种情形**，保留正确的 BID 对合并更有利。多源复用同一谱面时合并，来源写进 osu! `Version` 的括号标签 `(MWC 2025 F HB3 & VNMC …)`；顺序 = 比赛排序（`priority` 降序 → `year` **升序**（旧在前）→ 比赛缩写升序 → `id` 升序；2026-09-19 起改过，旧版是 year 降序 + 直接比 id）。
 - **身份核对报告** `reports/pack-identity-report.md`：同 BID / 同元数据但内容不同（已阻止合并，各自打包）、文件缺失且身份无法确认，以及**「内容摘要相同、但身份来源不同」**（2026-09-18 加，**只报告、不改包** —— 用于先量化"该合没合"的规模）。摘要取自预取阶段已经在手上的 `.osu`，**零额外下载**；跑 `--type=<类型>` 的离线预览也会写，或直接用 Actions 的 **Identity Report**（只读，用仓库密钥跑）。
 - **输出命名**：文件名 `<realType>_<part>.osz`（单包也带 `_1`，破坏性升级 `57904da`，勿回退）；osu! 内部 `Title = "4K Tournament {名字} Pack {n}"`、`Artist = "Various Artists"`、`Creator = "various mappers,compiled by the osu!mania Ladder Team"`、`BeatmapID=0`、`BeatmapSetID=-1`、`Source/Tags` 清空。
+- **下载并发 = `PACK_DOWNLOAD_CONCURRENCY`**（默认 8、上限 32、非法值回退默认；`resolveDownloadConcurrency()`）：
+  `scripts/generate-pack.js` 里**不得再出现写死的并发数**（有源码守门测试）。两个 workflow 都设成 `12`。
+  这是"不改架构就能提速"的唯一旋钮 —— 瓶颈在每条记录的网络往返，不在脚本本身。
 - **[Difficulty] 段整体不做干预 —— OD 与 HP 都跟随原谱，原谱是多少就是多少**（2026-09-13 用户先要求「取消所有的合包 OD 下限」，随后追加「HP 也跟随原谱」；旧的 `OD_FLOOR` 表、`getOdFloor()`、`rewriteOsu` 里的抬 OD 分支，以及固定写 7 的 `HP_TARGET` 已全部删除）。⚠️ 重新合包会让包内 .osu 字节与旧包不同（OD/HP 变了），玩家已下成绩会断 —— 与 §5.4 同一性质，别再单独推导。
 - **每包生成完立即上传 R2 公开桶并删本地副本**（磁盘防爆，`d6afbf7`/`8b6fd1c` 的修复）。上传 Body 必须用 **Buffer 而非流**（R2 不支持 chunked 上传）。R2 上传失败时保留本地副本。
 - **manifest 全量重建**：全量跑时旧 manifest 转储 `.previous.json` → 用本次输出重建 → `(realType, part)` 匹配找回旧 `links`/`gdriveFileId` → 清理 R2 桶孤儿（本次没产出的 `.osz`）→ Drive 孤儿同步删 → 清 `.previous.json`。
@@ -236,6 +239,19 @@ d:/osumania ladder/              ← 注意路径带空格，bash 里用引号
 **测试**：`scripts/mania-chart.test.mjs` 锁定几何（4K `chunkWidth=70` / `chunksPerRow=27` / `chunkX=30`，7K `chunksPerRow=18`，`beatToY` / `svToX` / `getKeyOverlay` / 跨切片裁切 / 虚拟红线 / SV 阈值 / 分页夹取）。
 
 ---
+
+### 5.6 后台「键型谱面」的跨轮重复判读（2026-09-19 起）
+
+`mapIdentityKey` 决定"这两张图算不算同一张"。**name 是槽位记号时不能当身份**：
+
+- 判据（`isSlotPlaceholderName`，命中任一即视为占位）：① `^[a-z]{1,4}\d{1,3}$`（**要求至少一位数字**，
+  免得误伤 `MU` 这类短曲名）；② 归一化后与**自己的 slot** 相同（兜住 `FS/TB`、`GM(HR/SD)`）。
+- 命中后忽略 name、身份退到 BID；**没有可用 BID 就当没有身份**（返回 `null`）—— 宁可漏报不误报。
+  背景：全库 227 张图的 name 就是槽位记号，`同大类+同槽位名+同难度` 跨独立轮次必然相撞（4DM2023 的 SV1 曾跨 7 轮报重复）。
+- **轮次判重按 `round.id`**（不是 abbreviation）：两轮都叫 "F" 时按名去重会把两轮合成一轮而**漏报**。
+  `warnings[].rounds` 是**给人看的**、按显示名去重 → **条目存在即等于"确实跨 ≥2 轮"**，
+  调用方（如 `RealTypeMapBrowser` 的横幅/行内 `!`）**不得再拿 `rounds.length > 1` 当门槛**。
+- 已知边界（刻意保留）：name 是**真实曲名**时身份只看「名字+难度」、不看 BID —— 同 BID 但两轮曲名写法不同**不报**。
 
 ## 6. 运行命令
 
@@ -325,6 +341,7 @@ Tabs（`src/app/admin/page.tsx` 的 `Tab` 类型）：
 | 谱面上传 | `MapUploader` | 自动下载+上传（一键下载上传 N）；贴 BID 补传（三阶段：粘贴→review→执行；TB↔TB1 自动匹配；未匹配 slot 手动指派；"包含已上传"=覆盖 R2）。浏览器侧 JSZip 切单难度+去 storyboard+保留打击音效，`POST /api/maps/upload` |
 | 下载链接 | `PackLinksEditor` | 按 `(realType, part)` 复合键逐包填各盘链接 |
 | realType 体检 | `RealTypeConflictChecker` | 批量体检同谱面 realType 冲突，admin 可保存（GitHub Git Data 单 commit 批量写回） |
+| 键型谱面 | `RealTypeMapBrowser` | 按 realType 浏览全库谱面 + 跨轮重复报警。判读唯一实现在 `src/lib/tournamentDiagnostics.ts`（§5.6）|
 | 回收站 | `TrashManager`（admin） | KV 软删比赛一键恢复 |
 | 成员 | `AdminsManager`（admin） | 四级角色名单管理 |
 | 审计 | `AuditLog`（admin） | KV 审计日志 180 天 |

@@ -36,6 +36,22 @@ function normalizeRealType(realType) {
   return REAL_TYPE_ALIASES[value] || value
 }
 
+/**
+ * R2 下载并发。原来是写死的 4 —— 合包时间基本都花在"逐张下载 + 解压 + 解析"上，
+ * 所以这是唯一一个不用改架构就能提速的旋钮。
+ *
+ * 用环境变量 `PACK_DOWNLOAD_CONCURRENCY` 调；非法值（0 / 负数 / NaN / 空）回退默认值，
+ * 免得把并发设成 0 让任务空转。上限 32：再往上收益很小，更容易被上游限流。
+ */
+const DEFAULT_DOWNLOAD_CONCURRENCY = 8
+const MAX_DOWNLOAD_CONCURRENCY = 32
+function resolveDownloadConcurrency(raw = process.env.PACK_DOWNLOAD_CONCURRENCY) {
+  const n = Number(raw)
+  if (!Number.isFinite(n) || n < 1) return DEFAULT_DOWNLOAD_CONCURRENCY
+  return Math.min(Math.floor(n), MAX_DOWNLOAD_CONCURRENCY)
+}
+
+const DOWNLOAD_CONCURRENCY = resolveDownloadConcurrency()
 const R2_ACCOUNT_ID = process.env.R2_ACCOUNT_ID
 const R2_ACCESS_KEY = process.env.R2_ACCESS_KEY
 const R2_SECRET_KEY = process.env.R2_SECRET_KEY
@@ -524,6 +540,29 @@ function packSizeFor(total, index, parts) {
   return base + (index < total % parts ? 1 : 0)
 }
 
+/**
+ * 比赛的排序。**这就是包内来源标签的顺序** —— `formatSources` 只按首次出现分组、
+ * 分组顺序即输入顺序，它自己不再排序，所以顺序完全由这个 comparator 决定。
+ *
+ * 2026-09-19 站长定稿：`priority` 降序 → `year` **升序**（旧→新）→ 缩写升序 → id 升序。
+ *   · priority 排在年份**之前** —— 不是"先按年份"；
+ *   · 年份是**升序**：同一张图被多个比赛用过时，先列早期比赛；
+ *   · 第三级用**缩写**（包面标签显示的就是它），最后才用 id 兜底保证全序稳定（重名比赛）。
+ *
+ * ⚠️ 改这一处会改包内**合并谱面的 Version 字符串**（= 玩家成绩的身份），要改一次改定。
+ * 单独抽成函数是为了能被 `generate-pack.test.mjs` 静态锁定顺序。
+ */
+function compareTournamentsForSources(a, b) {
+  const priA = a.priority || 0
+  const priB = b.priority || 0
+  if (priA !== priB) return priB - priA
+  const yearDiff = (a.year || 0) - (b.year || 0)
+  if (yearDiff !== 0) return yearDiff
+  const abbrDiff = (a.abbreviation || a.id).localeCompare(b.abbreviation || b.id)
+  if (abbrDiff !== 0) return abbrDiff
+  return a.id.localeCompare(b.id)
+}
+
 async function generatePack(targetType, { publish = true } = {}) {
   targetType = normalizeRealType(targetType)
   if (PACK_EXCLUDED_REAL_TYPES.has(targetType)) {
@@ -539,15 +578,7 @@ async function generatePack(targetType, { publish = true } = {}) {
   const tournamentsList = files.map(file =>
     JSON.parse(fs.readFileSync(path.join(tournamentsDir, file), 'utf-8'))
   )
-  tournamentsList.sort((a, b) => {
-    // 优先级降序(5→1, 无 priority 当 0 最后),相同 priority 内年份降序(新→旧)
-    const priA = a.priority || 0
-    const priB = b.priority || 0
-    if (priA !== priB) return priB - priA
-    const yearDiff = (b.year || 0) - (a.year || 0)
-    if (yearDiff !== 0) return yearDiff
-    return a.id.localeCompare(b.id)
-  })
+  tournamentsList.sort(compareTournamentsForSources)
 
   for (const tournament of tournamentsList) {
     for (const round of tournament.rounds) {
@@ -629,7 +660,7 @@ async function generatePack(targetType, { publish = true } = {}) {
   const needRead = rawEntries.filter(e => e.exists && (!e.beatmapId || ambiguousPaths.has(e.r2Key)))
   if (needRead.length > 0) {
     console.log(`[${targetType}] 身份核对:读取 ${needRead.length} 个引用（无 BID 或同 BID 多路径）...`)
-    const infos = await mapWithConcurrency(needRead, 4, (e) => readIdentity(e.r2Key))
+    const infos = await mapWithConcurrency(needRead, DOWNLOAD_CONCURRENCY, (e) => readIdentity(e.r2Key))
     const byKey = new Map(needRead.map((e, i) => [e.r2Key, infos[i]]))
     for (const e of needRead) {
       const info = byKey.get(e.r2Key)
@@ -722,12 +753,13 @@ async function generatePack(targetType, { publish = true } = {}) {
     const archive = new ZipArchive({ zlib: { level: 5 } })
     archive.pipe(output)
 
-    // 并发预取:4 个并发跑 R2 下载 + JSZip 解压 + parseOsu。
-    // 失败/缺 .osu 的返回 null,prefetch 内部已经 warn 过了。
+    // 并发预取:R2 下载 + JSZip 解压 + parseOsu。并发数见 DOWNLOAD_CONCURRENCY
+    // （默认 8，可用 PACK_DOWNLOAD_CONCURRENCY 调）。失败/缺 .osu 的返回 null,
+    // prefetch 内部已经 warn 过了。
     let prefetched
     let prefetchError = null
     try {
-      prefetched = await mapWithConcurrency(chunk, 4, (m) => prefetchMap(m, packName))
+      prefetched = await mapWithConcurrency(chunk, DOWNLOAD_CONCURRENCY, (m) => prefetchMap(m, packName))
     } catch (err) {
       // mapWithConcurrency 只在 fn 抛异常时才抛;prefetchMap 自己已把失败包成对象,
       // 所以走到这里属于意外错误 —— 整包作废(下面会判成 failed)。
@@ -1067,7 +1099,7 @@ async function analyzeTypeIdentity(targetType, sharedR2Keys = null) {
   let readFailed = 0
   if (needRead.length > 0) {
     console.log(`[${targetType}] 读取 ${needRead.length} 个引用的内容摘要（只读，不打包）...`)
-    const infos = await mapWithConcurrency(needRead, 4, (e) => readIdentity(e.r2Key))
+    const infos = await mapWithConcurrency(needRead, DOWNLOAD_CONCURRENCY, (e) => readIdentity(e.r2Key))
     const byKey = new Map(needRead.map((e, i) => [e.r2Key, infos[i]]))
     for (const e of needRead) {
       const info = byKey.get(e.r2Key)
@@ -1317,8 +1349,14 @@ module.exports = {
   REAL_TYPE_NAMES,
   packCountFor,
   packSizeFor,
+  // 包内来源标签的顺序唯一实现（含 priority/year/缩写/id 四级）
+  compareTournamentsForSources,
   PACK_EXCLUDED_REAL_TYPES,
   // 报告渲染是纯函数式的（给一个类型结果数组 + 输出路径），导出来是为了能单测
   writeIdentityReport,
   countIdentityIssues,
+  // 并发旋钮：导出给单测（默认值 / 非法值回退 / 上限）
+  resolveDownloadConcurrency,
+  DEFAULT_DOWNLOAD_CONCURRENCY,
+  MAX_DOWNLOAD_CONCURRENCY,
 }

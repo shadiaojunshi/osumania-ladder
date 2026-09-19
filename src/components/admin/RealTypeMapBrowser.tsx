@@ -108,10 +108,13 @@ export function RealTypeMapBrowser({ canStage = false, stagedCount = 0, onStageM
 
   // 警告横幅里要列出**真正触发**的比赛，不能写死某个历史事故的名字。
   // 按「比赛 + 涉及的轮次集合」去重，这样一行代表一组复用，而不是每张图一行。
+  // 判据是"这一行的身份有警告"——`findDuplicateRoundMaps` 只在**跨 ≥2 个轮次**时才产出条目，
+  // 所以条目存在本身就是证据；不能再拿 `rounds.length` 当门槛
+  // （两轮缩写重名时显示名会被去重成一个，那仍是实打实的跨轮复用）。
   const duplicateGroups = useMemo(() => {
     const seen = new Map<string, { abbr: string; rounds: string[] }>()
     for (const row of visibleRows) {
-      if (!row.duplicateRounds || row.duplicateRounds.length < 2) continue
+      if (!row.duplicateRounds) continue
       const key = `${row.tournamentId}:${row.duplicateRounds.join('&')}`
       if (!seen.has(key)) seen.set(key, { abbr: row.tournamentAbbr, rounds: row.duplicateRounds })
     }
@@ -249,7 +252,7 @@ export function RealTypeMapBrowser({ canStage = false, stagedCount = 0, onStageM
                   </td>
                   <td className="px-3 py-2.5 text-gray-500 dark:text-neutral-400" title={row.roundName}>
                     {row.roundAbbr}
-                    {row.duplicateRounds && row.duplicateRounds.length > 1 && (
+                    {row.duplicateRounds && (
                       <span className="ml-1 text-amber-600 dark:text-amber-300" title={t('realTypeMaps.duplicateRowHint', { rounds: row.duplicateRounds.join(' & ') })}>!</span>
                     )}
                   </td>

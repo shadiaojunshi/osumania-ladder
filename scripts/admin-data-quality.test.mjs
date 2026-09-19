@@ -123,3 +123,99 @@ test('source labels retain slots when reuse stays within one round', () => {
     { tournamentAbbr: 'XXX', roundAbbr: 'QF', slot: 'LN1' },
   ], false), 'XXX QF RC1 & XXX QF LN1')
 })
+
+// ---------------------------------------------------------------------------
+// 反复报"同一场比赛的不同轮次复用了同一张图"的**误报**（2026-09-19）
+// ---------------------------------------------------------------------------
+// 身份键在 name 非空时用「大类 + 曲名 + 难度」，但全库有 227 张图的 name 根本不是曲名，
+// 而是槽位记号（SV1 / ln3 / RC8 / TB1 …）。「同大类 + 同槽位名 + 同难度」在不同轮次必然
+// 相撞 —— 4DM2023 的 SV1 就是这么在 7 个轮次里被报出来的。占位名不是身份。
+
+test('R34：槽位名当 name 用时不作为身份，退到 BID；没有可用 BID 就当没有身份', async () => {
+  const { mapIdentityKey } = await import('../src/lib/tournamentDiagnostics.ts')
+  // 槽位记号（大小写、带不带空格都算）：忽略 name，用 BID。
+  assert.equal(mapIdentityKey({ slot: 'SV1', type: 'SV', name: 'SV1', difficulty: 0, beatmapId: 3970874 }), 'bid:3970874')
+  assert.equal(mapIdentityKey({ slot: 'LN3', type: 'LN', name: ' ln3 ', difficulty: 8, beatmapId: 5234260 }), 'bid:5234260')
+  // 槽位名 + 没有可用 BID → 没有身份（过去会返回 meta:SV|sv1|0| 并跨轮互撞）。
+  assert.equal(mapIdentityKey({ slot: 'SV1', type: 'SV', name: 'SV1', difficulty: 0 }), null)
+  assert.equal(mapIdentityKey({ slot: 'ST1', type: 'SV', name: 'SV1', difficulty: 0 }), null, 'name 与自己的槽位名不一致也算占位记号')
+
+  // 真实曲名照旧当身份（不受影响）。
+  assert.equal(
+    mapIdentityKey({ slot: 'RC1', type: 'RC', name: 'Camellia - ANOMALY (Cut Ver.) [BEYOND]', difficulty: 12 }),
+    'meta:RC|camellia - anomaly (cut ver.) [beyond]|12|',
+  )
+  // 纯字母的短名不算占位（要求至少一位数字），避免误伤 MU 这类短曲名。
+  assert.equal(mapIdentityKey({ slot: 'RC1', type: 'RC', name: 'MU', difficulty: 9 }), 'meta:RC|mu|9|')
+})
+
+test('R34：4DM2023 式跨轮同名槽位不再被报成"同一张图被复用"', () => {
+  const svMap = (beatmapId) => ({ slot: 'SV1', type: 'SV', realType: 'PDSV', name: 'SV1', difficulty: 0, beatmapId })
+  const warnings = findDuplicateRoundMaps([
+    tournament('4dm2023', '4DM2023', [
+      round('qual', 'Qual', [svMap(3958440)]),
+      round('qf', 'QF', [svMap(3990217)]),
+      round('sf', 'SF', [svMap(3999979)]),
+      round('gf', 'GF', [svMap(4021087)]),
+    ]),
+  ])
+  assert.deepEqual(warnings, [], '每轮各自的 SV1 是不同文件，不该报重复')
+})
+
+test('R34：真正的跨轮复用（同 BID / 同真实曲名）仍然要报', () => {
+  const reused = findDuplicateRoundMaps([
+    // name 是槽位记号 → 被忽略，身份退到 BID：两轮的 SV1 用的是**同一个**文件 → 必须报。
+    tournament('reuse-bid', 'REUSE-BID', [
+      round('sf', 'SF', [{ slot: 'SV1', type: 'SV', realType: 'PDSV', name: 'SV1', difficulty: 0, beatmapId: 3960212 }]),
+      round('f', 'F', [{ slot: 'SV1', type: 'SV', realType: 'PDSV', name: 'SV1', difficulty: 0, beatmapId: 3960212 }]),
+    ]),
+    // 没有 BID，但真实曲名 + 难度逐字相同 → 走 meta 那条道，也要报。
+    tournament('reuse-meta', 'REUSE-META', [
+      round('qf', 'QF', [{ slot: 'LN2', type: 'LN', realType: 'DE', name: 'rejection - Hypnotize [1.05x]', difficulty: 7.08 }]),
+      round('gf', 'GF', [{ slot: 'LN2', type: 'LN', realType: 'DE', name: 'rejection - Hypnotize [1.05x]', difficulty: 7.08 }]),
+    ]),
+  ])
+  assert.deepEqual(warnings_abbr(reused), ['REUSE-BID', 'REUSE-META'])
+
+  const byBid = reused.find((w) => w.tournamentAbbr === 'REUSE-BID')
+  assert.equal(byBid.beatmapId, 3960212)
+  assert.deepEqual(byBid.rounds, ['SF', 'F'])
+  assert.deepEqual(byBid.slots, ['SV1', 'SV1'])
+
+  // 已知边界（刻意不动）：name 非空且是**真实曲名**时，身份就只看名字+难度，不看 BID。
+  // 所以"同 BID 但两轮曲名写法不同"不会报 —— 这是 R33 定下的契约（名字优先）。
+  const sameBidDifferentName = findDuplicateRoundMaps([
+    tournament('name-wins', 'NAME-WINS', [
+      round('sf', 'SF', [{ slot: 'RC1', type: 'RC', realType: 'SS', name: 'Camellia - X [A]', difficulty: 12, beatmapId: 5000001 }]),
+      round('f', 'F', [{ slot: 'RC1', type: 'RC', realType: 'SS', name: 'Camellia - X [B]', difficulty: 12, beatmapId: 5000001 }]),
+    ]),
+  ])
+  assert.deepEqual(sameBidDifferentName, [], '名字优先于 BID，这是刻意保留的契约（不是本次要改的误报）')
+})
+
+test('R34：轮次按 id 判重，缩写相同（都叫 F）的两轮不会被合成一轮而漏报', () => {
+  const warnings = findDuplicateRoundMaps([
+    tournament('same-abbr', 'SAME-ABBR', [
+      round('final-a', 'F', [{ slot: 'RC1', type: 'RC', realType: 'SS', name: 'X - Song [A]', difficulty: 12 }]),
+      round('final-b', 'F', [{ slot: 'RC1', type: 'RC', realType: 'SS', name: 'X - Song [A]', difficulty: 12 }]),
+    ]),
+  ])
+  assert.equal(warnings.length, 1, '缩写相同的两个轮次仍然算跨轮复用')
+  assert.deepEqual(warnings[0].rounds, ['F'], '给人看的列表按显示名去重（不输出 "F & F"）')
+  assert.deepEqual(warnings[0].slots, ['RC1', 'RC1'], '两个轮次都在 slots 里，说明确实认出两轮')
+
+  // 对照：同一轮里两张同身份的图**不算**跨轮复用。
+  const single = findDuplicateRoundMaps([
+    tournament('one-round', 'ONE-ROUND', [
+      round('qf', 'QF', [
+        { slot: 'RC1', type: 'RC', realType: 'SS', name: 'X - Song [A]', difficulty: 12 },
+        { slot: 'RC2', type: 'RC', realType: 'SS', name: 'X - Song [A]', difficulty: 12 },
+      ]),
+    ]),
+  ])
+  assert.deepEqual(single, [], '同一轮内重复不算跨轮复用')
+})
+
+function warnings_abbr(warnings) {
+  return warnings.map((w) => w.tournamentAbbr)
+}

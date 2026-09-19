@@ -7,8 +7,9 @@ import { tournaments } from '@/generated/tournaments'
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react'
 import { HoverCard } from './HoverCard'
 import { RoundDetailModal } from './RoundDetailModal'
-import { normalizeRealType } from '@/lib/realType'
 import { countableMaps } from '@/lib/difficultyCount'
+// 键型判读与筛选收敛的唯一实现在 lib（集合从键型目录推导，不再硬编码）
+import { scopeToFilter, isLnBased, getLnDiff, projectedDifficulties, resolveTitleAvg } from '@/lib/ladderScope'
 import { createTournamentSearchIndex, searchTournaments } from '@/lib/tournamentSearch'
 import { LadderSearchResults } from './LadderSearchResults'
 import { useT } from '@/lib/i18n'
@@ -19,22 +20,6 @@ const searchIndex = createTournamentSearchIndex(tournaments)
 
 const DIFFICULTY_RANGE = { min: 0.5, max: 16.5 }
 const BOX_HEIGHT_TYPE = 28
-
-const LN_REAL_TYPES = new Set(['RE', 'CO', 'TE', 'DE', 'JW', 'SW', 'LNMX', 'LNWC', 'LNTC', 'IN', 'LNWL', 'OLN'])
-const HB_REAL_TYPES = new Set(['HB1', 'HB2', 'HB3', 'HB4', 'HB5', 'RCmainHB', 'LNmainHB', 'MXHB', 'MNTB', 'OHB'])
-
-function isLnBased(m: { type: string; realType: string }): boolean {
-  const realType = normalizeRealType(m.realType)
-  return m.type === 'LN' || m.type === 'HB' || LN_REAL_TYPES.has(realType) || HB_REAL_TYPES.has(realType)
-}
-
-function getLnDiff(m: { type: string; realType: string; difficulty: number; difficultyLn?: number }): number {
-  if (m.type === 'LN') return m.difficulty
-  const realType = normalizeRealType(m.realType)
-  if (LN_REAL_TYPES.has(realType)) return m.difficultyLn || m.difficulty
-  if (m.type === 'HB' || HB_REAL_TYPES.has(realType)) return m.difficultyLn || m.difficulty
-  return m.difficulty
-}
 
 export function LadderView() {
   const { mode, zoom, columnWidth, rowHeight, rfLnOffset, activeFilter, searchQuery, sortMode, customOrder, hideQualifiers, yearFilter, roundFilter, roundBorderAlways } = useViewStore()
@@ -549,17 +534,11 @@ function TournamentColumn({
     visibleRounds.forEach((round, idx) => {
       // TB 不参与 round 框的高度/颜色/段位统计(仅红条另外画)。
       // LN 系(含 HB)取 ln 值再减 rfLnOffset,统一投影到 rf 轴上。
-      const adjustedDiffs: number[] = []
       // 勾了"不参与难度统计"的图不进框高/颜色(与后台平均值同一口径)。
-      for (const m of countableMaps(round.maps)) {
-        if (m.type === 'TB') continue
-        if (isLnBased(m)) {
-          const d = getLnDiff(m) - rfLnOffset
-          if (d > 0) adjustedDiffs.push(d)
-        } else if (m.difficulty > 0) {
-          adjustedDiffs.push(m.difficulty)
-        }
-      }
+      // 键型筛选生效时再收窄到该大类 —— 切 RC/LN/HB/TB 时框高与标题高度都会跟着变。
+      // 取值口径的唯一实现在 lib/ladderScope(判读集合从键型目录推导,不再硬编码)。
+      const roundMaps = countableMaps(round.maps)
+      const adjustedDiffs = projectedDifficulties(roundMaps, activeFilter, rfLnOffset)
       const computedMin = adjustedDiffs.length > 0 ? Math.min(...adjustedDiffs) : Infinity
       const computedMax = adjustedDiffs.length > 0 ? Math.max(...adjustedDiffs) : -Infinity
       const allLn = countableMaps(round.maps).filter((m) => m.type !== 'TB').length > 0 &&
@@ -589,6 +568,10 @@ function TournamentColumn({
       // 任务 D:不 clamp 真实难度,先判超界再裁切绘制区。
       const geometry = computeRangeGeometry(maxDiff, minDiff, plotHeight, DIFFICULTY_RANGE)
       if (!geometry) return
+      // 标题高度口径见 lib/ladderScope.resolveTitleAvg(先存量平均、再逐图平均，
+      // 两个来源都收窄到当前键型 → 切 RC/LN/HB/TB 时标题位置会跟着变)。
+      // 注意这对混合键型轮次是"整轮平均"，若落在框外会被下面的 minY/maxY 夹住。
+      const titleAvg = resolveTitleAvg(round, roundMaps, activeFilter, rfLnOffset)
       layouts.push({
         key: `${round.id}-${idx}`,
         round,
@@ -598,6 +581,7 @@ function TournamentColumn({
         paintHeight: geometry.paintBottom - geometry.paintTop,
         minDifficulty: minDiff,
         maxDifficulty: maxDiff,
+        avgDifficulty: titleAvg ?? (minDiff + maxDiff) / 2,
         dimmed: !!(activeFilter && !round.maps.some((m) => m.type === activeFilter)),
       })
     })
@@ -614,8 +598,12 @@ function TournamentColumn({
   )
 
   if (mode === 'tournament') {
+    // 键型筛选生效时，整列的高度与"指针落在哪一轮"的判定都只看该大类 ——
+    // 否则会出现"框只有 RC 的高度、但指针按全部图反解难度"的错位。
     const allDiffs = visibleRounds.flatMap((r) =>
-      countableMaps(r.maps).filter((m) => m.type !== 'TB').map((m) => isLnBased(m) ? getLnDiff(m) - rfLnOffset : m.difficulty)
+      scopeToFilter(countableMaps(r.maps), activeFilter)
+        .filter((m) => m.type !== 'TB')
+        .map((m) => isLnBased(m) ? getLnDiff(m) - rfLnOffset : m.difficulty)
     ).filter((d) => d > 0)
     // maps 都是 0 时 fallback 到每轮 difficulty.average
     const fallbackAvgs = visibleRounds
@@ -644,7 +632,7 @@ function TournamentColumn({
     // plotHeight 是整段难度区间的高度,perUnit = 每 1 点难度多少像素
     const perUnit = plotHeight / (DIFFICULTY_RANGE.max - DIFFICULTY_RANGE.min)
     const roundRanges = visibleRounds.map((round) => {
-      const diffs = countableMaps(round.maps)
+      const diffs = scopeToFilter(countableMaps(round.maps), activeFilter)
         .filter((m) => m.type !== 'TB')
         .map((m) => (isLnBased(m) ? getLnDiff(m) - rfLnOffset : m.difficulty))
         .filter((d) => d > 0)
@@ -744,18 +732,21 @@ function TournamentColumn({
           })}
         </div>
         {/* 标题层:z-30,纯文本、不吃指针(点击/悬浮照常落到框体)。
-            位置取所属框的垂直中心(水平+垂直都严格居中),画在框体之上,
-            所以不会被任何轮次框盖住。仅当中心落进 32px 吸顶列头里(CET GF 这类超界框)时
-            才下压到列头下方,保证可见。 */}
+            高度取该轮的**平均难度**(不是框的几何中心),水平+垂直居中于该高度,
+            画在框体之上,所以不会被任何轮次框盖住。
+            夹两道:列头下方(否则超界框的标题会被吸顶列头压住)、框底之上。 */}
         <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 30 }}>
           {roundLayouts.map((l) => {
             if (l.dimmed) return null
-            const centerY = (l.rawTop + l.rawBottom) / 2
+            const desired = yForDifficulty(l.avgDifficulty, plotHeight, DIFFICULTY_RANGE)
+            const minY = Math.max(l.rawTop + 6, 40)
+            const maxY = Math.max(l.rawBottom - 6, minY)
+            const centerY = Math.min(Math.max(desired, minY), maxY)
             return (
               <span
                 key={l.key}
                 className="round-box-text absolute left-1 right-1"
-                style={{ top: Math.max(centerY, 40), transform: 'translateY(-50%)' }}
+                style={{ top: centerY, transform: 'translateY(-50%)' }}
               >
                 {tournament.abbreviation} {l.round.abbreviation}
               </span>

@@ -262,7 +262,7 @@ export const messagesZh = {
   'realTypeMaps.staged': '已暂存 {n} 个比赛的修改，请在新建/编辑页统一提交。',
   'realTypeMaps.stagedOne': '键型修改已暂存到本浏览器。',
   'realTypeMaps.stageFailed': '读取 {id} 的最新版本失败，这次键型改动没有暂存。',
-  'realTypeMaps.duplicateWarning': '同一比赛的不同轮次里出现了相同身份的谱面（同 BID，或同「曲名 + 难度」）。行内有 ! 标记，请先核对原始图池。',
+  'realTypeMaps.duplicateWarning': '同一比赛的不同轮次里出现了相同身份的谱面（同 BID，或同「曲名 + 难度」）。曲名只是槽位记号（如 sv1 / ln3）时不当作身份。行内有 ! 标记，请先核对原始图池。',
   'realTypeMaps.duplicateRowHint': '相同身份的谱面还出现在：{rounds}',
 
   // ---------- AdminsManager ----------

@@ -1,0 +1,122 @@
+name: Backfill Map Metadata
+
+# 批量补全谱面元数据（beatmapId / beatmapsetId / name）—— 用仓库里已有的 R2 secrets 跑，
+# 这样就不需要"补一个比赛就消耗一次构建机会"（后台逐场保存 = 逐次提交 = 逐次重建）。
+#
+# 默认**只跑 dry-run**（不写任何文件、只出报告）。要真写数据必须显式把 apply 选成 true。
+# 会写的东西只有 data/tournaments/*.json；`backfill-bid-report.json` 在仓库根目录、
+# 被 .gitignore 的 `/*-report.json` 覆盖，不会进提交。
+#
+# 为什么单独一个 workflow：本地没有 R2 凭据时这个脚本跑不了（要读 maps/ 里的原始 .osz）。
+# 详细操作单见 BATCH-METADATA-BACKFILL.md。
+
+on:
+  workflow_dispatch:
+    inputs:
+      apply:
+        description: '是否真的写回 data/tournaments（false = 只出报告，不改任何文件）'
+        required: true
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
+
+concurrency:
+  group: backfill-metadata
+  cancel-in-progress: false
+
+jobs:
+  backfill:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - run: npm ci
+
+      - name: Backfill (dry-run unless apply=true)
+        env:
+          APPLY: ${{ github.event.inputs.apply }}
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY: ${{ secrets.R2_ACCESS_KEY }}
+          R2_SECRET_KEY: ${{ secrets.R2_SECRET_KEY }}
+          R2_BUCKET: osumania-ladder-maps
+        run: |
+          set -euo pipefail
+          args=()
+          # 只有输入**恰好**是 true 才写盘；其他任何值（含空、拼错）都退化成 dry-run。
+          if [ "$APPLY" = "true" ]; then args+=("--apply"); fi
+          echo "模式：$([ "$APPLY" = "true" ] && echo 写回 || echo 仅报告)"
+          # 脚本是 ESM(.mjs) 但 import 了 `src/lib/beatmapIds.ts`（占位 ID 判读的唯一实现）。
+          # Node 22.18+ 默认开启类型剥离，这里显式加上，免得 runner 拿到的 22.x 小版本
+          # 恰好早于 22.18 时脚本在 import 阶段就挂掉（那时修改不会发生，但会白跑一趟）。
+          node --experimental-strip-types scripts/backfill-bid.mjs "${args[@]}"
+
+      - name: Show summary in job summary
+        if: always()
+        run: |
+          set -euo pipefail
+          if [ ! -f backfill-bid-report.json ]; then
+            echo "没有生成报告文件。" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          {
+            echo '## 回填结果（统计）'
+            echo ''
+            echo '```json'
+            node -e "const r=require('./backfill-bid-report.json');console.log(JSON.stringify({apply:r.apply,可回填:r.ok.length,未上传谱:r.unsubmitted.length,R2无文件:r.noFile.length,解析出错:r.errored.length},null,2))"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backfill-bid-report
+          path: backfill-bid-report.json
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Show changes
+        if: success()
+        run: |
+          set -euo pipefail
+          echo "=== 改动规模 ==="
+          git diff --stat -- data/tournaments | tail -20
+
+      - name: Commit data changes
+        # 只有 apply=true 且脚本成功时才提交。any 失败都不提交 ——
+        # 回填是"只增不改"的，但写一半的 JSON 比不写更糟。
+        if: success() && github.event.inputs.apply == 'true'
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          # 只加数据目录：绝不用 `git add -A`（会把报告、其他改动手滑带进来）。
+          git add data/tournaments
+          if git diff --cached --quiet; then
+            echo "没有任何回填改动，跳过提交。"
+            exit 0
+          fi
+          git commit -m "Backfill map metadata (beatmapId / beatmapsetId / name)"
+          # push 撞上远端新提交时先 rebase 再试，重试次数有上限。**禁 force push、禁回滚。**
+          for i in 1 2 3; do
+            if git push; then
+              exit 0
+            fi
+            echo "push 失败（第 $i 次），先同步远端再试"
+            git fetch origin "${GITHUB_REF_NAME}"
+            if ! git rebase "origin/${GITHUB_REF_NAME}"; then
+              git rebase --abort || true
+              echo "::error::回填改动与远端冲突（可能有人正在编辑比赛）。已保留本地结果，请人工处理；不要 force push。"
+              exit 1
+            fi
+          done
+          echo "::error::push 连续失败，已保留本地提交与结果。"
+          exit 1

@@ -21,5 +21,8 @@ export interface RoundLayout {
   paintHeight: number
   minDifficulty: number
   maxDifficulty: number
+  // 平均难度：标题画在**这个高度**上（不是框的几何中心）。
+  // 优先用逐图难度的平均（与框高同一口径），没有逐图值才退到 round.difficulty.average。
+  avgDifficulty: number
   dimmed: boolean
 }

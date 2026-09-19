@@ -47,6 +47,8 @@ jobs:
           R2_ACCESS_KEY: ${{ secrets.R2_ACCESS_KEY }}
           R2_SECRET_KEY: ${{ secrets.R2_SECRET_KEY }}
           R2_BUCKET: osumania-ladder-maps
+          # 与 generate-packs.yml 同一口径：逐张读 .osz 的并发（脚本默认 8，上限 32）。
+          PACK_DOWNLOAD_CONCURRENCY: '12'
         run: |
           set -euo pipefail
           args=("--identity-report")

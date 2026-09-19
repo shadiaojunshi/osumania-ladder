@@ -12,6 +12,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import JSZip from 'jszip'
+import { readFileSync } from 'node:fs'
 
 import { decideFill, parseOszMetadata } from './backfill-bid.mjs'
 
@@ -131,4 +132,28 @@ test('parseOszMetadata：zip 里没有 .osu → null', async () => {
   const zip = new JSZip()
   zip.file('readme.txt', 'nothing here')
   assert.equal(await parseOszMetadata(await zip.generateAsync({ type: 'nodebuffer' })), null)
+})
+
+// ---------- Action 的守门（2026-09-19）----------
+// 这个 workflow 用的是**仓库里的真实 R2 密钥**，而且它**会改比赛数据**。
+// 所以"默认只报告"和"只提交 data/tournaments"必须由断言守住，不能只写在注释里。
+
+// 注释里出现 `git add -A` 是**说明**，不是行为 —— 只检查真正的命令行。
+const codeOnly = (src) => src.split(/\r?\n/).filter((line) => !/^\s*#/.test(line)).join('\n')
+
+test('守门：backfill-metadata.yml 默认必须是只报告（只有显式 true 才写数据）', () => {
+  const src = readFileSync(new URL('../.github/workflows/backfill-metadata.yml', import.meta.url), 'utf-8')
+  assert.match(src, /default:\s*'false'/, '默认值必须是 false（只报告）')
+  assert.ok(!/default:\s*'true'/.test(src), '默认值绝不能是 true')
+  assert.match(src, /if \[ "\$APPLY" = "true" \]; then args\+=\("--apply"\); fi/, '只有显式 true 才加 --apply')
+  // 提交那一步必须同时要求 apply=true
+  assert.match(src, /if: success\(\) && github\.event\.inputs\.apply == 'true'/, '提交步骤要被 apply=true 守住')
+})
+
+test('守门：backfill-metadata.yml 只能提交 data/tournaments（不许 git add -A / force push）', () => {
+  const src = readFileSync(new URL('../.github/workflows/backfill-metadata.yml', import.meta.url), 'utf-8')
+  assert.ok(src.includes('git add data/tournaments'), '只加数据目录')
+  assert.ok(!/git add -A|git add \.\s/.test(codeOnly(src)), '不能用 git add -A')
+  assert.ok(!/--force|push -f/.test(codeOnly(src)), '禁止 force push')
+  assert.ok(src.includes("git rebase --abort || true"), 'rebase 冲突要安全中止')
 })

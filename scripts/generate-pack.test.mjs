@@ -20,7 +20,7 @@ process.env.R2_ACCESS_KEY = 'test-key'
 process.env.R2_SECRET_KEY = 'test-secret'
 
 const require = createRequire(import.meta.url)
-const { rewriteOsu, packCountFor, packSizeFor, writeIdentityReport, countIdentityIssues } = require('./generate-pack.js')
+const { rewriteOsu, packCountFor, packSizeFor, compareTournamentsForSources, writeIdentityReport, countIdentityIssues, resolveDownloadConcurrency, DEFAULT_DOWNLOAD_CONCURRENCY, MAX_DOWNLOAD_CONCURRENCY } = require('./generate-pack.js')
 
 const sampleOsu = (od, hp = 5) => [
   'osu file format v14',
@@ -302,6 +302,30 @@ test('守门：报告条数统计必须把 sameContent 算进去（否则"只有
   assert.equal(countIdentityIssues({ conflicts: [1], unresolved: [] }), 1)
 })
 
+// ---------- 下载并发旋钮（合包提速的那一刀）----------
+
+test('并发旋钮：默认 8、非法值回退、上限 32、下限 1', () => {
+  assert.equal(resolveDownloadConcurrency(undefined), DEFAULT_DOWNLOAD_CONCURRENCY)
+  assert.equal(DEFAULT_DOWNLOAD_CONCURRENCY, 8, '默认值改动要同步文档（PACK_DOWNLOAD_CONCURRENCY）')
+
+  // 非法 / 无意义的值一律回退默认，绝不返回 0 或 NaN（那会让任务空转）
+  for (const bad of ['', '  ', '0', '-1', 'abc', 'NaN', null]) {
+    assert.equal(resolveDownloadConcurrency(bad), DEFAULT_DOWNLOAD_CONCURRENCY, `${JSON.stringify(bad)} 应回退默认`)
+  }
+
+  assert.equal(resolveDownloadConcurrency('1'), 1)
+  assert.equal(resolveDownloadConcurrency('12'), 12)
+  assert.equal(resolveDownloadConcurrency('12.9'), 12, '小数向下取整')
+  assert.equal(resolveDownloadConcurrency('9999'), MAX_DOWNLOAD_CONCURRENCY, '上限封顶')
+})
+
+test('守门：并发数只从一个地方取，脚本里不得再有写死的并发', () => {
+  // 写死的并发是"以前调不动合包速度"的根因，别再散落回去。
+  const src = fs.readFileSync(new URL('./generate-pack.js', import.meta.url), 'utf-8')
+  const hardcoded = [...src.matchAll(/mapWithConcurrency\(\s*[A-Za-z_$][\w$]*\s*,\s*(\d+)/g)].map((m) => m[1])
+  assert.deepEqual(hardcoded, [], `mapWithConcurrency 的并发数必须走 DOWNLOAD_CONCURRENCY，发现写死：${hardcoded.join(', ')}`)
+})
+
 test('守门：--identity-report 分支必须写在打包/发布分支之前（顺序反了会真的全量发布）', () => {
   // main() 里 mode 的分支是顺序判断的：'identity-report' 落在 'single-*' / 全量分支之后的话，
   // 只读体检就会掉进发布路径 —— 那是真的要传 R2、改清单的。这条顺序只能靠源码断言守住。
@@ -331,4 +355,42 @@ test('守门：预取阶段必须真的把内容摘要送进报告（这条线�
     src.includes('sameContent: findSameContentDifferentIdentity(identitySeen)'),
     '要用收集到的条目真的算出报告内容',
   )
+})
+
+// ---------------------------------------------------------------------------
+// 包内来源标签的顺序（2026-09-19 站长定稿）
+// ---------------------------------------------------------------------------
+// `formatSources` 只按**首次出现**分组、自己不再排序，所以包面标签的顺序完全由
+// `compareTournamentsForSources` 决定。这条顺序改了会改合并谱面的 Version 字符串
+// （玩家成绩的身份），必须被测试锁住，不能靠注释守。
+
+test('包内来源顺序：priority 降序排在年份之前（不是先按年份）', () => {
+  const high = { id: 'a', abbreviation: 'AAA', year: 2020, priority: 5 }
+  const low = { id: 'b', abbreviation: 'BBB', year: 2026, priority: 1 }
+  assert.ok(compareTournamentsForSources(high, low) < 0, 'priority 高的排前面，哪怕年份更旧')
+})
+
+test('包内来源顺序：同 priority 内年份升序（旧的在前）', () => {
+  const old = { id: 'a', abbreviation: 'AAA', year: 2019, priority: 3 }
+  const mid = { id: 'b', abbreviation: 'BBB', year: 2023, priority: 3 }
+  const fresh = { id: 'c', abbreviation: 'CCC', year: 2026, priority: 3 }
+  const sorted = [fresh, old, mid].sort(compareTournamentsForSources)
+  assert.deepEqual(sorted.map((t) => t.year), [2019, 2023, 2026])
+})
+
+test('包内来源顺序：缺 priority 当 0 排最后；第三级是缩写、最后才是 id', () => {
+  const noPriority = { id: 'zzz', abbreviation: 'ZZZ', year: 2026 }
+  const withPriority = { id: 'aaa', abbreviation: 'AAA', year: 2019, priority: 1 }
+  assert.ok(compareTournamentsForSources(withPriority, noPriority) < 0, '无 priority 视作 0')
+
+  // 同年同 priority → 按缩写升序，而不是按 id（重名缩写时再退到 id）。
+  const beta = { id: 'z-file', abbreviation: 'BETA', year: 2024, priority: 2 }
+  const alpha = { id: 'a-file', abbreviation: 'ALPHA', year: 2024, priority: 2 }
+  assert.deepEqual([beta, alpha].sort(compareTournamentsForSources).map((t) => t.abbreviation), ['ALPHA', 'BETA'])
+
+  // 缩写也完全相同（重名比赛）→ 用 id 兜底，保证全序稳定、不依赖输入顺序。
+  const dupA = { id: 'aaa', abbreviation: 'SAME', year: 2024, priority: 2 }
+  const dupB = { id: 'bbb', abbreviation: 'SAME', year: 2024, priority: 2 }
+  assert.ok(compareTournamentsForSources(dupA, dupB) < 0)
+  assert.equal(compareTournamentsForSources(dupA, dupB) === 0, false, '重名比赛也必须能分出先后')
 })

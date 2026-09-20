@@ -3,35 +3,23 @@
 import { useMemo, useState } from 'react'
 import { tournaments as allTournaments } from '@/generated/tournaments'
 import { useT } from '@/lib/i18n'
-import { REAL_TYPES } from './MapSlotEditor'
-import type { MapCategory } from './MapSlotEditor'
+import { REAL_TYPES } from '@/lib/realTypeCatalog'
 import { normalizeRealType } from '@/lib/realType'
-import { findDuplicateRoundMaps, mapIdentityKey } from '@/lib/tournamentDiagnostics'
+import {
+  browserOptionGroups,
+  buildMapBrowserRows,
+  conversionGroupsFor,
+  duplicateGroupsOf,
+  duplicateRoundIndexOf,
+  matchingTournamentsFor,
+  visibleBrowserRows,
+  type BrowserOverrideMap,
+  type MapBrowserRow,
+} from '@/lib/mapBrowserRows'
 import { ManiaChartButton } from '@/components/chart/ManiaChartButton'
 
-const CATEGORY_ORDER = ['RC', 'LN', 'HB', 'SV', 'TB'] as const
-
-interface MapRow {
-  key: string
-  tournamentId: string
-  tournamentName: string
-  tournamentAbbr: string
-  roundId: string
-  roundIndex: number
-  roundName: string
-  roundAbbr: string
-  roundOrder: number
-  slot: string
-  type: string
-  realType: string
-  name: string
-  difficulty: number
-  difficultyLn?: number
-  beatmapId?: number
-  category: MapCategory
-  duplicateRounds?: string[]
-}
-
+// 行形状与判定逻辑都在 src/lib/mapBrowserRows.ts（公开反馈页复用同一份），
+// 这里只做"取全库数据 → 喂给纯函数 → 渲染表格"的适配。
 interface Props {
   canStage?: boolean
   stagedCount?: number
@@ -42,110 +30,39 @@ export function RealTypeMapBrowser({ canStage = false, stagedCount = 0, onStageM
   const t = useT()
   const [selectedRealType, setSelectedRealType] = useState(REAL_TYPES.RC[0].id)
   const [selectedTournamentId, setSelectedTournamentId] = useState('all')
-  const [overrides, setOverrides] = useState<Record<string, string>>({})
+  const [overrides, setOverrides] = useState<BrowserOverrideMap>({})
 
-  const duplicateMapIndex = useMemo(() => {
-    const index = new Map<string, string[]>()
-    for (const warning of findDuplicateRoundMaps(allTournaments)) {
-      index.set(`${warning.tournamentId}:${warning.mapKey}`, warning.rounds)
-    }
-    return index
-  }, [])
+  // 行生成 / 筛选 / 排序 / 下拉项全部走 src/lib/mapBrowserRows.ts 的纯函数
+  // （公开反馈页用的是同一份，因此这些规则只有一处实现）。
+  const duplicateMapIndex = useMemo(() => duplicateRoundIndexOf(allTournaments), [])
+  const allRows = useMemo(() => buildMapBrowserRows(allTournaments, duplicateMapIndex), [duplicateMapIndex])
+  const optionGroups = useMemo(() => browserOptionGroups(allRows, t('realTypeMaps.customGroup')), [allRows, t])
 
-  const allRows = useMemo<MapRow[]>(() => allTournaments.flatMap((tournament) =>
-    (tournament.rounds || []).flatMap((round, roundIndex) =>
-      (round.maps || []).map((map, index) => ({
-        key: `${tournament.id}:${round.id}:${roundIndex}:${map.slot}:${map.beatmapId || index}`,
-        tournamentId: tournament.id,
-        tournamentName: tournament.name,
-        tournamentAbbr: tournament.abbreviation || tournament.id,
-        roundName: round.name,
-        roundAbbr: round.abbreviation || round.name,
-        roundId: round.id,
-        roundIndex,
-        roundOrder: round.order,
-        slot: map.slot,
-        type: map.type,
-        realType: normalizeRealType(map.realType),
-        name: map.name,
-        difficulty: map.difficulty,
-        difficultyLn: map.difficultyLn,
-        beatmapId: map.beatmapId,
-        category: (['RC', 'LN', 'HB', 'SV', 'TB'].includes(map.type) ? map.type : 'SPECIAL') as MapCategory,
-        duplicateRounds: (() => {
-          const mapKey = mapIdentityKey(map)
-          return mapKey ? duplicateMapIndex.get(`${tournament.id}:${mapKey}`) : undefined
-        })(),
-      })),
-    ),
-  ), [duplicateMapIndex])
+  const matchingTournaments = useMemo(
+    () => matchingTournamentsFor(allTournaments, allRows, selectedRealType),
+    [allRows, selectedRealType],
+  )
 
-  const optionGroups = useMemo(() => {
-    const known = new Set(CATEGORY_ORDER.flatMap((category) => REAL_TYPES[category].map((item) => item.id)))
-    const custom = Array.from(new Set(allRows.map((row) => row.realType).filter((id) => id && !known.has(id))))
-      .sort((a, b) => a.localeCompare(b))
-    return [
-      ...CATEGORY_ORDER.map((category) => ({ category, options: REAL_TYPES[category] })),
-      ...(custom.length > 0 ? [{ category: t('realTypeMaps.customGroup'), options: custom.map((id) => ({ id, name: id })) }] : []),
-    ]
-  }, [allRows, t])
+  const visibleRows = useMemo(
+    () => visibleBrowserRows(allRows, {
+      realType: selectedRealType,
+      tournamentId: selectedTournamentId,
+      overrides,
+    }),
+    [allRows, overrides, selectedRealType, selectedTournamentId],
+  )
 
-  const matchingTournaments = useMemo(() => {
-    const matchingIds = new Set(allRows
-      .filter((row) => row.realType === selectedRealType)
-      .map((row) => row.tournamentId))
-    return allTournaments.filter((tournament) => matchingIds.has(tournament.id))
-  }, [allRows, selectedRealType])
-
-  const visibleRows = useMemo(() => allRows
-    .map((row) => ({ ...row, realType: overrides[row.key] || row.realType }))
-    .filter((row) => row.realType === selectedRealType)
-    .filter((row) => selectedTournamentId === 'all' || row.tournamentId === selectedTournamentId)
-    .sort((a, b) => a.tournamentName.localeCompare(b.tournamentName)
-      || a.roundOrder - b.roundOrder
-      || a.slot.localeCompare(b.slot, undefined, { numeric: true })),
-  [allRows, overrides, selectedRealType, selectedTournamentId])
-
-  // 警告横幅里要列出**真正触发**的比赛，不能写死某个历史事故的名字。
-  // 按「比赛 + 涉及的轮次集合」去重，这样一行代表一组复用，而不是每张图一行。
-  // 判据是"这一行的身份有警告"——`findDuplicateRoundMaps` 只在**跨 ≥2 个轮次**时才产出条目，
-  // 所以条目存在本身就是证据；不能再拿 `rounds.length` 当门槛
-  // （两轮缩写重名时显示名会被去重成一个，那仍是实打实的跨轮复用）。
-  const duplicateGroups = useMemo(() => {
-    const seen = new Map<string, { abbr: string; rounds: string[] }>()
-    for (const row of visibleRows) {
-      if (!row.duplicateRounds) continue
-      const key = `${row.tournamentId}:${row.duplicateRounds.join('&')}`
-      if (!seen.has(key)) seen.set(key, { abbr: row.tournamentAbbr, rounds: row.duplicateRounds })
-    }
-    return [...seen.values()]
-  }, [visibleRows])
+  // 「这一行的身份在别处被复用了」的汇总（判据与去重规则见 mapBrowserRows.duplicateGroupsOf）。
+  const duplicateGroups = useMemo(() => duplicateGroupsOf(visibleRows), [visibleRows])
 
   const handleRealTypeChange = (realType: string) => {
     setSelectedRealType(realType)
     setSelectedTournamentId('all')
   }
 
-  const getConversionGroups = (row: MapRow) => {
-    const entries = Object.entries(REAL_TYPES)
-      .filter(([category]) => category !== 'SPECIAL') as [string, { id: string; name: string }[]][]
-    const ordered = row.category === 'SPECIAL'
-      ? entries
-      : [
-          ...entries.filter(([category]) => category === row.category),
-          ...entries.filter(([category]) => category !== row.category),
-        ]
-    return ordered
-      .map(([category, options], index) => {
-        const current = index === 0 && row.realType && !options.some((option) => option.id === row.realType)
-          ? [{ id: row.realType, name: `${row.realType} (current)` }, ...options]
-          : options
-        return { category, options: current }
-      })
-      .filter((group) => group.options.length > 0)
-  }
+  const getConversionGroups = (row: MapBrowserRow) => conversionGroupsFor(row.category, row.realType)
 
-  const handleConversion = (row: MapRow, realType: string) => {
+  const handleConversion = (row: MapBrowserRow, realType: string) => {
     const canonical = normalizeRealType(realType)
     setOverrides((current) => ({ ...current, [row.key]: canonical }))
     onStageMapChange?.({

@@ -4,24 +4,12 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useT } from '@/lib/i18n'
 import { tournaments } from '@/generated/tournaments'
 import { fetchLadder } from './DifficultyRefPicker'
-import {
-  baseLadderRounds,
-  resolveLadder,
-  sampleLadderAtPos,
-  type LadderEntry,
-  type RefField,
-  type RefType,
-} from '@/lib/referenceData'
+import { baseLadderRounds, type LadderEntry } from '@/lib/referenceData'
+import { computeRoundRefValues, ROUND_REF_FIELDS, type RoundRefValues } from '@/lib/roundReference'
 
 // 整轮「参考」结果:6 个非 SV 值(SV 不碰)。
-export interface RoundRefValues {
-  rc: number
-  hbRf: number
-  hbLn: number
-  ln: number
-  tbRf: number
-  tbLn: number
-}
+// 唯一实现在 src/lib/roundReference.ts —— 公开反馈页要用同一份，这里只转发。
+export type { RoundRefValues }
 
 interface Props {
   // 当前轮缩写,用于自动匹配基准(MWC)同名轮
@@ -56,14 +44,8 @@ function standardRank(abbr: string): number | undefined {
 }
 
 // 每个目标字段 → (type, field)。SV 排除。
-const FIELDS: { key: keyof RoundRefValues; type: RefType; field: RefField; label: string }[] = [
-  { key: 'rc', type: 'RC', field: 'rf', label: 'RC' },
-  { key: 'hbRf', type: 'HB', field: 'rf', label: 'HB(rf)' },
-  { key: 'hbLn', type: 'HB', field: 'ln', label: 'HB(ln)' },
-  { key: 'ln', type: 'LN', field: 'ln', label: 'LN' },
-  { key: 'tbRf', type: 'TB', field: 'rf', label: 'TB(rf)' },
-  { key: 'tbLn', type: 'TB', field: 'ln', label: 'TB(ln)' },
-]
+// 唯一实现在 src/lib/roundReference.ts 的 ROUND_REF_FIELDS。
+const FIELDS = ROUND_REF_FIELDS
 
 export function RoundRefPicker({ roundAbbr, siblingAbbrs, roundIndex, onApply, excludeRef }: Props) {
   const t = useT()
@@ -190,13 +172,15 @@ export function RoundRefPicker({ roundAbbr, siblingAbbrs, roundIndex, onApply, e
   // 预览每个字段的插值结果。offset 现在是"标准轮数",在真实轮位轴上取值。
   const preview = useMemo(() => {
     if (!entries || basePos === null) return null
-    const result: RoundRefValues = { rc: 0, hbRf: 0, hbLn: 0, ln: 0, tbRf: 0, tbLn: 0 }
-    for (const f of FIELDS) {
-      const ladder = resolveLadder(tournaments, entries, f.type, f.field, excludeRef)
-      const v = sampleLadderAtPos(ladder, basePos, offsetNum)
-      result[f.key] = v ?? 0
-    }
-    return result
+    // 逐字段 resolveLadder → sampleLadderAtPos 的实现已抽到 roundReference.ts，
+    // 公开反馈页（静态标尺）走的是同一个函数。
+    return computeRoundRefValues({
+      tournaments,
+      entries,
+      basePos,
+      offset: offsetNum,
+      exclude: excludeRef,
+    })
   }, [entries, basePos, offsetNum, excludeRef])
 
   const apply = () => {

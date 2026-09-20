@@ -1,7 +1,7 @@
 'use client'
 
 import { useViewStore } from '@/stores/viewStore'
-import { getGradientForRange, getDifficultyColor } from '@/lib/difficulty'
+import { getDifficultyColor } from '@/lib/difficulty'
 import type { Tournament, Round } from '@/lib/types'
 import { tournaments } from '@/generated/tournaments'
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react'
@@ -14,13 +14,16 @@ import { createTournamentSearchIndex, searchTournaments } from '@/lib/tournament
 import { LadderSearchResults } from './LadderSearchResults'
 import { useT } from '@/lib/i18n'
 import type { RoundLayout } from '@/lib/roundLabelLayout'
-import { COLUMN_HEADER_HEIGHT, OVERFLOW_BAND_HEIGHT, ORIGIN_Y, yForDifficulty, computeRangeGeometry, computeScalarGeometry } from '@/lib/ladderGeometry'
+import { ORIGIN_Y, yForDifficulty, computeRangeGeometry, computeScalarGeometry } from '@/lib/ladderGeometry'
+import { updateLadderHover, type LadderHover } from '@/lib/ladderHover'
+import { RangeDecoration, rangeSurface } from './RangeSurface'
+import { TournamentIdentity } from './TournamentIdentity'
+import { tournamentIcons } from '@/generated/tournamentIcons'
 
 const searchIndex = createTournamentSearchIndex(tournaments)
 
 const DIFFICULTY_RANGE = { min: 0.5, max: 16.5 }
 const BOX_HEIGHT_TYPE = 28
-const TOURNAMENT_GRADIENT = getGradientForRange(DIFFICULTY_RANGE.min, DIFFICULTY_RANGE.max)
 type RegisterRangeHover = (element: HTMLButtonElement, update: (x: number, y: number) => void) => () => void
 
 export function LadderView() {
@@ -38,7 +41,7 @@ export function LadderView() {
   }, [])
 
   // slot = 被悬浮的那个框的槽位名(多 TB/HB 拆框时才有);有它才能按"那张图的实际难度"出段位。
-  const [hoveredRound, setHoveredRound] = useState<{ round: Round; tournament: Tournament; x: number; y: number; type?: string; slot?: string } | null>(null)
+  const [hoveredRound, setHoveredRound] = useState<LadderHover | null>(null)
   const [detailRound, setDetailRound] = useState<{ round: Round; tournament: Tournament } | null>(null)
   const hideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const detailTriggerRef = useRef<HTMLElement | null>(null)
@@ -85,7 +88,9 @@ export function LadderView() {
       scrollFrameRef.current = null
       const pointer = pointerRef.current
       if (!pointer) return
-      const target = document.elementFromPoint(pointer.x, pointer.y)?.closest('[data-range-hover]')
+      const hit = document.elementFromPoint(pointer.x, pointer.y)
+      if (hit?.closest('[data-ladder-hover-card]')) return
+      const target = hit?.closest('[data-range-hover]')
       const update = target && el.contains(target) ? rangeHoverRef.current.get(target) : undefined
       if (update) update(pointer.x, pointer.y)
       else setHoveredRound(null)
@@ -97,12 +102,11 @@ export function LadderView() {
       clearTimeout(hideTimeoutRef.current)
       hideTimeoutRef.current = null
     }
-    setHoveredRound((current) => current?.round === round && current.tournament === tournament &&
-      current.x === x && current.y === y && current.type === type && current.slot === slot
-      ? current : { round, tournament, x, y, type, slot })
-  }, [])
+    setHoveredRound((current) => updateLadderHover(current, { round, tournament, x, y, type, slot }, mode === 'tournament'))
+  }, [mode])
 
   const scheduleHide = useCallback(() => {
+    if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current)
     hideTimeoutRef.current = setTimeout(() => {
       setHoveredRound(null)
     }, 150)
@@ -165,6 +169,7 @@ export function LadderView() {
         <LeftScaleInner ref={leftRef} plotHeight={plotHeight} />
 
         <div
+          data-ladder-scroll
           className="flex-1 overflow-auto"
           ref={scrollContainerRef}
           onScroll={handleScroll}
@@ -653,10 +658,8 @@ function TournamentColumn({
     const geometry = computeRangeGeometry(maxDiff, minDiff, plotHeight, DIFFICULTY_RANGE)
     if (!geometry) return null
     const lastRound = visibleRounds[visibleRounds.length - 1]
-    const height = Math.max(geometry.paintBottom - geometry.paintTop, 40)
-    const surfaceTop = geometry.above ? COLUMN_HEADER_HEIGHT : geometry.paintTop
-    const bodyVisible = geometry.paintBottom - geometry.paintTop >= 2
-    const surfaceHeight = geometry.above ? OVERFLOW_BAND_HEIGHT + (bodyVisible ? height : 0) : height
+    const surface = rangeSurface(geometry, plotHeight, minDiff)
+    const { top: surfaceTop, height: surfaceHeight } = surface.style
     // 悬浮/点击按"指针所在高度"决定指哪一轮:整个比赛只有一个框(最低→最高),
     // 固定绑最后一轮会让任何位置都显示决赛(站长反馈)。这里把指针 y 反解成难度,
     // 再取难度区间离它最近的那一轮。
@@ -697,10 +700,12 @@ function TournamentColumn({
         {columnHeader}
         {/* 熔岩头和范围框共用一个按钮、背景和外边框，避免接缝及两套 hover。 */}
         <div className="absolute inset-0" style={{ zIndex: 10 }}>
-          {(geometry.above || bodyVisible) && (
+          {surface.visible && (
             <button
               type="button"
-              className={`round-box absolute left-0 right-0 ${geometry.above ? 'overflow-range' : ''} ${geometry.below ? 'overflow-cropped-bottom' : ''} ${roundBorderAlways ? 'always-border' : ''}`}
+              className={`round-box absolute left-0 right-0 ${surface.className} ${roundBorderAlways ? 'always-border' : ''}`}
+              aria-label={tournament.name}
+              title={tournament.name}
               data-range-hover
               ref={(element) => {
                 if (!element) return
@@ -709,16 +714,7 @@ function TournamentColumn({
                   onHover(pickRoundAtPointer(y, rect.top, rect.height), x, y)
                 })
               }}
-              style={{
-                top: surfaceTop,
-                height: surfaceHeight,
-                paddingTop: geometry.above && bodyVisible ? OVERFLOW_BAND_HEIGHT : undefined,
-                backgroundColor: getDifficultyColor(geometry.above ? DIFFICULTY_RANGE.max : minDiff),
-                backgroundImage: TOURNAMENT_GRADIENT,
-                backgroundSize: `100% ${plotHeight}px`,
-                backgroundPosition: `0 ${ORIGIN_Y - surfaceTop}px`,
-                backgroundRepeat: 'no-repeat',
-              }}
+              style={surface.style}
               onMouseEnter={(e) => {
                 const rect = e.currentTarget.getBoundingClientRect()
                 onHover(pickRoundAtPointer(e.clientY, rect.top, rect.height), e.clientX, e.clientY)
@@ -738,12 +734,8 @@ function TournamentColumn({
                 onOpenDetail(e.detail === 0 ? lastRound : pickRoundAtPointer(e.clientY, rect.top, rect.height), e.currentTarget)
               }}
             >
-              {geometry.above && <span aria-hidden className="overflow-range-heat" />}
-              <span className="relative">
-                {geometry.above && <span aria-hidden className="overflow-marker-arrow mr-1">↑</span>}
-                {tournament.abbreviation}
-              </span>
-              {geometry.below && <span aria-hidden className="overflow-edge-bottom" />}
+              <RangeDecoration above={geometry.above} below={geometry.below} />
+              <TournamentIdentity key={tournament.id} name={tournament.name} icon={tournamentIcons[tournament.id]} above={geometry.above} />
             </button>
           )}
         </div>
@@ -756,28 +748,31 @@ function TournamentColumn({
     return (
       <div className="relative shrink-0" style={{ width: columnWidth }}>
         {columnHeader}
-        {/* 框体层:z-10 独立层叠上下文(把 hover 白边限制在本层内)。
-            框内文字改 sr-only,可见标题由上面的 z-30 标题层绘制(不被其他框遮挡)。
-            超界框不裁切/不标红,伸出顶部的部分由 sticky 列头自然遮挡。 */}
+        {/* 与整场比赛共用裁切、渐变和单表面熔岩；保留重叠布局。 */}
         <div className="absolute inset-0" style={{ zIndex: 10 }}>
           {roundLayouts.map((l, i) => {
+            const geometry = computeRangeGeometry(l.maxDifficulty, l.minDifficulty, plotHeight, DIFFICULTY_RANGE)!
+            const surface = rangeSurface(geometry, plotHeight, l.minDifficulty)
+            if (!surface.visible) return null
             return (
               <button
                 type="button"
                 key={l.key}
-                className={`round-box absolute left-1 right-1 ${l.dimmed ? 'dimmed' : ''} ${roundBorderAlways ? 'always-border' : ''}`}
+                className={`round-box absolute left-1 right-1 ${surface.className} ${l.dimmed ? 'dimmed' : ''} ${roundBorderAlways ? 'always-border' : ''}`}
                 style={{
-                  // 直接取 layout 里已算好的真实坐标;最小高度由 CSS 的
-                  // .round-box min-height 兜底,这里不再重复 clamp。
-                  top: l.rawTop,
-                  height: l.rawBottom - l.rawTop,
-                  background: getGradientForRange(l.minDifficulty, l.maxDifficulty),
+                  ...surface.style,
                   zIndex: totalRounds - i,
                 }}
                 onMouseEnter={(e) => onHover(l.round, e.clientX, e.clientY)}
                 onMouseLeave={onLeave}
+                onFocus={(e) => {
+                  const rect = e.currentTarget.getBoundingClientRect()
+                  onHover(l.round, rect.left + rect.width / 2, rect.top)
+                }}
+                onBlur={onLeave}
                 onClick={(e) => onOpenDetail(l.round, e.currentTarget)}
               >
+                <RangeDecoration above={geometry.above} below={geometry.below} />
                 <span className="sr-only">{tournament.abbreviation} {l.round.abbreviation}</span>
               </button>
             )
@@ -791,8 +786,11 @@ function TournamentColumn({
           {roundLayouts.map((l) => {
             if (l.dimmed) return null
             const desired = yForDifficulty(l.avgDifficulty, plotHeight, DIFFICULTY_RANGE)
-            const minY = Math.max(l.rawTop + 6, 40)
-            const maxY = Math.max(l.rawBottom - 6, minY)
+            const geometry = computeRangeGeometry(l.maxDifficulty, l.minDifficulty, plotHeight, DIFFICULTY_RANGE)!
+            const surface = rangeSurface(geometry, plotHeight, l.minDifficulty)
+            if (!surface.visible) return null
+            const minY = surface.style.top + 16
+            const maxY = Math.max(surface.style.top + surface.style.height - 16, minY)
             const centerY = Math.min(Math.max(desired, minY), maxY)
             return (
               <span
@@ -800,6 +798,7 @@ function TournamentColumn({
                 className="round-box-text absolute left-1 right-1"
                 style={{ top: centerY, transform: 'translateY(-50%)' }}
               >
+                {geometry.above && <span aria-hidden className="overflow-marker-arrow mr-1">↑</span>}
                 {tournament.abbreviation} {l.round.abbreviation}
               </span>
             )

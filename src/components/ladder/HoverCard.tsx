@@ -39,8 +39,8 @@ export function HoverCard({
   const t = useT()
   const diffLabel = buildDifficultyLabel(round, { activeFilter, type: hoveredType, slot: hoveredSlot }, dans)
 
-  const cardX = typeof window !== 'undefined' ? Math.min(x + 12, window.innerWidth - 300) : x + 12
-  const cardY = typeof window !== 'undefined' ? Math.min(y + 12, window.innerHeight - 220) : y + 12
+  const cardX = typeof window !== 'undefined' ? Math.max(8, Math.min(x + 12, window.innerWidth - 300)) : x + 12
+  const cardY = typeof window !== 'undefined' ? Math.max(8, Math.min(y + 12, window.innerHeight - 260)) : y + 12
 
   // 无 hoveredType 时不数 TB(TB 不进框范围,数进去会显得"框过大"且张数虚高)。
   // 有 hoveredSlot 时进一步收窄到那张图,保证"张数/范围/段位"三处口径一致。
@@ -67,8 +67,9 @@ export function HoverCard({
 
   return (
     <div
-      className="fixed z-50 bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-700 rounded-lg shadow-lg dark:shadow-black/40 p-3 max-w-xs"
-      style={{ left: cardX, top: cardY }}
+      data-ladder-hover-card
+      className="fixed z-50 bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-700 rounded-lg shadow-lg dark:shadow-black/40 p-3 w-72 max-w-[calc(100vw-16px)] overflow-auto"
+      style={{ left: cardX, top: cardY, maxHeight: `calc(100vh - ${cardY + 8}px)` }}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
     >

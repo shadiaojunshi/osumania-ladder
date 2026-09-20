@@ -74,7 +74,7 @@
 - **审查后加固**（另一条线的 7 条意见里成立的 5 条）：裸 `--offline` 与空 `--type=` 会静默全量发布 → 改成硬错误；孤儿清理从生成流程**摘出去**（重跑 hash 变了会误删线上正在引用的对象）；Drive 孤儿也默认只报告；`pendingMirrors` 只增不减；packs 桶 LIST 补分页。
 - **Drive 也版本化**：Drive 文件名 = 与 R2 相同的内容键 → **同名即同内容**，已存在就跳过上传（重跑省整轮流量），内容变了才新建，旧文件只进孤儿报告。
 
-**当前验证状态（2026-09-19 复测）**：`npm test` **551/551**；前后端 `tsc` 0 错；`npm run build` 成功；`npm run lint` 25 条存量错误（基线见 `PROJECT-REVIEW` R19）。**但从未在真实 R2 / GitHub Actions 上跑过全量** —— 所有发布路径的结论都来自纯函数单测、源码结构断言和故障注入式的单元测试。
+**当前验证状态（2026-09-19 复测）**：`npm test` **599/599**；前后端 `tsc` 0 错；`npm run build` 成功；`npm run lint` 25 条存量错误（基线见 `PROJECT-REVIEW` R19）。**但从未在真实 R2 / GitHub Actions 上跑过全量** —— 所有发布路径的结论都来自纯函数单测、源码结构断言和故障注入式的单元测试。
 
 ## 3. 还没做的
 
@@ -118,7 +118,7 @@
 
 ```bash
 npm run verify                                  # 前端 TS → 后端 TS → lint → 测试（一条龙；lint 现在会失败，见下）
-npm test                                        # 期望 551/551
+npm test                                        # 期望 599/599
 npm run lint                                    # 目前 25 条存量错误 → 退出 1（基线见 PROJECT-REVIEW R19）
 npx tsc --noEmit                                # 期望 0 错
 npx tsc -p functions/tsconfig.json --noEmit     # 期望 0 错

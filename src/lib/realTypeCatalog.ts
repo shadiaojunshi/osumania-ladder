@@ -13,6 +13,25 @@
 
 export type MapCategory = 'RC' | 'LN' | 'HB' | 'SV' | 'TB' | 'SPECIAL'
 
+/**
+ * 标准大类（不含 SPECIAL）。顺序 = 界面上的大类分组顺序。
+ * 与 `functions` 侧无关；JSON 里的 `type` 字段只有落在这五个里才算标准大类。
+ */
+export const STANDARD_MAP_CATEGORIES = ['RC', 'LN', 'HB', 'SV', 'TB'] as const
+export type StandardMapCategory = (typeof STANDARD_MAP_CATEGORIES)[number]
+
+/**
+ * 从 JSON 的 `type`（或编辑器的 `category`）取大类。
+ * 不在标准五类里的一律归 `SPECIAL`（跨大类自定义池，如 `HB&SV`）。
+ * 唯一实现：浏览表格、整轮参考、导入诊断都走这里，避免各自写一份 `includes` 判断。
+ */
+export function categoryOfRaw(raw: unknown): MapCategory {
+  const value = String(raw ?? '')
+  return (STANDARD_MAP_CATEGORIES as readonly string[]).includes(value)
+    ? (value as StandardMapCategory)
+    : 'SPECIAL'
+}
+
 export interface RealTypeOption {
   id: string
   name: string

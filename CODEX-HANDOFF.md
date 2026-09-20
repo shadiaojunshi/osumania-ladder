@@ -281,6 +281,28 @@ d:/osumania ladder/              ← 注意路径带空格，bash 里用引号
 
 注意与 §9 的 **`JsonPreview`「暂存到本浏览器」不是一回事**：那是整份比赛 JSON 草稿（key 前缀
 `osumania-ladder:staged-tournaments:v1`），这是元数据补丁；两者最后都汇到同一个 batch 端点。
+### 5.8 天梯视图的身份层与悬浮（2026-09-19 起）
+
+**默认进入"整场比赛"视图**（`useViewStore.mode` 默认值 `tournament`）。一个比赛 = 一个按钮 = 一整段难度范围，
+框内显示**比赛全名**（不再是缩写）。三个视图模式：整场比赛 / 每轮图池 / 每轮键型。
+
+- **悬浮锁定位**（`src/lib/ladderHover.ts`）：整场视图下同一次悬浮会话**只定位一次**，鼠标移动/滚动只换
+  "指针命中的轮次"，卡片本身不动；换到另一场比赛才重新定位。每轮 / 键型视图**不锁定**（卡片跟随指针）。
+  指针落在卡片上时 `LadderView` 的 `elementFromPoint` 先看 `[data-ladder-hover-card]`，命中就直接 return ——
+  否则会被当成"离开了框"而把卡片关掉。滚动重绘用 `requestAnimationFrame`（滚动不发 `mousemove`）。
+- **单表面**（`computeRangeSurface` + `RangeSurface.tsx` 的 `rangeSurface()`）：比赛框与轮次框共用同一套渐变坐标
+  （`backgroundSize` = 绘图区高，`backgroundPosition` 按表面顶偏移），熔岩头在按钮内部，没有残片副框。
+  改这两个函数会同时影响整场与每轮两种框。
+- **比赛图标**：文件放 `public/tournament-icons/<比赛完整 id>.<png|webp|jpg|jpeg|svg|avif>`（**id，不是缩写**，每 id 只留一个，
+  同名不同扩展会**抛错**）。`scripts/generate-tournaments.js` 在 `npm run dev` / `npm run build` 时扫目录，
+  生成 `src/generated/tournamentIcons.ts`（**生成物**在 .gitignore；`public/tournament-icons/` 下的图标**要提交**，它们是站点资源）。
+  **无图标不发任何网络请求**（不做 404 探测）。数量不符时构建日志会打印 `Generated icon index with N icons`。
+  首次进入可视区且图片加载成功后保留原貌 5 秒，再淡出标题、淡入徽章；`prefers-reduced-motion: reduce` 下等 5 秒但不做过渡。
+  加载失败保留全名，不显示破图。
+- **三处逻辑已抽到 `src/lib`，别再在组件里重写一份**：`roundReference.ts`（整轮参考，含 `applyRoundRefToMaps` /
+  `computeRoundRefValues` / `describeRoundRefChanges`）、`mapBrowserRows.ts`（键型浏览表格）、
+  `suggestions/validation.ts`（建议校验，服务端有一份独立镜像，改一边必须同时改另一边并由测试锁住）。
+  大题判读也统一走 `realTypeCatalog.ts` 的 `categoryOfRaw`。
 ## 6. 运行命令
 
 > 注意：仓库路径 `d:/osumania ladder` 带空格。bash 里 `cd "/d/osumania ladder"` 或全程用绝对路径。

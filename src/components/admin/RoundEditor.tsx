@@ -8,7 +8,8 @@ import { countableMaps } from '@/lib/difficultyCount'
 import { getTemplatesByBestOf, type PoolTemplate } from '@/lib/poolTemplates'
 import { useT } from '@/lib/i18n'
 import { DifficultyRefPicker } from './DifficultyRefPicker'
-import { RoundRefPicker, type RoundRefValues } from './RoundRefPicker'
+import { RoundRefPicker } from './RoundRefPicker'
+import { applyRoundRefToMaps, roundRefWriteSet, type RoundRefValues } from '@/lib/roundReference'
 import {
   DIFFICULTY_MAX,
   DIFFICULTY_WARN_ABOVE,
@@ -186,44 +187,20 @@ export function RoundEditor({ round, index, onChange, onRemove, getMapHistory, s
   }
 
   // 整轮「参考」:把 6 个非 SV 平均值一次写回并 lock。SV / min/max 不动。
+  //
+  // 写谱面的逻辑已抽到 `src/lib/roundReference.ts` —— 公开反馈页与审核预览调的是同一个
+  // applyRoundRefToMaps，不存在两套实现漂移。这里只负责把它接回编辑器的 onChange。
   const applyRoundRef = (v: RoundRefValues) => {
     // Keep the visible per-map editor and the summary editor in sync. The
     // exported round is derived from both, so updating only _typeDiffs made a
     // reference appear to do nothing while the editor was in per-map mode.
-    const maps = round._maps.map((map) => {
-      switch (map.category) {
-        case 'RC':
-          return v.rc > 0 ? { ...map, difficulty: v.rc } : map
-        case 'HB':
-          return {
-            ...map,
-            ...(v.hbRf > 0 ? { difficulty: v.hbRf } : {}),
-            ...(v.hbLn > 0 ? { difficultyLn: v.hbLn } : {}),
-          }
-        case 'LN':
-          return v.ln > 0 ? { ...map, difficulty: v.ln } : map
-        case 'TB':
-          return {
-            ...map,
-            ...(v.tbRf > 0 ? { difficulty: v.tbRf } : {}),
-            ...(v.tbLn > 0 ? { difficultyLn: v.tbLn } : {}),
-          }
-        default:
-          // SV and custom SPECIAL pools are intentionally not touched.
-          return map
-      }
-    })
+    const maps = applyRoundRefToMaps(round._maps, v)
     const nextDiffs = { ...round._typeDiffs }
     const nextLocked = { ...round._typeDiffsLocked }
-    const set = (key: keyof RoundWithMeta['_typeDiffs'], lockKey: keyof RoundWithMeta['_typeDiffsLocked'], val: number) => {
-      if (val > 0) { nextDiffs[key] = val; nextLocked[lockKey] = true }
+    for (const key of roundRefWriteSet(v)) {
+      nextDiffs[key] = v[key]
+      nextLocked[key] = true
     }
-    set('rc', 'rc', v.rc)
-    set('hbRf', 'hbRf', v.hbRf)
-    set('hbLn', 'hbLn', v.hbLn)
-    set('ln', 'ln', v.ln)
-    set('tbRf', 'tbRf', v.tbRf)
-    set('tbLn', 'tbLn', v.tbLn)
     onChange({
       ...round,
       _maps: maps,

@@ -29,6 +29,18 @@ export const COLUMN_HEADER_HEIGHT = 32
 export const OVERFLOW_BAND_HEIGHT = 32
 export const ORIGIN_Y = COLUMN_HEADER_HEIGHT + OVERFLOW_BAND_HEIGHT
 
+// 比赛/轮次共用一个连续表面，熔岩头包含在按钮内部；没有残片副框。
+export function computeRangeSurface(geometry: RangeGeometry) {
+  const bodyVisible = geometry.paintBottom - geometry.paintTop >= 2
+  const bodyHeight = Math.max(geometry.paintBottom - geometry.paintTop, 40)
+  return {
+    top: geometry.above ? COLUMN_HEADER_HEIGHT : geometry.paintTop,
+    height: geometry.above ? OVERFLOW_BAND_HEIGHT + (bodyVisible ? bodyHeight : 0) : bodyHeight,
+    visible: geometry.above || bodyVisible,
+    bodyVisible,
+  }
+}
+
 // 绘图区内的偏移(0 = 绘图区顶)。与 difficulty.ts 的 difficultyToY 同公式。
 export function plotOffsetY(difficulty: number, plotHeight: number, bounds: Bounds): number {
   const ratio = (bounds.max - difficulty) / (bounds.max - bounds.min)

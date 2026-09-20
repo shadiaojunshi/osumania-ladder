@@ -34,7 +34,7 @@ interface ViewStore {
 }
 
 export const useViewStore = create<ViewStore>((set) => ({
-  mode: 'round',
+  mode: 'tournament',
   zoom: 2,
   rowHeight: 100,
   columnWidth: 140,

@@ -195,7 +195,21 @@ d:/osumania ladder/              ← 注意路径带空格，bash 里用引号
 - **NSV 变体缺音频/曲绘时借用同槽主图**：`.nsv.osz`（NSV 变体）常常只带 `.osu`，直接打包会让这个难度在游戏里**没声音**。现在发现音频/曲绘缺失且是 NSV 时，回退去读同槽的 `<slot>.osz` 借同一首歌的音频/曲绘；每个包的日志里会打印体检行 `音频:借用主图 x 张;仍缺 y 张 → <keys>`（"仍缺"的那些要人补传）。
 - **去重签名（R11，2026-09-12 起，**别再按旧的"元数据指纹"理解**）**：合并键 = **候选键 + NSV + 内容摘要**。候选键三选一互斥：有 BID → `bid:<id>`；无 BID 用 `.osu` **内部**元数据 → `meta:artist|title|creator|version`（不是 JSON 的 `name`）；都没有 → `solo:<r2Key>`（永不合并）。**等价性只看内容摘要**（`Mode` + `[Difficulty]`/`[TimingPoints]`/`[HitObjects]`；标题/背景/音频名不算差异，**OD/HP 算**）。⚠️ **两条道互不相通** —— 同内容但一个有 BID 一个没有 → **不合并也不报冲突（静默）**；都无 BID 时元数据必须**逐字相同**才合并。反过来：**清 BID 救不回这种情形**，保留正确的 BID 对合并更有利。多源复用同一谱面时合并，来源写进 osu! `Version` 的括号标签 `(MWC 2025 F HB3 & VNMC …)`；顺序 = 比赛排序（`priority` 降序 → `year` **升序**（旧在前）→ 比赛缩写升序 → `id` 升序；2026-09-19 起改过，旧版是 year 降序 + 直接比 id）。
 - **身份核对报告** `reports/pack-identity-report.md`：同 BID / 同元数据但内容不同（已阻止合并，各自打包）、文件缺失且身份无法确认，以及**「内容摘要相同、但身份来源不同」**（2026-09-18 加，**只报告、不改包** —— 用于先量化"该合没合"的规模）。摘要取自预取阶段已经在手上的 `.osu`，**零额外下载**；跑 `--type=<类型>` 的离线预览也会写，或直接用 Actions 的 **Identity Report**（只读，用仓库密钥跑）。
-- **输出命名**：文件名 `<realType>_<part>.osz`（单包也带 `_1`，破坏性升级 `57904da`，勿回退）；osu! 内部 `Title = "4K Tournament {名字} Pack {n}"`、`Artist = "Various Artists"`、`Creator = "various mappers,compiled by the osu!mania Ladder Team"`、`BeatmapID=0`、`BeatmapSetID=-1`、`Source/Tags` 清空。
+- **输出命名**：文件名 `<realType>_<part>.osz`（单包也带 `_1`，破坏性升级 `57904da`，勿回退）；
+  上传到 R2/网盘时是**内容寻址**的 `<realType>_<part>.<hash8>.osz`（`objectKeyFor`，见 `pack-publish.js`；
+  键里带哈希是 R10 第 3 条：新内容 = 新键 = 旧对象原地不动，manifest 一次性切过去，避免"半新半旧"；
+  内容没变则哈希相同、复用同一对象）。**"R2 与 Drive 同名即同内容"是这套设计的前提**，
+  网盘侧 `driveName = entry.objectKey`。⚠️ **别为了"好看"去掉哈希或往键里加中文名** ——
+  `findOrphanKeys` / `referencedObjectKeys` 靠**逐字比对**清单引用的键，键一改，
+  线上 55 个老包的键就不在任何引用里 → **会被全判成孤儿、GC 一跑就删光**。
+  另：`REAL_TYPE_NAMES` 里有 4 个名字**含斜杠**（`SS` = `Single/Minijack Stream/Consistency`、
+  `WTC`、`HB1`、`HB2`），把它们拼进对象键会变成 R2 的目录分隔符，不要这么用。
+  ✅ **2026-09-20 评估过"把下载文件名改成好看的名字"（站长提的 D 方案）→ 决定不做**，
+  四条候选与结论留档：A 不改（保持 `PDSV_3.a1b2c3d4.osz`）/ B 去掉哈希（丢"内容变了就重传"的判断）/
+  C 全名（等于放弃内容寻址）/ D 全名+哈希前缀（即上面的孤儿误判 + 斜杠问题）/
+  F 给 R2 设 `Content-Disposition` 让浏览器存成好看的名字（对象键不动，代价最小，但**网盘那条路管不了**，
+  且 CF 公开域名 `pub-xxx.r2.dev` 是否透传该头**未实测**）。**站长："算了，懒得改了" —— 全部搁置。**
+  另注：玩家在 osu! 里按 `.osu` 的 `Title`（= `4K Tournament {名字} Pack {n}`）找图，下载页显示的也是这个好看名字；`.osz` 文件名很少被玩家看到 —— 这也是上一条不建议改名的原因之一。osu! 内部 `Title = "4K Tournament {名字} Pack {n}"`、`Artist = "Various Artists"`、`Creator = "various mappers,compiled by the osu!mania Ladder Team"`、`BeatmapID=0`、`BeatmapSetID=-1`、`Source/Tags` 清空。
 - **下载并发 = `PACK_DOWNLOAD_CONCURRENCY`**（默认 8、上限 32、非法值回退默认；`resolveDownloadConcurrency()`）：
   `scripts/generate-pack.js` 里**不得再出现写死的并发数**（有源码守门测试）。两个 workflow 都设成 `12`。
   这是"不改架构就能提速"的唯一旋钮 —— 瓶颈在每条记录的网络往返，不在脚本本身。
@@ -214,6 +228,24 @@ d:/osumania ladder/              ← 注意路径带空格，bash 里用引号
 ### 5.4 osu! 成绩绑定机制（用户已拍板的结论，别再推导）
 
 **osu! 本地成绩绑 .osu 文件 md5 hash，不绑 set ID。** 所以改谱面任何字节（名称/OD/HP/sourcesLabel 括号）→ hash 变 → 玩家已下成绩断。`Version` 里 sourcesLabel 括号 n→n+1 也是一个固有断点。**已知悉、接受、三方案（A 冻结名/B 去掉来源/C 维持现状）用户"先不改"，搁置。**
+
+**⚠️ 两个不同性质的断点，别再混为一谈（2026-09-20 实测澄清）：**
+
+① **换包号会断**（纯副作用）。一张图的 `.osu` 里，**唯一"因为换了包才变"的就是 `Title` 这一行** ——
+   `Title:4K Tournament RC Pack 3`（`TitleUnicode` 同值）。`packName` 由 `generate-pack.js` 的
+   `4K Tournament {键型全名} Pack {包号}` 拼出，直接写进 `.osu`。所以**重排包 = 换包号 = 换 Title = 断成绩**。
+   实测（真实 `rewriteOsu`）：同一输入跑两次 md5 相同；只把 `Pack 3` 改成 `Pack 7` → md5 不同。
+
+② **包内成员变化不会断**。包里换进来/换出去别的图，只是"这张图和谁住一起"变了，
+   它自己的 `.osu` 内容一个字节没动 → **hash 不变 → 成绩保住**。
+   （不要按"里面东西变了所以成绩也没了"理解 —— 那是反的。）
+
+真正会断的是这两类**身份变化**，与包号无关：这张图**被新的比赛收录**（`Version` 前缀的 sourcesLabel
+括号由 `(MWC 2023)` 变成 `(+SWM2 2026 | MWC 2023)`）、或 **OD/HP 被改**。
+
+**站长 2026-09-20 最终拍板：保留 ` Pack N`，不做方案 A。** 理由（站长原话意思）：
+无论如何 `Version` 里的 sourcesLabel 括号都要因为"新比赛收录"而变、成绩都要断一次，
+既然如此不如就带着包号一起断 —— 不额外多挨一刀。**此话题关闭，别再提去掉包号。**
 
 ### 5.5 谱面可视化（复刻雨沐 `!v`，2026-09-13 上线）
 

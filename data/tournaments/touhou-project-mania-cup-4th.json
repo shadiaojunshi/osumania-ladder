@@ -1173,7 +1173,7 @@
         {
           "slot": "LN1",
           "type": "LN",
-          "realType": "CO",
+          "realType": "TE",
           "name": "Meramipop feat. Studio \"Syrup Comfiture\" - Zillion Lights [Stellar]",
           "difficulty": 12.9,
           "beatmapId": 5256397,
@@ -1238,7 +1238,10 @@
           "ln": 12.9
         },
         "SV": {},
-        "TB": {}
+        "TB": {
+          "rf": 12.3,
+          "ln": 12.8
+        }
       }
     }
   ],

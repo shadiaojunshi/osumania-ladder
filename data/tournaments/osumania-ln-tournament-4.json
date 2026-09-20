@@ -1120,7 +1120,7 @@
         {
           "slot": "WC4",
           "type": "LN",
-          "realType": "LNMX",
+          "realType": "LNWC",
           "name": "Camellia - Speedrun [Mission Success (OMLN4 Edit)]",
           "difficulty": 13.8,
           "beatmapId": 5366658,

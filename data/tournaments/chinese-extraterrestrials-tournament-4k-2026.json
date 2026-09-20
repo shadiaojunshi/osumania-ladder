@@ -13,9 +13,9 @@
       "order": 1,
       "isQualifier": true,
       "difficulty": {
-        "min": 0,
-        "max": 0,
-        "average": 0
+        "min": 11.43,
+        "max": 13.76,
+        "average": 12.42
       },
       "maps": [
         {
@@ -23,7 +23,7 @@
           "type": "RC",
           "realType": "ADP",
           "name": "sabi - Dog Eater (kyou1110 Remix) [Stage 1: Limit Breaker]",
-          "difficulty": 0,
+          "difficulty": 11.43,
           "beatmapId": 5764840,
           "beatmapsetId": 2584785
         },
@@ -32,7 +32,7 @@
           "type": "RC",
           "realType": "STC",
           "name": "WOVOP feat. LuoTianyi - Wo Shi Qin Shi Huang [Stage 2: Terracotta Warriors]",
-          "difficulty": 0,
+          "difficulty": 12.28,
           "beatmapId": 5764848,
           "beatmapsetId": 2584790
         },
@@ -41,25 +41,27 @@
           "type": "HB",
           "realType": "HB1",
           "name": "Camellia - False Amber [Stage 3: Simulant]",
-          "difficulty": 0,
+          "difficulty": 11.6,
           "beatmapId": 5764826,
-          "beatmapsetId": 2584777
+          "beatmapsetId": 2584777,
+          "difficultyLn": 11.6
         },
         {
           "slot": "ST4",
           "type": "HB",
           "realType": "HB2",
           "name": "Cansol - Jazz Invasion [Stage 4: Jigsaw Improv]",
-          "difficulty": 0,
+          "difficulty": 12,
           "beatmapId": 5764830,
-          "beatmapsetId": 2584780
+          "beatmapsetId": 2584780,
+          "difficultyLn": 12
         },
         {
           "slot": "ST5",
           "type": "RC",
           "realType": "CJ",
           "name": "Ivana Wong - Hate Love Hate Love You [Stage 5: Enchevetrement]",
-          "difficulty": 0,
+          "difficulty": 12.6,
           "beatmapId": 5764927,
           "beatmapsetId": 2584828
         },
@@ -68,7 +70,7 @@
           "type": "RC",
           "realType": "SA",
           "name": "hitorie - Heart Breath (Sped Up Ver.) [Stage 6: Kardia Pneuma]",
-          "difficulty": 0,
+          "difficulty": 13.76,
           "beatmapId": 5764829,
           "beatmapsetId": 2584779
         },
@@ -77,7 +79,7 @@
           "type": "LN",
           "realType": "TE",
           "name": "otetsu feat. GUMI - Rubik's Cube [Stage 7: Chaos Longtwist]",
-          "difficulty": 0,
+          "difficulty": 12,
           "beatmapId": 5764806,
           "beatmapsetId": 2584771
         },
@@ -86,7 +88,7 @@
           "type": "LN",
           "realType": "DE",
           "name": "TamaDo - Triumphal Return [Stage 8: Honor]",
-          "difficulty": 0,
+          "difficulty": 13.4,
           "beatmapId": 5764802,
           "beatmapsetId": 2584768
         },
@@ -95,15 +97,22 @@
           "type": "RC",
           "realType": "WTC",
           "name": "Kola Kid - can't hide your love [Stage 9: Obsession]",
-          "difficulty": 0,
+          "difficulty": 13.73,
           "beatmapId": 5764841,
           "beatmapsetId": 2584786
         }
       ],
       "typeDifficulties": {
-        "RC": {},
-        "HB": {},
-        "LN": {},
+        "RC": {
+          "rf": 12.76
+        },
+        "HB": {
+          "rf": 11.8,
+          "ln": 11.8
+        },
+        "LN": {
+          "ln": 12.7
+        },
         "SV": {},
         "TB": {}
       }

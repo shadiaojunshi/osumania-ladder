@@ -1,6 +1,7 @@
 import type { Tournament } from './types'
 import { normalizeRealType } from './realType.ts'
 import { usableBeatmapId } from './beatmapIds.ts'
+import { extractVersionName } from './mapConflictDetection.ts'
 
 // PDEX = 特殊槽位(跨大类,如 HB&SV)的"待分类",2026-09-15 加。
 // 它和 PDSV 不同:PDEX 只当分类队列,不进合包(见 scripts/generate-pack.js),
@@ -18,6 +19,8 @@ export interface PendingMapLocation {
   realType: string
   beatmapId?: number
   name?: string
+  /** 从 `name` 末尾方括号取出的版本名（osu! difficulty name）；历史手传的数据取不到。 */
+  versionName?: string | null
 }
 
 export interface ImportedRoundInput {
@@ -198,6 +201,7 @@ export function findPendingMaps(
           type: map.type,
           realType,
           beatmapId: map.beatmapId,
+          versionName: extractVersionName(map.name),
           name: map.name,
         })
       }

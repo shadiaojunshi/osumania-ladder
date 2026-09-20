@@ -425,6 +425,21 @@ LN 单曲使用 difficulty 是当前领域约定，不能改成 difficultyLn。�
 - 测试：`upload-to-gdrive.test.mjs` 扩到 **14 例**（+5：清单里同内容键跳过、Drive 已有同名复用、内容变了新建不覆盖、旧文件进孤儿报告但不删、历史条目仍覆盖）。变异 3 处（不信内容键 / 退回覆盖式 / 不查同名文件）分别挂 1、4、1 例。`npm test` → **418/418**；前后端 `tsc` 0 错。
 - 注意：Drive 上传仍是**整包重传**（Drive 不支持局部修改），每轮流量与过去相同 —— 版本化只是把「覆盖」换成「新增副本」，不额外增加流量。
 
+**复查修正（2026-09-20）**
+
+- **`needsMirrorSync` 原来只看「本次有没有产出 r2 链接」，不看内容键是否真的变了。** 内容寻址键落地后
+  这两件事不再等价：一次全量跑会把所有包重新生成一遍，字节没变 → 对象键相同 → 但每个包都会被重新打上
+  「镜像未同步」。Drive 侧有 `gdriveObjectKey === objectKey → 跳过上传` 兜着，所以不会重复传输，
+  **但下载页会照着这份标记误报** —— 而下载页正好在这一轮开始消费 `pendingMirrors`，所以必须一并修。
+- 改成比较 **Drive 上那个文件对应的内容键**（`previousEntry.gdriveObjectKey === currentObjectKey`）。
+  上一版没记 `gdriveObjectKey` 的历史条目落到「要同步」，方向是保守的（宁可让 Drive 核对一次）。
+- 测试：新增 `scripts/pack-mirrors.test.mjs` **8 例** —— 其中包括一条**镜像锁**：直接拿
+  `buildManifestPacks` 的**真实产物**去比对前端 `src/lib/packMirrors.ts` 的键拼法（两边分处
+  `scripts/`（CJS）与 `src/lib`，不能互相 import）。变异 2 处（不比较内容键 / 比错字段）各挂 1 例。
+- **同期收尾**：下载页开始消费 `pendingMirrors`（信息行「⚠ 镜像未同步」+ Drive 按钮加 title 与琥珀色描边）；
+  `upload-packs-to-drive.yml` 补上 `upload-artifact`（与 `generate-packs.yml` 同一件事：
+  runner 一退出工作区就没了，失败时那句「已保留本地结果」得靠它兜住）。
+
 ### R11 [P1] 元数据指纹会错误合并不同谱面；备选路径不验证内容
 
 证据：scripts/generate-pack.js:290、:484、:537、:575、:310。已复现同 Artist/Title/Creator/Version、不同 HitObjects 指纹相同；元数据全空还会得到相同的分隔符串。

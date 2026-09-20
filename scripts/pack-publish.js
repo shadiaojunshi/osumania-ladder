@@ -160,12 +160,20 @@ function mergeLinks(previousLinks, currentLinks) {
  * 包内容变了（本次重新上传了 r2）时，旧 manifest 里的镜像链接指向的还是**旧内容**。
  * 链接要保留（不能丢人工维护的镜像），但必须显式标记出来，免得被当成"镜像已更新"。
  */
-function needsMirrorSync(previousEntry, currentLinks) {
+function needsMirrorSync(previousEntry, currentLinks, currentObjectKey) {
   if (!previousEntry) return false
   const prevMirrors = Object.keys(previousEntry.links || {}).filter((k) => k !== 'r2')
+  // 没有人工镜像链接 → 没什么可同步的。
   if (prevMirrors.length === 0) return false
-  // 本次产出了新的 r2 链接 = 包内容确实换了。
-  return typeof currentLinks?.r2 === 'string' && currentLinks.r2.length > 0
+  // 本次没产出新的 r2 链接 = 这个包根本没被重新生成。
+  if (typeof currentLinks?.r2 !== 'string' || currentLinks.r2.length === 0) return false
+  // "重新生成过"不等于"内容变了"：对象键是**内容寻址**的，键相同就是同一份字节。
+  // 少了这一句，每次全量跑都会给所有包重新打上"镜像未同步"——而它们其实一模一样。
+  // Drive 侧有一道 `gdriveObjectKey === objectKey → 跳过上传` 兜着，所以不会重复传输，
+  // 但下载页会照着这份标记误报。上一版没记 `gdriveObjectKey` 的历史条目会落到"要同步"，
+  // 方向是保守的（宁可让 Drive 那边核对一次）。
+  if (currentObjectKey && previousEntry.gdriveObjectKey === currentObjectKey) return false
+  return true
 }
 
 /**
@@ -215,7 +223,7 @@ function buildManifestPacks({ typeResults = [], oldManifest = {}, today, preserv
         gdriveObjectKey: previous?.gdriveObjectKey,
         sizeMB: r.sizeMB,
       })
-      if (needsMirrorSync(previous, r.links)) pendingMirrors.add(`${r.realType}_${part}.osz`)
+      if (needsMirrorSync(previous, r.links, r.objectKey)) pendingMirrors.add(`${r.realType}_${part}.osz`)
     }
   }
 

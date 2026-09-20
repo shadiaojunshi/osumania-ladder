@@ -88,6 +88,8 @@ export const messagesEn: Record<keyof typeof messagesZh, string> = {
   'download.mapsSimple': '{n} maps',
   'download.updated': 'Updated {date}',
   'download.noLinks': 'No download',
+  'download.mirrorPending': 'Mirror out of date',
+  'download.mirrorPendingHint': 'This mirror still holds the previous version; the R2 copy is current',
   'download.link.r2': 'Cloudflare Direct',
   'download.link.drive123': '123 Pan',
   'download.link.googleDrive': 'Google Drive',

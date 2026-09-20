@@ -12,7 +12,8 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "typecheck:functions": "tsc -p functions/tsconfig.json --noEmit",
-    "verify": "npm run typecheck && npm run typecheck:functions && npm run lint && npm test"
+    "typecheck:workers": "tsc -p workers/feedback/tsconfig.json --noEmit",
+    "verify": "npm run typecheck && npm run typecheck:functions && npm run typecheck:workers && npm run lint && npm test"
   },
   "keywords": [],
   "author": "",

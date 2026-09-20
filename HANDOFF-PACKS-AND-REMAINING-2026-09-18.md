@@ -97,8 +97,11 @@
 
 ### C. 我从审查里认领但没做完的
 
-- **下载页还没消费 `pendingMirrors`**：清单顶层已经在如实记录「哪些包的镜像仍是旧内容」，但 `/download` 页面没有读它。要么显示「镜像未同步」，要么在未同步时先不显示 Drive 链接。
-- **`upload-packs-to-drive.yml` 还没加 `upload-artifact`**（只给 `generate-packs.yml` 加了）。
+- ~~下载页还没消费 `pendingMirrors`~~ —— **2026-09-20 已做**：`src/lib/packMirrors.ts`（纯逻辑 + 与
+  `pack-publish.js` 的**镜像锁**测试）+ 信息行「⚠ 镜像未同步」标记 + Drive 按钮 title/描边。
+  顺带修了它上游的一个真 bug：`needsMirrorSync` 过去只看「本次有没有产出 r2 链接」、不看内容键是否变了，
+  导致全量跑会把所有包误标成「镜像未同步」（详见 `PROJECT-REVIEW-2026-09-12.md` R10 的复查修正）。
+- ~~`upload-packs-to-drive.yml` 还没加 `upload-artifact`~~ —— **2026-09-20 已加**。
 - **Drive 的旧版本文件清理**：现在只报告不删。5TB 下可以长期留着当回滚点，要清的话照 `gc-pack-objects.mjs` 的思路再写一个 Drive 版（读已提交清单 + 保留期）。
 
 ## 4. 改合包链之前必须知道的契约（最容易踩的）

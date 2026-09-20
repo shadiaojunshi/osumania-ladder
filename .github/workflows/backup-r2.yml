@@ -29,5 +29,44 @@ jobs:
           R2_BUCKET: osumania-ladder-maps
           R2_BACKUP_BUCKET: osumania-ladder-maps-backup
           # 变更前存档的保留天数（0 = 关闭存档与轮转，退回纯镜像）。
-          # 保留期要长于"你能发现被篡改的时间"—— 超过这个天数，快照就被轮转删掉了。
-          R2_SNAPSHOT_RETENTION_DAYS: 7
+          # 保留期 = 你的**发现窗口** —— 超过这个天数，快照就被轮转删掉了。
+          # 2026-09-20 从 7 提到 30：一周太短（出差/忙起来就错过），30 天的存储代价可以接受。
+          R2_SNAPSHOT_RETENTION_DAYS: 30
+
+  # KV 里那三样（管理员名单 / 审计日志 / 回收站元数据）**不在任何 R2 备份路径里**，
+  # 所以单开一个作业导出到同一个备份桶（`kv-snapshots/<日期>.json`）。
+  #
+  # 为什么独立作业而不是加在上面那个里：KV 走 **Cloudflare API**（API token），
+  # R2 走 S3 凭据 —— 两套凭据。合在一起的话，任一侧缺凭据会让另一个也拿不到状态。
+  # KV 导出失败不影响 R2 备份的结论，反之亦然。
+  #
+  # 需要三个**仓库里没有**的 secret（配之前这个作业会红，那是提醒而不是故障）：
+  #   CF_API_TOKEN       —— Account 级，权限只要 `KV Storage:Read`
+  #   CF_ACCOUNT_ID      —— Cloudflare 账号 id
+  #   CF_KV_NAMESPACE_ID —— LADDER_KV 的 namespace id
+  backup-kv:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - run: npm ci
+
+      - name: Backup KV to the backup bucket
+        run: node scripts/backup-kv.mjs
+        env:
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CF_KV_NAMESPACE_ID: ${{ secrets.CF_KV_NAMESPACE_ID }}
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY: ${{ secrets.R2_ACCESS_KEY }}
+          R2_SECRET_KEY: ${{ secrets.R2_SECRET_KEY }}
+          R2_BACKUP_BUCKET: osumania-ladder-maps-backup
+          KV_SNAPSHOT_RETENTION_DAYS: 30
+          # 变更前存档的保留天数（0 = 关闭存档与轮转，退回纯镜像）。
+          # 保留期 = 你的**发现窗口** —— 超过这个天数，快照就被轮转删掉了。
+          # 2026-09-20 从 7 提到 30：一周太短（出差/忙起来就错过），30 天的存储代价可以接受。
+          R2_SNAPSHOT_RETENTION_DAYS: 30

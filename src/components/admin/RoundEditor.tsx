@@ -10,6 +10,7 @@ import { useT } from '@/lib/i18n'
 import { DifficultyRefPicker } from './DifficultyRefPicker'
 import { RoundRefPicker } from './RoundRefPicker'
 import { applyRoundRefToMaps, roundRefWriteSet, type RoundRefValues } from '@/lib/roundReference'
+import { recalcDifficulty } from '@/lib/roundDifficulty'
 import {
   DIFFICULTY_MAX,
   DIFFICULTY_WARN_ABOVE,
@@ -590,36 +591,10 @@ function mapsToOutput(maps: ExtendedMap[]): BeatmapMeta[] {
   return maps.map(({ category, ...rest }) => rest)
 }
 
-// round.difficulty 的收数规则:
-//   TB (含 slot='TB1', type 都是 'TB'):不参与本轮统计
-//   HB:同一张图有 rf/ln 两个刻度,两侧都填就取平均 (rf+ln)/2 作为一个数据点,
-//        单侧有就用那侧,两侧都是 0 就跳过。rf/ln 尺度不严格对应,但作
-//        round-level 的 fallback 数字足够。
-//   其它 (RC/LN/SV/SPECIAL):存储字段 difficulty > 0 就收 difficulty。
-function recalcDifficulty(maps: ExtendedMap[]): Round['difficulty'] {
-  if (maps.length === 0) return { min: 0, max: 0, average: 0 }
-  const points: number[] = []
-  // 勾了"不参与难度统计"的图不进本轮 min/max/average(与前端取数同一口径)。
-  for (const m of countableMaps(maps)) {
-    if (m.type === 'TB') continue
-    if (m.type === 'HB') {
-      const rf = m.difficulty > 0 ? m.difficulty : 0
-      const ln = (m.difficultyLn ?? 0) > 0 ? m.difficultyLn! : 0
-      // 双值偏 ln 2/3;单侧就用那侧;都空跳过。
-      if (rf > 0 && ln > 0) points.push(rf + (ln - rf) * (2 / 3))
-      else if (rf > 0) points.push(rf)
-      else if (ln > 0) points.push(ln)
-      else continue
-    } else {
-      if (m.difficulty > 0) points.push(m.difficulty)
-    }
-  }
-  if (points.length === 0) return { min: 0, max: 0, average: 0 }
-  const min = +Math.min(...points).toFixed(2)
-  const max = +Math.max(...points).toFixed(2)
-  const average = +(points.reduce((s, d) => s + d, 0) / points.length).toFixed(2)
-  return { min, max, average }
-}
+// `recalcDifficulty` 已抽到 `@/lib/roundDifficulty`（唯一实现）—— 反馈建议采纳时也要重算
+// summary，那段判定在 `src/lib` 里，不能反过来 import 这个组件。
+// 顺带记一笔：原注释写 HB 双刻度"取平均 (rf+ln)/2"，但代码一直是偏 ln 2/3
+// （`rf + (ln - rf) * 2/3`）—— 抽取时按**代码**为准，没有沿用那句过时描述。
 
 function autoCalcTypeDiffs(
   maps: ExtendedMap[],

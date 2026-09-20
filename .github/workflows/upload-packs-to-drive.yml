@@ -70,3 +70,16 @@ jobs:
           done
           echo "::error::push 连续失败，已保留本地提交与生成结果。"
           exit 1
+
+      - name: Keep failure artifacts
+        # 与 generate-packs.yml 同一件事：runner 一退出工作区就没了，失败时那句
+        # 「已保留本地结果」得靠这个动作兜住。只上传清单，不含任何凭据。
+        if: failure() || cancelled()
+        uses: actions/upload-artifact@v4
+        with:
+          name: drive-sync-debug
+          path: |
+            data/packs-manifest.json
+            data/packs-manifest.previous.json
+          if-no-files-found: ignore
+          retention-days: 7

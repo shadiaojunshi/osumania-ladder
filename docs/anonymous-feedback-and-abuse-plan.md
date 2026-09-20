@@ -1,6 +1,6 @@
 # 匿名访问、额度保护与反馈功能实施方案
 
-日期：2026-09-18。状态：**设计交接，反馈和限流功能尚未实现**。不要把本文中的阈值、绑定、Turnstile、熔断和邮件能力当作已经上线。
+日期：2026-09-18。状态：**设计交接；纯逻辑已部分落地（见文末「实施进度（2026-09-20）」），页面 / Worker / 审核仍未实现**。不要把本文中的阈值、绑定、Turnstile、熔断和邮件能力当作已经上线。
 
 ## 1. 建议直接采用的产品决定
 
@@ -168,3 +168,126 @@ R2 不提供跨对象事务。不要用“删 pending 对象、写 accepted 对�
 验收必须包括：匿名首页/筛选/键型展示零业务 API；合法提交无 GitHub 调用；未授权审核 401/403；回放/过期/错误 hostname 的 Turnstile 被拒；伪造字段/路径穿越/缺长度头/超长 UTF-8/NaN 被拒；跨两实例并发超预算不超写；IPv6/NAT 策略；同 requestId 幂等与冲突；R2 成功后响应丢失不重复；两个管理员 CAS 冲突；目标改名/换 BID 后不误改；跨多建议同一文件合并；整轮不动 SV/SPECIAL；保存失败保留草稿；commit 成功 finalize 失败不重 commit；清空暂存可重新采纳；100 条建议一次合法 batch 只创建一个数据 commit；关闭反馈后后台及静态资源按预期仍可访问。
 
 平台能力核对入口（实施时查看当前文档和账号实配）：[Pages Functions routing](https://developers.cloudflare.com/pages/functions/routing/)、[Workers limits](https://developers.cloudflare.com/workers/platform/limits/)、[KV limits](https://developers.cloudflare.com/kv/platform/limits/)、[R2 pricing](https://developers.cloudflare.com/r2/pricing/)、[Turnstile server validation](https://developers.cloudflare.com/turnstile/get-started/server-side-validation/)、[Rate limiting](https://developers.cloudflare.com/waf/rate-limiting-rules/)、[Durable Objects pricing](https://developers.cloudflare.com/durable-objects/platform/pricing/)。
+
+
+## 实施进度（2026-09-20）
+
+只记「哪些文件已经存在 / 哪些还没有」，不改本文其余部分。
+
+### 已落地（§9 第 2 步的纯逻辑）
+
+全部在 `src/lib` 下，可被 `node --test` 直接导入，不依赖 React、不依赖 `functions/`。
+
+| 文件 | 内容 |
+| --- | --- |
+| `src/lib/suggestions/types.ts` | 判别联合契约（`slot.realType` / `slot.difficulty` / `round.reference`）、`SuggestRecord`、拒绝码 |
+| `src/lib/suggestions/validation.ts` | 白名单式解构；身份字段（id / status / reviewerUid / commitSha）传了就拒 |
+| `src/lib/suggestions/patch.ts` | 定位目标、算 old→new、按大类判可写性、与暂存比冲突 |
+| `src/lib/suggestions/apply.ts` | 把变更计划落回**草稿**，产出可追溯的 `suggestionChanges` 记录 |
+| `src/lib/roundReference.ts` | 整轮参考的应用与派生（从 `RoundEditor.applyRoundRef` 抽出） |
+| `src/lib/roundDifficulty.ts` | `round.difficulty`（min / max / average）的收数规则（从 `RoundEditor.recalcDifficulty` 抽出） |
+| `src/lib/mapBrowserRows.ts` | 浏览表格的行身份 / 筛选 / 排序（从 `RealTypeMapBrowser` 抽出） |
+| `scripts/{suggestion-validation,suggestion-patch,suggestion-apply,round-reference,map-browser-rows}.test.mjs` | 对应单测 |
+
+顺带把「难度是单刻度还是双刻度」从 `MapSlotEditor.tsx` 移到 `src/lib/realTypeCatalog.ts`
+（`needsDualDifficulty` / `difficultyFieldsFor`），组件改成 import + re-export（调用点不变）。
+`round.difficulty` 的收数规则同样抽到了 `src/lib/roundDifficulty.ts`（`RoundEditor` 有 6 处调用它）——
+整轮参考与单张难度建议都会改到谱面难度，采纳时必须重算 summary，用的得是同一份规则。
+理由与键型目录相同：公开页不能 import 后台组件，规则留在组件里就会长出第二份实现。
+
+`patch.ts` 的四条口径（都与现有后台行为对齐）：
+
+1. **定位不猜** —— `round-not-found` / `slot-not-found` / `slot-ambiguous` / `beatmap-mismatch`
+   四种分别报出来，不用 `roundIndex || fallback`。占位 BID（0 / 1）在提案与数据两侧都当「没有 ID」。
+2. **键型只改 `realType`，不动 `type`（大类）** —— 同 `admin/page.tsx` 的 `handleStageMapChange`。
+   大类要变属于另一个动作（`MapSlotEditor.handleCategoryChange`），不在建议范围内。
+3. **难度按大类** —— RC / LN / SV 只有 `difficulty`；HB / TB / SPECIAL 才有 `difficultyLn`。
+   给了该大类不适用的字段**显式拒绝**，不静默丢掉。
+4. **整轮参考列全影响面** —— 用 `describeRoundRefChanges` 逐槽位逐字段给出 old→new；
+   SV 与 SPECIAL 有意不动。参考来源轮与目标轮不一致要拒。
+
+冲突比较只认「同一槽位、同一字段、**不同的值**」；值相同视为同一条建议，合并来源即可。
+
+`apply.ts` 的四条口径（对应方案第 7 节）：
+
+1. 改的是**草稿**（`StagedEntry.data`），不是权威文件；真正写回仍由「保存全部」的
+   `/api/tournaments/batch` 完成 —— N 条建议 = 1 次 commit / 1 次构建。
+2. 写进去的是**审核员看过的那个值**（计划的 `after`），不在这里重算。
+3. 逐字段记录 `suggestionId / revision / key / field / before / after`，不是只记一串 ID。
+4. **先全校验再全写**：任一字段当前值与 `before` 对不上就整条拒绝、一个字都不改
+   （`superseded`）。草稿里已经是目标值的不重复写，记为 `already`（同值建议合并来源）。
+   改过任何难度才重算 `round.difficulty`；键型建议不重算。
+
+### 自审记录（2026-09-20 复核 `patch.ts`）
+
+- **拿真实数据全量跑了一遍**（55 场比赛 / 4987 张谱面 / 385 个轮次，对每张图各造一条键型建议与
+  一条难度建议、每个轮次造一条整轮参考建议）：**零定位失败**，整轮参考平均波及 12.25 个槽位。
+  真实数据里**没有** slot 重复、也**没有**占位 BID —— 那两个失败分支目前纯属防御，
+  保留是因为它们正是方案第 7 节第 2 条点名要拦的情况。
+- **发现并修掉三处**（改动前测试全绿 → 说明三处都是覆盖盲区）：
+  1. `mapBeatmapId` 做了 `Number(value)` 宽容转换，字符串 BID 会被当成真 ID ——
+     与 `validation.ts` 的「不猜」原则不一致，已收紧成只看 `number`。
+  2. 轮次级建议的 `category` 报了 `'SPECIAL'` —— 它是「不适用」，不是「SPECIAL」，
+     界面拿去显示会误导；已改成 `null`。
+  3. 难度 `changes` 的顺序跟着 `Object.keys(value)` 走，同一条建议在审核页上的 old→new
+     顺序会随提交方的键序变化；已固定为 `difficultyFieldsFor` 的顺序（rf 在前）。
+- **补了 3 条用例**（33 例）：难度顺序固定、轮次级类别为 null、字符串 BID 不当 ID。
+  两轮变异合计 **14 处，全部被抓到**；其中「占位／字符串 ID 当真 ID」与「难度路径的 `noop`」
+  第一次都**没挂**，补上对应用例后才挂 —— 说明这两个分支原本没有断言。
+- `apply.ts` 另做 6 处变异（含**破坏原子性**：把写入挪进第一遍校验循环），全部被抓到。
+
+### 提交 Worker（§9 第 3 步）
+
+`workers/feedback/` —— 代码就绪，**但没部署过、也没在真实 Cloudflare 上验证过**。
+
+| 文件 | 职责 |
+| --- | --- |
+| `src/index.ts` | 入口与编排；闸门顺序在这里 |
+| `src/policy.ts` | Turnstile 判定、频率/预算决策、IP 加盐哈希 |
+| `src/request.ts` | 方法/类型/Origin、**限长读体**（边读边数，超限即 cancel） |
+| `src/store.ts` | 对象键、幂等判定、落盘；`r2ObjectStore` 把 R2 适配成最小接口 |
+| `src/env.ts` | 绑定契约与配置完整性检查 |
+| `wrangler.toml` | 配置样例 |
+| `README.md` | 权限边界、上线步骤、出事时怎么关 |
+
+闸门顺序（每一道的顺序都是有意的）：
+
+```
+开关 → 配置完整性 → 方法/类型/Origin → 限长读体 → JSON → 白名单校验
+→ 验证闸门 → Turnstile → 接纳闸门 → 幂等 → 写 R2 → 201
+```
+
+1. **验证闸门在 Turnstile 之前** —— 被刷的请求连一次 siteverify 都不花。
+2. **接纳闸门在写之前** —— 验证过了但额度见底也不落盘。
+3. 白名单校验直接 `import src/lib/suggestions/validation.ts`，公开端与后台**共用同一份契约**（§5）。
+
+**三处 fail-closed**：开关未设 / 配置缺项 / 没有额度协调器 → 一律 503。不"半开着跑" ——
+半配置状态最容易发生的不是功能不可用，而是某道闸门被静默跳过。
+
+**现在还不能上线**：缺额度协调器（Durable Object）与 §9 第 1 步的前置（额度实测、路由验证、桶建好）。
+DO 只在**同一个串行事务**里调 `policy.ts` 的决策函数，规则仍然只有这一份实现。
+`FEEDBACK_WRITES_ENABLED` 缺省关闭，部署上去也不会收提交。
+
+验证：`scripts/feedback-worker.test.mjs` **46 例**（预算决策、IP 只认 `CF-Connecting-IP`、
+Turnstile 三字段、限长含 `Content-Length` 撒谎、幂等三态、端到端编排用假 env + 真 `Request`/`Response`）；
+变异 **9 处抓到 8 处**（存活那处是"配置检查不查 QUOTA"，handler 里还有第二道兜底，属冗余而非盲区）。
+⚠️ 这些都不是平台证据 —— DO 定价、WAF 限流是否按路径生效、R2 lifecycle、Turnstile 的 hostname
+回填，都要在账号里实测（§9 验收清单）。
+
+新增 `npm run typecheck:workers`，根 tsconfig 的 exclude 加上 `workers`（与 `functions` / `osu-proxy`
+同一个模式），`verify` 也串上了它。
+
+### 未落地
+
+`src/app/feedback/`、`src/components/maps/MapBrowser.tsx`、`src/components/feedback/FeedbackDialog.tsx`、
+`functions/api/suggestions/`、`src/components/admin/SuggestionReview.tsx`、`docs/feedback-operations.md`；
+以及**额度协调器（Durable Object）的实现与部署**。
+
+§7 只剩「记录层」没接：`StagedEntry`（`src/app/admin/page.tsx`）目前是
+`{ data, baseSha, baseline, legacy? }`，还没有 `suggestionChanges` 字段来记住
+「这一版草稿里哪几个字段是哪条建议带来的」。审核 UI 也还没有。
+
+**更正一处早先的判断**：`MapPatch`（`src/lib/mapPatchCommit.ts`，只有 `name` / `beatmapId` /
+`beatmapsetId`）**不需要**为反馈建议扩字段。它是**上传页**的补丁池；审核采纳改的是
+`StagedEntry.data`（一份完整的 `Tournament` 草稿，与 `admin/page.tsx` 的
+`handleStageMapChange` 走同一条路）。两套机制互不相干 —— 之前把它们混为一谈是错的。

@@ -87,6 +87,8 @@ export const messagesZh = {
   'download.mapsSimple': '{n} 张',
   'download.updated': '更新于 {date}',
   'download.noLinks': '暂无下载',
+  'download.mirrorPending': '镜像未同步',
+  'download.mirrorPendingHint': '这个镜像还是上一版内容；R2 主链已更新',
   'download.link.r2': 'Cloudflare 直链',
   'download.link.drive123': '123网盘',
   'download.link.googleDrive': 'Google Drive',

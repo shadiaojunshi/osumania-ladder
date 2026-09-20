@@ -26,8 +26,26 @@ const metaOf = (over = {}) => ({
   ...over,
 })
 
-test('decideFill：已经有可用 beatmapId 的图一律不动', () => {
-  assert.equal(decideFill({ slot: 'RC1', beatmapId: 999 }, metaOf()), null)
+// 2026-09-20 行为变更：以前"有可用 BID"就整条跳过，name 分支永远够不到。
+// 现在两条判断互相独立 —— BID 绝不改写，但 name 是占位时仍要补。
+test('decideFill：BID 可用**且 name 是真名** → 一律不动（只增不改）', () => {
+  assert.equal(decideFill({ slot: 'RC1', beatmapId: 999, name: 'Real Song [Insane]' }, metaOf()), null)
+})
+
+test('decideFill：BID 可用但 name 是占位 → 只补 name，绝不碰 ID', () => {
+  // 真实案例：ASC 2025 有 80/88 张是这样（BID 正确、name 被填成槽位记号），
+  // 4DM2023 是 98/98，全库共 214 张。旧实现永远修不了这批。
+  const fill = decideFill({ slot: 'RC1', beatmapId: 999 }, metaOf())
+  assert.equal(fill.beatmapId, undefined, 'BID 本来就没问题 —— 不该写回去')
+  assert.equal(fill.beatmapsetId, undefined, '连带也不该动 setId')
+  assert.equal(fill.replacedPlaceholder, false, '这不是"覆盖占位 ID"')
+  assert.equal(fill.name, 'A - T [V]')
+
+  // name === slot 的形态（ASC 2025 的 ST1 等）。
+  assert.equal(decideFill({ slot: 'ST1', beatmapId: 5363572, name: 'ST1' }, metaOf()).name, 'A - T [V]')
+  // 空 / 纯空白同样算占位。
+  assert.equal(decideFill({ slot: 'RC1', beatmapId: 999, name: '' }, metaOf()).name, 'A - T [V]')
+  assert.equal(decideFill({ slot: 'RC1', beatmapId: 999, name: '   ' }, metaOf()).name, 'A - T [V]')
 })
 
 test('decideFill：meta 里的 beatmapId 不可用（占位/缺失/非整数）→ 不回填', () => {

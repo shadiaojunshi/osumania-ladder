@@ -137,6 +137,38 @@ export function defaultRealTypeFor(category: MapCategory, fallback = ''): string
   return first ?? fallback
 }
 
+// ---------------------------------------------------------------------------
+// 难度刻度
+// ---------------------------------------------------------------------------
+//
+// 从 `MapSlotEditor.tsx` 原样移到 lib（组件继续 re-export，行为不变）。
+// 移出来的理由与键型目录相同:反馈建议的补丁逻辑(`src/lib/suggestions/patch.ts`)也要用它,
+// 而公开反馈页不能 import 带 OAuth/KV 的后台组件 —— 规则留在组件里就会长出第二份实现,
+// 「单刻度 / 双刻度」一旦两边漂移,审核页显示的和真正写进去的就不是一回事。
+
+export const DIFFICULTY_FIELD_RF = 'difficulty' as const
+export const DIFFICULTY_FIELD_LN = 'difficultyLn' as const
+export type DifficultyField = typeof DIFFICULTY_FIELD_RF | typeof DIFFICULTY_FIELD_LN
+
+/**
+ * 该大类是否用**双刻度**:
+ *   HB / TB / SPECIAL → `difficulty` 是 rf、`difficultyLn` 是 ln(两个输入框);
+ *   RC / LN / SV       → 只有一个 `difficulty`。
+ */
+export function needsDualDifficulty(category: MapCategory): boolean {
+  return category === 'HB' || category === 'TB' || category === 'SPECIAL'
+}
+
+/**
+ * 该大类**实际会写**的难度字段(顺序 = 界面上输入框的顺序)。
+ * 用途:让"建议值里给了这个字段但该大类不认"能被显式拒绝,而不是静默丢掉。
+ */
+export function difficultyFieldsFor(category: MapCategory): readonly DifficultyField[] {
+  return needsDualDifficulty(category)
+    ? [DIFFICULTY_FIELD_RF, DIFFICULTY_FIELD_LN]
+    : [DIFFICULTY_FIELD_RF]
+}
+
 /**
  * 下拉框可选项。
  * 普通大类只看自己的列表;**特殊槽位**跨大类——列出所有大类的键型(带 `group` 便于分组),

@@ -4,7 +4,7 @@ import { useState, useMemo, useCallback, useEffect, useRef } from 'react'
 import { useT } from '@/lib/i18n'
 import { tournaments as allTournaments } from '@/generated/tournaments'
 import type { Tournament } from '@/lib/types'
-import { classifySetConflict, extractRate } from '@/lib/mapConflictDetection'
+import { classifySetConflict, extractRate, extractVersionName } from '@/lib/mapConflictDetection'
 import { isUsableBeatmapId } from '@/lib/beatmapIds'
 import { findPendingMaps } from '@/lib/tournamentDiagnostics'
 import { normalizeRealType } from '@/lib/realType'
@@ -22,6 +22,14 @@ interface Usage {
   beatmapId: number
   beatmapsetId?: number
   rate?: number // 仅倍速冲突用于展示
+  /**
+   * 版本名（osu! 的 difficulty name），从 `name` 的末尾方括号取。
+   *
+   * 用途：同 set 那几行光看槽位（`RC7` / `RC6`）分不清「同 set 里两张不同的谱面」和
+   * 「同一张谱的倍速版本」—— 把版本名并排显示出来就一眼能看出来。
+   * 历史手传的数据里 `name` 可能就是槽位记号，那种取不到（为 null）。
+   */
+  versionName?: string | null
 }
 
 type ConflictKind = 'bid' | 'rateSet' | 'setReview'
@@ -120,6 +128,7 @@ function findConflicts(tournaments: Tournament[]): Conflict[] {
           beatmapId: m.beatmapId || 0,
           beatmapsetId: m.beatmapsetId,
           rate: extractRate(m.name),
+          versionName: extractVersionName(m.name),
         }
         // 占位 ID（0/1/负数）不参与分组：它们不是真实 ID，混进来会把无关谱面粘成
         // 一组"同 set/BID 冲突"（MKTC 2025 的 36 张就是 `BeatmapSetID:1`）。
@@ -497,6 +506,15 @@ export function RealTypeConflictChecker({ canSave }: { canSave: boolean }) {
                       <span className="tabular-nums text-gray-400 dark:text-neutral-500 shrink-0">{(u.rate ?? 1)}x</span>
                     )}
                     <span className="truncate">{u.tournamentAbbr} · {u.roundAbbr} · {u.slot}</span>
+                    {/* 倍速冲突那行已经用 `1.05x` 表达了版本差异，这里就不重复。 */}
+                    {c.kind !== 'rateSet' && u.versionName && (
+                      <span
+                        className="shrink-0 text-purple-600 dark:text-purple-300"
+                        title={u.name}
+                      >
+                        · {u.versionName}
+                      </span>
+                    )}
                   </div>
                 ))}
               </div>
@@ -525,9 +543,18 @@ export function RealTypeConflictChecker({ canSave }: { canSave: boolean }) {
                 <span className="w-12 shrink-0 rounded bg-amber-100 px-1.5 py-0.5 text-center font-mono text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">
                   {map.realType}
                 </span>
-                <span className="min-w-0 flex-1 truncate text-gray-600 dark:text-neutral-300">
+                {/* 以前这里接的是完整曲名，被 `truncate` 截掉后恰好看不到**末尾的版本名** ——
+                    而那正是用来分辨「同 set 不同谱面」与「同一谱的倍速」的东西。
+                    现在版本名单独摆出来，完整曲名放 title。 */}
+                <span className="min-w-0 flex-1 truncate text-gray-600 dark:text-neutral-300" title={map.name || undefined}>
                   {map.tournamentAbbr} · {map.roundAbbr} · {map.slot}
-                  {map.name ? ` · ${map.name}` : ''}
+                  {map.versionName ? (
+                    <span className="text-purple-600 dark:text-purple-300"> · {map.versionName}</span>
+                  ) : map.name && map.name !== map.slot ? (
+                    ` · ${map.name}`
+                  ) : (
+                    ''
+                  )}
                 </span>
                 {map.beatmapId && (
                   <a

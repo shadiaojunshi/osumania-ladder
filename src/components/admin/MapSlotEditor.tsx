@@ -8,7 +8,7 @@ import type { RefType } from '@/lib/referenceData'
 import type { MapHistorySummary } from '@/hooks/useMapHistory'
 import { classifySetConflict } from '@/lib/mapConflictDetection'
 import { normalizeRealType } from '@/lib/realType'
-import { CATEGORY_COLORS, defaultRealTypeFor, realTypeOptionsFor, type MapCategory } from '@/lib/realTypeCatalog'
+import { CATEGORY_COLORS, defaultRealTypeFor, needsDualDifficulty, realTypeOptionsFor, type MapCategory } from '@/lib/realTypeCatalog'
 import { estimateBeatmapDifficulty, ManiaAnalysisError, type ManiaAnalysisEstimate } from '@/lib/maniaAnalyserClient'
 import {
   DIFFICULTY_MAX,
@@ -23,7 +23,7 @@ import { ManiaChartButton } from '@/components/chart/ManiaChartButton'
 // 键型目录(REAL_TYPES / 默认键型 / 颜色)已抽到 src/lib/realTypeCatalog.ts —— 那是纯数据模块,
 // 可以被 node --test 直接导入锁住"默认键型必须是 Pending"这类规则。
 // 这里继续 re-export,免得散落各处的 `from './MapSlotEditor'` 全都要改。
-export { REAL_TYPES, PENDING_REAL_TYPE_BY_CATEGORY, CATEGORY_COLORS } from '@/lib/realTypeCatalog'
+export { REAL_TYPES, PENDING_REAL_TYPE_BY_CATEGORY, CATEGORY_COLORS, needsDualDifficulty } from '@/lib/realTypeCatalog'
 export type { MapCategory } from '@/lib/realTypeCatalog'
 
 const CATEGORIES: { id: MapCategory; label: string; labelKey?: MessageKey }[] = [
@@ -50,10 +50,8 @@ interface Props {
   roundId?: string
 }
 
-export function needsDualDifficulty(category: MapCategory): boolean {
-  return category === 'HB' || category === 'TB' || category === 'SPECIAL'
-}
-
+// `needsDualDifficulty` 已移到 `@/lib/realTypeCatalog`(纯数据模块),这里 import + re-export,
+// 免得散落各处的 `from './MapSlotEditor'` 全都要改(与上面键型目录同一个做法)。
 function getDiffLabel(category: MapCategory): string {
   switch (category) {
     case 'RC': case 'SV': return 'rf'

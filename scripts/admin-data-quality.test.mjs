@@ -3,7 +3,7 @@ import { createRequire } from 'node:module'
 import test from 'node:test'
 
 import { analyzeImportedMapIds, findDuplicateRoundMaps, findPendingMaps } from '../src/lib/tournamentDiagnostics.ts'
-import { classifySetConflict, extractRate } from '../src/lib/mapConflictDetection.ts'
+import { classifySetConflict, extractRate, extractVersionName } from '../src/lib/mapConflictDetection.ts'
 import { isMatchingTournamentId, isValidTournamentId } from '../functions/api/_lib/tournamentId.ts'
 
 const require = createRequire(import.meta.url)
@@ -108,6 +108,46 @@ test('known MMT set variants reproduce the intended history classifications', ()
     { beatmapId: 5309392, realType: 'PDRC', name: 'buelow - Revolver (Sped Up Ver.) [Femme Fatale 1.05x]' },
     { beatmapId: 5309394, realType: 'SS', name: 'buelow - Revolver (Sped Up Ver.) [Femme Fatale 1.1x]' },
   ]), 'rateSet')
+})
+
+test('rate extraction also reads bare decimals (no "x", no 倍速)', () => {
+  // 真实案例：GBC 2026 IRL 的 QF/RC7 与 GBC 2024 Spring 的 F/RC6 是同一个 set
+  // （1517816）下的两张图，Version 直接写成 `[1.05]` / `[1.1]` —— **既没有 x 也没有
+  // 「倍速」字样**。旧实现三条模式全都够不到，于是两张明显是倍速变体的图被判成
+  // 「同 set 待核对」，而不是可识别的 rateSet。
+  assert.equal(extractRate('Fusq x Moe Shop ft. Hentai Dude - Perfume x Superstar [1.05]'), 1.05)
+  assert.equal(extractRate('Fusq x Moe Shop ft. Hentai Dude - Perfume x Superstar [1.1]'), 1.1)
+  assert.equal(classifySetConflict([
+    { beatmapId: 3107132, realType: 'DP', name: 'Fusq x Moe Shop - Perfume x Superstar [1.05]' },
+    { beatmapId: 3107133, realType: 'STC', name: 'Fusq x Moe Shop - Perfume x Superstar [1.1]' },
+  ]), 'rateSet', '修好之后这两张该被认成同 set 的倍速变体')
+
+  // 歌名里的 `x` 是连接词（`A x B`），不是倍速记号。
+  assert.equal(extractRate('A x B - Song'), 1)
+  // 结尾裸小数：**要求带小数点**，否则 `Song 2` / `Vol 3` 会被当成倍速。
+  assert.equal(extractRate('Artist - Title 0.95'), 0.95)
+  assert.equal(extractRate('Artist - Title 2'), 1)
+  // 方括号里是版本名而不是数字时不瞎猜。
+  assert.equal(extractRate('Song [Hard]'), 1)
+  assert.equal(extractRate('Song [[1.0CCCD_16]]'), 1, '复合版本名里的数字不是倍速')
+  // 超出 0.5~2.5 的数字不是倍速。
+  assert.equal(extractRate('Song [2024]'), 1)
+  assert.equal(extractRate('Song [0.25]'), 1)
+})
+
+test('version name comes from the trailing bracket; slot-shaped names have none', () => {
+  assert.equal(extractVersionName('Fusq x Moe Shop ft. Hentai Dude - Perfume x Superstar [1.05]'), '1.05')
+  assert.equal(extractVersionName('Song [Hard]'), 'Hard')
+  // 取**最后一组**：曲名里也可能带方括号。
+  assert.equal(extractVersionName('Artist - Song [Lunatic] [1.1]'), '1.1')
+  // 最内层方括号 —— 真实数据里有 `[[1.0CCCD_16]]` 这种复合版本名。
+  assert.equal(extractVersionName("ariiol - Sorry, I'm daria emotional [[1.0CCCD_16]]"), '1.0CCCD_16')
+  // 历史手传的数据里 name 就是槽位记号（ASC 2025 有 80/88 张如此）—— 没有版本名。
+  assert.equal(extractVersionName('SV1'), null)
+  assert.equal(extractVersionName('[RC7]'), null)
+  assert.equal(extractVersionName('Artist - Song'), null)
+  assert.equal(extractVersionName(''), null)
+  assert.equal(extractVersionName(undefined), null)
 })
 
 test('source labels collapse cross-round reuse within one tournament', () => {

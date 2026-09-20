@@ -5,8 +5,8 @@
 // 独立 Worker，它只该拿到这份纯逻辑，不该被拖进 Pages 后台的鉴权/KV 依赖。
 //
 // 因此这里的规则是 functions/api/_lib/{validation,mapKeys,tournamentId}.ts 的**独立复刻**，
-// scripts/suggestion-limits.test.mjs 会断言两边的数字相等 —— 改一边必须改另一边
-// （与 difficultyLimits.ts / DIFFICULTY_MAX 同一个先例）。
+// scripts/suggestion-validation.test.mjs 会断言两边的数字相等、键段规则逐例同判 ——
+// 改一边必须改另一边（与 difficultyLimits.ts / DIFFICULTY_MAX 同一个先例）。
 //
 // 三条刻意的设计：
 //  1. **白名单式解构**：每个层级都先收未知字段再取值。客户端传 `id`/`status`/`reviewerUid`/

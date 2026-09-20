@@ -41,28 +41,42 @@ const tournamentsDir = path.join(ROOT, 'data', 'tournaments')
 
 /**
  * 决定单个 map 的回填内容。**不产生任何 I/O**，便于单测。
+ *
+ * 两条独立的判断：
+ *   · **BID**：缺 / 占位 → 从 .osu 补。已有可用 BID 的图**绝不改写 ID**（只增不改）。
+ *   · **name**：空 / 等于槽位记号 → 补 `Artist - Title [Version]`。已有真名不覆盖。
+ *
+ * 为什么 name 这条要独立于 BID（2026-09-20 站长反馈）：网站早期"手传"时代的比赛，
+ * 谱面文件传上去了、BID 也对，但 `name` 被填成了槽位记号（ASC 2025 有 80/88 张、
+ * 4DM2023 98/98、全库共 214 张）。旧实现第一句就是「已有可用 BID → return null」，
+ * 这批图**永远够不到**下面的 name 分支，上传页因此一直显示不出歌名。
+ *
  * @param {{beatmapId?: number, beatmapsetId?: number, slot: string, name?: string}} map 比赛 JSON 里的当前值
  * @param {{beatmapId?: number, beatmapsetId?: number, artist?: string, title?: string, version?: string}} meta 从 .osu 读到的元数据
- * @returns {{beatmapId: number, beatmapsetId?: number, name?: string, replacedPlaceholder: boolean} | null}
- *          null = 不需要改（已有可用 BID 且名字也不需要补）
+ * @returns {{beatmapId?: number, beatmapsetId?: number, name?: string, replacedPlaceholder: boolean} | null}
+ *          null = 不需要改（ID 可用、名字也不是占位）
  */
 export function decideFill(map, meta) {
   const bidUsable = isUsableBeatmapId(meta?.beatmapId)
   if (!bidUsable) return null
-  // 已经有可用 BID 的图不动（只增不改）。
-  if (isUsableBeatmapId(map?.beatmapId)) return null
 
-  const result = {
-    beatmapId: meta.beatmapId,
-    replacedPlaceholder: map?.beatmapId !== undefined && map?.beatmapId !== null,
+  const curName = String(map?.name ?? '').trim()
+  const nameNeedsFill = !curName || curName === map?.slot
+  const idUsable = isUsableBeatmapId(map?.beatmapId)
+
+  // 两样都不缺 → 不动。
+  if (idUsable && !nameNeedsFill) return null
+
+  const result = { replacedPlaceholder: false }
+
+  if (!idUsable) {
+    result.beatmapId = meta.beatmapId
+    result.replacedPlaceholder = map?.beatmapId !== undefined && map?.beatmapId !== null
+    // setId 同样按共享判读：占位 1 / 0 / 负数不写回。
+    if (isUsableBeatmapId(meta.beatmapSetId)) result.beatmapsetId = meta.beatmapSetId
   }
 
-  // setId 同样按共享判读：占位 1 / 0 / 负数不写回。
-  if (isUsableBeatmapId(meta.beatmapSetId)) result.beatmapsetId = meta.beatmapSetId
-
-  // name 仅在为空 / 等于 slot 占位时补真实曲名，不覆盖已有真实名。
-  const curName = String(map?.name ?? '').trim()
-  if (!curName || curName === map?.slot) {
+  if (nameNeedsFill) {
     const artist = meta.artist || 'Unknown'
     const title = meta.title || 'Unknown'
     const version = meta.version || 'Normal'
@@ -158,13 +172,23 @@ async function main() {
 
   const files = fs.readdirSync(tournamentsDir).filter((f) => f.endsWith('.json'))
 
-  // 收集所有 beatmapId 不可用的 map（缺失或占位），带定位信息。
+  // 收集需要处理的 map，**两类**：
+  //   ① beatmapId 不可用（缺失 / 占位）→ 补 BID；
+  //   ② name 是占位（空 / 等于槽位记号）→ 只补真名（BID 本来就没问题）。
+  // ②是 2026-09-20 加进来的：早期"手传"时代的比赛（ASC 2025 80/88、4DM2023 98/98、
+  // CUC 2026、TTI… 全库 214 张）BID 正确但 name 被填成槽位记号，旧判据只认"缺 BID"，
+  // 这批图永远够不到，上传页一直显示不出歌名。
   const targets = []
+  let nameOnlyTargets = 0
   for (const file of files) {
     const data = JSON.parse(fs.readFileSync(path.join(tournamentsDir, file), 'utf-8'))
     for (const round of data.rounds || []) {
       for (const map of round.maps || []) {
-        if (isUsableBeatmapId(map.beatmapId)) continue
+        const idUsable = isUsableBeatmapId(map.beatmapId)
+        const curName = String(map.name ?? '').trim()
+        const nameIsPlaceholder = !curName || curName === String(map.slot ?? '')
+        if (idUsable && !nameIsPlaceholder) continue
+        if (idUsable) nameOnlyTargets++
         targets.push({
           file,
           tid: data.id,
@@ -176,7 +200,7 @@ async function main() {
     }
   }
 
-  console.log(`beatmapId 不可用（缺失/占位）的 map 共 ${targets.length} 张`)
+  console.log(`待处理 map 共 ${targets.length} 张（其中只缺 name、BID 没问题的 ${nameOnlyTargets} 张）`)
 
   console.log('列举 R2 maps/ 对象…')
   const s3 = createClient({ accountId, accessKey, secretKey })
@@ -212,6 +236,7 @@ async function main() {
   // ---------- 写回（按文件分组，一次读写一个 JSON） ----------
   let filledBid = 0
   let filledName = 0
+  let nameOnly = 0
   let replacedPlaceholder = 0
   const byFile = new Map()
   for (const r of ok) {
@@ -227,16 +252,23 @@ async function main() {
     for (const e of entries) {
       const round = (data.rounds || []).find((rd) => rd.id === e.rid)
       if (!round) continue
-      const map = (round.maps || []).find((m) => m.slot === e.slot && !isUsableBeatmapId(m.beatmapId))
-      if (!map) continue
+      // 定位只按 slot，且**要求唯一**：以前靠「BID 不可用」来消歧，现在这个条件没了，
+      // 同槽位出现多张时必须停下（与 R20 的"定位不唯一即整组拒绝"同一个原则）。
+      const hits = (round.maps || []).filter((m) => m.slot === e.slot)
+      if (hits.length !== 1) continue
+      const map = hits[0]
 
       const fill = decideFill(map, e.meta)
       if (!fill) continue
 
-      map.beatmapId = fill.beatmapId
+      if (fill.beatmapId !== undefined) {
+        map.beatmapId = fill.beatmapId
+        filledBid++
+      } else {
+        nameOnly++
+      }
       if (fill.beatmapsetId !== undefined) map.beatmapsetId = fill.beatmapsetId
       if (fill.replacedPlaceholder) replacedPlaceholder++
-      filledBid++
       touched = true
       if (fill.name !== undefined) {
         map.name = fill.name
@@ -253,7 +285,7 @@ async function main() {
 
   // ---------- 报告 ----------
   console.log('\n═══════════════════════════════════════════')
-  console.log(`可回填 BID:        ${ok.length}  (name 补 ${filledName}，覆盖占位 ${replacedPlaceholder})`)
+  console.log(`可回填:            ${ok.length}  (BID 补 ${filledBid}，其中只补 name 的 ${nameOnly}；name 共补 ${filledName}，覆盖占位 ID ${replacedPlaceholder})`)
   console.log(`未上传谱(占位/缺 BID): ${unsubmitted.length}  → 需手动处理`)
   console.log(`R2 无文件:         ${noFile.length}  → 需重传或确认`)
   console.log(`解析出错/无.osu:   ${errored.length}`)

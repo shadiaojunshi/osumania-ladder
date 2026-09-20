@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import packsManifest from '@data/packs-manifest.json'
 import { useT, type MessageKey } from '@/lib/i18n'
+import { isMirrorPending, readPendingMirrors } from '@/lib/packMirrors'
 
 interface Pack {
   realType: string
@@ -35,6 +36,11 @@ const LINK_LABEL_KEYS: Record<string, MessageKey> = {
 export default function DownloadPage() {
   const t = useT()
   const allPacks = (packsManifest.packs || []) as Pack[]
+  // 「哪些包的镜像还是上一版」。清单里一直记着，只是以前没人读 —— 光写不显示，
+  // 用户点 Drive 拿到旧内容也不会知道。字段缺失（旧清单）时按空数组处理。
+  const pendingMirrors = readPendingMirrors(
+    (packsManifest as { pendingMirrors?: unknown }).pendingMirrors,
+  )
   // 按 realType 分组,每组按 part 升序排
   const groupsByType = new Map<string, Pack[]>()
   for (const p of allPacks) {
@@ -72,7 +78,7 @@ export default function DownloadPage() {
               </h2>
               <div className="grid gap-3">
                 {categoryGroups.map(g => (
-                  <PackGroup key={g.type} parts={g.parts!} />
+                  <PackGroup key={g.type} parts={g.parts!} pendingMirrors={pendingMirrors} />
                 ))}
               </div>
             </section>
@@ -90,7 +96,7 @@ export default function DownloadPage() {
   )
 }
 
-function PackGroup({ parts }: { parts: Pack[] }) {
+function PackGroup({ parts, pendingMirrors }: { parts: Pack[]; pendingMirrors: readonly string[] }) {
   const t = useT()
   // 同 realType 的多个 part 共享 mapCount/totalMaps 求和;name 取去掉" Pack N"后缀的根名
   const totalMaps = parts[0].totalMaps
@@ -105,7 +111,13 @@ function PackGroup({ parts }: { parts: Pack[] }) {
 
   // 单包时直接平铺,多包时折叠
   if (!isMulti) {
-    return <PackRow pack={parts[0]} hidePartLabel />
+    return (
+      <PackRow
+        pack={parts[0]}
+        hidePartLabel
+        mirrorPending={isMirrorPending(pendingMirrors, parts[0].realType, parts[0].part)}
+      />
+    )
   }
 
   const progress = totalMaps > 0 ? Math.round((totalMapCount / totalMaps) * 100) : 0
@@ -138,14 +150,32 @@ function PackGroup({ parts }: { parts: Pack[] }) {
 
       {expanded && (
         <div className="border-t border-gray-100 dark:border-neutral-800 divide-y divide-gray-100 dark:divide-neutral-800">
-          {parts.map(p => <PackRow key={p.part} pack={p} indent />)}
+          {parts.map(p => (
+            <PackRow
+              key={p.part}
+              pack={p}
+              indent
+              mirrorPending={isMirrorPending(pendingMirrors, p.realType, p.part)}
+            />
+          ))}
         </div>
       )}
     </div>
   )
 }
 
-function PackRow({ pack, indent, hidePartLabel }: { pack: Pack; indent?: boolean; hidePartLabel?: boolean }) {
+function PackRow({
+  pack,
+  indent,
+  hidePartLabel,
+  mirrorPending,
+}: {
+  pack: Pack
+  indent?: boolean
+  hidePartLabel?: boolean
+  /** 这个包的 Drive 镜像还是上一版（见 src/lib/packMirrors.ts）。 */
+  mirrorPending?: boolean
+}) {
   const t = useT()
   const hasLinks = Object.keys(pack.links).length > 0
   const progress = pack.totalMaps > 0 ? Math.round((pack.mapCount / pack.totalMaps) * 100) : 0
@@ -167,6 +197,11 @@ function PackRow({ pack, indent, hidePartLabel }: { pack: Pack; indent?: boolean
           <span>{t('download.mapsSimple', { n: pack.mapCount })}</span>
           {pack.sizeMB > 0 && <span>{pack.sizeMB}MB</span>}
           {hidePartLabel && pack.lastUpdated && <span>{t('download.updated', { date: pack.lastUpdated })}</span>}
+          {mirrorPending && (
+            <span className="text-amber-600 dark:text-amber-400" title={t('download.mirrorPendingHint')}>
+              ⚠ {t('download.mirrorPending')}
+            </span>
+          )}
         </div>
         {hidePartLabel && progress < 100 && (
           <div className="mt-2 w-32 h-1.5 bg-gray-100 dark:bg-neutral-800 rounded-full overflow-hidden">
@@ -177,17 +212,22 @@ function PackRow({ pack, indent, hidePartLabel }: { pack: Pack; indent?: boolean
 
       <div className="flex gap-2">
         {hasLinks ? (
-          Object.entries(pack.links).map(([key, url]) => (
-            <a
-              key={key}
-              href={url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-3 py-1.5 text-xs font-medium bg-purple-50 text-purple-700 rounded-md hover:bg-purple-100 dark:bg-purple-900/30 dark:text-purple-200 dark:hover:bg-purple-900/50"
-            >
-              {LINK_LABEL_KEYS[key] ? t(LINK_LABEL_KEYS[key]) : key}
-            </a>
-          ))
+          Object.entries(pack.links).map(([key, url]) => {
+            // 只有 Drive 这一路会滞后：R2 是主链，写清单时它就已经指向新键了。
+            const stale = key === 'googleDrive' && mirrorPending === true
+            return (
+              <a
+                key={key}
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+                title={stale ? t('download.mirrorPendingHint') : undefined}
+                className={`px-3 py-1.5 text-xs font-medium bg-purple-50 text-purple-700 rounded-md hover:bg-purple-100 dark:bg-purple-900/30 dark:text-purple-200 dark:hover:bg-purple-900/50${stale ? ' ring-1 ring-amber-400 dark:ring-amber-600' : ''}`}
+              >
+                {LINK_LABEL_KEYS[key] ? t(LINK_LABEL_KEYS[key]) : key}
+              </a>
+            )
+          })
         ) : (
           <span className="text-xs text-gray-400 dark:text-neutral-500 px-3 py-1.5">{t('download.noLinks')}</span>
         )}

@@ -180,7 +180,7 @@
         {
           "slot": "HB2",
           "type": "HB",
-          "realType": "HB3",
+          "realType": "HB4",
           "name": "xaev - insane anime obsessed boyfriend [super kawaii tsundere girlfriend hybrid]",
           "difficulty": 7.4,
           "beatmapId": 4478857,
@@ -190,7 +190,7 @@
         {
           "slot": "HB3",
           "type": "HB",
-          "realType": "MNTB",
+          "realType": "HB4",
           "name": "Qyubey - Thesis B [entropy (edit)]",
           "difficulty": 7,
           "beatmapId": 5663359,
@@ -369,7 +369,7 @@
         {
           "slot": "LN3",
           "type": "LN",
-          "realType": "LNMX",
+          "realType": "LNWC",
           "name": "ITZY - Algorhythm (Final Ver.) (Cut Ver.) [My Beat, My Show]",
           "difficulty": 8.36,
           "beatmapId": 5677241,
@@ -811,7 +811,7 @@
         {
           "slot": "HB2",
           "type": "HB",
-          "realType": "HB4",
+          "realType": "HB3",
           "name": "(un)familiar. - robot jesus vampire (ft. slphr) [I'm Late for my Back, Sack and Crack! (edit)]",
           "difficulty": 12.25,
           "beatmapId": 5528157,
@@ -1032,7 +1032,7 @@
         {
           "slot": "LN4",
           "type": "LN",
-          "realType": "JW",
+          "realType": "TE",
           "name": "LeaF - Kyouki Ranbu (extended ver.) (Cut Ver.) [1.15x]",
           "difficulty": 13.2,
           "beatmapId": 4142820,
@@ -1041,7 +1041,7 @@
         {
           "slot": "LN5",
           "type": "LN",
-          "realType": "LNMX",
+          "realType": "LNWC",
           "name": "LOVEBITES - We Are The Resurrection [The saved souls are in heaven]",
           "difficulty": 13.8,
           "beatmapId": 5731259,
@@ -1172,7 +1172,7 @@
         {
           "slot": "HB2",
           "type": "HB",
-          "realType": "HB2",
+          "realType": "HB4",
           "name": "Mono. - Everlasting Game [Checkmate]",
           "difficulty": 13.5,
           "beatmapId": 4034178,
@@ -1210,7 +1210,7 @@
         {
           "slot": "LN3",
           "type": "LN",
-          "realType": "SW",
+          "realType": "LNTC",
           "name": "Twenty One Pilots - Heathens (Magnetude Bootleg) (Cut Ver.) [Ainer's Desperation 1.1x]",
           "difficulty": 14.2,
           "beatmapId": 5743206,
@@ -1228,7 +1228,7 @@
         {
           "slot": "LN5",
           "type": "LN",
-          "realType": "LNMX",
+          "realType": "LNTC",
           "name": "Supire - KUKRI [breathe.]",
           "difficulty": 14.2,
           "beatmapId": 5743123,

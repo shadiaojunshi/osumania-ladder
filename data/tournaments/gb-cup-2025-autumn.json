@@ -208,7 +208,7 @@
         {
           "slot": "LN3",
           "type": "LN",
-          "realType": "LNMX",
+          "realType": "LNWC",
           "name": "Static-X - Brainfog [Confused 1.0x]",
           "difficulty": 8,
           "beatmapId": 5396587,
@@ -352,7 +352,7 @@
         {
           "slot": "LN3",
           "type": "LN",
-          "realType": "LNMX",
+          "realType": "LNTC",
           "name": "Kikuo - Yoru no Uta (Cut Ver.) [Wonderland in Darkness]",
           "difficulty": 8.6,
           "beatmapId": 5406618,

@@ -380,7 +380,7 @@
         {
           "slot": "LN3",
           "type": "LN",
-          "realType": "LNMX",
+          "realType": "LNWC",
           "name": "Link\"0 - rezehv [Acquiesce]",
           "difficulty": 8.6,
           "beatmapId": 5204533,
@@ -570,7 +570,7 @@
         {
           "slot": "LN4",
           "type": "LN",
-          "realType": "LNMX",
+          "realType": "LNTC",
           "name": "Billain & Kursa - NEWGROOVEORDER [Exorbitant]",
           "difficulty": 13,
           "beatmapId": 5207494,

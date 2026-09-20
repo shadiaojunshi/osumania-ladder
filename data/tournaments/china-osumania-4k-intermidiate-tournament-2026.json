@@ -538,7 +538,7 @@
         {
           "slot": "EX2",
           "type": "LN",
-          "realType": "LNMX",
+          "realType": "LNWC",
           "name": "D-D-Dice + seatrus - Lustroustravel [Starfall (176bpm)]",
           "difficulty": 7.4,
           "beatmapId": 4223666,
@@ -1093,7 +1093,7 @@
         {
           "slot": "LN4",
           "type": "LN",
-          "realType": "LNMX",
+          "realType": "LNWC",
           "name": "Static-X - Brainfog [Confused 1.0x]",
           "difficulty": 9.04,
           "beatmapId": 5396587,

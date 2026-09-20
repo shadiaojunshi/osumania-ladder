@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import JSZip from 'jszip'
 import { useT } from '@/lib/i18n'
-import { isUsableBeatmapId, usableBeatmapId, usableBeatmapsetId } from '@/lib/beatmapIds'
+import { isPlaceholderName, isUsableBeatmapId, usableBeatmapId, usableBeatmapsetId } from '@/lib/beatmapIds'
 import { fetchWithNetworkRetry, isNetworkFailure, withNetworkRetry } from '@/lib/fetchRetry'
 import {
   applyPatches,
@@ -13,6 +13,7 @@ import {
   countStagedGroups,
   dropSlotFromGroups,
   parseStagedGroups,
+  planFileDelete,
   serializeStagedGroups,
   slotPatchKey,
   stageIntoGroups,
@@ -323,14 +324,27 @@ export function MapUploader({ onDirtyChange }: { onDirtyChange?: (dirty: boolean
   // ---------- 一键补全:从 R2 已有 .osz 反解 [Metadata],补缺失的 name/BID ----------
 
   // 找出"R2 有文件但 JSON 缺 name 或 BID"的 slot——补全按钮只处理这批。
+  //
+  // 两处判"缺"都要用**共享判读**,不能写朴素的存在性判断,否则这些 slot 到不了这里,
+  // 下游的补丁再对也没用(入口就把它们滤掉了):
+  //   · 占位 ID(0/1/负数)= 没有 BID —— `isUsableBeatmapId`(R20 修的那条);
+  //   · 占位名(`name === slot`,如 `"RC1"`)= 没有曲名 —— `isPlaceholderName`。
+  // 后者是 2026-09-20「小字」bug 的另一半:提交端 `hasRemoteValue` 已经把占位名当成
+  // "没有曲名"了,但候选筛选原本用 `m.name` 朴素判"有",于是全库那批"占位名 + 可用
+  // 真 BID"的槽位(ASC 2025 88 个槽位里 80 个、4DM2023 98 个里 98 个,全库共 214 处)
+  // **永远进不了补全**,停在"BID 是真值、曲名仍是记号"的半吊子状态。两条判据必须同口径。
+  //
+  // ⚠️ 已知够不到的一批:全库另有 12 处 name 是记号但**不与 slot 同名** ——
+  // ASC 2025 资格赛 8 处(`slot:"ST1"` / `name:"SV1"`)、NMWC 2025 两处(`RC4`/`RC5`·`RC6`)、
+  // CN Cup 2025 两处(`ST4`/`RC4`、`DF`/`RC8`)。`isPlaceholderName` 判不出来,要覆盖它们
+  // 得放宽到 `tournamentDiagnostics.ts` 的正则口径 —— 那会连带影响提交端,先不动。
   const backfillCandidates = useMemo(() => {
     const list: { roundId: string; slot: string }[] = []
     if (!tournamentData) return list
     for (const round of tournamentData.rounds) {
       for (const m of round.maps) {
         if (!uploadedSlots.has(`${round.id}/${m.slot}`)) continue
-        // 占位 ID（0/1）不算"已有 BID"，否则这些 slot 永远不会进补全候选。
-        if (m.name && isUsableBeatmapId(m.beatmapId)) continue
+        if (m.name && !isPlaceholderName(m.name, m.slot) && isUsableBeatmapId(m.beatmapId)) continue
         list.push({ roundId: round.id, slot: m.slot })
       }
     }
@@ -356,7 +370,10 @@ export function MapUploader({ onDirtyChange }: { onDirtyChange?: (dirty: boolean
     for (let i = 0; i < backfillCandidates.length; i += BATCH) {
       if (!stillCurrent()) break
       const batch: { roundId: string; slot: string }[] = backfillCandidates.slice(i, i + BATCH)
-      const roundsParam = batch.map(c => `${c.roundId}:${c.slot}`).join('&')
+      // 两段各自百分号编码再拼 —— 槽位名里可能有 `&`/`/`/`(` 等字符,字面拼会被后端切开。
+      const roundsParam = batch
+        .map(c => `${encodeURIComponent(c.roundId)}:${encodeURIComponent(c.slot)}`)
+        .join('&')
       try {
         const res = await fetch(`/api/maps/meta?tournamentId=${opTournament}&rounds=${encodeURIComponent(roundsParam)}`)
         const body = await res.json().catch(() => ({})) as {
@@ -377,11 +394,16 @@ export function MapUploader({ onDirtyChange }: { onDirtyChange?: (dirty: boolean
           }
           const patch: MapPatch = {}
           const cur = tournamentData?.rounds.find(rr => rr.id === c.roundId)?.maps.find(mm => mm.slot === c.slot)
-          if (!cur?.name && r.artist && r.title) {
+          // 发的是 fill 补丁,所以只能声明"我补的是缺口" —— 判断缺口的口径必须和池子
+          // 里的 hasRemoteValue 一致(占位名 = 没有曲名、占位 ID = 没有 ID)。
+          // 反过来说:别在这里拿 isUsable* 的**结果**去回显。`cur` 是权威数据、不是池子,
+          // 覆盖它会把用户已有的(或已暂存的)值显示成"空",看着像数据丢了。
+          const nameMissing = !cur?.name || isPlaceholderName(cur.name, c.slot)
+          if (nameMissing && r.artist && r.title) {
             patch.name = `${r.artist} - ${r.title}${r.version ? ` [${r.version}]` : ''}`
           }
-          if (!cur?.beatmapId && r.beatmapId) patch.beatmapId = r.beatmapId
-          if (!cur?.beatmapsetId && r.beatmapsetId) patch.beatmapsetId = r.beatmapsetId
+          if (!isUsableBeatmapId(cur?.beatmapId) && r.beatmapId) patch.beatmapId = r.beatmapId
+          if (!isUsableBeatmapId(cur?.beatmapsetId) && r.beatmapsetId) patch.beatmapsetId = r.beatmapsetId
           if (Object.keys(patch).length === 0) continue
           patches.set(`${c.roundId}/${c.slot}`, patch)
           if (patch.beatmapId) summary.staged++; else summary.nameOnly++
@@ -669,10 +691,23 @@ export function MapUploader({ onDirtyChange }: { onDirtyChange?: (dirty: boolean
       // 只处理**主文件**:name/BID 是从主图读出来的,删 NSV 变体不该动它们。
       const patchKey = slotPatchKey(roundId, slot)
       if (!isNsv) {
+        // 丢什么、回显退回什么,规则在 planFileDelete 里(可单测):
+        //   · fill 条目 = 上传时从那个 .osz 读出来的 → 与文件同寿,丢池 + 退回存档值;
+        //   · explicit 条目 = 用户刚明确指定的(贴 BID 补传、清空旧信息)→ 与文件无关,留着。
+        // 后者是 2026-09-20「小字」bug 的根:旧代码无条件丢池 + 退回存档值,把用户刚下的
+        // 清空补丁一并推翻、又把存档里的旧曲名(或占位名)挂回行上 → 小字又回来。
+        const plan = planFileDelete(
+          stagedGroupsRef.current.get(opTournament)?.get(patchKey),
+          slotBaselineRef.current.get(patchKey),
+          slot,
+        )
+        if (plan.dropStaged) {
+          setPendingPatches((prev) => dropSlotFromGroups(prev, opTournament, patchKey))
+        }
         // 只丢**这场比赛**这个 slot 的暂存 —— 别的比赛的暂存一动不动。
-        setPendingPatches((prev) => dropSlotFromGroups(prev, opTournament, patchKey))
-        const baseline = slotBaselineRef.current.get(patchKey)
-        if (baseline) applyPatchesLocal(new Map([[patchKey, baseline]]))
+        if (plan.rollback) {
+          applyPatchesLocal(new Map([[patchKey, plan.rollback]]))
+        }
       }
 
       // 再跟服务端对一次账(文件可能在别处被删/被传)。

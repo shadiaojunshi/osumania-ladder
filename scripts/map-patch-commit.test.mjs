@@ -14,6 +14,7 @@ import {
   isCurrentRequest,
   mergeStagedPatch,
   parseStagedGroups,
+  planFileDelete,
   serializeStagedGroups,
   sameStagedPatch,
   slotPatchKey,
@@ -153,14 +154,14 @@ test('删除回滚:把 baseline 应用回去 = 空字段被清掉、存档里有
   assert.equal(data[0].maps[0].name, 'uploaded title')
 
   const key = slotPatchKey('r1', 'A')
-  applyPatches(data, new Map([[key, buildSlotBaseline(rounds()).get(key)]]))
+  applyPatches(data, new Map([[key, planFileDelete(undefined, buildSlotBaseline(rounds()).get(key), 'A').rollback]]))
   assert.equal('name' in data[0].maps[0], false, '存档里没有 name → 回滚后应被删掉')
   assert.equal('beatmapId' in data[0].maps[0], false)
   assert.equal('beatmapsetId' in data[0].maps[0], false)
 
   // 存档里本来有值的 slot 不被清空
   const keyB = slotPatchKey('r1', 'B')
-  applyPatches(data, new Map([[keyB, buildSlotBaseline(rounds()).get(keyB)]]))
+  applyPatches(data, new Map([[keyB, planFileDelete(undefined, buildSlotBaseline(rounds()).get(keyB), 'B').rollback]]))
   assert.equal(data[0].maps[1].name, 'remote name')
   assert.equal(data[0].maps[1].beatmapId, 777)
 })
@@ -186,9 +187,11 @@ test('删除回滚:完整时序 —— 手传 → 删除 → BID 补传后,池�
   staged = new Map([[key, mergeStagedPatch(undefined, { name: 'old title', beatmapId: 111, beatmapsetId: 222 }, 'fill')]])
   applyPatches(data, new Map([[key, { name: 'old title', beatmapId: 111, beatmapsetId: 222 }]]))
 
-  // 2) 删除该文件:丢池里的条目 + 回显退回存档值
+  // 2) 删除该文件:fill 条目 → 丢池里的条目 + 回显退回存档值
+  const del = planFileDelete(staged.get(key), baseline.get(key), 'A')
+  assert.equal(del.dropStaged, true)
   staged = dropStagedSlot(staged, key)
-  applyPatches(data, new Map([[key, baseline.get(key)]]))
+  applyPatches(data, new Map([[key, del.rollback]]))
   assert.equal(staged.has(key), false, '那份补丁是刚从已删除文件里读出来的,不能留着')
   assert.equal('name' in data[0].maps[0], false, '行上不该再显示已删除文件的信息')
 
@@ -336,6 +339,104 @@ test('跨比赛:parseStagedGroups 清洗脏数据,永不抛异常', () => {
   assert.equal(parsed.get('AAA').get('r1/E').origin, 'fill')
   assert.deepEqual([...parsed.get('AAA').keys()], ['r1/A', 'r1/E'])
   assert.deepEqual(parsed.get('BBB').get('r1/A').patch, { beatmapId: -3 })
+})
+
+// ---------- 占位名（name === slot）不算"远端已有值" ----------
+//
+// 2026-09-20 站长反馈的「小字」bug：把一张 BID 错的谱面换成官网上查不到的谱面时，
+// 先用一个不存在的 BID 让 osu 返回 not found 再点「暂存本轮」→ 补丁是
+// {name:null, beatmapId:null, beatmapsetId:null}（清空）。但 name 是占位名
+// （MWC 2023 那批就是 "RC1"/"SV1"）、非空 → isPresent 判"远端有值" → 清空被跳过，
+// 行上的小字消除不掉。下面把修复锁住。
+
+test('占位名不算远端已有值：清空补丁（explicit）必须能写进去 —— 这就是「小字」消除不掉的根因', () => {
+  const placeholder = [{ id: 'round-1', maps: [{ slot: 'RC9', name: 'RC9', difficulty: 7.1 }] }]
+  const clear = new Map([['round-1/RC9', { patch: { name: null, beatmapId: null, beatmapsetId: null }, origin: 'explicit' }]])
+  const res = applyStagedPatches(placeholder, clear)
+  assert.deepEqual(res.appliedKeys, ['round-1/RC9'], '清空必须算写进去了')
+  assert.deepEqual(res.skippedRemote, [], '占位名不该再被当成"远端已有值"跳过')
+  assert.equal('name' in placeholder[0].maps[0], false, 'name 字段应被删除（小字消失）')
+
+  // 对照：**真**曲名仍然受保护，清空不覆盖它（这是 fill/explicit 都该守的底线）
+  const real = [{ id: 'round-1', maps: [{ slot: 'RC9', name: 'Camellia - Ghost [NM]' }] }]
+  assert.equal('name' in real[0].maps[0], true, '真名不受影响')
+  const guarded = [{ id: 'round-1', maps: [{ slot: 'RC9', name: 'Camellia - Ghost [NM]' }] }]
+  applyStagedPatches(guarded, new Map([['round-1/RC9', { patch: { name: null, beatmapId: null, beatmapsetId: null }, origin: 'fill' }]]))
+  assert.equal('name' in guarded[0].maps[0], true, '真名仍不能让 fill 清空')
+})
+
+test('占位名不算远端已有值：补真实曲名（fill）也要能写进去', () => {
+  // 过去 fill 看到 name='RC9' 非空 → 跳过 name，只写 BID，留下"半吊子"占位名。
+  const rounds2 = [{ id: 'round-1', maps: [{ slot: 'RC9', name: 'RC9' }] }]
+  const res = applyStagedPatches(rounds2, new Map([
+    ['round-1/RC9', { patch: { name: 'Luze - RENDA JOCEKY [121212121212]', beatmapId: 4635642 }, origin: 'fill' }],
+  ]))
+  assert.deepEqual(res.skippedRemote, [], '占位名不该挡真实曲名')
+  assert.equal(rounds2[0].maps[0].name, 'Luze - RENDA JOCEKY [121212121212]')
+  assert.equal(rounds2[0].maps[0].beatmapId, 4635642)
+})
+
+test('占位名不算远端已有值：空名照旧算"没有名字"（别把空名也当成占位名）', () => {
+  // 空名（字段缺失 / 空串）走的是 isPresent 那一关，本来就算"没有名字" ——
+  // isPlaceholderName 有 slot 守卫，两边都空时返回 false，不会替它做这件事。
+  // 这条锁住"空名 → 补真名"的既有行为不被占位名那条改动带偏。
+  const rounds3 = [{ id: 'round-1', maps: [{ slot: 'RC9' }, { slot: 'RC8', name: '' }] }]
+  const res = applyStagedPatches(rounds3, new Map([
+    ['round-1/RC9', { patch: { name: 'A - B [C]' }, origin: 'fill' }],
+    ['round-1/RC8', { patch: { name: 'D - E [F]' }, origin: 'fill' }],
+  ]))
+  assert.deepEqual(res.skippedRemote, [])
+  assert.equal(rounds3[0].maps[0].name, 'A - B [C]')
+  assert.equal(rounds3[0].maps[1].name, 'D - E [F]')
+})
+
+test('删除文件:explicit 条目留着、回显不动（2026-09-20 小字 bug）', () => {
+  // 站长的路径:贴错 BID → osu 报 not found → 确定(清空补丁以 explicit 进池,小字消失)
+  // → 再去 R2 删那个 .osz。旧代码在这里无条件丢池 + 退回存档值,于是刚下的清空被推翻、
+  // 存档里那条错曲名又被挂回行上 —— 小字又回来。
+  const explicit = { patch: { name: null, beatmapId: null, beatmapsetId: null }, origin: 'explicit' }
+  assert.deepEqual(
+    planFileDelete(explicit, { name: 'Wrong Song [NM]', beatmapId: 111, beatmapsetId: 222 }, 'RC1'),
+    { dropStaged: false, rollback: null },
+    '用户刚明确指定的清空不能被删文件推翻',
+  )
+  // 贴 BID 补真的(补传)也同理。
+  const reupload = { patch: { name: 'New Song [MX]', beatmapId: 999 }, origin: 'explicit' }
+  assert.deepEqual(planFileDelete(reupload, { name: 'Old', beatmapId: 1 }, 'RC1'), {
+    dropStaged: false, rollback: null,
+  })
+})
+
+test('删除文件:fill 条目丢池 + 回显退回存档值（R32 那条不能回退）', () => {
+  const fill = { patch: { name: 'From Osz [NM]', beatmapId: 111, beatmapsetId: 222 }, origin: 'fill' }
+  const plan = planFileDelete(fill, { name: 'RC1', beatmapId: 111, beatmapsetId: 222 }, 'RC1')
+  assert.equal(plan.dropStaged, true, '这份信息是从被删的文件里读出来的,不能留着')
+  // 存档里是占位名 → 退回空,不要把占位名再挂回行上当曲名。
+  assert.deepEqual(plan.rollback, { name: null, beatmapId: 111, beatmapsetId: 222 })
+
+  // 存档里是真曲名(人工填的) → 照留。
+  const keep = planFileDelete(fill, { name: 'Camellia - Ghost [MX]', beatmapId: 999, beatmapsetId: null }, 'RC1')
+  assert.deepEqual(keep.rollback, { name: 'Camellia - Ghost [MX]', beatmapId: 999, beatmapsetId: null })
+
+  // 根本没暂存过(池里没这条) → 不回滚,免得覆盖行上别的东西;但池里本来也没有可丢的。
+  assert.deepEqual(planFileDelete(undefined, { name: 'RC1' }, 'RC1'), {
+    dropStaged: false,
+    rollback: { name: null, beatmapId: null, beatmapsetId: null },
+  })
+  // 没有基准 → 退回全空,不能 throw。
+  assert.deepEqual(planFileDelete(fill, undefined, 'RC1'), {
+    dropStaged: true,
+    rollback: { name: null, beatmapId: null, beatmapsetId: null },
+  })
+})
+
+test('删除回滚:基准里占位名照原样记着(判读推迟到 planFileDelete,别在记基准时就丢)', () => {
+  const baseline = buildSlotBaseline([{ id: 'round-1', maps: [{ slot: 'RC9', name: 'RC9' }] }])
+  assert.equal(baseline.get('round-1/RC9').name, 'RC9', '基准如实记录存档值')
+  // 真名与空名维持原状
+  const mixed = buildSlotBaseline([{ id: 'round-1', maps: [{ slot: 'A', name: 'X - Y [Z]' }, { slot: 'B' }] }])
+  assert.equal(mixed.get('round-1/A').name, 'X - Y [Z]')
+  assert.equal(mixed.get('round-1/B').name, null)
 })
 
 test('跨比赛:sameStagedPatch 比较来源与字段', () => {

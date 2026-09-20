@@ -50,6 +50,83 @@ export function hasNsvSuffixAmbiguity(slot: string, nsv: boolean): boolean {
   return !nsv && slot.endsWith('.nsv')
 }
 
+// ---------- `/api/maps/meta` 的 rounds 参数编解码 ----------
+//
+// 键段本身可以含 `/`、`&`、`()` 等字符(见文件头),但 URL query 里的 `rounds` 是
+// **一个字符串**装 N 个 `roundId:slot` 对 —— 用 `&` 或 `:` 当字面分隔符就会和合法的
+// 槽位名撞车。实测(2026-09-20)全库有 2 个真实槽位含 `&`:
+//   japanese-mania-championship-2 round-5 `HB4(Wild&SV)`
+//   po-fang-cup-s4             round-5 `GM(FL&EZ)`
+// 它们被前端按 80 个一批打包时,含 `&` 的那个槽位会被从 `&` 处切开 →
+// 请求里两个碎片都查不到文件 → 报成"R2 无文件"(假的),真正的槽位一次都没被查过。
+//
+// 所以两端都用**百分号编码**(`encodeURIComponent` / `decodeURIComponent`)把每段编成
+// 不含分隔符的形式:`%`、`:`、`&`、`/` 编完都变成 `%XX`。只编码不改解析规则 ——
+// 既有的(不含特殊字符的)参数编码前后完全一样,老客户端与既有测试不受影响。
+//
+// roundId 与 slot 各自编码后再用 `:` 与 `&` 连接;`:` 在编码结果里不会出现
+// (encodeURIComponent 会把它编成 `%3A`),所以解码时**第一个 `:`** 就是分隔点。
+
+/**
+ * 把一批槽位编成 `rounds` 参数值(`roundId:slot` 用 `&` 连接,两段各自百分号编码)。
+ *
+ * ⚠️ 这个返回值里**仍然含 `&`**,它是"参数值"而不是"URL 片段" —— 放进 URL 时必须
+ * 再编码一次(`encodeURIComponent(...)` 或 `URLSearchParams.set('rounds', ...)`)。
+ * 少这一次会让 `&` 重新变回分隔符,正是这个 bug 的成因。解码端拿到的字符串应当长成
+ * `enc(roundId):enc(slot)&enc(roundId):enc(slot)` 这个样子(见 `decodeMetaRoundsParam`)。
+ */
+export function encodeMetaRoundsParam(items: { roundId: string; slot: string }[]): string {
+  return items
+    .map((item) => `${encodeURIComponent(item.roundId)}:${encodeURIComponent(item.slot)}`)
+    .join('&')
+}
+
+/**
+ * 解析 `rounds` 参数值。逐段解码;**形状不对**、**解码失败**、**解码后校验不过**的段
+ * 都返回错误,由调用方决定回 400。
+ *
+ * 为什么不静默跳过:静默跳过会让"这个槽位没查"变成"这个槽位查不到"的假象。
+ * 旧客户端字面拼 `HB4(Wild&SV)` 会切出碎片 `SV)`(形状不对)—— 报错才能让人发现
+ * 是参数编码的问题,而不是以为那个槽位在 R2 里没有文件。
+ * 唯一的例外是 `&&` 产生的**空组**:那是"这里没有一项",不是坏段。
+ */
+export function decodeMetaRoundsParam(
+  roundsParam: string,
+): { ok: true; value: { roundId: string; slot: string }[] } | { ok: false; error: string } {
+  const wanted: { roundId: string; slot: string }[] = []
+  const seen = new Set<string>()
+  for (const group of roundsParam.split('&')) {
+    // `&&` 或末尾 `&` 切出来的空组 = "这里没有一项",跳过(既有行为不变)。
+    // 注意这与「`round-1:` 这种空槽位」不是一回事 —— 后者形状不对,见下。
+    if (group === '') continue
+    const ci = group.indexOf(':')
+    if (ci <= 0 || ci === group.length - 1) {
+      // 缺分隔符 / 空 roundId / 空 slot:一律报错,不静默跳过。
+      // 静默跳过会把"这个槽位没查"伪装成"这个槽位查不到" —— 比如旧客户端字面拼
+      // `HB4(Wild&SV)` 切出的碎片 `SV)` 会被无声丢掉,而真正含 `&` 的槽位一次都没查过。
+      return { ok: false, error: 'rounds 参数段不是 roundId:slot 形状（缺 `:` 或有一侧为空）' }
+    }
+    let roundId: string
+    let slot: string
+    try {
+      // decodeURIComponent 对孤立的 `%` 会抛 URIError —— 坏参数就报错,不猜。
+      roundId = decodeURIComponent(group.slice(0, ci))
+      slot = decodeURIComponent(group.slice(ci + 1))
+    } catch {
+      return { ok: false, error: 'rounds 参数含非法的百分号编码' }
+    }
+    const roundCheck = validateRoundId(roundId)
+    if (!roundCheck.ok) return { ok: false, error: roundCheck.error }
+    const slotCheck = validateSlot(slot)
+    if (!slotCheck.ok) return { ok: false, error: slotCheck.error }
+    const ck = `${roundId}:${slot}`
+    if (seen.has(ck)) continue
+    seen.add(ck)
+    wanted.push({ roundId, slot })
+  }
+  return { ok: true, value: wanted }
+}
+
 /**
  * 把 `parseMapObjectKey` 得到的 relative（`roundId/slot`，slot 自身可能含 `/`）
  * 拆回两段并**按同一套键规则校验**。

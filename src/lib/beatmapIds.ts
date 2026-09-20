@@ -38,6 +38,34 @@ export function usableBeatmapsetId(value: unknown): number | null {
 }
 
 /**
+ * 这个 `name` 到底有没有曲名信息?**等于槽位名就说明没有**（占位名）。
+ *
+ * 为什么要有这个判断（2026-09-20 站长反馈的「小字」bug）:
+ *   站长把一张 BID 错的谱面换成"官网查不到的谱面"时,先用一个不存在的 BID 让
+ *   osu 返回 not found,再点「暂存本轮」→ 补丁是 `{name:null, beatmapId:null,
+ *   beatmapsetId:null}`(清空)。但提交阶段 `isPresent` 把占位名 `"RC9"` 当成
+ *   **已有值**,于是 origin='fill' 的写路径一律跳过它 —— 清空永远不生效,行上的
+ *   小字消除不掉。而占位名往往就是 `slot` 本身(MWC 2023 那批是 `"RC1"`/`"SV1"`),
+ *   所以这里用 `name === slot` 就能识别出来。
+ *
+ * 与 `scripts/backfill-bid.mjs` 的口径**基本一致但有一处差别**:那边比较前先
+ * `.trim()`(离线脚本,宽松些无妨),这里**不 trim** —— 多一个空格就是另一个值,
+ * 界面上的判读宁可严一点。另有第三套更宽的口径在 `src/lib/tournamentDiagnostics.ts`
+ * (`/^[a-z]{1,4}\d{1,3}$/`,用来忽略"name 写成了槽位记号"的身份键),它连
+ * `slot: "ST1"` / `name: "SV1"` 那种"记号但不与 slot 同名"也覆盖 —— 那批(ASC 2025
+ * 资格赛 8 处)**这三处判读里只有它够得到**。三套口径各自的用途不同,别当成一处改。
+ *
+ * 有一道 **slot 守卫**:`slot` 不是非空字符串时一律返回 `false` —— 没有可比对的
+ * 槽位名,就构不成"等于槽位名"。这顺带堵死了 `undefined === undefined` 那个坑,
+ * 调用方**不需要**为了这个再额外判空(`hasRemoteValue` 那里本来就先过了 `isPresent`,
+ * 空名第一关就返回"没有"了)。
+ */
+export function isPlaceholderName(name: unknown, slot: unknown): boolean {
+  if (typeof slot !== 'string' || slot === '') return false
+  return name === slot
+}
+
+/**
  * 从 `Artist - Title [Version]` 里取 `artist - title`（小写），
  * 用来判断"同一个 setId 下的谱面是不是同一首歌"。
  * 取不到（没名字 / 只有版本号）时返回 null。

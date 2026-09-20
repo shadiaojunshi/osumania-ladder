@@ -15,6 +15,7 @@ import test from 'node:test'
 import {
   PLACEHOLDER_ID_MAX,
   SET_ID_UNRELIABLE_SONG_COUNT,
+  isPlaceholderName,
   isUsableBeatmapId,
   songKeyOf,
   usableBeatmapId,
@@ -35,6 +36,25 @@ test('R33 占位阈值：0 / 1 / 负数 / 非整数 / 非数字都不可用', ()
   assert.equal(usableBeatmapId(1), null)
   assert.equal(usableBeatmapsetId(1), null)
   assert.equal(usableBeatmapId(5165500), 5165500)
+})
+
+test('占位名判读：name 等于槽位名 = 没有曲名（2026-09-20 小字 bug 的根因）', () => {
+  // MWC 2023 那批的形状：name 就是槽位名本身。
+  assert.equal(isPlaceholderName('RC1', 'RC1'), true)
+  assert.equal(isPlaceholderName('SV1', 'SV1'), true)
+  // 真曲名 / 只差一点点的名字都不是占位。
+  assert.equal(isPlaceholderName('Toromaru - Curiosity [S7]', 'RC1'), false)
+  assert.equal(isPlaceholderName('RC1 ', 'RC1'), false, '不做 trim —— 多一个空格就是另一个值')
+  // slot 不是非空字符串时一律**不算**占位名 —— 没有可比对的槽位名，构不成"等于槽位名"。
+  // 这条守卫顺带堵死了 `undefined === undefined` 那个坑：两边都空时返回 false，
+  // 所以"空名"不会被误判成占位名。调用方仍该先判空，但那是为了别的（别把"没有曲名"
+  // 当成两种不同的事去分支），不是因为这个函数返回 true。
+  assert.equal(isPlaceholderName(undefined, undefined), false, '两边都空不是"等于槽位名"')
+  assert.equal(isPlaceholderName(null, undefined), false)
+  assert.equal(isPlaceholderName('RC1', undefined), false)
+  assert.equal(isPlaceholderName('RC1', ''), false)
+  assert.equal(isPlaceholderName('RC1', 123), false)
+  assert.equal(isPlaceholderName({}, {}), false)
 })
 
 test('R33 songKeyOf：从 "Artist - Title [Version]" 取 "artist - title"', () => {

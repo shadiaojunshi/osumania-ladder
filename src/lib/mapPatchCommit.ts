@@ -19,6 +19,12 @@
 //  3. 池里的 key 在权威 JSON 里找不到对应 slot 时,保留条目并报出来,
 //     不擅自清池(applied=0 也一样),由用户手动清空。
 
+// 扩展名必须写全:这个模块由 `scripts/map-patch-commit.test.mjs` 直接加载,
+// 而 Node 的 ESM 解析器不会为省略扩展名的相对路径补 `.ts`(那个测试也没注册
+// `_ts-extension-loader.mjs`,它只为 `functions/` 源码而设)。同目录的既有先例
+// 也一样 —— 运行期 import 带 `.ts`,`import type` 才可以省。
+import { isPlaceholderName } from './beatmapIds.ts'
+
 export interface MapPatch {
   name?: string | null
   beatmapId?: number | null
@@ -53,6 +59,29 @@ function writeField(map: Record<string, unknown>, field: PatchField, value: unkn
 function isPresent(map: Record<string, unknown>, field: PatchField): boolean {
   const value = map[field]
   return value !== undefined && value !== null && value !== ''
+}
+
+/**
+ * 这个字段在**提交时**算不算"远端已经有值"（fill 补丁据此决定跳不跳）。
+ *
+ * 比 `isPresent` 多一条:`name` 等于槽位名时**不算有值**(占位名)。
+ *
+ * 为什么:全库有 214 处槽位的 `name` 与 `slot` 完全同名(`"name": "RC1"` 且
+ * `"slot": "RC1"`,见 `isPlaceholderName`;2026-09-20 按 `data/tournaments/**`
+ * 实测统计,4987 个槽位里带槽位记号的共 226 处 —— 另有 12 处是"记号但不与 slot
+ * 同名"(ASC 2025 资格赛 8 处 `ST1`/`SV1` 那类、NMWC 2025 两处 `RC4`/`RC5`·`RC6`、
+ * CN Cup 2025 两处 `ST4`/`RC4`·`DF`/`RC8`),那种这个判据够不到,
+ * 见 `tournamentDiagnostics.ts` 里更宽的正则口径)。补全/手传回填发的都是 fill 补丁,
+ * 而 `isPresent` 只看"非空"→ 占位名挡住了真曲名,**永远补不进去**,
+ * 那些槽位会停在"半吊子"状态(BID 是真值、曲名仍是记号)。
+ *
+ * 注意这一条只管**提交时跳不跳**;删掉 R2 文件后要退回什么,是另一处判断
+ * (见 `planFileDelete`),两者别混。
+ */
+function hasRemoteValue(map: Record<string, unknown>, field: PatchField): boolean {
+  if (!isPresent(map, field)) return false
+  if (field === 'name' && isPlaceholderName(map[field], map.slot)) return false
+  return true
 }
 
 // 把新补丁并进已暂存的条目:字段逐个覆盖;来源取"更明确"的那个
@@ -109,7 +138,8 @@ export function applyStagedPatches(rounds: PatchRound[], staged: StagedPatchMap)
     for (const field of FIELDS) {
       if (!(field in entry.patch)) continue
       // fill 只补缺:远端已经有值就跳过,不覆盖别人的改动。
-      if (entry.origin === 'fill' && isPresent(map, field)) {
+      // (占位名不算"有值" —— 见 hasRemoteValue;否则清空/补真名都会被永久跳过。)
+      if (entry.origin === 'fill' && hasRemoteValue(map, field)) {
         skipped.push(field)
         continue
       }
@@ -156,22 +186,81 @@ export function slotPatchKey(roundId: string, slot: string): string {
  * 暂存补丁**都要退回存档值**。否则会出现:
  *   手传 → 从文件里读出 name/BID(暂存 + 回显)→ 删掉文件 → 行上仍显示那份**已删除**
  *   文件的信息,而且保存时还会把它写进 JSON;之后再补传,看到的仍是"先前那份信息"。
+ *
+ * ⚠️ 这里**照原样记**,不做占位名判读 —— 判读属于"回滚时要不要显示",归 `planFileDelete`。
+ * 理由有二:
+ *   · **一律记 null 会把空名与占位名混成一种。** 两者含义不同:占位名的槽位大概率有
+ *     R2 文件(补全能补出真名),空名则可能压根没传过。基准丢了这层区分,补全候选、
+ *     统计、以后任何"这槽位到底缺什么"的判断都少一份依据。
+ *   · 基准是**存档的忠实快照**,不是加工过的视图。加工过的视图只该有一处(回滚时)。
  */
 export function buildSlotBaseline(rounds: PatchRound[]): PatchMap {
   const baseline: PatchMap = new Map()
   for (const round of rounds) {
     for (const map of round.maps) {
-      const name = map.name
-      const beatmapId = map.beatmapId
-      const beatmapsetId = map.beatmapsetId
-      baseline.set(slotPatchKey(round.id, String(map.slot)), {
-        name: typeof name === 'string' && name !== '' ? name : null,
-        beatmapId: typeof beatmapId === 'number' ? beatmapId : null,
-        beatmapsetId: typeof beatmapsetId === 'number' ? beatmapsetId : null,
-      })
+      baseline.set(slotPatchKey(round.id, String(map.slot)), readSlotInfo(map))
     }
   }
   return baseline
+}
+
+/** 从权威数据里读一个 slot 的信息(字段总是存在,本来没有的记 null)。 */
+function readSlotInfo(map: Record<string, unknown>): MapPatch {
+  const name = map.name
+  const beatmapId = map.beatmapId
+  const beatmapsetId = map.beatmapsetId
+  return {
+    name: typeof name === 'string' && name !== '' ? name : null,
+    beatmapId: typeof beatmapId === 'number' ? beatmapId : null,
+    beatmapsetId: typeof beatmapsetId === 'number' ? beatmapsetId : null,
+  }
+}
+
+/**
+ * 删掉 R2 文件之后,这个 slot 的**暂存与回显**各该怎么办。
+ *
+ * 这是站长 2026-09-20 反馈的「小字」bug 的落点,单独抽出来就是为了能测:
+ *
+ *   贴一个不存在的 BID 让 osu 报 not found → 点确定 → 清空补丁
+ *   `{name:null, beatmapId:null, beatmapsetId:null}` 以 **explicit** 进池,
+ *   行上的小字(那条错谱面的曲名)消失 → **再去 R2 删那个 .osz**。
+ *
+ * 删文件时的旧行为是"无条件丢掉该 slot 的暂存条目、回显退回存档值",于是:
+ *   · 用户刚下的 explicit 清空**被一起丢掉**;
+ *   · 回显退回**存档值** —— 而存档里那条正是错谱面的曲名/占位名(`"RC1"`)。
+ *   → **小字又回来**(站长反馈的路径)。
+ *
+ * 判据是"这份信息从哪儿来",不是"值长什么样":
+ *   · `fill` = 上传时从那个 .osz 的 `[Metadata]` 里读出来的 → **与文件同寿**,
+ *     文件删了就丢池 + 退回存档值(R32 修的就是这条)。
+ *   · `explicit` = 用户明确指定的(贴 BID 补传、清空旧信息)→ 与那个文件无关,
+ *     **留着**,回显也照它显示。用户刚说的话不能因为删了个文件就被推翻。
+ *
+ * 存档值里若是**占位名**(`name === slot`,如 `"RC1"`),退回时记成空 —— 它当初也是
+ * 从那个 .osz 里读出来的,而且槽位名上方已经显示过了,再当曲名挂一遍没有信息量。
+ */
+export interface FileDeletePlan {
+  /** 池里这条要不要丢。 */
+  dropStaged: boolean
+  /** 回显要改成什么;`null` = 不动(照池里那份显示)。 */
+  rollback: MapPatch | null
+}
+
+export function planFileDelete(
+  entry: StagedPatch | undefined,
+  baseline: MapPatch | undefined,
+  slot: string,
+): FileDeletePlan {
+  if (entry?.origin === 'explicit') return { dropStaged: false, rollback: null }
+  const info = baseline ?? {}
+  return {
+    dropStaged: entry !== undefined,
+    rollback: {
+      name: typeof info.name === 'string' && info.name !== '' && !isPlaceholderName(info.name, slot) ? info.name : null,
+      beatmapId: info.beatmapId ?? null,
+      beatmapsetId: info.beatmapsetId ?? null,
+    },
+  }
 }
 
 /**

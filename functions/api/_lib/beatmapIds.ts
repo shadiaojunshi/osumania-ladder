@@ -31,3 +31,22 @@ export function usableBeatmapId(value: unknown): number | null {
 export function usableBeatmapsetId(value: unknown): number | null {
   return isUsableBeatmapId(value) ? value : null
 }
+
+/**
+ * 这个 `name` 到底有没有曲名信息?**等于槽位名就说明没有**（占位名）。
+ *
+ * 与 `src/lib/beatmapIds.ts` 逐字对齐的一份（`functions/` 与 `src/` 是两条独立构建）。
+ * 用途:`/api/maps/meta` 回给前端的 `name` 只是原样转发,真正需要这个判断的是
+ * 前端（暂存与提交两边都得看清占位名）。放这里是为了让镜像测试能锁住两份一致。
+ *
+ * ⚠️ 判据是 `name === slot`,**不 trim**、也不认"记号但不与 slot 同名"的写法
+ * （ASC 2025 资格赛是 `slot: "ST1"` / `name: "SV1"`)。别在这里放宽 —— 后端这份
+ * 只是给镜像测试用的锚,放宽会让两边口径漂开。
+ *
+ * 有一道 **slot 守卫**:`slot` 不是非空字符串时一律返回 `false`(没有可比对的槽位名),
+ * 所以 `undefined === undefined` 那个坑不存在。与 `src/lib/beatmapIds.ts` 逐字对齐。
+ */
+export function isPlaceholderName(name: unknown, slot: unknown): boolean {
+  if (typeof slot !== 'string' || slot === '') return false
+  return name === slot
+}

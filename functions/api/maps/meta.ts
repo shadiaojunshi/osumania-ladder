@@ -3,7 +3,7 @@ import { isUsableBeatmapId, usableBeatmapId, usableBeatmapsetId } from '../_lib/
 import { jsonResponse, noContent } from '../_lib/cors'
 import { hasRole, type AuthEnv, type SessionUser } from '../_lib/auth'
 import { isValidTournamentId } from '../_lib/tournamentId'
-import { mapObjectKey, mapObjectPrefix, validateRoundId, validateSlot } from '../_lib/mapKeys'
+import { decodeMetaRoundsParam, mapObjectKey, mapObjectPrefix } from '../_lib/mapKeys'
 
 interface Env extends AuthEnv {
   GITHUB_TOKEN: string
@@ -31,24 +31,15 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env, data }) =
   }
 
   // rounds=rid1:slot1&rid2:slot2 —— 前端从 JSON 里挑出缺 name/BID 的才发过来。
-  // slot 里假定不含冒号(现有 slot 命名 RC1/LN2/TB 等);roundId 先取到第一个冒号。
-  const wanted: { roundId: string; slot: string }[] = []
-  const seen = new Set<string>()
-  for (const group of roundsParam.split('&')) {
-    const ci = group.indexOf(':')
-    if (ci <= 0 || ci === group.length - 1) continue
-    const roundId = group.slice(0, ci)
-    const slot = group.slice(ci + 1)
+  // 两段都走**百分号编码**再拼(见 _lib/mapKeys 的 encode/decodeMetaRoundsParam):
+  // 真实槽位里有含 `&` 的(japanese-mania-championship-2 的 `HB4(Wild&SV)`、
+  // po-fang-cup-s4 的 `GM(FL&EZ)`),用字面 `&` 当分隔符会被切开 → 误报"R2 无文件"。
+  const decoded = decodeMetaRoundsParam(roundsParam)
+  if (!decoded.ok) {
     // R04:分隔出来的两段也走共享键段校验 —— 坏段直接 400,不静默跳过。
-    const roundCheck = validateRoundId(roundId)
-    if (!roundCheck.ok) return jsonResponse({ error: roundCheck.error, code: 'INVALID_ROUND_ID' }, 400)
-    const slotCheck = validateSlot(slot)
-    if (!slotCheck.ok) return jsonResponse({ error: slotCheck.error, code: 'INVALID_SLOT' }, 400)
-    const ck = `${roundId}:${slot}`
-    if (seen.has(ck)) continue
-    seen.add(ck)
-    wanted.push({ roundId, slot })
+    return jsonResponse({ error: decoded.error, code: 'INVALID_ROUNDS_PARAM' }, 400)
   }
+  const wanted = decoded.value
   if (wanted.length === 0) return jsonResponse({ error: 'no rounds specified' }, 400)
   if (wanted.length > 500) return jsonResponse({ error: 'too many slots (max 500)' }, 400)
 

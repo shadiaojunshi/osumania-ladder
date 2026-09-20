@@ -40,6 +40,90 @@ test('R33 前后端两份判读口径一致（阈值与判定结果逐项对齐�
   assert.equal(backend.usableBeatmapId(1), frontend.usableBeatmapId(1))
   assert.equal(backend.usableBeatmapsetId(1), frontend.usableBeatmapsetId(1))
   assert.equal(backend.usableBeatmapId(5165500), 5165500)
+
+  // 占位名判读也要两边一致（2026-09-20 小字 bug）。
+  const nameSamples = [
+    ['RC1', 'RC1'], ['SV1', 'SV1'], ['RC1 ', 'RC1'],
+    ['Toromaru - Curiosity [S7]', 'RC1'],
+    [undefined, undefined], [null, undefined], ['RC1', undefined], ['RC1', ''], ['RC1', 123],
+  ]
+  for (const [name, slot] of nameSamples) {
+    assert.equal(
+      backend.isPlaceholderName(name, slot),
+      frontend.isPlaceholderName(name, slot),
+      `${String(name)} / ${String(slot)} 两边判定必须一致`,
+    )
+  }
+})
+
+// ---------- /api/maps/meta 的 rounds 参数：含 & 的槽位必须端到端可用 ----------
+//
+// 2026-09-20 实测的回归：前端把 N 个槽位用字面 `&` 拼成 rounds 参数，而真实槽位里
+// 有含 `&` 的（japanese-mania-championship-2 的 `HB4(Wild&SV)`、po-fang-cup-s4 的
+// `GM(FL&EZ)`）→ 被从 `&` 处切开 → 两个碎片都查不到文件 → 误报"R2 无文件"，
+// 而真正的槽位一次都没被查过。修法是两段各自百分号编码。
+
+test('rounds 参数编解码：含 & / : / / / ( 的槽位端到端往返不丢', async () => {
+  const { encodeMetaRoundsParam, decodeMetaRoundsParam } = await import('../functions/api/_lib/mapKeys.ts')
+  const cases = [
+    { roundId: 'round-5', slot: 'HB4(Wild&SV)' },   // 真实存在于 japanese-mania-championship-2
+    { roundId: 'round-5', slot: 'GM(FL&EZ)' },      // 真实存在于 po-fang-cup-s4
+    { roundId: 'round-2', slot: 'GM(HR/SD)' },      // 含 `/`（R2 键里也是合法段）
+    { roundId: 'round-8-f', slot: 'FS/TB' },
+    { roundId: 'round-1', slot: 'RC1' },            // 普通槽位：编码前后完全一样
+  ]
+  const param = encodeMetaRoundsParam(cases)
+  // 普通槽位不受影响（老客户端/既有测试的形状）
+  assert.ok(param.includes('round-1:RC1'), '不含特殊字符的段编码后应保持原样')
+  const decoded = decodeMetaRoundsParam(param)
+  assert.equal(decoded.ok, true)
+  assert.deepEqual(decoded.value, cases, '往返必须逐条一致 —— 含 & 的槽位不能被切开')
+})
+
+test('rounds 参数解码：坏参数报错而不是静默跳过（静默跳过会把"查不到"变成假象）', async () => {
+  const { decodeMetaRoundsParam } = await import('../functions/api/_lib/mapKeys.ts')
+  // 孤立的 `%` 让 decodeURIComponent 抛错 → 必须报错
+  assert.equal(decodeMetaRoundsParam('round-1:RC%ZZ').ok, false)
+  // 解码后落到空串/`.`/`..` 的段被键段校验挡下
+  assert.equal(decodeMetaRoundsParam('round-1:').ok, false, '空段不是"没有 rounds"，是坏参数')
+  assert.equal(decodeMetaRoundsParam('round-1:%2E%2E').ok, false, '解码成 `..` 的段必须被拒')
+  // `&` 切出来的空段仍然忽略（既有行为不变）
+  assert.deepEqual(decodeMetaRoundsParam('round-1:RC1&&round-2:RC2').value, [
+    { roundId: 'round-1', slot: 'RC1' },
+    { roundId: 'round-2', slot: 'RC2' },
+  ])
+})
+
+test('rounds 参数编码：真实的含 & 槽位不再被切开（对拍旧的字面拼法）', async () => {
+  const { encodeMetaRoundsParam, decodeMetaRoundsParam } = await import('../functions/api/_lib/mapKeys.ts')
+  const batch = [
+    { roundId: 'round-5', slot: 'HB4(Wild&SV)' },
+    { roundId: 'round-5', slot: 'RC1' },
+  ]
+  // 旧实现（字面拼）会怎样：先被 `&` 切成三片 —— 槽位 `HB4(Wild&SV)` 拦腰断成 `HB4(Wild` 与 `SV)`。
+  const naive = batch.map((c) => `${c.roundId}:${c.slot}`).join('&')
+  assert.deepEqual(
+    naive.split('&'),
+    ['round-5:HB4(Wild', 'SV)', 'round-5:RC1'],
+    '旧实现确实把槽位切成了碎片',
+  )
+  // 更糟的是后半：碎片 `SV)` 没有 `:`，旧解析**无声丢掉**它 ——
+  // 于是接口报的是"这两个槽位查不到文件"，而真正的 `HB4(Wild&SV)` 一次都没被查过。
+  const naiveParsed = []
+  for (const group of naive.split('&')) {
+    const ci = group.indexOf(':')
+    if (ci <= 0 || ci === group.length - 1) continue
+    naiveParsed.push(`${group.slice(0, ci)}:${group.slice(ci + 1)}`)
+  }
+  assert.deepEqual(naiveParsed, ['round-5:HB4(Wild', 'round-5:RC1'], '碎片被静默丢掉，错误信息因此是假的')
+  // 新解码端对这种形状**报错**（不再是无声丢掉）：老客户端字面拼出来的参数会拿到 400，
+  // 而不是一个"R2 无文件"的假象。
+  assert.equal(decodeMetaRoundsParam(naive).ok, false, '形状不对的段必须报错，不能伪装成"查不到"')
+
+  // 新实现：完整往返，且请求里两个槽位都在。
+  const decoded = decodeMetaRoundsParam(encodeMetaRoundsParam(batch))
+  assert.equal(decoded.ok, true)
+  assert.deepEqual(decoded.value, batch)
 })
 
 // ---------- 后端 .osu 解析：占位 ID 一律当没有 ----------

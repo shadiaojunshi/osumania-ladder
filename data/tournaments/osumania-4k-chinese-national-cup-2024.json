@@ -281,7 +281,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "MTC",
+          "realType": "JTC",
           "name": "Protest The Hero - She Who Mars The Skin Of Gods [Cygnusian 1.2x]",
           "difficulty": 9.07,
           "beatmapId": 3857511,

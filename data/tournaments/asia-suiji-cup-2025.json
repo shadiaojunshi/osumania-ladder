@@ -141,7 +141,7 @@
         {
           "slot": "RC3",
           "type": "RC",
-          "realType": "DP",
+          "realType": "STC",
           "name": "RC3",
           "difficulty": 5.3,
           "beatmapId": 4946095,
@@ -377,7 +377,7 @@
         {
           "slot": "LN3",
           "type": "LN",
-          "realType": "LNTC",
+          "realType": "RE",
           "name": "LN3",
           "difficulty": 8,
           "beatmapId": 5318794,

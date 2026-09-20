@@ -866,7 +866,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "MX",
+          "realType": "TC",
           "name": "STEAKA feat. Hatsune Miku - Sanity Krush [Insane 1.05x 176bpm]",
           "difficulty": 12.74,
           "beatmapId": 5347208,

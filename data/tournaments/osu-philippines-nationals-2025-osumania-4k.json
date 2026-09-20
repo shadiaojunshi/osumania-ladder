@@ -460,7 +460,7 @@
         {
           "slot": "LN1",
           "type": "LN",
-          "realType": "CO",
+          "realType": "TE",
           "name": "Primary - Inai Sekai [Departure [1.05x Rate]]",
           "difficulty": 10.2,
           "beatmapId": 4747791,

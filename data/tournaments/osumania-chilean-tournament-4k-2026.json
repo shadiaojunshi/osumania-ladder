@@ -745,7 +745,7 @@
         {
           "slot": "RC5",
           "type": "RC",
-          "realType": "MTC",
+          "realType": "DP",
           "name": "Sakaue Nachi - Crazy Hot [1.1x]",
           "difficulty": 12.9,
           "beatmapId": 5551262,

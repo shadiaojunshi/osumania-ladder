@@ -767,7 +767,7 @@
         {
           "slot": "EX2",
           "type": "LN",
-          "realType": "LNMX",
+          "realType": "LNWC",
           "name": "sasakure.UK - the EmpErroR [LmpErroN]",
           "difficulty": 10.6,
           "beatmapId": 5134950,

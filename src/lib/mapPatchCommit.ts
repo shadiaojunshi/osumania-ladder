@@ -69,8 +69,9 @@ function isPresent(map: Record<string, unknown>, field: PatchField): boolean {
  *
  * 为什么 name 那条:全库有 214 处槽位的 `name` 与 `slot` 完全同名(`"name": "RC1"` 且
  * `"slot": "RC1"`,见 `isPlaceholderName`;2026-09-20 按 `data/tournaments/**`
- * 实测统计,4987 个槽位里带槽位记号的共 226 处 —— 另有 12 处是"记号但不与 slot
- * 同名"(ASC 2025 资格赛 8 处 `ST1`/`SV1` 那类、NMWC 2025 两处 `RC4`/`RC5`·`RC6`、
+ * 实测统计,带槽位记号的共 226 处(槽位总数随比赛增减,别把总数当固定值)。
+ * 另有 12 处是"记号但不与 slot 同名"(ASC 2025 资格赛 8 处 `ST1`/`SV1` 那类、
+ * NMWC 2025 两处 `RC4`/`RC5`·`RC6`、
  * CN Cup 2025 两处 `ST4`/`RC4`·`DF`/`RC8`),那种这个判据够不到,
  * 见 `tournamentDiagnostics.ts` 里更宽的正则口径)。补全/手传回填发的都是 fill 补丁,
  * 而 `isPresent` 只看"非空"→ 占位名挡住了真曲名,**永远补不进去**,

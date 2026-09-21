@@ -25,6 +25,10 @@ const require = createRequire(import.meta.url)
 const cjs = require('./pack-as.js')
 const ts = await import('../src/lib/packAs.ts')
 const { REAL_TYPES } = await import('../src/lib/realTypeCatalog.ts')
+const { normalizeRealType: tsNormalize } = await import('../src/lib/realType.ts')
+// 合包脚本直跑不经过 Next，所以 generate-pack.js 自己有份 CJS 的别名副本 ——
+// 它才是 `isPackAsOverridden` 实际收到的那个函数，测它而不是测 TS 那份。
+const { normalizeRealType: cjsNormalize } = require('./generate-pack.js')
 
 const generatePackSrc = readFileSync(new URL('./generate-pack.js', import.meta.url), 'utf-8')
 
@@ -55,6 +59,11 @@ test('镜像锁：两份实现逐函数同结果（空值 / 空白 / 别名 / �
     assert.equal(cjs.isValidPackAs(map.packAs), ts.isValidPackAs(map.packAs), `isValidPackAs ${label}`)
     assert.equal(cjs.packRealTypeFor(map), ts.packRealTypeFor(map), `packRealTypeFor ${label}`)
     assert.equal(cjs.isPackAsOverridden(map), ts.isPackAsOverridden(map), `isPackAsOverridden ${label}`)
+    // generate-pack.js 走的是带 normalize 的版本（别名要认成同一个键型）
+    assert.equal(
+      cjs.isPackAsOverridden(map, cjsNormalize), ts.isPackAsOverridden(map),
+      `isPackAsOverridden(带别名归一化) ${label}`,
+    )
   }
   // 分组也要一致：CJS 侧没有镜像函数（合包是按 targetType 过滤的，不需要分组），
   // 所以这里只钉住 TS 侧的分组语义 —— 键是 packAs 优先，且顺序按输入顺序。
@@ -149,7 +158,18 @@ test('合包筛选：进哪个包看 packAs 优先，realType 仍原样带进打
   assert.equal(cjs.isPackAsOverridden(map), true)
   // 别名在 packAs 里也认（`WC` 不是真实类型，不过一遍 normalizeRealType 哪个包都进不去）
   const legacy = { realType: 'SS', packAs: 'WC' }
-  assert.equal(cjs.isPackAsOverridden(legacy), true)
+  assert.equal(cjs.isPackAsOverridden(legacy, cjsNormalize), true)
+  assert.equal(ts.isPackAsOverridden(legacy), true)
+
+  // ★ 别名**两边都是别名**时不算借来的：`WC` 与 `LNWC` 是同一个键型、进同一个包。
+  // 按原始字符串比会得出"借来的"，于是在一张**根本没换包**的图上加 `[LN Wildcard]` 前缀
+  // —— 而那会改已发布的 Version 串（内容寻址，改了就是断成绩）。
+  const sameType = { realType: 'WC', packAs: 'LNWC' }
+  assert.equal(cjs.isPackAsOverridden(sameType, cjsNormalize), false, 'WC 与 LNWC 是同一个键型')
+  assert.equal(ts.isPackAsOverridden(sameType), false, 'WC 与 LNWC 是同一个键型')
+  const reverseAlias = { realType: 'LNWC', packAs: 'WC' }
+  assert.equal(cjs.isPackAsOverridden(reverseAlias, cjsNormalize), false, '方向反过来也一样')
+  assert.equal(ts.isPackAsOverridden(reverseAlias), false, '方向反过来也一样')
   // 哨兵：语法上必须过 normalizeRealType —— 这条靠源码锁，因为函数是文件内私有的
   assert.ok(
     /normalizeRealType\(packRealTypeFor\(map\)\)/.test(generatePackSrc),
@@ -174,8 +194,9 @@ test('`[真实键型]` 前缀的判据是"任一来源被临时归类"，取簇�
     'sources 上必须带上 packAsOverridden，否则包内标签永远不加前缀',
   )
   assert.ok(
-    /packAsOverridden: isPackAsOverridden\(map\)/.test(generatePackSrc),
-    'mapsToProcess 里必须算 packAsOverridden',
+    /packAsOverridden: isPackAsOverridden\(map, normalizeRealType\)/.test(generatePackSrc),
+    'mapsToProcess 里必须算 packAsOverridden，且**必须带 normalizeRealType** —— ' +
+      '少了它，别名数据（realType=WC / packAs=LNWC）会被误判成借来的，给没换包的图加前缀（= 断成绩）',
   )
 })
 
@@ -206,4 +227,16 @@ test('真实数据：填了的 packAs 一律是**有效的合包目标**（写�
   }
   assert.ok(total > 1000, `只读到 ${total} 张谱面 —— 数据路径不对`)
   assert.deepEqual(bad, [], `这些 packAs 不是可归类的目标（会哪个包都不进）：${bad.join(', ')}`)
+})
+
+test('别名表锁：generate-pack.js 的 normalizeRealType 必须与 src/lib/realType.ts 一致', () => {
+  // 上面那条别名用例的前提 —— 两份表漂开了，"WC 与 LNWC 同键型"在合包链上就不成立，
+  // 而又不会有人发现（只有真的出现别名数据时才暴露）。
+  const probes = ['WC', 'LNWC', 'SS', 'IN', 'PDEX', '', null, undefined, '  SS  ', 'NOSUCH']
+  for (const value of probes) {
+    assert.equal(
+      cjsNormalize(value), tsNormalize(value),
+      `normalizeRealType(${JSON.stringify(value)}) 两份实现不一致 —— 别名表要同步`,
+    )
+  }
 })

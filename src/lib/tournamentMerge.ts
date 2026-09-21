@@ -63,12 +63,20 @@ const TOP_LEVEL_FIELDS = [
 
 // slot 是配对键,不参与合并;id 同理。
 const ROUND_FIELDS = ['name', 'abbreviation', 'order', 'isQualifier', 'bestOf'] as const
+// ⚠️ 这份清单就是"合并时会被考虑"的全部字段。**漏掉一个字段 = 静默数据丢失**:
+// mergeMap 从 mine 克隆,没列进来的字段永远不会采用服务器侧的值 —— 对方刚设的
+// 标记会在你保存时被悄悄抹掉,而且 conflicts 是空的,你连提示都看不到。
+// 2026-09-21 补进 `excludeFromDifficulty`(早已存在,一直在丢)与 `packAs`(新字段)。
+// 新增可选字段时**必须**同时加到这里 —— `scripts/tournament-merge.test.mjs`
+// 有一条用例拿真实数据核对"数据里出现过的每个 map 键都在清单里"。
 const MAP_FIELDS = [
   'type',
   'realType',
   'name',
   'difficulty',
   'difficultyLn',
+  'excludeFromDifficulty',
+  'packAs',
   'beatmapId',
   'beatmapsetId',
   'oszUrl',

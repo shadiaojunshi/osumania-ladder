@@ -245,6 +245,53 @@ function evaluateSlotLoss({ previousSlots = 0, currentSlots = 0, allowContentGap
   return { lost, blocked: !allowContentGaps }
 }
 
+/**
+ * 「这个类型本次一个槽位都没有」时该怎么办（2026-09-21，packAs 引入）。
+ *
+ * 两种截然不同的原因**必须分开**：
+ *   ① 这个键型的图真的没了 / 被删了      → 保留旧包（SKIPPED）。数据滞后也走这条。
+ *   ② 图还在，只是**全被临时归类挪走了** → 保留旧包就错了：那些图此刻已经在别的包里，
+ *      旧包也还在线上 ⇒ 同一张图同时出现在两个包里，下载页两个包都列它。
+ *      返回 OK + 空 packs，走 buildManifestPacks 的"整段替换"分支：旧条目被移除，
+ *      包从清单下线，剩下的 R2 对象由 gc-pack-objects 按保留期清理（与"该类型改名/
+ *      合并"的既有处理一致）。
+ *
+ * 为什么不新造第三种 status：SKIPPED 的语义就是"保留旧条目"，而这里要的恰恰是不保留。
+ * 复用 SKIPPED 会让 buildManifestPacks 把旧条目留下 —— 那正是 bug ② 本身。
+ */
+function classifyEmptyType({ movedOutSlots = 0 } = {}) {
+  if (movedOutSlots > 0) return { status: STATUS_OK, reason: 'moved-out' }
+  return { status: STATUS_SKIPPED, reason: 'no-slots' }
+}
+
+/**
+ * 收缩护栏（R10）拦下发布时，针对**临时归类（packAs）**的补充说明行。
+ *
+ * 护栏列的是"R2 里找不到文件的主图槽位"，而临时归类让包变小的时候**一个槽位都列不出来**
+ * —— 站长看到的是「少了 3 张（无可列出的槽位）」，下一步就是死胡同。两个方向都要说，
+ * 但**不说两家话**：下面②只是"最可能的解释"，不假装能精确归因。
+ *
+ *   ① 本键型的图被挪走（realType === targetType 但 packAs 指向别处）→ 能直接数出来
+ *   ② 之前借进来的图回家了（**撤销** packAs）→ 事后从数据里看不出来：那些图现在的
+ *      realType 是别的键型、packAs 也已清空，与本类型再无关联。只能在"确实没有真丢文件"
+ *      的前提下作为最可能的解释给出来。
+ */
+function slotLossHintLines({ movedOutSlots = 0, missingMainSlotCount = 0, lost = 0 } = {}) {
+  const lines = []
+  if (movedOutSlots > 0) {
+    lines.push(`  ⚠ 其中 ${movedOutSlots} 张是**被临时归类（packAs）挪去别的包**的：这不是文件丢失。`)
+    lines.push('    确认这是有意的 → 加 --allow-content-gaps 重新发布；旧包（含那些图）会被本次的新包替换。')
+  }
+  // `movedOutSlots < lost`：全都缺文件时别再把"撤销"当主因，那会盖过真正的原因。
+  if (missingMainSlotCount === 0 && movedOutSlots < lost) {
+    lines.push('  ⚠ 没有任何槽位真的缺文件 —— 说明这次"变少"不是 R2 掉文件。')
+    lines.push('    最可能是**撤销了临时归类**：之前借进本包的图已经回到它们自己的键型包，')
+    lines.push('    本包因此缩小（这是正常的，不是故障）。')
+    lines.push('    确认如此 → 加 --allow-content-gaps 重新发布。')
+  }
+  return lines
+}
+
 function buildManifestPacks({ typeResults = [], oldManifest = {}, today, preserveOtherTypes = false } = {}) {
   const oldPacks = oldManifest.packs || []
   const byKey = new Map(oldPacks.map((p) => [`${p.realType}#${p.part || 1}`, p]))
@@ -609,6 +656,8 @@ module.exports = {
   evaluateSlotLoss,
   previousManifestSlotTotal,
   hasComparableBaseline,
+  classifyEmptyType,
+  slotLossHintLines,
   describeCliError,
   CLI_USAGE,
 }

@@ -24,6 +24,9 @@ const {
   evaluateSlotLoss,
   previousManifestSlotTotal,
   hasComparableBaseline,
+  // 空类型该保留还是下线、收缩护栏的补充说明 —— 都是纯函数，放这边才有单测
+  classifyEmptyType,
+  slotLossHintLines,
 } = require('./pack-publish')
 const {
   contentSignature,
@@ -862,7 +865,9 @@ async function generatePack(targetType, {
             r2Key,
             // 这张图是不是被临时塞进来的（包 ≠ 真实键型）——决定包内标签要不要加
             // `[真实键型全名]` 前缀，也用来统计"这个包里有几张不是本键型的"。
-            packAsOverridden: isPackAsOverridden(map),
+            // 传 normalizeRealType：别名（WC→LNWC）下"借来的"要判准，否则会给一张
+            // 根本没换包的图加前缀 —— 那会改已发布的 Version 串（= 断成绩）。
+            packAsOverridden: isPackAsOverridden(map, normalizeRealType),
             realType: normalizeRealType(map.realType),
           })
         }
@@ -876,8 +881,18 @@ async function generatePack(targetType, {
   // 必须与"有槽位但读不到文件"分开:后者是本次生成失败(见下面 available.length === 0),
   // 混为一谈的话,一次数据滞后就会把线上包当孤儿删掉(R10 第 1、2 条)。
   if (mapsToProcess.length === 0) {
-    console.log(`[${targetType}] No slots in current data — keeping previously published packs`)
-    return { realType: targetType, status: STATUS_SKIPPED, reason: 'no-slots', plannedSlots: 0, packs: [] }
+    // 判定在 pack-publish.js（纯函数，有单测钉着）：图真的没了 → SKIPPED 保留旧包；
+    // 全被临时归类挪走了 → OK + 空 packs，旧包一并下线（否则与接收方重复收录）。
+    const { status, reason } = classifyEmptyType({ movedOutSlots })
+    if (reason === 'moved-out') {
+      console.log(
+        `[${targetType}] 全部 ${movedOutSlots} 个槽位都被临时归类（packAs）挪去了别的包 —— ` +
+          '本类型本次不产出包，旧包与旧清单项一并下线（否则它们会与接收方重复收录同一批图）',
+      )
+    } else {
+      console.log(`[${targetType}] No slots in current data — keeping previously published packs`)
+    }
+    return { realType: targetType, status, reason, plannedSlots: 0, packs: [] }
   }
 
   const r2Objects = await listR2Objects('maps/')
@@ -1019,11 +1034,15 @@ async function generatePack(targetType, {
     )
     console.error('  若这些文件**上一版有、现在丢了**：先补回 R2 再重跑，别急着发布。')
     console.error('  若确认是数据侧正常收缩（删比赛、改槽位）：加 --allow-content-gaps 继续。')
-    // 临时归类（packAs）会**主动**让包变小，撞上同一道护栏。这种情况①上一条提示
-    // 一个槽位都列不出来（文件没丢），②是站长自己刚做的操作 —— 说清楚，别让人以为丢图了。
-    if (movedOutSlots > 0) {
-      console.error(`  ⚠ 其中 ${movedOutSlots} 张是**被临时归类（packAs）挪去别的包**的：这不是文件丢失。`)
-      console.error('    确认这是有意的 → 加 --allow-content-gaps 重新发布；旧包（含那些图）会被本次的新包替换。')
+    // 临时归类（packAs）会**主动**让包变大变小，撞上同一道护栏，而"文件丢失"的提示
+    // 一条也对不上 —— 这时候站长会卡在「少了 N 张，但哪个槽位都没缺」上。
+    // 文案在 pack-publish.js（纯函数，有单测钉着，免得哪天被顺手删掉）。
+    for (const line of slotLossHintLines({
+      movedOutSlots,
+      missingMainSlotCount: missingMainSlots.length,
+      lost: slotLoss,
+    })) {
+      console.error(line)
     }
     return {
       realType: targetType,
@@ -1575,6 +1594,13 @@ async function main() {
 
     if (result.status === STATUS_SKIPPED) {
       console.log(`\n${cli.targetType} 在当前数据里没有槽位（或属于不产包的类型）—— 没有做任何改动。`)
+    } else if (result.reason === 'moved-out') {
+      // 与上面的 SKIPPED 正好相反：这个类型的槽位**还在**，只是全被临时归类挪去别的包了。
+      // 说清楚"包下线了"而不是"更新了" —— 否则站长会以为 IN 包还在，只是没变。
+      console.log(
+        `\n${cli.targetType} 的槽位全被临时归类（packAs）挪去了别的包 —— ` +
+          '本次不产出包，旧包与旧清单项已下线（别的类型不受影响）。',
+      )
     } else if (!publish) {
       console.log('\n离线预览完成:包在 output/ 下,未上传 R2、未改动 manifest。要发布请加 --publish。')
     } else {

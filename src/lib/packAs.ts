@@ -24,6 +24,7 @@
 //      这条靠 `scripts/pack-as.test.mjs` 对全库数据钉着（不是靠运行时兜底：
 //      值只从下拉里来，真正的风险是手改 JSON / 将来某次改名留下的陈值，都是提交时就能挡的）。
 
+import { normalizeRealType } from './realType.ts'
 import { REAL_TYPES, type MapCategory, type RealTypeOption } from './realTypeCatalog.ts'
 
 export interface PackAsAssignable {
@@ -91,9 +92,17 @@ export function packRealTypeFor(map: PackAsAssignable): string {
   return isValidPackAs(map.packAs) ? map.packAs : String(map.realType ?? '')
 }
 
-/** 这张图是不是被临时归类了（= 合包的包 ≠ 它真实的键型）。 */
+/**
+ * 这张图是不是被临时归类了（= 合包的包 ≠ 它真实的键型）。
+ *
+ * ⚠️ 比较走 `normalizeRealType`，不能直接比字符串：realType 里可能还留着历史别名
+ * （`WC`），而 packAs 下拉给的是规范值（`LNWC`）—— 两者其实是同一个键型、进的是同一个包，
+ * 按原始字符串比却会得出"借来的"，于是给一张**根本没过户**的图加上 `[LN Wildcard]` 前缀。
+ * 前缀会改已发布的 Version 串，而谱面文件名是内容寻址的：改了就是断成绩。
+ */
 export function isPackAsOverridden(map: PackAsAssignable): boolean {
-  return isValidPackAs(map.packAs) && map.packAs !== map.realType
+  if (!isValidPackAs(map.packAs)) return false
+  return normalizeRealType(map.packAs) !== normalizeRealType(map.realType)
 }
 
 /**

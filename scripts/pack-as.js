@@ -29,10 +29,23 @@ function packRealTypeFor(map) {
   return isValidPackAs(m.packAs) ? m.packAs : String(m.realType == null ? '' : m.realType)
 }
 
-/** 这张图是不是被临时归类了（= 合包的包 ≠ 它真实的键型）。 */
-function isPackAsOverridden(map) {
+/**
+ * 这张图是不是被临时归类了（= 合包的包 ≠ 它真实的键型）。
+ *
+ * ⚠️ `normalize` 必须传进来，否则**别名**会骗过判断：realType 里可能还留着历史别名
+ * （`WC`），而 packAs 下拉给的是规范值（`LNWC`）—— 两者其实是同一个键型、进的是同一个包，
+ * 按原始字符串比却会得出"借来的"，于是给一张**根本没过户**的图加上 `[LN Wildcard]` 前缀。
+ * 前缀会改已发布的 Version 串，而谱面文件名是内容寻址的：改了就是断成绩。
+ *
+ * 归一化知识留在调用方（generate-pack.js 有自己那份 REAL_TYPE_ALIASES，
+ * 与 src/lib/realType.ts 一致），这里不复制第三份别名表。
+ */
+function isPackAsOverridden(map, normalize) {
   const m = map || {}
-  return isValidPackAs(m.packAs) && m.packAs !== m.realType
+  if (!isValidPackAs(m.packAs)) return false
+  const norm = typeof normalize === 'function' ? normalize : (value) => value
+  const realType = m.realType == null ? '' : m.realType
+  return String(norm(m.packAs)) !== String(norm(realType))
 }
 
 /**

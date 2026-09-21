@@ -38,6 +38,8 @@ const {
   evaluateSlotLoss,
   previousManifestSlotTotal,
   hasComparableBaseline,
+  classifyEmptyType,
+  slotLossHintLines,
 } = require('./pack-publish.js')
 
 // 与 generate-pack.js 的 main 一一对应的发布决策：有失败就整次取消，不写 manifest。
@@ -881,4 +883,93 @@ test('③ 结构：GC 脚本必须核实清单"已上线"，而不是只打一�
   assert.ok(at('probeManifestInGit(manifestPath)') < at('new DeleteObjectCommand('), '核实要早于删除')
   // 而且必须早于凭据检查：这是本地错误，不该先要 R2 凭据
   assert.ok(at('probeManifestInGit(manifestPath)') < at('缺失 R2 凭据'), '核实要早于凭据检查')
+})
+
+// ---------------------------------------------------------------------------
+// 临时归类（packAs）：把某个真实键型**整体**挪进别的包（2026-09-21）
+// ---------------------------------------------------------------------------
+//
+// 这是"一个真实键型被彻底暂时转移到别的键型"的核心场景。最危险的不是图挪错了，
+// 而是**同一个包留在线上**：那些图此刻已经在接收方的包里，旧包却还在，下载页两个包
+// 都列它，玩家下两次。所以"该保留旧包"与"该把旧包下线"必须分得开。
+
+test('空类型：图真的没了 → SKIPPED 保留旧包（数据滞后也走这条）', () => {
+  const { status, reason } = classifyEmptyType({ movedOutSlots: 0 })
+  assert.equal(status, STATUS_SKIPPED)
+  assert.equal(reason, 'no-slots')
+})
+
+test('空类型：全被临时归类挪走了 → OK + 空 packs，旧包必须下线', () => {
+  const { status, reason } = classifyEmptyType({ movedOutSlots: 3 })
+  // **不能**是 SKIPPED —— buildManifestPacks 对 SKIPPED 的处理是"原样保留旧条目"，
+  // 而那正是 bug：旧条目留着，同一批图就同时出现在两个包里。
+  assert.notEqual(status, STATUS_SKIPPED, '复用 SKIPPED 会让旧包留在清单里 ⇒ 重复收录')
+  assert.equal(status, STATUS_OK)
+  assert.equal(reason, 'moved-out')
+})
+
+test('空类型 + 全被挪走：端到端跑 buildManifestPacks，旧包确实从清单里消失', () => {
+  const oldManifest = {
+    packs: [
+      { realType: 'IN', part: 1, objectKey: 'IN_1.aaa.osz', mapCount: 3, totalMaps: 3, links: { r2: 'https://r2/IN_1.aaa.osz' } },
+      { realType: 'SS', part: 1, objectKey: 'SS_1.bbb.osz', mapCount: 100, totalMaps: 100, links: { r2: 'https://r2/SS_1.bbb.osz' } },
+    ],
+  }
+  const typeResults = [
+    // IN 的 3 张全被 packAs='SS' 挪走 → generate-pack.js 会返回 OK + 空 packs
+    { realType: 'IN', status: STATUS_OK, reason: 'moved-out', plannedSlots: 0, packs: [] },
+    { realType: 'SS', status: STATUS_OK, packs: [pack('SS#1', { realType: 'SS', mapCount: 103, totalMaps: 103, objectKey: 'SS_1.ccc.osz' })] },
+  ]
+  const { packs } = buildManifestPacks({ typeResults, oldManifest, today: '2026-09-21' })
+  assert.equal(packs.filter((p) => p.realType === 'IN').length, 0, 'IN 的旧包还在清单里 ⇒ 那 3 张图会同时出现在 IN 与 SS 包里')
+  assert.equal(packs.filter((p) => p.realType === 'SS').length, 1)
+})
+
+test('空类型：SKIPPED 那条路仍在 —— 真没图的类型保留旧条目（别把两种混成一种）', () => {
+  const oldManifest = {
+    packs: [{ realType: 'IN', part: 1, objectKey: 'IN_1.aaa.osz', mapCount: 3, totalMaps: 3 }],
+  }
+  const typeResults = [
+    { realType: 'IN', status: STATUS_SKIPPED, reason: 'no-slots', plannedSlots: 0, packs: [] },
+    { realType: 'SS', status: STATUS_OK, packs: [pack('SS#1', { objectKey: 'SS_1.bbb.osz' })] },
+  ]
+  const { packs } = buildManifestPacks({ typeResults, oldManifest, today: '2026-09-21' })
+  assert.equal(packs.filter((p) => p.realType === 'IN').length, 1, '本地数据滞后时误删线上包（R10 第 1、2 条）')
+})
+
+test('收缩护栏：本键型的图被挪走时，必须说明"这不是文件丢失"', () => {
+  const lines = slotLossHintLines({ movedOutSlots: 3, missingMainSlotCount: 0, lost: 3 })
+  const text = lines.join('\n')
+  assert.match(text, /临时归类/, '不说的话站长会以为是 R2 掉文件')
+  assert.match(text, /allow-content-gaps/, '要给出下一步动作，不能只说"拒绝发布"')
+  assert.match(text, /不是文件丢失/)
+})
+
+test('收缩护栏：撤销临时归类（借进来的图回家了）也要有解释', () => {
+  // 这条是最难归因的：撤销后那些图的 realType 是别的键型、packAs 也已清空，
+  // 与本类型再无关联 —— movedOutSlots 是 0，只能靠"确实没有槽位缺文件"推出来。
+  const lines = slotLossHintLines({ movedOutSlots: 0, missingMainSlotCount: 0, lost: 3 })
+  const text = lines.join('\n')
+  assert.match(text, /撤销/, '没有真丢文件时，最常见的解释就是撤销了临时归类')
+  assert.match(text, /allow-content-gaps/)
+})
+
+test('收缩护栏：真丢了文件时不许把"撤销"当主因（会盖过真正的原因）', () => {
+  const lines = slotLossHintLines({ movedOutSlots: 0, missingMainSlotCount: 4, lost: 4 })
+  const text = lines.join('\n')
+  assert.doesNotMatch(text, /撤销/, '缺文件的槽位列得出来时，就别再猜撤销了')
+  assert.equal(lines.length, 0, '没有临时归类参与时不该多嘴')
+})
+
+test('收缩护栏：全被挪走（挪走的恰好等于少的）就不重复说撤销', () => {
+  const lines = slotLossHintLines({ movedOutSlots: 3, missingMainSlotCount: 0, lost: 3 })
+  assert.doesNotMatch(lines.join('\n'), /撤销/, 'movedOutSlots === lost 时"撤销"是错的解释（那些图全在本键型名下被挪出去，不是回家的）')
+})
+
+test('generate-pack.js 走的是这两个纯函数，不再有内联副本', () => {
+  const src = readFileSync(new URL('./generate-pack.js', import.meta.url), 'utf-8')
+  assert.ok(src.includes('classifyEmptyType({ movedOutSlots })'), '空分类要走纯函数')
+  assert.ok(src.includes('slotLossHintLines({'), '护栏提示要走纯函数')
+  // 内联副本一旦回潮，测试就管不着了（这两处逻辑的 bug 都是"少一句话"型）。
+  assert.doesNotMatch(src, /reason: 'moved-out',\s*\n\s*plannedSlots/, '别把判定写回 generate-pack.js 里')
 })

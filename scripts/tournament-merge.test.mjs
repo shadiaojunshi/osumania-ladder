@@ -284,3 +284,113 @@ test('真实数据自比:零冲突、零跟随、内容深相等', () => {
     assert.deepEqual(out.merged, tournament, `${file} 自比改变了内容`)
   }
 })
+
+// 2026-09-21：这条是**静默数据丢失**的守卫，务必留着。
+//
+// `mergeMap` 从 `mine` 克隆，然后只对 `MAP_FIELDS` 里的字段做三方判定 ——
+// **没列进清单的字段永远不会采用服务器侧的值**：对方刚设的标记会在你保存时被
+// 悄悄抹掉，而且 conflicts 是空的，界面上连提示都没有。
+//
+// 上面那条"真实数据自比"抓不到这个：自比时三边一模一样，漏掉的字段克隆自 mine
+// 恰好等于原值。只有"**服务器改了、我没改**"才暴露。
+// 实测已有过受害者：`excludeFromDifficulty`（早就在用，一直在丢）与 `packAs`(新)。
+test('服务器单方改了可选 map 字段，必须跟随而不是抹掉', () => {
+  const withMap = (map) => {
+    const t = baseTournament()
+    t.rounds[0].maps[0] = { ...t.rounds[0].maps[0], ...map }
+    return t
+  }
+  const base = withMap({})
+  // 我改了同一张图的 name（保证 mine ≠ base，走的不是"整槽新增"那条路）
+  const mine = withMap({ name: 'Me - Fixed' })
+  const theirs = withMap({ name: 'Me - Fixed', packAs: 'SS', excludeFromDifficulty: true })
+
+  const { merged, conflicts } = mergeTournament(base, mine, theirs)
+  const out = merged.rounds[0].maps[0]
+  assert.deepEqual(conflicts, [], '服务器单方改动不该报冲突')
+  assert.equal(out.packAs, 'SS', '服务器侧设的 packAs 被静默丢掉了')
+  assert.equal(out.excludeFromDifficulty, true, '服务器侧设的 excludeFromDifficulty 被静默丢掉了')
+  assert.equal(out.name, 'Me - Fixed')
+})
+
+// MAP_FIELDS 是手写清单 —— 它必须覆盖**类型定义里声明过**的每一个 map 字段。
+// 漏一个就是一个静默丢失字段，而上面那条"真实数据自比"抓不到它：自比时三边一模一样，
+// 漏掉的字段克隆自 mine 恰好等于原值。只有"服务器改了、我没改"才暴露。
+//
+// 清单来源是 `BeatmapMeta` 接口而不是真实数据 —— 数据会漏。实测：`oszUrl` 在接口里
+// 声明了却**从没被写入过任何一条数据**，只扫数据的话它是个永久盲区。接口才是
+// "这个字段存在"的定义，数据只负责补充"接口漏了但数据里有"的僵尸字段。
+test('MAP_FIELDS 必须覆盖 BeatmapMeta 声明过的每一个 map 字段', () => {
+  const known = new Set(['slot']) // slot 是配对键，不参与字段合并
+  for (const field of beatmapMetaFields()) known.add(field)
+  for (const file of readdirSync(DATA_DIR).filter((f) => f.endsWith('.json'))) {
+    const tournament = JSON.parse(readFileSync(`${DATA_DIR}${file}`, 'utf-8'))
+    for (const round of tournament.rounds || []) {
+      for (const map of round.maps || []) for (const key of Object.keys(map)) known.add(key)
+    }
+  }
+  assert.ok(known.size > 5, `只扫到 ${known.size} 个字段，接口解析或数据路径大概坏了`)
+  // 真实数据的键 → 逐个验证"服务器改了它会被跟随"。
+  // 场景固定为「服务器给这个键设了值，我在同一张图上改了**另一个**键」：
+  // 这是最容易被静默吞掉的情形（我确实动过这张图 ⇒ 走不到"整槽新增"那条捷径，
+  // 但合并逐字段进行 ⇒ 我没碰的字段本应跟随服务器）。
+  const base = baseTournament()
+  for (const key of known) {
+    if (key === 'slot') continue
+    const sample = sampleFor(key)
+    assert.notEqual(sample, undefined, `新出现的 map 键 \`${key}\` 没在 sampleFor 里登记 —— 补一个样本值再跑`)
+    // 挑一个≠key 的字段当"我改的"：两边改同一个字段是**真冲突**，那是另一条用例的事。
+    const myEditField = key === 'name' ? 'difficulty' : 'name'
+    const myEditValue = myEditField === 'name' ? 'Me - Fixed' : 25
+
+    const theirs = baseTournament()
+    theirs.rounds[0].maps[0] = { ...theirs.rounds[0].maps[0], [key]: sample }
+    const mine = baseTournament()
+    mine.rounds[0].maps[0] = { ...mine.rounds[0].maps[0], [myEditField]: myEditValue }
+
+    const { merged: out, conflicts } = mergeTournament(base, mine, theirs)
+    assert.deepEqual(conflicts, [], `键 \`${key}\` 的用例不该产生冲突（挑的"我改的"字段撞车了？）`)
+    assert.deepEqual(
+      out.rounds[0].maps[0][key], sample,
+      `map 键 \`${key}\` 没有列进 tournamentMerge.ts 的 MAP_FIELDS —— 服务器侧的改动会在保存时被静默丢掉`,
+    )
+    assert.deepEqual(out.rounds[0].maps[0][myEditField], myEditValue, `我改的 \`${myEditField}\` 被覆盖了`)
+  }
+})
+
+/**
+ * 从 types.ts 的 `BeatmapMeta` 接口里读出字段名。
+ *
+ * 刻意用文本解析而不是 import：这里要的是"接口**声明**了哪些字段"，走 TS 类型系统
+ * 反而拿不到运行时信息（interface 会被整个擦除）。文本解析的失效模式是"解析到空集合" ——
+ * 上面那条 `known.size > 5` 断言就是为了把它变成红色而不是静默通过。
+ */
+function beatmapMetaFields() {
+  const src = readFileSync(fileURLToPath(new URL('../src/lib/types.ts', import.meta.url)), 'utf-8')
+  const body = src.match(/export interface BeatmapMeta \{([\s\S]*?)\n\}/)
+  assert.ok(body, '没能从 types.ts 里解析出 BeatmapMeta —— 接口改名或换了写法？')
+  const fields = []
+  for (const line of body[1].split('\n')) {
+    const m = line.match(/^\s{2}([A-Za-z_$][\w$]*)\??\s*:/) // 顶层字段缩进两格，注释/嵌套不匹配
+    if (m) fields.push(m[1])
+  }
+  assert.ok(fields.length > 5, `只从 BeatmapMeta 解析出 ${fields.length} 个字段，解析器大概坏了`)
+  return fields
+}
+
+/** 给每个已知键挑一个"与原值不同、类型正确"的样本值；没登记的键会被上面断言挡下。 */
+function sampleFor(key) {
+  const samples = {
+    type: 'LN',
+    realType: 'CJ',
+    name: 'Server - Value',
+    difficulty: 21,
+    difficultyLn: 19,
+    excludeFromDifficulty: true,
+    packAs: 'SS',
+    beatmapId: 999999,
+    beatmapsetId: 888888,
+    oszUrl: 'https://example.com/a.osz',
+  }
+  return samples[key]
+}

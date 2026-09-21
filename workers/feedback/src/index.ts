@@ -23,6 +23,11 @@ export async function handleSubmit(request: Request, env: Env, deps: Deps = {}):
   if (!writesEnabled(env) || !readConfig(env).ok) return reject('DISABLED', 503, [], 3600)
   const shape = checkRequestShape(request, { allowedOrigins })
   if (!shape.ok) return reject('BAD_REQUEST', shape.status, [{ field: 'request', code: shape.code, message: '' }])
+  // 客户端一律只看到笼统的 503；原因**只进日志**（CF 控制台 / `wrangler tail`）。
+  // `[area] CODE` + 结构化字段与 functions/ 里的两条日志同一格式。
+  // 刻意不记 IP、不记 ipHash（那按设计就是不该留存的加盐哈希），
+  // 只记报告者自己拿得到的 clientRequestId —— 用户来报"提交不了"时能对上号。
+  let requestId: string | undefined
   try {
     const body = await readBoundedBody(request)
     if (!body.ok) return reject(body.code === 'too-large' ? 'TOO_LARGE' : 'BAD_REQUEST', body.code === 'too-large' ? 413 : 400)
@@ -30,8 +35,13 @@ export async function handleSubmit(request: Request, env: Env, deps: Deps = {}):
     if (!parsed.ok) return reject('BAD_REQUEST', 400)
     const validated = validateSubmission(parsed.value)
     if (!validated.ok) return reject('BAD_REQUEST', 400, validated.errors)
+    requestId = validated.value.clientRequestId
     const ip = clientIp(request)
-    if (!ip) return reject('INTERNAL', 503)
+    if (!ip) {
+      // 只在 CF 边缘缺失/串了 CDN 头时才会走到：查起来毫无头绪，必须留下痕迹。
+      console.error('[feedback] MISSING_CLIENT_IP', { requestId })
+      return reject('INTERNAL', 503)
+    }
     const ipHash = await hashIp(ip, dailySalt(env.IP_HASH_SALT!, (deps.now ?? (() => new Date()))()))
     const coordinator = deps.coordinator ?? coordinatorFor(env.QUOTA!)
     const verification = await coordinator.reserve(ipHash, 'verification')
@@ -53,11 +63,23 @@ export async function handleSubmit(request: Request, env: Env, deps: Deps = {}):
     if (!stored) {
       const concurrent = await env.SUGGESTIONS.get(key)
       const replay = checkIdempotency(concurrent ? await concurrent.text() : null, payloadHash)
-      if (replay.action !== 'replay') return reject('INTERNAL', 503, [], 5)
+      if (replay.action !== 'replay') {
+        // 预留了编号却写不进去，而且重读也不是自己那份 —— 值得单独留一条。
+        console.error('[feedback] CONCURRENT_WRITE_NOT_REPLAY', { id, requestId })
+        return reject('INTERNAL', 503, [], 5)
+      }
       return json({ ok: true, ...replay.receipt }, 200)
     }
     return json({ ok: true, id, receivedAt }, 201)
-  } catch {
+  } catch (error) {
+    // 以前这里是个裸 catch：R2 没绑、DO 挂了、配额协调器超时，线上全都只表现为
+    // "提交永远 503"，而日志里一个字都没有，只能靠猜。响应体保持笼统（不泄漏内部结构），
+    // 真正的原因只写日志。
+    console.error('[feedback] SUBMIT_FAILED', {
+      requestId,
+      name: error instanceof Error ? error.name : typeof error,
+      message: error instanceof Error ? error.message : String(error),
+    })
     return reject('INTERNAL', 503, [], 5)
   }
 }

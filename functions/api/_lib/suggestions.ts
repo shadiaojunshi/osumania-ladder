@@ -31,9 +31,25 @@ export function checkReviewer(env: SuggestionsEnv, user?: SessionUser): asserts 
   if (!hasRole(user ?? null, 'admin')) throw new ReviewError('需要 admin 或 owner 权限', user ? 403 : 401)
   if (!env.SUGGESTIONS || !env.SUGGESTION_REVIEWS) throw new ReviewError('反馈存储尚未配置', 503)
 }
+/** 审核状态只认这五个 —— 与 `ReviewState['status']` 一字不差。 */
+const REVIEW_STATUSES = ['pending', 'staged', 'ignored', 'applied', 'resolved']
+
+/**
+ * 读审核状态。记录**存在但形状不对**时报错，不当作"默认待审核"糊过去。
+ *
+ * 为什么这比"容错成 pending"更安全：状态里的每个动作都要过 `state.revision !== ref.revision`
+ * 这道 CAS 守卫，而缺 `revision` 的记录永远不等 → 任何动作都返回 409「建议已更新或正在发布，
+ * 请刷新」，可刷新永远不会变好，这条建议等于永久卡死、而审核员看到的原因还是假的。
+ * `readItem` 对损坏记录的态度是「建议记录损坏」422，这里沿用同一条规矩 ——
+ * 说"坏了"，让站长能定位到那个 R2 对象去处理，而不是编一个看得懂但不对的理由。
+ * （尚不存在"历史格式"的包袱：反馈功能还没上线，线上一条记录都没有。）
+ */
 export async function readState(env: SuggestionsEnv, id: string, date: string) {
   const object = await env.SUGGESTION_REVIEWS!.get(itemKey(id, date, 'reviews'))
-  return { state: object ? await object.json<ReviewState>() : { status: 'pending', revision: 0 } as ReviewState, etag: object?.etag }
+  if (!object) return { state: { status: 'pending', revision: 0 } as ReviewState, etag: undefined }
+  const state = await object.json<ReviewState>()
+  if (!state || typeof state !== 'object' || !Number.isInteger(state.revision) || state.revision < 0 || !REVIEW_STATUSES.includes(state.status)) throw new ReviewError('审核状态记录损坏，请联系站长核对该建议', 422)
+  return { state, etag: object.etag }
 }
 export async function writeState(env: SuggestionsEnv, id: string, date: string, state: ReviewState, etag?: string) {
   const saved = await env.SUGGESTION_REVIEWS!.put(itemKey(id, date, 'reviews'), JSON.stringify(state), {

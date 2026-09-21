@@ -130,7 +130,7 @@ export default function AdminPage() {
   }, [stagedChangesLoaded, readAux, writeAux])
 
   const claimLegacyDrafts = () => {
-    if (!window.confirm('确认这些旧草稿属于你？导入会保留旧存储备份；同名新草稿不会被覆盖。')) return
+    if (!window.confirm(t('admin.legacy.confirmClaim'))) return
     try {
       const rawV2 = localStorage.getItem(STAGED_TOURNAMENTS_KEY)
       const old = JSON.parse(rawV2 ?? localStorage.getItem(STAGED_TOURNAMENTS_KEY_V1) ?? '{}')
@@ -147,26 +147,26 @@ export default function AdminPage() {
       setStagedChanges(next)
       // 认领过就不再提示（标记只在**写入成功之后**才记，导入失败时横幅留着）。
       drafts.claimLegacy()
-      setSubmitStatus({ type: 'local', message: imported > 0 ? `旧草稿已导入 ${imported} 份，原备份保留。` : '没有可导入的旧草稿（同名草稿已存在或旧数据为空）。' })
+      setSubmitStatus({ type: 'local', message: imported > 0 ? t('admin.legacy.imported', { n: imported }) : t('admin.legacy.none') })
     } catch (e) { setSubmitStatus({ type: 'error', message: (e as Error).message }) }
   }
 
   const handleAcceptSuggestion = async (preview: ReviewPreview) => {
-    if (drafts.readAux('pendingBatch')) throw new Error('请先恢复上次保存结果')
+    if (drafts.readAux('pendingBatch')) throw new Error(t('admin.pendingBatch.recoverFirst'))
     const id = preview.tournament.id
     const ref: SuggestionRef = { id: preview.item.id, date: preview.item.receivedAt.slice(0, 10), revision: preview.item.review.revision, draftId }
     const prepare = () => {
       const existing = stagedChangesRef.current[id]
-      if (existing?.legacy) throw new Error('请先处理该比赛的旧版无基准草稿')
-      if (existing?.suggestions?.some(s => s.ref.id === ref.id)) throw new Error('这条建议已经在暂存中')
-      if (existing && existing.baseSha !== preview.sha) throw new Error('现有草稿与权威版本不同，请先保存或合并这份草稿，再采纳建议')
+      if (existing?.legacy) throw new Error(t('admin.suggestion.stage.legacyDraft'))
+      if (existing?.suggestions?.some(s => s.ref.id === ref.id)) throw new Error(t('admin.suggestion.stage.alreadyStaged'))
+      if (existing && existing.baseSha !== preview.sha) throw new Error(t('admin.suggestion.stage.baseChanged'))
       const base = existing ?? { data: preview.tournament, baseSha: preview.sha, baseline: preview.tournament }
       const data = structuredClone(base.data)
-      if (planIdentity(data, preview.plan) !== planIdentity(preview.tournament, preview.plan)) throw new Error('草稿已替换谱面，请先处理冲突')
+      if (planIdentity(data, preview.plan) !== planIdentity(preview.tournament, preview.plan)) throw new Error(t('admin.suggestion.stage.mapReplaced'))
       const result = applySuggestPlan({ draft: data, plan: preview.plan, suggestionId: ref.id, revision: ref.revision })
       if (!result.ok) throw new Error(result.detail)
       // Different proposals for the same field must be resolved explicitly.
-      for (const source of base.suggestions ?? []) if (!planSatisfied(data, source.review)) throw new Error('与已经采纳的建议冲突，请先取消原建议关联')
+      for (const source of base.suggestions ?? []) if (!planSatisfied(data, source.review)) throw new Error(t('admin.suggestion.stage.conflictStaged'))
       return { ...base, data }
     }
     prepare()
@@ -175,7 +175,7 @@ export default function AdminPage() {
     try {
       const entry = prepare()
       setStagedChanges(current => ({ ...current, [id]: { ...entry, suggestions: [...(entry.suggestions ?? []), { ref: claimed, review: result.review }] } }))
-      setSubmitStatus({ type: 'local', message: '建议已进入暂存，保存全部后才发布。' })
+      setSubmitStatus({ type: 'local', message: t('admin.suggestion.stage.done') })
     } catch (error) {
       try { await reviewRequest('release', claimed) } catch { /* lease expires; UI may reclaim after refresh */ }
       throw error
@@ -183,7 +183,7 @@ export default function AdminPage() {
   }
 
   const handleReleaseSuggestion = async (ref: SuggestionRef) => {
-    if (drafts.readAux('pendingBatch')) throw new Error('请先恢复上次保存结果')
+    if (drafts.readAux('pendingBatch')) throw new Error(t('admin.pendingBatch.recoverFirst'))
     await reviewRequest('release', ref)
     setStagedChanges(current => Object.fromEntries(Object.entries(current).map(([id, entry]) => [id, { ...entry, suggestions: entry.suggestions?.filter(s => s.ref.id !== ref.id) }])))
   }
@@ -201,7 +201,7 @@ export default function AdminPage() {
         } catch { left.push(batchId) }
       }
       drafts.writeAux('finalizations', left)
-      setSubmitStatus({ type: left.length ? 'error' : 'success', message: left.length ? `数据已保存，${left.length} 个批次的审核状态仍待同步，可稍后再试。` : '已保存的审核状态全部同步完成。' })
+      setSubmitStatus({ type: left.length ? 'error' : 'success', message: left.length ? t('admin.suggestion.save.statePending', { n: left.length }) : t('admin.suggestion.save.stateSynced') })
     } catch (e) { setSubmitStatus({ type: 'error', message: (e as Error).message }) }
     finally { setBatchSubmitting(false) }
   }
@@ -215,11 +215,11 @@ export default function AdminPage() {
         const snapshot = structuredClone(stagedChangesRef.current)
         const entries = Object.entries(snapshot)
         if (!entries.length) return
-        if (entries.some(([, e]) => e.legacy)) throw new Error('旧版无基准草稿不能提交')
+        if (entries.some(([, e]) => e.legacy)) throw new Error(t('admin.suggestion.save.legacyCannotSubmit'))
         const refs = entries.flatMap(([, e]) => (e.suggestions ?? []).map(s => s.ref))
-        if (!refs.length || refs.length > 50) throw new Error('每批支持 1 至 50 条反馈建议')
+        if (!refs.length || refs.length > 50) throw new Error(t('admin.suggestion.save.refLimit'))
         for (const [, entry] of entries) for (const source of entry.suggestions ?? []) {
-          if (!planSatisfied(entry.data, source.review)) throw new Error(`建议 ${source.ref.id} 的值已被手改覆盖，请取消关联后再保存`)
+          if (!planSatisfied(entry.data, source.review)) throw new Error(t('admin.suggestion.save.overwritten', { id: source.ref.id }))
         }
         pending = { snapshot, items: entries.map(([id, e]) => ({ id, tournament: e.data, baseSha: e.baseSha })), suggestionBatch: { id: crypto.randomUUID(), refs } }
         drafts.writeAux('pendingBatch', pending)
@@ -234,7 +234,7 @@ export default function AdminPage() {
         }
         throw new Error(body.error ?? `HTTP ${res.status}`)
       }
-      if (!body.success || typeof body.commit !== 'string' || !Array.isArray(body.files)) throw new Error('保存结果不完整，保留原批次并重试')
+      if (!body.success || typeof body.commit !== 'string' || !Array.isArray(body.files)) throw new Error(t('admin.suggestion.save.incomplete'))
       const waiting = drafts.readAux<string[]>('finalizations') ?? []
       // Record recovery before removing any draft. Reload after a crash replays this batch.
       drafts.writeAux('finalizations', [...new Set([...waiting, pending.suggestionBatch.id])])
@@ -253,7 +253,7 @@ export default function AdminPage() {
       setBrowserSaved(current => ({ ...current, ...Object.fromEntries(pending!.items.map(item => [item.id, item.tournament])) }))
       drafts.writeAux('pendingBatch', null); setPendingFeedback(false)
       if (!body.pendingSuggestions?.length) drafts.writeAux('finalizations', waiting.filter(id => id !== pending!.suggestionBatch.id))
-      setSubmitStatus({ type: 'success', message: `已一次保存 ${pending.items.length} 场比赛。提交 ${body.commit.slice(0, 8)}${body.pendingSuggestions?.length ? '；数据已保存，审核状态待同步。' : '；审核状态已同步。'}` })
+      setSubmitStatus({ type: 'success', message: t('admin.suggestion.save.batchDone', { n: pending.items.length, sha: body.commit.slice(0, 8) }) + (body.pendingSuggestions?.length ? t('admin.suggestion.save.tailPending') : t('admin.suggestion.save.tailSynced')) })
       fetchList()
     } catch (e) { setSubmitStatus({ type: 'error', message: (e as Error).message }) }
     finally { setBatchSubmitting(false) }
@@ -319,7 +319,7 @@ export default function AdminPage() {
   const handleSubmit = async () => {
     if (!tournament) return
     if (drafts.readAux('pendingBatch') || stagedChangesRef.current[tournament.id]?.suggestions?.length) {
-      setSubmitStatus({ type: 'error', message: '此比赛关联反馈建议，请使用反馈审核中的保存全部或恢复上次保存。' })
+      setSubmitStatus({ type: 'error', message: t('admin.suggestion.save.useBatchSave') })
       return
     }
     if (editingLegacy) {
@@ -605,7 +605,7 @@ export default function AdminPage() {
   }
 
   const handleClearStaged = async () => {
-    if (drafts.readAux('pendingBatch')) { setSubmitStatus({ type: 'error', message: '请先恢复上次保存结果，再清空暂存。' }); return }
+    if (drafts.readAux('pendingBatch')) { setSubmitStatus({ type: 'error', message: t('admin.pendingBatch.clearBlocked') }); return }
     if (!window.confirm(t('admin.stage.clearConfirm'))) return
     try {
       for (const entry of Object.values(stagedChangesRef.current)) for (const source of entry.suggestions ?? []) await handleReleaseSuggestion(source.ref)
@@ -727,7 +727,7 @@ export default function AdminPage() {
 
   // 载入最新版本 = 以权威内容为准重新开始(会先确认)。刻意不做"旧 JSON 配新 SHA 直接提交"。
   const handleReloadLatest = async (id: string) => {
-    if (stagedChangesRef.current[id]?.suggestions?.length) { setSubmitStatus({ type: 'error', message: '请先在反馈审核取消这份草稿的建议关联，再载入最新版本。' }); return }
+    if (stagedChangesRef.current[id]?.suggestions?.length) { setSubmitStatus({ type: 'error', message: t('admin.suggestion.reloadLinked') }); return }
     if (!window.confirm(t('admin.stage.reloadLatestConfirm', { id }))) return
     const loaded = await fetchAuthoritative(id)
     if (!loaded) {
@@ -935,8 +935,8 @@ export default function AdminPage() {
         </div>
 
         {drafts.error && <p role="alert" className="mb-4 text-red-600">{drafts.error}</p>}
-        {drafts.legacy && <div className="mb-4 rounded border border-amber-300 p-3 text-sm">发现旧版未归属账号的草稿。保留在本机，不会自动合并到当前账号。<button className="ml-3 underline" onClick={claimLegacyDrafts}>确认归属并导入旧草稿</button></div>}
-        {pendingFeedback && tab !== 'feedback' && <p className="mb-4 text-amber-700">上次反馈保存结果待确认，请进入“反馈审核”恢复。</p>}
+        {drafts.legacy && <div className="mb-4 rounded border border-amber-300 p-3 text-sm">{t('admin.legacy.banner')}<button className="ml-3 underline" onClick={claimLegacyDrafts}>{t('admin.legacy.bannerButton')}</button></div>}
+        {pendingFeedback && tab !== 'feedback' && <p className="mb-4 text-amber-700">{t('admin.pendingBatch.banner')}</p>}
         {tab === 'feedback' && isAdmin && stagedChangesLoaded && <SuggestionReview
           draftId={draftId} onStage={handleAcceptSuggestion} onSave={handleSubmitStaged} onClear={handleClearStaged}
           count={Object.keys(stagedChanges).length} busy={batchSubmitting} status={submitStatus?.message}

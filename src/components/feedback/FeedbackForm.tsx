@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { tournaments } from '@/generated/tournaments'
 import { feedbackDatasetVersion } from '@/generated/feedbackDataset'
 import ladder from '@data/ref-ladder.json'
-import { REAL_TYPES, difficultyFieldsFor } from '@/lib/realTypeCatalog'
+import { REAL_TYPES, realTypeMatchesCategory, difficultyFieldsFor } from '@/lib/realTypeCatalog'
 import { computeRoundRefValues, ROUND_REF_FIELDS } from '@/lib/roundReference'
 import { planSuggestChange } from '@/lib/suggestions/patch'
 import { stableJson, targetFingerprint } from '@/lib/suggestions/fingerprint'
@@ -80,11 +80,19 @@ export function FeedbackForm({ row, onClose }: { row: MapBrowserRow; onClose: ()
 
   async function submit() {
     setBusy(true); setError('')
+    // 校验放在 try **外面**：本地校验失败时请求根本没发出去，所以
+    //   ① 不能报成"提交未确认"（玩家会以为内容已经到过服务器）；
+    //   ② 不能作废这次验证 —— try 的 finally 会清 token 并换新挑战，
+    //      而服务端压根没见过这个 token，白白多花一次验证。
+    // 内容没改就再点一次时，token 仍然对得上（token 是按 contentKey 绑定的）。
+    const business = { schemaVersion: 1, datasetVersion: feedbackDatasetVersion, baseFingerprint: await targetFingerprint(tournament, proposal.target), proposal, ...(reason.trim() ? { reason: reason.trim() } : {}), ...(alias.trim() ? { alias: alias.trim() } : {}), evidenceUrls: links.split('\n').map(s => s.trim()).filter(Boolean) }
+    const validated = validateSubmission({ ...business, clientRequestId: crypto.randomUUID(), turnstileToken: token })
+    if (!validated.ok) {
+      setError(tr('内容有误，请修改后再提交：', 'Please fix these before submitting: ') + validated.errors.map(e => e.message).join('；'))
+      setBusy(false)
+      return
+    }
     try {
-      const business = { schemaVersion: 1, datasetVersion: feedbackDatasetVersion, baseFingerprint: await targetFingerprint(tournament, proposal.target), proposal, ...(reason.trim() ? { reason: reason.trim() } : {}), ...(alias.trim() ? { alias: alias.trim() } : {}), evidenceUrls: links.split('\n').map(s => s.trim()).filter(Boolean) }
-      const submission = { ...business, clientRequestId: crypto.randomUUID() }
-      const validated = validateSubmission({ ...submission, turnstileToken: token })
-      if (!validated.ok) throw new Error(validated.errors.map(e => e.message).join('；'))
       const stored = stripToken(validated.value)
       if (pending && stableJson({ ...pending, clientRequestId: undefined }) === stableJson({ ...stored, clientRequestId: undefined })) stored.clientRequestId = pending.clientRequestId
       setPending(stored)
@@ -109,7 +117,7 @@ export function FeedbackForm({ row, onClose }: { row: MapBrowserRow; onClose: ()
       {kind === 'slot.realType' && <label className="block text-sm">{tr('建议键型', 'Proposed pattern')}<select className={inputClass} value={realType} onChange={e => setRealType(e.target.value)}>{Object.entries(REAL_TYPES).map(([category, options]) => <optgroup key={category} label={category}>{options.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}</optgroup>)}</select></label>}
       {kind === 'slot.difficulty' && <div className="grid grid-cols-2 gap-3"><label className="text-sm">{row.category === 'LN' ? 'LN' : 'RF'}<input className={inputClass} type="number" min="0.01" max={SUGGEST_LIMITS.maxDifficulty} step="any" value={difficulty} onChange={e => setDifficulty(e.target.value)} /></label>{difficultyFieldsFor(row.category).includes('difficultyLn') && <label className="text-sm">LN<input className={inputClass} type="number" min="0.01" max={SUGGEST_LIMITS.maxDifficulty} step="any" value={difficultyLn} onChange={e => setDifficultyLn(e.target.value)} /></label>}</div>}
       {kind === 'round.reference' && <div className="space-y-2"><label className="block text-sm">{tr('统一标尺位置（0 为起点，每格一轮）', 'Global reference position (one round per step)')}<input className={inputClass} type="range" min="0" max="12" step="1" value={offset} onChange={e => setOffset(Number(e.target.value))} />{offset}</label><div className="grid grid-cols-3 gap-2">{ROUND_REF_FIELDS.map(f => <span key={f.key} className="rounded bg-purple-50 p-2 text-xs dark:bg-purple-950">{f.label} {values[f.key] ? values[f.key].toFixed(2) : '—'}</span>)}</div><p className="text-xs text-amber-700 dark:text-amber-300">{tr('整轮参考会统一同类槽位的难度，覆盖逐图差异；SV 与特殊槽位不变。', 'This sets the same difficulty for maps of each category, replacing individual differences. SV and special categories are unchanged.')}</p></div>}
-      <div className="max-h-44 overflow-auto rounded bg-gray-50 p-3 text-xs dark:bg-neutral-900">{plan.ok ? (plan.slot ? plan.changes.map(c => ({ ...c, slot: plan.slot, category: plan.category })) : plan.roundChanges).map((c, i) => <p key={i}>{c.slot} · {c.field === 'realType' ? tr('键型', 'Pattern') : c.field === 'difficultyLn' || c.category === 'LN' ? 'LN' : 'RF'}: {c.before || '—'} → {c.after}</p>) : plan.detail}</div>
+      <div className="max-h-44 overflow-auto rounded bg-gray-50 p-3 text-xs dark:bg-neutral-900">{plan.ok ? (plan.slot ? plan.changes.map(c => ({ ...c, slot: plan.slot, category: plan.category })) : plan.roundChanges).map((c, i) => <p key={i}>{c.slot} · {c.field === 'realType' ? tr('键型', 'Pattern') : c.field === 'difficultyLn' || c.category === 'LN' ? 'LN' : 'RF'}: {c.before || '—'} → {c.after}{c.field === 'realType' && c.category && !realTypeMatchesCategory(c.category, String(c.after)) && <span className="ml-2 font-medium text-amber-700 dark:text-amber-300">{tr('（跨类别：这张谱会归入另一个键型的包）', '(cross-category: this map joins another pattern\'s pack)')}</span>}</p>) : plan.detail}</div>
       <label className="block text-sm">{tr('理由（可选）', 'Reason (optional)')}<textarea className={inputClass} maxLength={500} rows={3} value={reason} onChange={e => setReason(e.target.value)} /></label>
       <div className="grid gap-3 sm:grid-cols-2"><label className="text-sm">{tr('昵称（可选）', 'Alias (optional)')}<input className={inputClass} maxLength={60} value={alias} onChange={e => setAlias(e.target.value)} /></label><label className="text-sm">{tr('证据链接（最多两个 HTTPS 链接，每行一个）', 'Evidence (up to two HTTPS links, one per line)')}<textarea className={inputClass} rows={2} value={links} maxLength={1002} onChange={e => setLinks(e.target.value)} /></label></div>
       {!endpoint || !siteKey ? <p className="rounded bg-amber-50 p-3 text-sm text-amber-900 dark:bg-amber-950 dark:text-amber-200">{tr('反馈提交暂未开放，你可以先浏览与填写建议。', 'Submission is not open yet. You can browse and prepare a suggestion.')}</p> : verifying ? <TurnstileChallenge key={`${contentKey}:${challenge}`} siteKey={siteKey} onToken={value => setChallengeResult({ key: contentKey, token: value })} errorText={tr('验证加载失败，请稍后重试。', 'Challenge unavailable. Please retry later.')} retryText={tr('重新验证', 'Retry verification')} /> : <button className="rounded border px-3 py-2 text-sm" onClick={() => setVerifying(true)}>{tr('填写完成，开始验证', 'Ready — verify to submit')}</button>}

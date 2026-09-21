@@ -1,5 +1,6 @@
 import { jsonResponse } from '../_lib/cors'
 import { readJsonBody } from '../_lib/validation'
+import { SUGGEST_MUTATING_ACTIONS } from '../../../src/lib/suggestions/types'
 import type { SessionUser } from '../_lib/auth'
 import { checkReviewer, checkDate, parseRef, previewSuggestion, readItem, readState, writeState, ownsLease, ReviewError, reviewFailure, type SuggestionsEnv } from '../_lib/suggestions'
 
@@ -13,11 +14,20 @@ export const onRequestGet: PagesFunction<SuggestionsEnv> = async ({ env, request
     if (cursor && cursor.length > 2048) throw new ReviewError('分页参数无效', 400)
     const list = await env.SUGGESTIONS!.list({ prefix, cursor, limit: 20 })
     const items = []
+    // 逐条容错。一条坏记录（schemaVersion/kind 不认识、receivedAt 与 key 日期不符、
+    // 正文不是合法 JSON、被 lifecycle 删在 list 与 get 之间、前缀下混进非 UUID 对象）
+    // 原来会把**整天**的队列变成一个错误：审核员什么都处理不了，也不知道是哪一条。
+    // 坏的那几条单独列出来（只给编号 + 审核员能看懂的原因，非 ReviewError 不外露原文）。
+    const unreadable = []
     for (const object of list.objects) {
       const id = object.key.slice(prefix.length).replace(/\.json$/, '')
-      items.push(await readItem(env, id, date))
+      try {
+        items.push(await readItem(env, id, date))
+      } catch (error) {
+        unreadable.push({ id, reason: error instanceof ReviewError ? error.message : '建议记录无法读取' })
+      }
     }
-    return jsonResponse({ items, cursor: list.truncated ? list.cursor : null })
+    return jsonResponse({ items, unreadable, cursor: list.truncated ? list.cursor : null })
   } catch (error) { return reviewFailure(error) }
 }
 
@@ -30,7 +40,10 @@ export const onRequestPost: PagesFunction<SuggestionsEnv> = async ({ env, reques
     const body = parsed.value as { action: string; ref: unknown; planHash?: string }
     const ref = parseRef(body.ref)
     if (body.action === 'preview') return jsonResponse(await previewSuggestion(env, ref.id, ref.date))
-    if (!['stage', 'ignore', 'release', 'resolve'].includes(body.action)) throw new ReviewError('审核动作无效', 400)
+    // 白名单取自 `types.ts` 的**唯一清单**（前端请求函数的参数类型也是它派生的）——
+    // 以前这里是手写的一份字面量，而前端那份写的是 'unstage'（服务端从来不认），
+    // 两边对不上也没人发现，因为前端那个类型根本没人 import。
+    if (!(SUGGEST_MUTATING_ACTIONS as readonly string[]).includes(body.action)) throw new ReviewError('审核动作无效', 400)
     const item = await readItem(env, ref.id, ref.date)
     const isText = item.submission.proposal.kind === 'text'
     if ((isText && !['ignore', 'resolve'].includes(body.action)) || (!isText && body.action === 'resolve')) throw new ReviewError('此操作不适用于该反馈类型', 400)

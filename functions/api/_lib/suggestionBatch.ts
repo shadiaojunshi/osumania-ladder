@@ -53,7 +53,9 @@ export async function beginSuggestionBatch(env: SuggestionsEnv, user: SessionUse
       const sameBatch = state.batchId === journal.id && state.reviewerUid === user.uid && state.draftId === ref.draftId && state.revision === ref.revision
       if (!sameBatch && (state.batchId || !ownsLease(state, ref, user))) throw new ReviewError('建议租约过期或已被其他草稿处理，请重新采纳')
       const item = items.find(i => i.id === state.plan?.tournamentId)
-      if (!item || !planSatisfied(item.tournament as Tournament, state)) throw new ReviewError('暂存内容已覆盖建议值或替换谱面，请先撤销这条建议的关联')
+      // 带上编号：这条是**整批**拒绝（一次 commit，全有或全无），不点名的话
+      // 审核员面对 5 条建议只看到一句「请先撤销这条建议的关联」，无从知道是哪条。
+      if (!item || !planSatisfied(item.tournament as Tournament, state)) throw new ReviewError(`暂存内容已覆盖建议 ${ref.id} 的值或替换了谱面，请先取消这条建议的关联后重新保存`)
       if (!sameBatch) await writeState(env, ref.id, ref.date, { ...state, batchId: journal.id }, etag)
     }
     return lease
@@ -83,11 +85,17 @@ export async function cancelSuggestionBatch(env: SuggestionsEnv, lease: BatchLea
 
 async function releaseBatchClaims(env: SuggestionsEnv, lease: BatchLease) {
   for (const ref of lease.journal.refs) {
-    const { state, etag } = await readState(env, ref.id, ref.date)
-    if (state.batchId !== lease.journal.id) continue
-    const next = { ...state }
+    // 读不出来（审核状态记录损坏）就跳过这一条：它本来也没有可释放的关联 ——
+    // 任何动作都会先被状态守卫挡下。这里是**逐条**容错而不是让整批中断：
+    // 本函数由 `cancelSuggestionBatch` 在 catch 里调用，抛出去会把原来那个真正的
+    // 失败原因（比如"哪条建议被手改覆盖"）盖成"记录损坏"，审核员就查错方向了。
+    // 写失败（R2 故障 / CAS 撞车）**照旧上抛** —— 那种情况下"已释放关联"是真话假说。
+    let read: Awaited<ReturnType<typeof readState>>
+    try { read = await readState(env, ref.id, ref.date) } catch { continue }
+    if (read.state.batchId !== lease.journal.id) continue
+    const next = { ...read.state }
     delete next.batchId
-    await writeState(env, ref.id, ref.date, next, etag)
+    await writeState(env, ref.id, ref.date, next, read.etag)
   }
 }
 

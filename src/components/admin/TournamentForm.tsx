@@ -484,15 +484,15 @@ function BasicInfoStep({
             const val = e.target.value === '' ? undefined : Number(e.target.value)
             updateField('priority', val)
           }}
-          placeholder="1-5 (可选)"
+          placeholder={t('admin.priority.placeholder')}
           className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-700 rounded-md text-sm bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 placeholder:text-gray-400 dark:placeholder:text-neutral-500 focus:outline-none focus:border-purple-400"
         />
         <p className="text-xs text-gray-500 dark:text-neutral-400 mt-1.5 leading-relaxed">
-          <strong>5</strong>: MWC 系列赛事<br/>
-          <strong>4</strong>: 世界热门锦标赛 (THMC4, 4DM, GBC春)<br/>
-          <strong>3</strong>: 世界大众赛事 & 国家杯锦标赛 (MCNC, TTI, JHC)<br/>
-          <strong>2</strong>: 世界小型 / 国家范围赛事 (CUC, RDC, PFC)<br/>
-          <strong>1</strong>: 小型社区比赛 (SYC, WBDC, GFRL)
+          <strong>5</strong>: {t('admin.priority.tier5')}<br/>
+          <strong>4</strong>: {t('admin.priority.tier4')}<br/>
+          <strong>3</strong>: {t('admin.priority.tier3')}<br/>
+          <strong>2</strong>: {t('admin.priority.tier2')}<br/>
+          <strong>1</strong>: {t('admin.priority.tier1')}
         </p>
       </div>
 

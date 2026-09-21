@@ -88,8 +88,27 @@ export type SuggestStoredSubmission = Omit<SuggestSubmission, 'turnstileToken'>
 
 export type SuggestStatus = 'pending' | 'staged' | 'applied' | 'ignored' | 'resolved'
 
-/** unstage = 撤销暂存回 pending；applied 只能由 finalize 写入，不接受直接指定。 */
-export type SuggestReviewAction = 'stage' | 'unstage' | 'ignore'
+/**
+ * 审核端点接受的全部动作。**唯一清单** —— 服务端白名单、前端请求函数的参数类型
+ * 都从这里派生，两边不会再各自写一份。
+ *
+ * 以前这里写的是 `'stage' | 'unstage' | 'ignore'`：`unstage` 服务端从来不认
+ * （撤销暂存走 `release`），而 `stage` 之外的 `release` / `resolve` 两个真在用的动作
+ * 反而没写进来。更糟的是这个类型谁都没 import，参数一直是 `string` ——
+ * 动作名拼错照样编译通过，要等线上收到「审核动作无效」才发现。
+ */
+export const SUGGEST_REVIEW_ACTIONS = ['preview', 'stage', 'ignore', 'release', 'resolve'] as const
+export type SuggestReviewAction = (typeof SUGGEST_REVIEW_ACTIONS)[number]
+
+/**
+ * 会**写状态**的动作，从上面那份清单**算**出来（不是再手写一份，防的就是两边漂移）。
+ * `preview` 只读，刻意留在白名单外面：它在服务端由上面的分支直接 return，
+ * 万一那个 return 没了，落进改动分支必须被拒 ——
+ * 而不是被当成"既不是 resolve 也不是 ignore"写成一笔 pending。
+ */
+export const SUGGEST_MUTATING_ACTIONS = SUGGEST_REVIEW_ACTIONS.filter(
+  (action): action is Exclude<SuggestReviewAction, 'preview'> => action !== 'preview',
+)
 
 /** 服务端生成的字段，客户端一律不许传。 */
 export interface SuggestRecord {

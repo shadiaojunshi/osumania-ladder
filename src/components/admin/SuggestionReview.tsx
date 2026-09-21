@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { usePrefsStore } from '@/stores/prefsStore'
+import { realTypeMatchesCategory } from '@/lib/realTypeCatalog'
 import type { ReviewItem, ReviewPreview, SuggestionRef } from '@/lib/suggestions/review'
 import { previewRequest, reviewRequest } from '@/lib/suggestions/adminClient'
 
@@ -19,6 +20,9 @@ export function SuggestionReview({ draftId, onStage, onSave, onClear, count, bus
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [loaded, setLoaded] = useState(false)
+  // 读不出来的那几条（坏记录、被保留期删掉、前缀下的杂项对象）。单独列出来，
+  // 否则审核员只看到"队列少了几条"，无从判断。列表本身不再因为它们整页失败。
+  const [unreadable, setUnreadable] = useState<{ id: string; reason: string }[]>([])
   const [filter, setFilter] = useState('all')
   const refFor = (item: ReviewItem): SuggestionRef => ({ id: item.id, date: item.receivedAt.slice(0, 10), revision: item.review.revision, draftId })
   async function run(action: () => Promise<void>) {
@@ -28,13 +32,20 @@ export function SuggestionReview({ draftId, onStage, onSave, onClear, count, bus
   async function load(next?: string) {
     const params = new URLSearchParams({ date, ...(next ? { cursor: next } : {}) })
     const res = await fetch(`/api/suggestions?${params}`)
-    const data = await res.json()
+    const data = await res.json() as { items: ReviewItem[]; unreadable?: { id: string; reason: string }[]; cursor: string | null; error?: string }
     if (!res.ok) throw new Error(data.error ?? 'Load failed')
     setItems(current => next ? [...current, ...data.items] : data.items)
+    setUnreadable(current => { const merged = next ? [...current, ...(data.unreadable ?? [])] : data.unreadable ?? []; return merged.filter((entry, i) => merged.findIndex(other => other.id === entry.id) === i) })
     setCursor(data.cursor); setLoaded(true)
   }
   const button = 'rounded border border-gray-300 px-3 py-2 text-sm disabled:opacity-40 dark:border-neutral-700'
   const statuses = { pending: tr('待审核', 'Pending'), staged: tr('待保存', 'Staged'), applied: tr('已发布', 'Published'), ignored: tr('已忽略', 'Ignored'), resolved: tr('已处理', 'Resolved') }
+  // 被审槽位在**权威版本**里的大类，直接用 plan 里那个（`patch.ts` 用 `refCategoryOf` 算的，
+  // 与它判定难度刻度的依据是同一个值）。跨类别改动必须在这里说出来：合包按 realType 归类，
+  // 采纳后这张谱会进另一个键型的包，而预览原来只印 `LN1 · realType: LN1 → HB3`。
+  // 不从 `preview.tournament` 里再找一遍谱面 —— 那是同一件事的第二份实现，
+  // 而且它只读 `type`，会漏掉编辑器对象上优先级更高的 `category` 覆盖。
+  const previewCategory = preview?.plan.category ?? null
   return <section className="space-y-4 rounded-xl border border-gray-200 bg-white p-5 text-gray-900 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-100">
     <h2 className="text-lg font-semibold">{tr('反馈审核', 'Feedback review')}</h2>
     <p className="text-sm text-gray-500">{tr('采纳只进入本机暂存。多条建议随“保存全部”一次发布。日期按 UTC；筛选只针对已加载的记录。', 'Accepting stages local drafts. Save all publishes the batch together. Dates use UTC; filters apply to loaded records only.')}</p>
@@ -48,6 +59,7 @@ export function SuggestionReview({ draftId, onStage, onSave, onClear, count, bus
       <button className={button} onClick={onSync}>{tr('同步已保存的审核状态', 'Sync published reviews')}</button>
     </fieldset>
     {(error || status) && <p role="status" className="whitespace-pre-wrap break-words text-sm text-amber-700 dark:text-amber-300">{error || status}</p>}
+    {unreadable.length > 0 && <div role="status" className="rounded border border-amber-300 p-3 text-sm text-amber-800 dark:border-amber-800 dark:text-amber-200"><p>{tr(`有 ${unreadable.length} 条记录读不出来，已跳过（其余照常可处理）。`, `${unreadable.length} record(s) could not be read and were skipped; the rest are still available.`)}</p><ul className="mt-1 list-inside list-disc break-all text-xs">{unreadable.map(entry => <li key={entry.id}>{entry.id} · {entry.reason}</li>)}</ul></div>}
     {linked.length > 0 && <details><summary>{tr('本机暂存的建议来源', 'Suggestions in local drafts')} ({linked.length})</summary><p className="text-xs text-gray-500">{tr('取消关联只释放建议，不回滚草稿中的数值；手动修改过的内容会保留。', 'Unlinking releases the suggestion and keeps draft values, including manual edits.')}</p>{linked.map(ref => <div key={ref.id} className="flex flex-wrap gap-2 py-1 text-xs"><span>{ref.date} · {ref.id}</span><button disabled={pending || busy || loading} className="underline" onClick={() => run(() => onRelease(ref))}>{tr('取消关联', 'Unlink')}</button></div>)}</details>}
     {loaded && !items.length && <p>{tr('这一天暂无建议。', 'No suggestions for this date.')}</p>}
     <div className="divide-y divide-gray-200 dark:divide-neutral-700">{items.filter(item => filter === 'all' || item.review.status === filter).map(item => {
@@ -59,6 +71,6 @@ export function SuggestionReview({ draftId, onStage, onSave, onClear, count, bus
       </div>
     })}</div>
     {cursor && <button className={button} disabled={loading} onClick={() => run(() => load(cursor))}>{tr('再加载 20 条', 'Load 20 more')}</button>}
-    {preview && <div className="space-y-3 rounded-lg bg-purple-50 p-4 dark:bg-purple-950/30"><h3 className="font-medium">{preview.tournament.name} · {preview.plan.roundId}</h3>{preview.changedSinceSubmission && <p className="text-sm text-amber-700 dark:text-amber-300">{tr('提交时的数据已变化。以下显示当前权威值，请重新判断。', 'Data changed since submission. Review the current authoritative values below.')}</p>}<p className="whitespace-pre-wrap break-words text-sm">{preview.item.submission.reason || tr('未填写理由', 'No reason provided')}</p><p className="text-xs">{tr('自填昵称（未验证）：', 'Unverified alias: ')}{preview.item.submission.alias || '—'}</p>{preview.item.submission.evidenceUrls?.map(url => <a key={url} href={url} target="_blank" rel="noopener noreferrer" className="block break-all text-sm underline">{url}</a>)}<div className="max-h-64 overflow-auto text-sm">{(preview.plan.slot ? preview.plan.changes.map(c => ({ ...c, slot: preview.plan.slot })) : preview.plan.roundChanges).map((c, i) => <p key={i}>{c.slot} · {c.field}: {c.before || '—'} → {c.after}</p>)}</div>{preview.plan.noop ? <p>{tr('当前数据已经符合建议，无需重复保存。', 'Already matches the current data; no save is needed.')}</p> : <button disabled={busy || loading || pending || linked.some(r => r.id === preview.item.id) || preview.item.review.status === 'applied'} className={button} onClick={() => run(async () => { await onStage(preview); setPreview(null); await load() })}>{tr('采纳到暂存', 'Accept into drafts')}</button>}</div>}
+    {preview && <div className="space-y-3 rounded-lg bg-purple-50 p-4 dark:bg-purple-950/30"><h3 className="font-medium">{preview.tournament.name} · {preview.plan.roundId}</h3>{preview.changedSinceSubmission && <p className="text-sm text-amber-700 dark:text-amber-300">{tr('提交时的数据已变化。以下显示当前权威值，请重新判断。', 'Data changed since submission. Review the current authoritative values below.')}</p>}<p className="whitespace-pre-wrap break-words text-sm">{preview.item.submission.reason || tr('未填写理由', 'No reason provided')}</p><p className="text-xs">{tr('自填昵称（未验证）：', 'Unverified alias: ')}{preview.item.submission.alias || '—'}</p>{preview.item.submission.evidenceUrls?.map(url => <a key={url} href={url} target="_blank" rel="noopener noreferrer" className="block break-all text-sm underline">{url}</a>)}<div className="max-h-64 overflow-auto text-sm">{(preview.plan.slot ? preview.plan.changes.map(c => ({ ...c, slot: preview.plan.slot })) : preview.plan.roundChanges).map((c, i) => <p key={i}>{c.slot} · {c.field}: {c.before || '—'} → {c.after}{c.field === 'realType' && previewCategory && !realTypeMatchesCategory(previewCategory, String(c.after)) && <span className="ml-2 font-medium text-amber-700 dark:text-amber-300">{tr(`（跨类别：${previewCategory} 槽位 → ${c.after}，合包按 realType 归类，这张谱会进另一个键型的包）`, `(cross-category: ${previewCategory} slot → ${c.after}; packs are keyed on realType, so this map joins another pattern's pack)`)}</span>}</p>)}</div>{preview.plan.noop ? <p>{tr('当前数据已经符合建议，无需重复保存。', 'Already matches the current data; no save is needed.')}</p> : <button disabled={busy || loading || pending || linked.some(r => r.id === preview.item.id) || preview.item.review.status === 'applied'} className={button} onClick={() => run(async () => { await onStage(preview); setPreview(null); await load() })}>{tr('采纳到暂存', 'Accept into drafts')}</button>}</div>}
   </section>
 }

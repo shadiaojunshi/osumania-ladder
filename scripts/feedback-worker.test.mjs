@@ -131,6 +131,21 @@ async function run(req, env, fetchImpl) {
   return { res, json }
 }
 
+/**
+ * 捕获一段代码里的 `console.error`。这个 Worker 没法在本地端到端跑，
+ * 线上唯一能看出"到底是 R2 没绑、DO 挂了还是配置串了"的就是日志 ——
+ * 所以"失败必须留一条日志"要和响应码一样被钉住。
+ */
+async function capturingErrors(fn) {
+  const original = console.error, calls = []
+  console.error = (...args) => calls.push(args)
+  try {
+    return { result: await fn(), calls }
+  } finally {
+    console.error = original
+  }
+}
+
 // ---------------------------------------------------------------------------
 // 决策层：频率与预算
 // ---------------------------------------------------------------------------
@@ -608,23 +623,33 @@ test('编排：读 R2 失败 → 503，不冒险继续写', async () => {
   assert.equal(json.code, 'INTERNAL')
 })
 
-test('编排：写 R2 失败 → 503（不能返回"已收到"）', async () => {
+test('编排：写 R2 失败 → 503（不能返回"已收到"），且内部原因只进日志', async () => {
   const env = makeEnv({
     SUGGESTIONS: {
       async get() { return null },
       async put() { throw new Error('R2 write down') },
     },
   })
-  const { res, json } = await run(post(), env)
+  const { result: { res, json }, calls } = await capturingErrors(() => run(post(), env))
   assert.equal(res.status, 503)
   assert.equal(json.code, 'INTERNAL')
+  // 响应体保持笼统：内部结构不回给客户端。但线上"提交永远 503"必须留下可查的痕迹，
+  // 否则只能靠猜是 R2 没绑、DO 挂了还是配置串了。
+  assert.equal(JSON.stringify(json).includes('R2 write down'), false, '内部错误原文不许出现在响应里')
+  assert.equal(calls.length, 1, '失败必须恰好留一条日志')
+  assert.equal(calls[0][0], '[feedback] SUBMIT_FAILED')
+  assert.equal(calls[0][1].message, 'R2 write down')
+  assert.equal(calls[0][1].requestId, REQUEST_ID, '要靠编号才能把用户反馈和日志对上')
+  assert.equal('ipHash' in calls[0][1], false, '日志里不许有 IP 哈希（那按设计就不该留存）')
 })
 
 test('编排：缺 CF-Connecting-IP → 503（不能退化成共用一个限流桶）', async () => {
   const env = makeEnv()
   const req = post(body())
   req.headers.delete('CF-Connecting-IP')
-  const { res } = await run(req, env)
+  const { result: { res }, calls } = await capturingErrors(() => run(req, env))
   assert.equal(res.status, 503)
   assert.equal(env.__bucket.map.size, 0)
+  assert.equal(calls.length, 1)
+  assert.equal(calls[0][0], '[feedback] MISSING_CLIENT_IP')
 })

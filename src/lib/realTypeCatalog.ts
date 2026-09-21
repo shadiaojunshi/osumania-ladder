@@ -182,3 +182,18 @@ export function realTypeOptionsFor(category: MapCategory): (RealTypeOption & { g
   }
   return REAL_TYPES[category] || []
 }
+
+/**
+ * 这个键型是不是属于这个大类？**跨类别**（LN 槽位被写成 HB3 之类）必须被说出来，
+ * 因为合包是按 `realType` 归类的（`generate-pack.js` 的 `packRealTypeFor`）：
+ * 值一跨，谱面就进了另一个键型的包 —— 正是冲突排查工具在全库找的那种状态。
+ *
+ * 为什么不直接拒：反馈表单给的是**整份目录**（玩家报的可能正是"这张图本来就不该是 LN"），
+ * 而后台的键型下拉是**故意**允许跨类别转换的（`realTypeOptionsFor`）。所以这里只做
+ * 判定，由提交页和审核预览把它显式写出来，让做决定的人看见。
+ * SPECIAL 槽位跨大类是设计如此（`HB&SV` 这类混池），永远算相符。
+ */
+export function realTypeMatchesCategory(category: MapCategory, realType: string): boolean {
+  if (category === 'SPECIAL') return true
+  return REAL_TYPES[category].some((option) => option.id === realType)
+}

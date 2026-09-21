@@ -4,11 +4,12 @@ import { register } from 'node:module'
 register(new URL('./_ts-extension-loader.mjs', import.meta.url))
 const { onRequestPost, onRequestGet } = await import('../functions/api/suggestions/index.ts')
 const { checkDate, readState, itemKey } = await import('../functions/api/_lib/suggestions.ts')
-const { beginSuggestionBatch, recordCandidate, recoverCandidate, finishSuggestionBatch, cancelSuggestionBatch } = await import('../functions/api/_lib/suggestionBatch.ts')
+const { beginSuggestionBatch, recordCandidate, recoverCandidate, finishSuggestionBatch, cancelSuggestionBatch, loadJournal } = await import('../functions/api/_lib/suggestionBatch.ts')
 const { targetFingerprint } = await import('../src/lib/suggestions/fingerprint.ts')
 const { applySuggestPlan } = await import('../src/lib/suggestions/apply.ts')
 const { onRequestPost: saveBatch } = await import('../functions/api/tournaments/batch.ts')
 const { planSuggestChange } = await import('../src/lib/suggestions/patch.ts')
+const { planIdentity, planSatisfied } = await import('../src/lib/suggestions/review.ts')
 
 function bucket() {
   const records = new Map(); let version = 0
@@ -66,6 +67,33 @@ test('review APIs reject anonymous, readonly and contributor users before access
   }
 })
 
+// 动作清单只有一份（`types.ts`），服务端白名单从它派生、前端请求函数的参数类型也从它派生。
+// 以前前端那份写的是 `'unstage'` —— 服务端从来不认（撤销暂存走 `release`），
+// 而 `release` / `resolve` 两个真在用的动作反而没写进去。两边对不上没人发现，
+// 是因为那个类型谁都没 import、参数一直是 `string`：拼错动作名能一路编译到线上。
+test('审核动作清单两边一致：清单里的都认，清单外的（含 unstage）一律「审核动作无效」', async t => {
+  mockGithub(t)
+  const { SUGGEST_REVIEW_ACTIONS, SUGGEST_MUTATING_ACTIONS } = await import('../src/lib/suggestions/types.ts')
+  assert.deepEqual([...SUGGEST_REVIEW_ACTIONS], ['preview', 'stage', 'ignore', 'release', 'resolve'], '动作词汇就是这个，改了就要同时想清楚服务端')
+  // 这三条锁的是当年那份写错的类型：unstage 不在词表里，而 release / resolve 在。
+  assert.equal(SUGGEST_REVIEW_ACTIONS.includes('unstage'), false, 'unstage 服务端从来不认（撤销暂存走 release）')
+  assert.ok(SUGGEST_MUTATING_ACTIONS.includes('release') && SUGGEST_MUTATING_ACTIONS.includes('resolve'), 'release / resolve 是真在用的动作，不能漏')
+  assert.equal(SUGGEST_MUTATING_ACTIONS.includes('preview'), false, 'preview 只读，不进改动白名单')
+  const f = await fixture()
+  assert.equal((await f.post('preview')).status, 200, '只读的 preview 照常可用（它不走白名单）')
+  for (const action of SUGGEST_MUTATING_ACTIONS) {
+    const res = await f.post(action)
+    // 可以因别的理由被拒（400「此操作不适用于该反馈类型」/ 409 状态已变），
+    // 但不能被判成"动作名不认识" —— 那说明白名单和清单漂移了。
+    if (res.status === 400) assert.doesNotMatch(res.body.error, /审核动作无效/, `${action} 在清单里，不该被判动作无效`)
+  }
+  for (const action of ['unstage', 'preview ', 'IGNORE', 'stageAll', '']) {
+    const res = await f.post(action)
+    assert.equal(res.status, 400, `${JSON.stringify(action)} 不在清单里`)
+    assert.match(res.body.error, /审核动作无效/)
+  }
+})
+
 test('UTC date validation rejects rollover and invalid dates', () => {
   for (const value of ['2026-02-30', '2026-99-99', '../x', undefined]) assert.throws(() => checkDate(value))
   assert.equal(checkDate('2026-09-21'), '2026/09/21')
@@ -80,6 +108,45 @@ test('list strips IP hash; preview decodes UTF8 and detects dataset changes', as
   const preview = await f.post('preview')
   assert.equal(preview.body.tournament.name, tournament.name)
   assert.equal(preview.body.changedSinceSubmission, false)
+})
+
+// 列表原来是一条坏记录毒死整天：只要日期前缀下有 1 个对象读不成合法记录
+// （schemaVersion 不认识 / receivedAt 与 key 日期不符 / 前缀下混进非 UUID 对象 /
+// 被 lifecycle 删在 list 与 get 之间），整个队列返回 4xx/5xx，审核员什么都做不了，
+// 也不知道是哪一条。现在逐条容错并单独报出来。
+test('一条坏记录不再毒死整天队列：好记录照常返回，坏记录单独列出来', async t => {
+  const f = await fixture()
+  const date = '2026-09-21'
+  const broken = crypto.randomUUID()
+  await f.env.SUGGESTIONS.put(`suggest/items/${date.replaceAll('-', '/')}/${broken}.json`, JSON.stringify({ id: broken, receivedAt: `${date}T00:00:00.000Z`, submission: { schemaVersion: 99 } }))
+  await f.env.SUGGESTIONS.put(`suggest/items/${date.replaceAll('-', '/')}/stray.txt`, 'not a suggestion')
+  const res = await onRequestGet({ env: f.env, request: new Request(`https://site/api/suggestions?date=${date}`), data: { user: admin } })
+  assert.equal(res.status, 200, '坏记录不能让整天队列失败')
+  const body = await res.json()
+  assert.deepEqual(body.items.map(item => item.id), [f.ref.id], '好记录必须照常在列表里')
+  assert.deepEqual(body.unreadable.map(entry => entry.id).sort(), [broken, 'stray.txt'].sort(), '坏记录要逐条报出来，审核员才知道是哪几条')
+  assert.equal(body.unreadable.every(entry => typeof entry.reason === 'string' && entry.reason.length > 0), true, '每条都要有原因')
+})
+
+// `changedSinceSubmission` 是"你提交时的看法可能已经过时"的提示，不是拦截。
+// 它以前只被断言过 false 那一半，真正要守的是 true 那一半：
+// ① 预览必须印**当前权威值**（before 用刚读到的 5，不是提交时的 2）；
+// ② 值已经（被别人）改成建议值时要 changedSinceSubmission 与 noop **同时**为真，
+//    审核员才敢直接忽略，而不是以为自己看的还是老数据。
+test('提交后的数据变了：changedSinceSubmission 为真，且预览一律以当前权威值为准', async t => {
+  const served = structuredClone(tournament)
+  mockGithub(t, path => path.includes('/contents/') ? Response.json({ sha: 'a'.repeat(40), content: Buffer.from(JSON.stringify(served)).toString('base64') }) : undefined)
+  const f = await fixture()
+  served.rounds[0].maps[0].difficulty = 5
+  const drifted = (await f.post('preview')).body
+  assert.equal(drifted.changedSinceSubmission, true, '权威值变了必须说出来')
+  assert.deepEqual(drifted.plan.changes, [{ field: 'difficulty', before: 5, after: 3 }], 'before 必须是刚读到的当前值')
+  assert.equal(drifted.plan.noop, false)
+  served.rounds[0].maps[0].difficulty = 3
+  const settled = (await f.post('preview')).body
+  assert.equal(settled.changedSinceSubmission, true)
+  assert.equal(settled.plan.noop, true, 'noop 与 changedSinceSubmission 是两件事，这里必须同时为真')
+  assert.equal((await f.post('stage', { planHash: settled.planHash })).status, 409, 'noop 的建议不许采纳')
 })
 
 test('文字反馈只能标记已处理，不能预览或暂存为比赛改动', async t => {
@@ -126,6 +193,85 @@ test('manual superseding values cannot be finalized or silently accepted into ba
   f.data.rounds[0].maps[0].difficulty = 4
   await assert.rejects(beginSuggestionBatch(f.env, admin, { id: crypto.randomUUID(), refs: [f.ref] }, f.items), /覆盖/)
   assert.equal((await readState(f.env, f.ref.id, f.ref.date)).state.batchId, undefined)
+})
+
+// `planSatisfied` 问的是"这条建议还算不算数"这一个布尔问题。身份/槽位算不出来时的
+// 答案必须是 false：旧实现直接调 `planIdentity`（它刻意不猜重复槽位、会抛），
+// 异常一路冒到 `reviewFailure`，本该是 409「请先取消关联」的响应变成 500/503
+// 「反馈服务暂时不可用」，审核员重试还是同一结果。
+test('planSatisfied 永不抛：槽位/轮次被删改时算「不算数」，重复槽位也不许猜', () => {
+  const plan = planSuggestChange({ rounds: tournament.rounds, proposal: { kind: 'slot.difficulty', target: { tournamentId: tid, roundId: 'final', slot: 'RC1' }, value: { difficulty: 3 } } })
+  assert.equal(plan.ok, true)
+  const state = { status: 'staged', revision: 1, plan, identity: planIdentity(tournament, plan) }
+  const changed = structuredClone(tournament)
+  changed.rounds[0].maps[0].difficulty = 3
+  assert.equal(planSatisfied(changed, state), true, '值已符合时必须算「算数」（否则这条断言本身就是坏的）')
+  changed.rounds[0].maps[0].difficulty = 2
+  assert.equal(planSatisfied(changed, state), false, '值被手改掉 → 不算数')
+  // 以下每一条旧实现都会**抛异常**（不是返回 false），所以每一条都是回归锁。
+  const renamed = structuredClone(changed); renamed.rounds[0].maps[0].slot = 'RC2'
+  assert.equal(planSatisfied(renamed, state), false, '槽位改名 = 找不到那个槽位')
+  const removed = structuredClone(changed); removed.rounds[0].maps = []
+  assert.equal(planSatisfied(removed, state), false, '槽位被删')
+  const duplicated = structuredClone(changed); duplicated.rounds[0].maps.push({ ...duplicated.rounds[0].maps[0] })
+  assert.equal(planSatisfied(duplicated, state), false, '重复槽位不许 `find` 取巧（与 planIdentity 同样的态度）')
+  const noRound = structuredClone(changed); noRound.rounds = []
+  assert.equal(planSatisfied(noRound, state), false, '轮次被删')
+  const dupRound = structuredClone(changed); dupRound.rounds.push(structuredClone(dupRound.rounds[0]))
+  assert.equal(planSatisfied(dupRound, state), false, '轮次重复')
+  assert.equal(planSatisfied({ ...changed, id: 'other' }, state), false, '比赛身份不符')
+  assert.equal(planSatisfied(changed, { status: 'pending', revision: 0 }), false, '还没采纳过（没有 plan）')
+})
+
+// 上面那条锁的是返回值，这条锁**审核员看到的东西**：槽位在审核期间被删掉之后，
+// 保存必须是一个能照着做的 409，而不是 500「反馈服务暂时不可用」。
+test('槽位被删后保存：409 + 点名编号，而不是 500/503', async t => {
+  mockGithub(t)
+  const f = await staged(t)
+  f.data.rounds[0].maps = []
+  const body = JSON.stringify({ items: f.items, suggestionBatch: { id: crypto.randomUUID(), refs: [f.ref] } })
+  const res = await saveBatch({ env: f.env, data: { user: admin }, request: new Request('https://site/api/tournaments/batch', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body }) })
+  const result = await res.json()
+  assert.equal(res.status, 409, `应是可照着做的 409，实际 ${res.status} ${JSON.stringify(result)}`)
+  assert.match(result.error, /覆盖/)
+  assert.ok(result.error.includes(f.ref.id), '整批拒绝时必须点名是哪条建议，否则审核员无从下手')
+})
+
+// 审核状态记录**存在但形状不对**（缺 revision / status 不认识 / 根本不是对象）时，
+// 旧实现把它当普通状态用：缺 revision 的记录永远过不了 `state.revision !== ref.revision`
+// 那道 CAS 守卫，于是任何动作都是 409「建议已更新或正在发布，请刷新」—— 刷新永远不会变好，
+// 这条建议永久卡死，而审核员看到的原因还是编的。现在直接说"记录损坏"。
+test('审核状态记录损坏：说是记录坏了，而不是 409「请刷新」', async () => {
+  const f = await fixture()
+  const key = `suggest/reviews/${f.ref.date.replaceAll('-', '/')}/${f.ref.id}.json`
+  for (const body of ['null', '42', '"pending"', '[]', '{}', '{"status":"pending"}', '{"revision":0}', '{"status":"weird","revision":0}', '{"status":"applied","revision":-1}', '{"status":"applied"}', '{"status":"applied","revision":1.5}']) {
+    await f.env.SUGGESTION_REVIEWS.put(key, body)
+    await assert.rejects(readState(f.env, f.ref.id, f.ref.date), e => e.status === 422 && /记录损坏/.test(e.message), `${body} 应被判为损坏`)
+  }
+  // 完整记录照常可读：别把正常状态一起判坏。
+  await f.env.SUGGESTION_REVIEWS.put(key, JSON.stringify({ status: 'staged', revision: 2, reviewerUid: '1' }))
+  assert.equal((await readState(f.env, f.ref.id, f.ref.date)).state.revision, 2)
+  // HTTP 层报的就是这个原因，不是那句假的"请刷新"。
+  await f.env.SUGGESTION_REVIEWS.put(key, '{"status":"pending"}')
+  const res = await f.post('ignore')
+  assert.equal(res.status, 422, JSON.stringify(res.body))
+  assert.match(res.body.error, /记录损坏/)
+  assert.doesNotMatch(res.body.error, /请刷新/)
+})
+
+// 上一条让「读审核状态」多了一种抛法，而 `releaseBatchClaims` 是在 catch 里被调的：
+// 它一抛就会把真正的失败原因（哪条建议被手改覆盖）盖成"记录损坏"，审核员就查错方向。
+// 顺带确认批次墓碑仍然写下了 —— 否则修好冲突后重试会撞上"该批次仍在处理中"。
+test('取消批次时逐条容错：另一条记录损坏不能盖掉真正的失败原因', async t => {
+  mockGithub(t)
+  const f = await staged(t)
+  const broken = { ...f.ref, id: crypto.randomUUID(), revision: 0 }
+  await f.env.SUGGESTION_REVIEWS.put(`suggest/reviews/${f.ref.date.replaceAll('-', '/')}/${broken.id}.json`, '{"status":"pending"}')
+  f.data.rounds[0].maps[0].difficulty = 4
+  const id = crypto.randomUUID()
+  await assert.rejects(beginSuggestionBatch(f.env, admin, { id, refs: [f.ref, broken] }, f.items), /覆盖/)
+  assert.equal((await loadJournal(f.env, id)).journal.cancelled, true, '批次要留下终态墓碑，不然审核员修好后重试会撞上"仍在处理中"')
+  assert.equal((await readState(f.env, f.ref.id, f.ref.date)).state.batchId, undefined, '能读的那条照常释放关联')
 })
 
 test('cancelled pre-publication journal is terminal; next batch can use same reviewed draft', async t => {

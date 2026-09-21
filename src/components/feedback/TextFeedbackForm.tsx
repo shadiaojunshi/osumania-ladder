@@ -60,9 +60,17 @@ export function TextFeedbackForm({ target, heading }: { target?: SuggestTarget; 
   const remaining = Math.max(0, Math.ceil((retryAt - clock) / 1000))
   async function submit() {
     setBusy(true); setError('')
+    // 校验放在 try **外面**：本地校验失败时请求根本没发出去，所以
+    //   ① 不能报成"提交未确认"（玩家会以为内容已经到过服务器）；
+    //   ② 不能作废这次验证 —— try 的 finally 会清 token 并换新挑战，
+    //      而服务端压根没见过这个 token，白白多花一次验证。
+    const validated = validateSubmission({ schemaVersion: 1, clientRequestId: crypto.randomUUID(), datasetVersion: feedbackDatasetVersion, baseFingerprint: 'text-feedback', proposal: { kind: 'text', message, ...(target ? { target } : {}) }, alias: alias.trim(), evidenceUrls: links.split('\n').map(s => s.trim()).filter(Boolean), turnstileToken: token })
+    if (!validated.ok) {
+      setError(tr('内容有误，请修改后再提交：', 'Please fix these before submitting: ') + validated.errors.map(e => e.message).join('；'))
+      setBusy(false)
+      return
+    }
     try {
-      const validated = validateSubmission({ schemaVersion: 1, clientRequestId: crypto.randomUUID(), datasetVersion: feedbackDatasetVersion, baseFingerprint: 'text-feedback', proposal: { kind: 'text', message, ...(target ? { target } : {}) }, alias: alias.trim(), evidenceUrls: links.split('\n').map(s => s.trim()).filter(Boolean), turnstileToken: token })
-      if (!validated.ok) throw new Error(validated.errors.map(e => e.message).join('；'))
       const stored = stripToken(validated.value)
       if (pending && stableJson({ ...pending, clientRequestId: undefined }) === stableJson({ ...stored, clientRequestId: undefined })) stored.clientRequestId = pending.clientRequestId
       setPending(stored)

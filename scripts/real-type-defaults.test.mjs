@@ -8,6 +8,7 @@ import {
   REAL_TYPES,
   PENDING_REAL_TYPE_BY_CATEGORY,
   defaultRealTypeFor,
+  realTypeMatchesCategory,
   realTypeOptionsFor,
 } from '../src/lib/realTypeCatalog.ts'
 import { isPendingRealType } from '../src/lib/realType.ts'
@@ -70,6 +71,39 @@ test('特殊槽位的下拉含 PDEX,普通大类不含 PDEX', () => {
     assert.equal(options.some((type) => type.id === 'PDEX'), false, `${category} 不应出现 PDEX`)
     assert.ok(options.every((type) => REAL_TYPES[category].some((own) => own.id === type.id)))
   }
+})
+
+// 合包按 `realType` 归类(`generate-pack.js` 的 `packRealTypeFor`),所以"这条建议把
+// 槽位改成别家的键型"必须能被判定出来 —— 提交页与审核预览都靠这个函数把跨类别改动说出来。
+test('跨类别判定:自家键型算相符、别家算跨类别、SPECIAL 永远相符', () => {
+  // 用目录自己生成用例:新增键型时不会漏,也不用在测试里再抄一份 id 清单。
+  for (const category of CATEGORIES) {
+    for (const option of REAL_TYPES[category]) {
+      assert.equal(realTypeMatchesCategory(category, option.id), true, `${category} 槽位用 ${option.id} 应算相符`)
+    }
+  }
+  // 这次的回归点:LN 槽位 → HB3 是跨类别(这张谱会进 HB 的包)。
+  assert.equal(realTypeMatchesCategory('LN', 'HB3'), false)
+  assert.equal(realTypeMatchesCategory('LN', 'RE'), true)
+  // LN 里没有 LN2(是 RE/CO/TE/DE/JW/SW/LNMX/LNWC/LNTC/IN/LNWL/OLN/PDLN),
+  // 别把"像 LN 的名字"当成相符 —— 合包看的是 id。
+  assert.equal(realTypeMatchesCategory('LN', 'LN2'), false)
+  assert.equal(realTypeMatchesCategory('RC', 'HB1'), false)
+  assert.equal(realTypeMatchesCategory('HB', 'SS'), false)
+  assert.equal(realTypeMatchesCategory('TB', 'TB'), true)
+  assert.equal(realTypeMatchesCategory('TB', 'SS'), false)
+  // 特殊槽位(HB&SV 这类混池)跨大类是设计如此,任何键型都算相符。
+  for (const category of CATEGORIES) {
+    for (const option of REAL_TYPES[category]) {
+      assert.equal(realTypeMatchesCategory('SPECIAL', option.id), true)
+    }
+  }
+  assert.equal(realTypeMatchesCategory('SPECIAL', 'NOT-A-REAL-TYPE'), true, '特殊槽位不认识的值也不会被说成跨类别')
+  // 空值 / 大小写 / 空格:标准大类里一律"不相符"。不做 trim、不忽略大小写 ——
+  // 目录里的 id 没有空格、都是大写,悄悄修正只会掩盖真实笔误。
+  assert.equal(realTypeMatchesCategory('RC', ''), false)
+  assert.equal(realTypeMatchesCategory('RC', 'SS '), false)
+  assert.equal(realTypeMatchesCategory('LN', 're'), false)
 })
 
 test('PDEX 被认作 Pending,并且不进合包(PDSV 仍可下载)', () => {

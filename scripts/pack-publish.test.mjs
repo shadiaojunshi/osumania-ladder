@@ -273,9 +273,27 @@ test('R10 真实 manifest：全量成功时镜像链接与 Drive fileId 一个�
     assert.equal(after.gdriveFileId, before.gdriveFileId, `${before.realType}_${before.part} 的 fileId 丢了`)
     assert.equal(after.mapCount, before.mapCount)
   }
-  // 本次重新上传了每个包的 r2 → 有镜像的包都要进 pendingMirrors
-  const withMirror = manifest.packs.filter((p) => p.links && p.links.googleDrive).length
-  assert.equal(pendingMirrors.length, withMirror)
+  // 镜像标记跟着**内容**走，不跟着"跑没跑过生成"走：本次 objectKey 与清单里记的相同
+  // ⇒ 同一份字节，Drive 侧已经是这一版，不该再标待同步。
+  // （这里曾经写成 `assert.equal(pendingMirrors.length, 有 googleDrive 的包数)`。
+  //  那是在旧清单一个 gdriveObjectKey 都没有、全部落进保守分支时才**碰巧**成立：
+  //  真实清单停在 2026-08-13 时它凑出 55 === 55，而清单一旦是新鲜的，
+  //  它就会因为一个完全正常的原因变红 —— 一个为假前提而写的断言。）
+  assert.equal(pendingMirrors.length, 0, '内容没变（objectKey 一致）时不该有包被标成待同步')
+
+  // 反过来必须成立，否则这条测试对 needsMirrorSync 毫无约束：objectKey 一变
+  // （内容寻址，新键 = 新字节），每个有镜像的包都要被标出来。
+  const withMirror = manifest.packs.filter((p) => p.links && p.links.googleDrive)
+  const changed = typeResults.map((t) => ({
+    ...t,
+    packs: t.packs.map((p) => ({ ...p, objectKey: `${p.objectKey}~next` })),
+  }))
+  const { pendingMirrors: afterChange } = buildManifestPacks({ typeResults: changed, oldManifest: manifest })
+  assert.equal(afterChange.length, withMirror.length, '内容变了以后待同步的包数应等于有镜像的包数')
+  for (const before of withMirror) {
+    const key = `${before.realType}_${before.part || 1}.osz`
+    assert.ok(afterChange.includes(key), `${key} 内容变了却没被标成待同步`)
+  }
 })
 
 // ---------- 门控顺序（防止有人顺手把它拆掉）----------

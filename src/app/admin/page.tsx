@@ -1,6 +1,8 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef, type SetStateAction } from 'react'
+import { tournaments as allTournaments } from '@/generated/tournaments'
+import { browserTournamentsWithDrafts } from '@/lib/mapBrowserRows'
 import Link from 'next/link'
 import { TournamentForm } from '@/components/admin/TournamentForm'
 import { JsonPreview } from '@/components/admin/JsonPreview'
@@ -91,7 +93,20 @@ export default function AdminPage() {
   const [submitStatus, setSubmitStatus] = useState<{ type: 'success' | 'error' | 'local'; message: string; conflict?: boolean; conflicts?: FieldConflict[] } | null>(null)
   const [conflicts, setConflicts] = useState<EditConflict[]>([])
   const [saveSignal, setSaveSignal] = useState(0)
-  const [stagedChanges, setStagedChanges] = useState<Record<string, StagedEntry>>({})
+  const [stagedChanges, setStagedChangesState] = useState<Record<string, StagedEntry>>({})
+  // Async fetches can finish together. Resolve patches against the latest draft
+  // synchronously; do not rely on React running a queued updater before status.
+  const stagedChangesRef = useRef(stagedChanges)
+  const setStagedChanges = useCallback((action: SetStateAction<Record<string, StagedEntry>>) => {
+    const next = typeof action === 'function' ? action(stagedChangesRef.current) : action
+    stagedChangesRef.current = next
+    setStagedChangesState(next)
+  }, [])
+  const [browserSaved, setBrowserSaved] = useState<Record<string, Tournament>>({})
+  const browserTournaments = useMemo(
+    () => browserTournamentsWithDrafts(allTournaments, browserSaved, stagedChanges),
+    [browserSaved, stagedChanges],
+  )
   const [stagedChangesLoaded, setStagedChangesLoaded] = useState(false)
   const [tab, setTab] = useState<Tab>('create')
   const [loadingList, setLoadingList] = useState(false)
@@ -144,7 +159,7 @@ export default function AdminPage() {
     } finally {
       setStagedChangesLoaded(true)
     }
-  }, [])
+  }, [setStagedChanges])
 
   useEffect(() => {
     if (!stagedChangesLoaded) return
@@ -294,6 +309,7 @@ export default function AdminPage() {
       if (newSha) setEditingSha(newSha)
       // 基准和表单都跟随「实际写进服务器的内容」:走过自动合并的话,服务器上现在是 merged。
       setEditingBaseline(written)
+      setBrowserSaved((current) => ({ ...current, [written.id]: written }))
       setEditingLegacy(false)
 
       // unchanged 判断的是「提交请求期间用户有没有新输入」,必须拿点保存那一刻的 submitted 比 ——
@@ -437,7 +453,8 @@ export default function AdminPage() {
           body: JSON.stringify({ items, summary: `Batch update tournaments (${count} files)` }),
         })
 
-      let res = await submitBatch(entries.map(([id, entry]) => ({ id, tournament: entry.data, baseSha: entry.baseSha })))
+      let writtenItems = entries.map(([id, entry]) => ({ id, tournament: entry.data, baseSha: entry.baseSha }))
+      let res = await submitBatch(writtenItems)
       let payload = (await res.json().catch(() => ({}))) as {
         error?: string
         code?: string
@@ -451,7 +468,10 @@ export default function AdminPage() {
         if (mergeable) {
           res = await submitBatch(mergeable.items)
           payload = (await res.json().catch(() => ({}))) as typeof payload
-          if (res.ok) followed = mergeable.followed
+          if (res.ok) {
+            followed = mergeable.followed
+            writtenItems = mergeable.items
+          }
         }
       }
 
@@ -463,6 +483,7 @@ export default function AdminPage() {
       }
       if (!res.ok) throw new Error(payload.error || t('admin.stage.submitError'))
 
+      setBrowserSaved((current) => ({ ...current, ...Object.fromEntries(writtenItems.map((item) => [item.id, item.tournament])) }))
       setStagedChanges((current) => {
         const next = { ...current }
         for (const [id, entry] of snapshot) {
@@ -499,6 +520,8 @@ export default function AdminPage() {
       if (!res.ok) return null
       const data = (await res.json()) as { tournament?: Tournament; sha?: string }
       if (!data.tournament || typeof data.sha !== 'string' || data.sha === '') return null
+      const loaded = data.tournament
+      setBrowserSaved((current) => ({ ...current, [id]: loaded }))
       return { tournament: data.tournament, sha: data.sha }
     } catch {
       return null
@@ -911,6 +934,7 @@ export default function AdminPage() {
 
         {tab === 'realTypeMaps' && (
           <RealTypeMapBrowser
+            tournaments={browserTournaments}
             canStage={has('contributor')}
             stagedCount={Object.keys(stagedChanges).length}
             onStageMapChange={handleStageMapChange}

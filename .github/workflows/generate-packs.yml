@@ -11,6 +11,11 @@ on:
         description: '指定 realType 时是否发布（true=上传 R2 并更新该类型的清单条目；false=仅离线预览）'
         required: false
         default: 'false'
+      allowContentGaps:
+        description: '确认有意移除或替换旧谱面，允许数量/内容收缩（不放行缺音频或损坏文件）'
+        type: boolean
+        required: false
+        default: false
 
 # 与 upload-packs-to-drive.yml **共用同一个发布组**：两个 workflow 同时改 R2 / manifest
 # 会互相打架（生成与 Drive 重传并发时，后者会照一份中间态的清单去算 Drive 孤儿）。
@@ -42,6 +47,7 @@ jobs:
         env:
           REAL_TYPE: ${{ github.event.inputs.realType }}
           PUBLISH: ${{ github.event.inputs.publish }}
+          ALLOW_CONTENT_GAPS: ${{ github.event.inputs.allowContentGaps }}
           R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
           R2_ACCESS_KEY: ${{ secrets.R2_ACCESS_KEY }}
           R2_SECRET_KEY: ${{ secrets.R2_SECRET_KEY }}
@@ -56,6 +62,7 @@ jobs:
           args=()
           if [ -n "$REAL_TYPE" ]; then args+=("--type=$REAL_TYPE"); fi
           if [ "$PUBLISH" = "true" ]; then args+=("--publish"); fi
+          if [ "$ALLOW_CONTENT_GAPS" = "true" ]; then args+=("--allow-content-gaps"); fi
           node scripts/generate-pack.js "${args[@]}"
 
       - name: Upload to Google Drive

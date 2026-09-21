@@ -52,6 +52,18 @@ export interface BrowserOverrideMap {
   [rowKey: string]: string | undefined
 }
 
+/** Drafts override fetched/saved data; removing a draft restores the latest saved value. */
+export function browserTournamentsWithDrafts(
+  base: Tournament[],
+  saved: Record<string, Tournament>,
+  drafts: Record<string, { data: Tournament }>,
+): Tournament[] {
+  const merged = new Map(base.map((tournament) => [tournament.id, tournament]))
+  for (const tournament of Object.values(saved)) merged.set(tournament.id, tournament)
+  for (const entry of Object.values(drafts)) merged.set(entry.data.id, entry.data)
+  return [...merged.values()]
+}
+
 /**
  * 把 `findDuplicateRoundMaps` 的警告转成行级索引。
  * 键 = `${tournamentId}:${mapKey}` —— 注意这里的 mapKey 是 `mapIdentityKey` 的结果，

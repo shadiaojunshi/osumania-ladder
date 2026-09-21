@@ -16,6 +16,7 @@ register(new URL('./_ts-extension-loader.mjs', import.meta.url))
 
 const {
   BROWSER_CATEGORY_ORDER,
+  browserTournamentsWithDrafts,
   browserOptionGroups,
   browserRowTarget,
   buildMapBrowserRows,
@@ -38,6 +39,22 @@ const tournaments = readdirSync(`${DATA_DIR}tournaments`)
 
 // 后台浏览器传的是"带重复索引"的行；顶层就用同一口径，后面的用例才对得上。
 const rows = buildMapBrowserRows(tournaments, duplicateRoundIndexOf(tournaments))
+
+test('归包回显跟随草稿：修改、取消、刷新恢复、清空与保存均不回到旧构建值', () => {
+  const original = structuredClone(tournaments[0])
+  const saved = structuredClone(original)
+  saved.rounds[0].maps[0].packAs = 'SS'
+  const draft = structuredClone(saved)
+  draft.rounds[0].maps[0].packAs = 'ORC'
+  const value = (data) => buildMapBrowserRows(data)[0].packAs
+  assert.equal(value(browserTournamentsWithDrafts([original], { [saved.id]: saved }, { [draft.id]: { data: draft } })), 'ORC')
+  const restored = JSON.parse(JSON.stringify({ [draft.id]: { data: draft } }))
+  assert.equal(value(browserTournamentsWithDrafts([original], {}, restored)), 'ORC')
+  delete draft.rounds[0].maps[0].packAs
+  assert.equal(value(browserTournamentsWithDrafts([original], { [saved.id]: saved }, { [draft.id]: { data: draft } })), undefined)
+  assert.equal(value(browserTournamentsWithDrafts([original], { [saved.id]: saved }, {})), 'SS')
+  assert.equal(value(browserTournamentsWithDrafts([original], { [draft.id]: draft }, {})), undefined)
+})
 
 function countSlots() {
   let n = 0

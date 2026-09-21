@@ -4,6 +4,7 @@ const { formatSources } = require('./source-label')
 // 「临时归类到别的键型包」(map.packAs) 的判读。镜像在 src/lib/packAs.ts，
 // 两份靠 scripts/pack-as.test.mjs 锁住一致。**改一边就得改另一边**。
 const { packRealTypeFor, isPackAsOverridden, realTypeDisplayName } = require('./pack-as')
+const { planPackRun, assertSinglePublishSafe, assertPublishedContent } = require('./pack-plan')
 const { ZipArchive } = require('archiver')
 const fs = require('fs')
 const path = require('path')
@@ -804,7 +805,7 @@ async function generatePack(targetType, {
   publish = true,
   // 上一版清单：用来区分「本来未上传」与「上一版有、现在丢失」—— 后者要拒绝发布。
   previousManifest = null,
-  // 显式放行内容缺口（少图 / 无音频）。只从 CLI 的 --allow-content-gaps 传进来。
+  // 显式允许旧谱面数量/内容收缩，不放行无音频或损坏文件。
   allowContentGaps = false,
 } = {}) {
   targetType = normalizeRealType(targetType)
@@ -887,7 +888,7 @@ async function generatePack(targetType, {
     if (reason === 'moved-out') {
       console.log(
         `[${targetType}] 全部 ${movedOutSlots} 个槽位都被临时归类（packAs）挪去了别的包 —— ` +
-          '本类型本次不产出包，旧包与旧清单项一并下线（否则它们会与接收方重复收录同一批图）',
+          '本类型本次不产出包；全量发布成功后才会移除旧清单项。',
       )
     } else {
       console.log(`[${targetType}] No slots in current data — keeping previously published packs`)
@@ -1020,10 +1021,14 @@ async function generatePack(targetType, {
   const previousSlots = previousManifestSlotTotal(previousManifest, targetType)
   const missingMainSlots = unresolved.filter((u) => !u.isNsv)
   // 判定是纯函数（pack-publish.js），与清单形状放在一起，这样"少几张才算问题"有单测钉着。
+  // Once entries are recorded, the global content check handles both migration
+  // and actual loss. Count-only guarding is retained for legacy packs.
+  const previousTypePacks = (previousManifest.packs || []).filter((p) => p.realType === targetType)
+  const hasContentBaseline = previousTypePacks.length > 0 && previousTypePacks.every((p) => Array.isArray(p.contentEntries))
   const { lost: slotLoss, blocked: slotLossBlocked } = evaluateSlotLoss({
     previousSlots,
     currentSlots: uniqueSlotTotal,
-    allowContentGaps,
+    allowContentGaps: allowContentGaps || hasContentBaseline,
   })
   if (slotLossBlocked) {
     const sample = missingMainSlots.slice(0, 5).map((u) => u.r2Key)
@@ -1103,6 +1108,7 @@ async function generatePack(targetType, {
     let audioMissingCount = 0
     const audioMissingKeys = []
     const skippedMaps = []
+    const contentEntries = []
     for (let i = 0; i < chunk.length; i++) {
       const item = prefetched[i]
       if (!item || !item.ok) {
@@ -1116,6 +1122,11 @@ async function generatePack(targetType, {
         continue
       }
       const p = item.payload
+      if (!item.contentKey) {
+        skippedMaps.push({ key: chunk[i].r2Key, reason: 'missing-content-identity', error: '无法记录谱面内容摘要' })
+        continue
+      }
+      contentEntries.push({ contentKey: item.contentKey, paths: chunk[i].alternatePaths || [chunk[i].r2Key] })
       identitySeen.push({
         r2Key: item.usedPath || chunk[i].r2Key,
         beatmapId: chunk[i].beatmapId,
@@ -1178,6 +1189,7 @@ async function generatePack(targetType, {
       reason: contentVerdict.reason,
       detail: contentVerdict.detail || '',
       skippedMaps,
+      contentEntries,
     }
     // 音频体检:借主图补上的、以及**仍然没有音频**的(后者在游戏里没声音,要人补传)。
     if (audioFromMainCount > 0 || audioMissingCount > 0) {
@@ -1494,6 +1506,12 @@ async function analyzeTypeIdentity(targetType, sharedR2Keys = null) {
   }
 }
 
+function reportContentCoverage(previousPacks = [], packs, allowContentGaps) {
+  const coverage = assertPublishedContent(previousPacks, packs, allowContentGaps)
+  if (coverage.legacyPacks) console.warn(`注意：${coverage.legacyPacks} 个历史包没有逐谱面内容记录，无法完整判断旧图是否丢失；本次成功发布后建立基准。`)
+  if (coverage.lost.length) console.warn(`已显式允许移除或替换 ${coverage.lost.length} 张旧谱面内容：${coverage.lost.flatMap((e) => e.paths).join(', ')}`)
+}
+
 async function main() {
   const cli = parsePackCli(process.argv.slice(2), {
     knownTypes: Object.keys(REAL_TYPE_NAMES),
@@ -1562,6 +1580,15 @@ async function main() {
     return
   }
 
+  const tournamentsDir = path.join(__dirname, '..', 'data', 'tournaments')
+  const tournaments = fs.readdirSync(tournamentsDir).filter((f) => f.endsWith('.json'))
+    .map((file) => JSON.parse(fs.readFileSync(path.join(tournamentsDir, file), 'utf-8')))
+  const plan = planPackRun(tournaments, {
+    normalize: normalizeRealType,
+    knownTypes: Object.keys(REAL_TYPE_NAMES),
+    excludedTypes: [...PACK_EXCLUDED_REAL_TYPES],
+  })
+
   if (cli.mode === 'single-preview' || cli.mode === 'single-publish') {
     // 单类型有两种明确语义（R12 第 3 条）:
     //   · 预览（默认）—— 只生成到 output/,不上传 R2、不动 manifest
@@ -1573,6 +1600,7 @@ async function main() {
     if (fs.existsSync(MANIFEST_PATH)) {
       singleOldManifest = JSON.parse(fs.readFileSync(MANIFEST_PATH, 'utf-8'))
     }
+    if (publish) assertSinglePublishSafe(plan.routing, singleOldManifest.packRouting)
     warnIfBaselineNotComparable(singleOldManifest)
     console.log(`单类型模式:${cli.targetType} —— ${publish ? '发布（上传 R2 + 更新该类型清单条目）' : '仅离线预览（不碰 R2 与 manifest）'}`)
     const result = await generatePack(cli.targetType, {
@@ -1594,22 +1622,18 @@ async function main() {
 
     if (result.status === STATUS_SKIPPED) {
       console.log(`\n${cli.targetType} 在当前数据里没有槽位（或属于不产包的类型）—— 没有做任何改动。`)
-    } else if (result.reason === 'moved-out') {
-      // 与上面的 SKIPPED 正好相反：这个类型的槽位**还在**，只是全被临时归类挪去别的包了。
-      // 说清楚"包下线了"而不是"更新了" —— 否则站长会以为 IN 包还在，只是没变。
-      console.log(
-        `\n${cli.targetType} 的槽位全被临时归类（packAs）挪去了别的包 —— ` +
-          '本次不产出包，旧包与旧清单项已下线（别的类型不受影响）。',
-      )
     } else if (!publish) {
-      console.log('\n离线预览完成:包在 output/ 下,未上传 R2、未改动 manifest。要发布请加 --publish。')
+      console.log(result.reason === 'moved-out'
+        ? '\n该类型的槽位已全部归到其他包，本次预览无产物，线上清单未改动。迁移请全量发布。'
+        : '\n离线预览完成:包在 output/ 下,未上传 R2、未改动 manifest。')
     } else {
       // 复用生成前读到的那一份（收缩判定与清单组装必须看同一版）。
       const oldManifest = singleOldManifest
       const { packs, pendingMirrors } = buildManifestPacks({
         typeResults: [result], oldManifest, preserveOtherTypes: true,
       })
-      const manifest = { packs, lastGenerated: new Date().toISOString() }
+      reportContentCoverage(oldManifest.packs, packs, cli.allowContentGaps)
+      const manifest = { packs, packRouting: plan.routing, lastGenerated: new Date().toISOString() }
       if (pendingMirrors.length > 0) manifest.pendingMirrors = pendingMirrors
       fs.writeFileSync(MANIFEST_PATH, JSON.stringify(manifest, null, 2) + '\n')
       console.log(`\n已更新 manifest 里 ${cli.targetType} 的条目（其他类型与人工链接原样保留）。`)
@@ -1627,16 +1651,7 @@ async function main() {
     return
   }
 
-  const allTypes = new Set()
-  const tournamentsDir = path.join(__dirname, '..', 'data', 'tournaments')
-  const files = fs.readdirSync(tournamentsDir).filter(f => f.endsWith('.json'))
-  for (const file of files) {
-    const t = JSON.parse(fs.readFileSync(path.join(tournamentsDir, file), 'utf-8'))
-    for (const r of t.rounds) for (const m of r.maps) {
-      const realType = normalizeRealType(m.realType)
-      if (!PACK_EXCLUDED_REAL_TYPES.has(realType)) allTypes.add(realType)
-    }
-  }
+  const allTypes = new Set(plan.types)
 
   // 旧清单必须在**生成之前**读：类型级的"比上一版少了多少张"判定要拿它当基准
   //（R10：区分"本来未上传"与"上一版有、现在丢失"）。生成之后再读就晚了。
@@ -1670,7 +1685,8 @@ async function main() {
     process.exit(1)
   }
   const { packs, pendingMirrors } = buildManifestPacks({ typeResults, oldManifest })
-  const manifest = { packs, lastGenerated: new Date().toISOString() }
+  reportContentCoverage(oldManifest.packs, packs, cli.allowContentGaps)
+  const manifest = { packs, packRouting: plan.routing, lastGenerated: new Date().toISOString() }
   if (pendingMirrors.length > 0) manifest.pendingMirrors = pendingMirrors
 
   // .previous 是给 upload-to-gdrive.js 判断 Drive 孤儿用的过程文件。

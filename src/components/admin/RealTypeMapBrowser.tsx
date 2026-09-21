@@ -6,6 +6,7 @@ import { useT } from '@/lib/i18n'
 import { REAL_TYPES } from '@/lib/realTypeCatalog'
 import { normalizeRealType } from '@/lib/realType'
 import { packAsTargetGroups } from '@/lib/packAs'
+import type { Tournament } from '@/lib/types'
 import {
   browserOptionGroups,
   buildMapBrowserRows,
@@ -22,28 +23,30 @@ import { ManiaChartButton } from '@/components/chart/ManiaChartButton'
 // 行形状与判定逻辑都在 src/lib/mapBrowserRows.ts（公开反馈页复用同一份），
 // 这里只做"取全库数据 → 喂给纯函数 → 渲染表格"的适配。
 interface Props {
+  tournaments?: Tournament[]
   canStage?: boolean
   stagedCount?: number
   onStageMapChange?: (change: { tournamentId: string; roundId: string; roundIndex: number; slot: string; beatmapId?: number; realType: string }) => void
   /** 「临时归包」的暂存：只改合包归属，不动 `realType`。传 undefined 表示清空。 */
-  onStagePackAsChange?: (change: { tournamentId: string; roundId: string; roundIndex: number; slot: string; beatmapId?: number; packAs?: string }) => void
+  onStagePackAsChange?: (change: { tournamentId: string; roundId: string; roundIndex: number; slot: string; beatmapId?: number; packAs?: string }) => Promise<void>
 }
 
-export function RealTypeMapBrowser({ canStage = false, stagedCount = 0, onStageMapChange, onStagePackAsChange }: Props) {
+export function RealTypeMapBrowser({ tournaments = allTournaments, canStage = false, stagedCount = 0, onStageMapChange, onStagePackAsChange }: Props) {
   const t = useT()
   const [selectedRealType, setSelectedRealType] = useState(REAL_TYPES.RC[0].id)
   const [selectedTournamentId, setSelectedTournamentId] = useState('all')
   const [overrides, setOverrides] = useState<BrowserOverrideMap>({})
+  const [pendingPackAs, setPendingPackAs] = useState<Set<string>>(new Set())
 
   // 行生成 / 筛选 / 排序 / 下拉项全部走 src/lib/mapBrowserRows.ts 的纯函数
   // （公开反馈页用的是同一份，因此这些规则只有一处实现）。
-  const duplicateMapIndex = useMemo(() => duplicateRoundIndexOf(allTournaments), [])
-  const allRows = useMemo(() => buildMapBrowserRows(allTournaments, duplicateMapIndex), [duplicateMapIndex])
+  const duplicateMapIndex = useMemo(() => duplicateRoundIndexOf(tournaments), [tournaments])
+  const allRows = useMemo(() => buildMapBrowserRows(tournaments, duplicateMapIndex), [tournaments, duplicateMapIndex])
   const optionGroups = useMemo(() => browserOptionGroups(allRows, t('realTypeMaps.customGroup')), [allRows, t])
 
   const matchingTournaments = useMemo(
-    () => matchingTournamentsFor(allTournaments, allRows, selectedRealType),
-    [allRows, selectedRealType],
+    () => matchingTournamentsFor(tournaments, allRows, selectedRealType),
+    [tournaments, allRows, selectedRealType],
   )
 
   const visibleRows = useMemo(
@@ -86,15 +89,24 @@ export function RealTypeMapBrowser({ canStage = false, stagedCount = 0, onStageM
   // 「临时归包」：只在合包时换包，`realType` 一个字不改（所以这里不碰 overrides ——
   // 那一行仍然属于它真实的键型，键型筛选的结果不该因为临时归包而变）。
   // 选「（不临时归类）」= 清空，传 undefined，JSON 里不落脏值。
-  const handlePackAs = (row: MapBrowserRow, value: string) => {
-    onStagePackAsChange?.({
-      tournamentId: row.tournamentId,
-      roundId: row.roundId,
-      roundIndex: row.roundIndex,
-      slot: row.slot,
-      beatmapId: row.beatmapId,
-      packAs: value === '' ? undefined : value,
-    })
+  const handlePackAs = async (row: MapBrowserRow, value: string) => {
+    setPendingPackAs((current) => new Set(current).add(row.key))
+    try {
+      await onStagePackAsChange?.({
+        tournamentId: row.tournamentId,
+        roundId: row.roundId,
+        roundIndex: row.roundIndex,
+        slot: row.slot,
+        beatmapId: row.beatmapId,
+        packAs: value === '' ? undefined : value,
+      })
+    } finally {
+      setPendingPackAs((current) => {
+        const next = new Set(current)
+        next.delete(row.key)
+        return next
+      })
+    }
   }
 
   return (
@@ -253,6 +265,7 @@ export function RealTypeMapBrowser({ canStage = false, stagedCount = 0, onStageM
                     <td className="px-4 py-2.5">
                       <select
                         value={row.packAs ?? ''}
+                        disabled={pendingPackAs.has(row.key)}
                         onChange={(event) => handlePackAs(row, event.target.value)}
                         // 被临时归类时标成琥珀色：一眼能看出这一行"不在自己本来的包里"。
                         className={`max-w-40 rounded border px-2 py-1 text-xs ${

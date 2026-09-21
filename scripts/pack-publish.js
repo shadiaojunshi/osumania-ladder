@@ -329,6 +329,7 @@ function buildManifestPacks({ typeResults = [], oldManifest = {}, today, preserv
         // 不同就要新建（版本化上传，见 upload-to-gdrive.js 的 syncOnePack）。
         gdriveObjectKey: previous?.gdriveObjectKey,
         sizeMB: r.sizeMB,
+        ...(Array.isArray(r.contentEntries) ? { contentEntries: r.contentEntries } : {}),
       })
       if (needsMirrorSync(previous, r.links, r.objectKey)) pendingMirrors.add(`${r.realType}_${part}.osz`)
     }
@@ -457,9 +458,9 @@ const CLI_USAGE = [
   '  --identity-report         **只读身份体检**:只读 R2 算身份并写报告,不打包、不上传、',
   '                            不改 manifest、不写 output/。可单独用（=全部类型）或与',
   '                            --type 合用。与 --publish / --offline 互斥。',
-  '  --allow-content-gaps      发布时**允许内容缺口**继续：比上一版少图（参考的 .osz 不在 R2）',
-  '                            或有谱面没有音频时，默认会**拒绝发布**；加了它才继续，缺口仍会写',
-  '                            进日志与身份报告。只在确认是数据侧正常收缩时用。',
+  '  --allow-content-gaps      确认有意移除或替换旧谱面后，允许数量/内容收缩；仍记录日志。',
+  '                            不放行缺音频、下载失败或损坏的谱面。',
+  '  临时归包或撤销临时归包必须全量发布；单类型仅支持离线预览。',
   '  --help                    显示本说明',
   '',
   '孤儿清理不在这里:node scripts/gc-pack-objects.mjs（基于**已提交**的清单，默认只报告）。',
@@ -480,7 +481,7 @@ function parsePackCli(argv = [], { knownTypes = [], excludedTypes = [] } = {}) {
     mode: 'full',
     targetType: null,
     publish: false,
-    // 显式放行内容缺口（比上一版少图 / 有谱面无音频）。默认 false = 缺口一律拒绝发布。
+    // 显式允许旧谱面数量/内容收缩，不放行无音频或损坏文件。
     allowContentGaps: false,
     errors: [],
     warnings: [],

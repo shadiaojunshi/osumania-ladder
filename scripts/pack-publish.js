@@ -31,6 +31,8 @@ const REASON_LABEL = {
   'slot-count-mismatch': '包内槽位数与计划不符',
   'no-available-files': '该类型有槽位但一张可读的文件都没有（疑似未上传或数据滞后）',
   'no-packs': '该类型计划出包但一个包都没产出',
+  'audio-missing': '有谱面没有音频（原包没有、借主图也失败）—— 这种图在游戏里没声音',
+  'slots-lost': '本次比上一版少图（疑似 R2 里的文件丢失；确认是数据正常收缩就用 --allow-content-gaps）',
 }
 
 function labelOf(reason) {
@@ -48,6 +50,8 @@ function evaluatePack({
   processedEntries = 0,
   plannedSlots = 0,
   processedSlots = 0,
+  // 最终没有音频的谱面数（原包没有、借主图也失败）—— 这类图在游戏里没声音。
+  audioMissing = 0,
   uploadOk = true,
 } = {}) {
   if (!uploadOk) return { status: STATUS_FAILED, reason: 'r2-upload' }
@@ -68,6 +72,15 @@ function evaluatePack({
       status: STATUS_FAILED,
       reason: 'slot-count-mismatch',
       detail: `槽位计划 ${plannedSlots}，实际 ${processedSlots}`,
+    }
+  }
+  // 张数、槽位都对，但有谱面没有音频。过去只 warn 就照发（另一条线的审查 P2）——
+  // 与"少了一张"同一档：那张图在包里是坏的，所以这个包不发布。
+  if (audioMissing > 0) {
+    return {
+      status: STATUS_FAILED,
+      reason: 'audio-missing',
+      detail: `${audioMissing} 张没有音频（原包没有、借主图也失败）`,
     }
   }
   return { status: STATUS_OK, reason: 'ok' }
@@ -185,6 +198,53 @@ function needsMirrorSync(previousEntry, currentLinks, currentObjectKey) {
  *
  * 前提：只在 publishable 时调用（有 failed 时整次不发布，不该走到这里）。
  */
+/**
+ * 上一版清单里某个类型一共打过多少张（只数主图，与 mapIdentity 的 slotTotalOf 同口径）。
+ * 返回 0 = **没有可用的基准**，不做收缩判定。
+ *
+ * ⚠️ 只有**这条发布链**产出过的条目才算数：判据是条目带内容寻址的 `objectKey`。
+ * 历史覆盖式键时代的清单不能用 —— 那时与现在的键型分类、去重口径都可能不同。
+ * 实测（2026-09-21）：仓库里的清单停在 2026-08-13、55 个条目**一个 objectKey 都没有**，
+ * 其中 CJ 记着 222 张，而现在数据里 CJ 只有 179 张 —— 差额是 FCJ 重新分类带走的 218 张。
+ * 拿它当基准，会把一次完全正常的发布误判成"文件丢了"并整次拦下。
+ */
+function previousManifestSlotTotal(manifest, realType) {
+  const packs = (manifest && manifest.packs) || []
+  let total = 0
+  for (const p of packs) {
+    if (!p || p.realType !== realType) continue
+    if (!p.objectKey) continue
+    total += Number(p.mapCount) || 0
+  }
+  return total
+}
+
+/**
+ * 现有清单能不能当收缩基准？有条目但**一个 objectKey 都没有** = 来自旧的覆盖式键时代。
+ * 这种一律不用，只提示一句 —— 从这次发布起才会开始有可比的基准。
+ */
+function hasComparableBaseline(manifest) {
+  const packs = (manifest && manifest.packs) || []
+  if (packs.length === 0) return false
+  return packs.some((p) => p && p.objectKey)
+}
+
+/**
+ * 「本次比上一版少了几张」的判定（R10 第 1 条：把"本来未上传"与"上一版有、现在丢了"分开）。
+ *
+ * 为什么需要基准：数据引用的槽位在 R2 里找不到文件、身份又挂靠不到别的副本时，那个槽位
+ * 不会进任何包 —— 过去只 warn，于是"上一版 100 张、这次 99 张"会安静地发出去。
+ * 但"本来就没上传"是常态（数据先行），所以只有**比上一版少**才拦。
+ *
+ * previousSlots = 0 → 没有基准（首次发布 / 历史条目不记张数）→ 不拦。
+ * allowContentGaps 是显式放行（确认是数据侧正常收缩）。
+ */
+function evaluateSlotLoss({ previousSlots = 0, currentSlots = 0, allowContentGaps = false } = {}) {
+  const lost = (Number(previousSlots) || 0) - (Number(currentSlots) || 0)
+  if (!(lost > 0)) return { lost: 0, blocked: false }
+  return { lost, blocked: !allowContentGaps }
+}
+
 function buildManifestPacks({ typeResults = [], oldManifest = {}, today, preserveOtherTypes = false } = {}) {
   const oldPacks = oldManifest.packs || []
   const byKey = new Map(oldPacks.map((p) => [`${p.realType}#${p.part || 1}`, p]))
@@ -342,6 +402,9 @@ const CLI_USAGE = [
   '  --identity-report         **只读身份体检**:只读 R2 算身份并写报告,不打包、不上传、',
   '                            不改 manifest、不写 output/。可单独用（=全部类型）或与',
   '                            --type 合用。与 --publish / --offline 互斥。',
+  '  --allow-content-gaps      发布时**允许内容缺口**继续：比上一版少图（参考的 .osz 不在 R2）',
+  '                            或有谱面没有音频时，默认会**拒绝发布**；加了它才继续，缺口仍会写',
+  '                            进日志与身份报告。只在确认是数据侧正常收缩时用。',
   '  --help                    显示本说明',
   '',
   '孤儿清理不在这里:node scripts/gc-pack-objects.mjs（基于**已提交**的清单，默认只报告）。',
@@ -362,6 +425,8 @@ function parsePackCli(argv = [], { knownTypes = [], excludedTypes = [] } = {}) {
     mode: 'full',
     targetType: null,
     publish: false,
+    // 显式放行内容缺口（比上一版少图 / 有谱面无音频）。默认 false = 缺口一律拒绝发布。
+    allowContentGaps: false,
     errors: [],
     warnings: [],
     knownTypes,
@@ -378,6 +443,7 @@ function parsePackCli(argv = [], { knownTypes = [], excludedTypes = [] } = {}) {
     if (a === '--publish') { opts.publish = true; continue }
     if (a === '--offline') { offline = true; continue }
     if (a === '--identity-report') { identityReport = true; continue }
+    if (a === '--allow-content-gaps') { opts.allowContentGaps = true; continue }
     if (a === '--clean-orphans') {
       // 孤儿清理已拆到独立命令：它必须基于**已提交/已部署**的清单来判，
       // 放在生成流程里会因为"重跑一次 hash 变了"而删掉线上正在引用的对象。
@@ -449,6 +515,49 @@ function parsePackCli(argv = [], { knownTypes = [], excludedTypes = [] } = {}) {
   return { ok: opts.errors.length === 0, ...opts }
 }
 
+/**
+ * 判断手上的清单有没有资格当孤儿清理的基准（另一条线的审查 P1：清理脚本直接相信本地清单）。
+ *
+ * 判据来自 git —— 本地唯一那份"线上到底是什么"的记录。三个事实都是**三态**：
+ * true / false / null（null = 无法判断）。只有**明确为 false** 才算危险证据：
+ * 否则在"不是 git 仓库 / 游离 HEAD"的环境里永远跑不动，而那种环境并不会更危险。
+ *   · tracked          文件被版本控制跟踪（未跟踪的文件用 `git diff` 看是"干净"的，会骗过检查）
+ *   · matchesHead      内容与 HEAD 一致（有未提交改动 ⇒ 线上还不是这一版）
+ *   · pushedToUpstream 这次提交已在 upstream 上（本地领先 ⇒ 线上更不可能是这一版）
+ *
+ * 默认值取 fail-closed（tracked/matchesHead = false）—— 调用方忘了传事实时是拒绝，不是放行。
+ * `allowUncommitted` 强行放行时返回 `forced: true`，由调用方把警告打出去。
+ */
+function evaluateManifestLiveness({
+  tracked = false,
+  matchesHead = false,
+  pushedToUpstream = null,
+  allowUncommitted = false,
+} = {}) {
+  const problems = []
+  const unknowns = []
+  if (tracked === false) {
+    problems.push('清单文件没有被 git 跟踪（未跟踪的文件用 diff 看是"干净"的，不能当依据）')
+  } else if (tracked === null) {
+    unknowns.push('无法确认清单是否被 git 跟踪')
+  } else if (matchesHead === false) {
+    problems.push('清单有未提交的改动（线上还是旧的那一版）')
+  } else if (matchesHead === null) {
+    unknowns.push('无法确认清单是否与 HEAD 一致')
+  }
+  if (pushedToUpstream === false) {
+    problems.push('清单所在的提交还没推到 upstream（线上不可能已经是这一版）')
+  } else if (pushedToUpstream === null) {
+    unknowns.push('无法确认清单是否已推送')
+  }
+
+  const warning = unknowns.length ? `${unknowns.join('；')} —— 请自己确认线上已是这一版` : ''
+  if (problems.length === 0) return { ok: true, code: 'ok', detail: '', forced: false, warning }
+  const detail = problems.join('；')
+  if (allowUncommitted) return { ok: true, code: 'forced', detail, forced: true, warning }
+  return { ok: false, code: 'not-live', detail, forced: false, warning }
+}
+
 function describeCliError(err) {
   switch (err.error) {
     case 'unknown-option':
@@ -496,6 +605,10 @@ module.exports = {
   referencedObjectKeys,
   resolveRealType,
   parsePackCli,
+  evaluateManifestLiveness,
+  evaluateSlotLoss,
+  previousManifestSlotTotal,
+  hasComparableBaseline,
   describeCliError,
   CLI_USAGE,
 }

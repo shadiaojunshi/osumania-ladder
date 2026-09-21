@@ -33,6 +33,11 @@ const {
   resolveRealType,
   parsePackCli,
   describeCliError,
+  labelOf,
+  evaluateManifestLiveness,
+  evaluateSlotLoss,
+  previousManifestSlotTotal,
+  hasComparableBaseline,
 } = require('./pack-publish.js')
 
 // 与 generate-pack.js 的 main 一一对应的发布决策：有失败就整次取消，不写 manifest。
@@ -625,4 +630,237 @@ test('守门：identity-report.yml 必须保持只读（不得出现发布开关
   assert.ok(src.includes('git add reports/pack-identity-report.md'), '只提交报告文件')
   assert.ok(/permissions:\s*\n?\s*contents: write/.test(src), '要能 push 报告')
   assert.ok(!/real_type[\s\S]{0,200}R2_PACKS/.test(src) || !src.includes('R2_PACKS_BUCKET'), '体检不需要 packs 桶密钥')
+})
+
+
+// ---------- 合包静态审查（2026-09-21）五处修复 ----------
+//
+// 背景：另一条线对合包链做了静态审查，提了 5 条。逐条对着代码核实后 4 条成立、1 条部分成立，
+// 全部已修。这里的用例钉住修复本身，尤其是那些**单测看不见**的失败模式 ——
+// 例如「const 重赋值抛异常被 catch 吞掉」，它不会让任何现有断言变红。
+
+// ⑤ 有谱面没有音频 → 该包不发布（过去只 warn 就照发）
+test('⑤ evaluatePack：有谱面没音频 = 内容缺口，该包不发布', () => {
+  const ok = evaluatePack({ plannedEntries: 10, processedEntries: 10, plannedSlots: 10, processedSlots: 10 })
+  assert.equal(ok.status, STATUS_OK)
+
+  const bad = evaluatePack({
+    plannedEntries: 10, processedEntries: 10, plannedSlots: 10, processedSlots: 10, audioMissing: 1,
+  })
+  assert.equal(bad.status, STATUS_FAILED)
+  assert.equal(bad.reason, 'audio-missing')
+  assert.match(bad.detail, /1 张没有音频/)
+
+  assert.equal(labelOf('audio-missing'), '有谱面没有音频（原包没有、借主图也失败）—— 这种图在游戏里没声音')
+})
+
+test('⑤ 优先级：张数对不上时先报「少图」，别被音频盖掉', () => {
+  // 一个包同时"少一张"和"有一张没音频"时，先报更根本的那个原因。
+  const r = evaluatePack({
+    plannedEntries: 10, processedEntries: 9, plannedSlots: 10, processedSlots: 9, audioMissing: 1,
+  })
+  assert.equal(r.reason, 'missing-entries')
+})
+
+// ② 「本来未上传」与「上一版有、现在丢了」必须分开
+test('② evaluateSlotLoss：只有比上一版少才拦，持平/变多/无基准都不拦', () => {
+  assert.deepEqual(evaluateSlotLoss({ previousSlots: 100, currentSlots: 100 }), { lost: 0, blocked: false })
+  assert.deepEqual(evaluateSlotLoss({ previousSlots: 100, currentSlots: 101 }), { lost: 0, blocked: false })
+  assert.deepEqual(evaluateSlotLoss({ previousSlots: 100, currentSlots: 99 }), { lost: 1, blocked: true })
+  // previousSlots=0 = 没有基准（首次发布 / 历史条目不记张数）→ 绝不拦
+  assert.deepEqual(evaluateSlotLoss({ previousSlots: 0, currentSlots: 5 }), { lost: 0, blocked: false })
+  assert.deepEqual(evaluateSlotLoss({}), { lost: 0, blocked: false })
+  // 缺参数的畸形输入不能变成 NaN 判定
+  assert.deepEqual(evaluateSlotLoss({ previousSlots: null, currentSlots: 'x' }), { lost: 0, blocked: false })
+})
+
+test('② evaluateSlotLoss：--allow-content-gaps 只解除拦截，仍然报出少了几张', () => {
+  const r = evaluateSlotLoss({ previousSlots: 100, currentSlots: 97, allowContentGaps: true })
+  assert.equal(r.blocked, false)
+  assert.equal(r.lost, 3, '放行也必须知道少了几张（要写进日志）')
+  assert.equal(labelOf('slots-lost').startsWith('本次比上一版少图'), true)
+})
+
+test('② previousManifestSlotTotal：只数带 objectKey 的条目（旧时代清单不能当基准）', () => {
+  const manifest = {
+    packs: [
+      { realType: 'RC', part: 1, mapCount: 60, objectKey: 'RC_1.aaaaaaaa.osz' },
+      { realType: 'RC', part: 2, mapCount: 40, objectKey: 'RC_2.bbbbbbbb.osz' },
+      { realType: 'LN', part: 1, mapCount: 7, objectKey: 'LN_1.cccccccc.osz' },
+      { realType: 'HB', part: 1, objectKey: 'HB_1.dddddddd.osz' }, // 缺 mapCount
+      { realType: 'CJ', part: 1, mapCount: 222 },  // 覆盖式键时代：没有 objectKey
+      null,                                         // 脏数据不能把整个计算带崩
+    ],
+  }
+  assert.equal(previousManifestSlotTotal(manifest, 'RC'), 100)
+  assert.equal(previousManifestSlotTotal(manifest, 'LN'), 7)
+  assert.equal(previousManifestSlotTotal(manifest, 'HB'), 0)
+  assert.equal(previousManifestSlotTotal(manifest, 'TB'), 0, '没有该类型 = 没有基准')
+  // 关键：实测里就是这条 —— 仓库清单停在 8-13、CJ 记着 222 张，而数据里 CJ 只剩 179 张，
+  // 拿它当基准会把一次正常发布拦下。
+  assert.equal(previousManifestSlotTotal(manifest, 'CJ'), 0, '旧时代的条目一律不算基准')
+  assert.equal(previousManifestSlotTotal(null, 'RC'), 0)
+  assert.equal(previousManifestSlotTotal({}, 'RC'), 0)
+})
+
+test('② hasComparableBaseline：这份清单到底能不能当基准', () => {
+  assert.equal(hasComparableBaseline({ packs: [{ realType: 'RC', mapCount: 1, objectKey: 'x' }] }), true)
+  assert.equal(hasComparableBaseline({ packs: [{ realType: 'RC', mapCount: 1 }] }), false, '没有 objectKey = 旧时代')
+  assert.equal(hasComparableBaseline({ packs: [] }), false)
+  assert.equal(hasComparableBaseline(null), false)
+})
+
+test('② 守门：仓库里现存的清单真的会被判成"不可比"（否则 CJ 那类会误拦）', () => {
+  // 这条是对着**真实清单文件**的断言：如果哪天它出现了 objectKey，说明已经跑过一次真发布，
+  // 那时这条用例会失败 —— 那是提醒我把它改成"应当可比"，而不是出了 bug。
+  const manifest = JSON.parse(readFileSync(new URL('../data/packs-manifest.json', import.meta.url), 'utf8'))
+  assert.equal(
+    hasComparableBaseline(manifest), false,
+    '现有清单没有 objectKey（还没跑过真发布）→ 不该被拿来当收缩基准',
+  )
+})
+
+test('② 守门：判定被跳过时必须在日志里说出来（别说不出声地不判）', () => {
+  const src = readFileSync(new URL('./generate-pack.js', import.meta.url), 'utf8')
+  // 两个读清单的地方都要提示：站长看不到这句，会以为没拦=检查过了。
+  assert.ok(src.includes('warnIfBaselineNotComparable(oldManifest)'), '全量模式要提示')
+  assert.ok(src.includes('warnIfBaselineNotComparable(singleOldManifest)'), '单类型模式也要提示')
+  assert.ok(src.includes('本次不做「比上一版少图」判定'), '提示要把话说清楚')
+})
+
+// ③ 清理脚本的基准必须是线上一份：三态判据
+test('③ evaluateManifestLiveness：只有"明确为 false"才算危险证据', () => {
+  const clean = evaluateManifestLiveness({ tracked: true, matchesHead: true, pushedToUpstream: true })
+  assert.equal(clean.ok, true)
+  assert.equal(clean.warning, '', '三个事实都确认过 → 不该有多余警告')
+
+  const untracked = evaluateManifestLiveness({ tracked: false, matchesHead: null, pushedToUpstream: null })
+  assert.equal(untracked.ok, false)
+  assert.match(untracked.detail, /没有被 git 跟踪/)
+
+  const dirty = evaluateManifestLiveness({ tracked: true, matchesHead: false, pushedToUpstream: true })
+  assert.equal(dirty.ok, false)
+  assert.match(dirty.detail, /未提交的改动/)
+
+  const unpushed = evaluateManifestLiveness({ tracked: true, matchesHead: true, pushedToUpstream: false })
+  assert.equal(unpushed.ok, false)
+  assert.match(unpushed.detail, /还没推到 upstream/)
+})
+
+test('③ evaluateManifestLiveness：判断不了只警告不拦（否则 CI / 非 git 环境永远跑不动）', () => {
+  const unknown = evaluateManifestLiveness({ tracked: null, matchesHead: null, pushedToUpstream: null })
+  assert.equal(unknown.ok, true)
+  assert.match(unknown.warning, /无法确认/)
+
+  // tracked 确认过、但没配 upstream（游离 HEAD）→ 放行 + 警告
+  const noUpstream = evaluateManifestLiveness({ tracked: true, matchesHead: true, pushedToUpstream: null })
+  assert.equal(noUpstream.ok, true)
+  assert.match(noUpstream.warning, /是否已推送/)
+})
+
+test('③ evaluateManifestLiveness：--allow-uncommitted 强行放行时有 forced 标记，且缺口照报', () => {
+  const forced = evaluateManifestLiveness({
+    tracked: true, matchesHead: false, pushedToUpstream: false, allowUncommitted: true,
+  })
+  assert.equal(forced.ok, true, '强行放行要能过')
+  assert.equal(forced.forced, true, '必须留下痕迹，调用方据此打警告')
+  assert.match(forced.detail, /未提交的改动/, '放行也必须说清楚冒了什么风险')
+  assert.match(forced.detail, /还没推到 upstream/)
+})
+
+test('③ 守门：默认值必须是 fail-closed（忘了传事实 = 拒绝，不是放行）', () => {
+  const r = evaluateManifestLiveness()
+  assert.equal(r.ok, false, '空调用不能默认放行 —— 不然调用方漏传事实就悄悄开闸')
+})
+
+// ① 发布模式必须有公开下载地址（否则"不上传却换统计"）
+test('① CLI：--allow-content-gaps 是合法开关（默认关）', () => {
+  const plain = cli([])
+  assert.equal(plain.ok, true)
+  assert.equal(plain.allowContentGaps, false, '默认必须是关闭')
+
+  const on = cli(['--allow-content-gaps'])
+  assert.equal(on.ok, true, '不能因为未知选项被拒')
+  assert.equal(on.allowContentGaps, true)
+
+  const withType = cli(['--type=SS', '--publish', '--allow-content-gaps'])
+  assert.equal(withType.ok, true)
+  assert.equal(withType.mode, 'single-publish')
+  assert.equal(withType.allowContentGaps, true)
+
+  assert.match(describeCliError({ arg: 'x', error: 'unknown-option' }), /未知选项/)
+})
+
+// ---------- 结构断言：这些失败模式不会被纯函数单测看见 ----------
+test('⑤ 结构：无音频必须真的参与判定（不能只 warn）', () => {
+  const src = readFileSync(new URL('./generate-pack.js', import.meta.url), 'utf8')
+  assert.ok(src.includes('audioMissing: audioMissingKeys.length'), '要把无音频数交给 evaluatePack')
+  assert.ok(src.includes("contentVerdict.reason === 'audio-missing'"), '失败日志要列出是哪几张')
+})
+
+test('④ 结构：bgEntry 必须是 let —— const 重赋值会被 catch 吞掉', () => {
+  // 这不是风格问题：`bgEntry = bgFrom` 抛 "Assignment to constant variable" 时，
+  // 异常正好被"借主图资源失败"那个 catch 接住 → 包照发、只是少了曲绘，
+  // 而所有单测都是绿的（借主图的路径要真 R2 才走得到）。
+  const src = readFileSync(new URL('./generate-pack.js', import.meta.url), 'utf8')
+  assert.ok(src.includes('let bgEntry = findZipEntry(zip, meta.backgroundFile)'), 'bgEntry 必须是 let')
+  assert.ok(!src.includes('const bgEntry ='), '不能退回 const')
+  assert.ok(src.includes('bgEntry = bgFrom'), 'NSV 借主图曲绘那段仍然要存在')
+})
+
+test('① 结构：入口硬闸门 + 上传处兜底，两道都要在', () => {
+  const src = readFileSync(new URL('./generate-pack.js', import.meta.url), 'utf8')
+  assert.ok(src.includes('assertPublishEnv(cli.mode)'), '入口要拦（发布模式必须有公开地址）')
+  assert.ok(src.includes('if (publish && !R2_PACKS_PUBLIC_URL)'), '上传处要有兜底置 failed')
+  assert.ok(src.includes("packEntry.detail = 'R2_PACKS_PUBLIC_URL 未配置"), '兜底要说清原因')
+})
+
+test('② 结构：少图判定必须在切包/上传之前，且两个模式都传上一版清单', () => {
+  const src = readFileSync(new URL('./generate-pack.js', import.meta.url), 'utf8')
+  const at = (needle) => {
+    const i = src.indexOf(needle)
+    assert.ok(i >= 0, `generate-pack.js 里找不到 ${needle}`)
+    return i
+  }
+  const lossCheck = at('if (slotLossBlocked) {')
+  // 锚点要带 s3.send：文件里另有一处 PutObjectCommand（另一个辅助函数，位置更早）
+  const upload = at('s3.send(new PutObjectCommand({')
+  assert.ok(lossCheck < upload, '判定必须早于任何上传 —— 否则已经推上去的包撤不回来')
+
+  // 判定必须真的被喂了上一版张数与当前张数 —— 写成 previousSlots: 0 就永远不触发，
+  // 而 evaluateSlotLoss 的单测照样全绿（它们直接调纯函数）。
+  assert.ok(src.includes('previousManifestSlotTotal(previousManifest, targetType)'), '基准要来自上一版清单')
+  // 用正则而不是 includes：被改写成 `previousSlots: 0,` 时函数名还在，只有看实参才抓得住。
+  assert.match(src, /previousSlots,\s*\n\s*currentSlots: uniqueSlotTotal,/, '基准与当前张数都要真的喂进去')
+  assert.ok(!src.includes('previousSlots: 0'), '基准不能被写死成 0（那等于永不触发）')
+
+  const fullCall = at('previousManifest: oldManifest,')
+  const singleCall = at('previousManifest: singleOldManifest,')
+  const singleRead = at("singleOldManifest = JSON.parse")
+  assert.ok(singleRead < singleCall, '单类型模式也要在生成前读清单')
+  assert.ok(fullCall > 0 && singleCall > 0)
+
+  // 旧清单的读取必须早于 generatePack 调用：生成之后再读就晚了一轮
+  const genCall = at('await generatePack(type, {')
+  const readBefore = at('oldManifest = JSON.parse')
+  assert.ok(readBefore < genCall, '全量模式必须先生成前读清单')
+})
+
+test('③ 结构：GC 脚本必须核实清单"已上线"，而不是只打一句提示', () => {
+  const src = readFileSync(new URL('./gc-pack-objects.mjs', import.meta.url), 'utf8')
+  const at = (needle) => {
+    const i = src.indexOf(needle)
+    assert.ok(i >= 0, `gc-pack-objects.mjs 里找不到 ${needle}`)
+    return i
+  }
+  assert.ok(src.includes('evaluateManifestLiveness('), '判据要走纯函数')
+  assert.ok(src.includes("probeManifestInGit(manifestPath)"), '事实要从 git 取')
+  assert.ok(src.includes('--allow-uncommitted'), '要留显式放行口')
+  // 拿到判据却不用，等于没核实：核实不过必须直接拒绝执行。
+  assert.match(src, /if \(!liveness\.ok\) \{[\s\S]{0,500}?process\.exit\(1\)/, '核实不过必须拒绝执行')
+  // 核实必须早于"列桶"与"删对象"
+  assert.ok(at('probeManifestInGit(manifestPath)') < at('listPacksBucket()'), '核实要早于列桶')
+  assert.ok(at('probeManifestInGit(manifestPath)') < at('new DeleteObjectCommand('), '核实要早于删除')
+  // 而且必须早于凭据检查：这是本地错误，不该先要 R2 凭据
+  assert.ok(at('probeManifestInGit(manifestPath)') < at('缺失 R2 凭据'), '核实要早于凭据检查')
 })

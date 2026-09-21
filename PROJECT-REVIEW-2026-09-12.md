@@ -440,6 +440,86 @@ LN 单曲使用 difficulty 是当前领域约定，不能改成 difficultyLn。�
   `upload-packs-to-drive.yml` 补上 `upload-artifact`（与 `generate-packs.yml` 同一件事：
   runner 一退出工作区就没了，失败时那句「已保留本地结果」得靠它兜住）。
 
+**复查修正 6（2026-09-21）：另一条线的静态审查 5 条 —— 4 条成立、1 条部分成立，已全部加固**
+
+背景：另一条线对合包链做了静态审查（未跑复现）。逐条对着代码核实并实测后的结论：
+
+1. **[P1] 发布模式没配 `R2_PACKS_PUBLIC_URL` → 跳过上传却照写新统计。成立。** 条件
+   `if (R2_PACKS_PUBLIC_URL && publish)` 为假时既不预览也不上传，`packEntry` 仍是 `ok`、
+   `objectKey` 为 `null`；而 `buildManifestPacks` 的 `lastUpdated` 用当天日期、`mapCount`/`sizeMB`
+   是本次的新值，`links` 又回退到旧的 → 清单显示「今天更新过」，下载到的还是旧包。
+   修法两道闸门：入口 `assertPublishEnv(cli.mode)`（`full` / `single-publish` 缺它直接 `exit 1`，
+   提示里指出改用 `--type=` 预览）；上传处再兜一道 `if (publish && !R2_PACKS_PUBLIC_URL)` → 该包置
+   `failed`，由 `summarizeRun` 取消整次发布（fail-closed）。离线预览不受影响。
+2. **[P1] 参考的文件从 R2 消失仍会发布缩小包。成立，且比报告说的更彻底。** 报告点的
+   `mapIdentity.js:197` 是对的，但真正的机制是：`clusterEntries` 只把 `exists` 的引用聚成簇，
+   **`pickExistingPath` 那个 `continue` 分支是死代码**（簇里的路径按定义都在 R2 里）——
+   所以"文件不在 R2"的槽位只能经由 `unresolved` 显形，而 `plannedEntries` 取自 `available`
+   （已剔除），`evaluatePack` 的 `missing-entries` 永远抓不到它。过去只有一行 warn + 报告。
+   修法：拿「上一版清单里该类型的张数」当基准（`previousManifestSlotTotal`），
+   `evaluateSlotLoss` **只在比上一版少时**拦 → 新失败原因 `slots-lost`（整次不发布），
+   据此把「本来未上传」（常态，允许）与「上一版有、现在丢了」（拦）分开。确认是数据侧正常收缩时
+   用新开关 `--allow-content-gaps` 放行，缺口照写日志与报告。旧清单的读取因此**前移到生成之前**
+   （全量与单类型两处都是）。
+3. **[P1] 清理脚本直接相信本地清单。成立 —— 原来只是一句提示，没有任何强制。**
+   `gc-pack-objects.mjs` 只在正文里写「确认这份清单就是**线上正在生效**的那份之后」；生成成功
+   但提交/部署失败时，本地清单引用新键、线上引用旧键，`--clean-orphans` 删掉的正是线上在用的包。
+   修法：新增纯函数 `evaluateManifestLiveness`（**三态**：只有明确 `false` 才算危险证据）。
+   GC 用 `probeManifestInGit` 取三个事实：是否被跟踪（未跟踪的文件 `git diff` 看是"干净"的，
+   会骗过检查）、是否与 HEAD 一致、提交是否已推送。任一为 `false` → 拒绝执行；判断不了
+   （非 git 仓库、游离 HEAD、`--manifest` 指到仓库外）只警告 —— 否则那种环境里永远跑不动。
+   留 `--allow-uncommitted` 显式放行并打警告。核实**前移到凭据检查之前**：这是本地错误，
+   不该先要 R2 凭据（顺带也能在本地实测）。
+4. **[P2] NSV 借主图曲绘会抛异常。成立 —— 真 bug。** `const bgEntry` 却在 `bgEntry = bgFrom`
+   处重新赋值 → 抛 `Assignment to constant variable`，而异常正好被「借主图资源失败」的 `catch`
+   接住 → NSV 变体**永远借不到曲绘**，只留一行误导性 warn（那句话说的是"可能没声音"）。改成 `let`。
+5. **[P2] 缺音频只告警、不阻止发布。部分成立。**「只 warn」属实（`audioMissingCount` 只进日志），
+   但"原包没有音频"其实被 `findAnyAudioEntry` 兜了一道，所以真正的触发条件是
+   「原包**没有任何**音频 + 借主图也失败」。已把 `audioMissing` 纳入 `evaluatePack` →
+   新失败原因 `audio-missing`。**行为变化须知**：一个包里只要有**任何一张**图最终没有音频，
+   该包不发布、整次发布取消（与"少了一张"同一档）。NSV 的主图缺失、或主图自身无音频，也走这条。
+
+**同日补充（合包前预检发现的误判）：旧的覆盖式键清单不能当收缩基准。**
+
+上线前拿仓库里的真实清单做了一次预检，发现第 2 条的新闸门会**误拦一次正常发布**：
+`data/packs-manifest.json` 停在 `2026-08-13`、55 个条目**一个 `objectKey` 都没有**（这条链还没真跑过），
+而其中 **CJ 记着 222 张、现在数据里 CJ 只有 179 张** —— 差额是 `FCJ 0 → 218` 那次键型重新分类带走的。
+按"比上一版少就拦"，CJ 会被判成"文件丢了"并整次拒绝发布（其余类型当前数据都多于清单，不会触发）。
+
+修法：基准只认**这条链**产出过的条目 —— 判据是条目带内容寻址的 `objectKey`；
+一个都没有时不做收缩判定，并在日志里明说（`warnIfBaselineNotComparable`），
+免得站长以为"没拦 = 检查过了"。从第一次真发布起，每个条目都会有 `objectKey`，基准自然成立。
+测试里加了一条对着**真实清单文件**的守门断言：哪天它出现 `objectKey` 了，这条用例会失败 ——
+那是提醒"现在应当可比了"，不是 bug。
+
+**顺带发现的两个新问题（已报给站长，本轮未改）**：
+
+- `missingPaths`（缺文件但身份唯一、标签挂到别的副本上）**算出来之后没有任何消费方** ——
+  既不打印也不进报告，只在单测里被断言。于是「R2 里丢了文件、但被同身份副本覆盖」静默通过，
+  而且 `slots-lost` 也抓不到它（张数没变）。要补的话：把 `missingPaths` 计数写进运行日志与身份报告。
+- 曲绘缺失**没有计数水位**（只有音频有），且 `meta.backgroundFile` 为空时即使 .osz 里有图也不会用，
+  而重写后的 `.osu` 仍会写一个新文件名 → 游戏里是空白背景。
+
+测试：`pack-publish.test.mjs` 50 → **68 例**（`evaluateSlotLoss` 的边界与放行、`previousManifestSlotTotal`
+的脏数据、`evaluateManifestLiveness` 的三态与 fail-closed 默认值、`audio-missing` 的优先级、
+CLI 新开关，以及 6 条**结构断言** —— 因为「const 重赋值被 catch 吞掉」「判定被喂 0 而永不触发」
+这类失败模式纯函数单测看不见）。写这份记录时那一批实际是 **18** 个新用例块（早先记的「65 例」
+是漏数，且其中一条「判定被跳过时必须在日志里说出来」**被粘了两遍** —— 复查时已删掉重复的那份，
+数字按删除后计）。**变异 17 处全部被抓到**；其中两条一开始是**空操作变异**
+（只改字符串、行为没变），我换成真变异后才验证出断言有效，并补了「GC 拿到判据却不按它拒绝」
+这条真盲区的断言。**复查时我自己另抽验了两处**：把 `generate-pack.js` 的基准写死成
+`previousSlots: 0`（= 判定永不触发）→ 红；把 GC 里那句拒绝执行的 `process.exit(1)` 摘掉
+（= 拿到判据却不用）→ 红。两处都是真断言，不是走过场。
+
+运行验证：`npm test` → **745/745**；前后端 + workers 三处 `tsc` 0 错；
+lint **25 errors / 7 warnings（与基线一致）**；`npm run build` 成功。实测：发布模式缺
+`R2_PACKS_PUBLIC_URL` → `exit 1`（补假凭据单独验过，确认它不是被凭据检查先拦下才「看着通过」）；
+离线预览不受影响；GC 对「已跟踪但已改动」与「未跟踪」两种清单都拒绝，加
+`--allow-uncommitted` 才放行并打 `⚠ 强行放行:…`。顺带实测了一件文档没写的事：
+`pack-publish.js` 里 `previousManifestSlotTotal` 累加的 `mapCount` 与生成端 `uniqueSlotTotal`
+**确实是同一个量**（都是「非 NSV 簇数」，见 `mapIdentity.js:284` 的 `slotTotalOf`）——
+跨版本比较可加和，这个前提成立。**仍未在带真实 R2 凭据的环境跑过全量。**
+
 ### R11 [P1] 元数据指纹会错误合并不同谱面；备选路径不验证内容
 
 证据：scripts/generate-pack.js:290、:484、:537、:575、:310。已复现同 Artist/Title/Creator/Version、不同 HitObjects 指纹相同；元数据全空还会得到相同的分隔符串。

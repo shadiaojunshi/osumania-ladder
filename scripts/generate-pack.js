@@ -18,6 +18,9 @@ const {
   parsePackCli,
   describeCliError,
   CLI_USAGE,
+  evaluateSlotLoss,
+  previousManifestSlotTotal,
+  hasComparableBaseline,
 } = require('./pack-publish')
 const {
   contentSignature,
@@ -68,6 +71,23 @@ function assertR2Env() {
     console.error('Missing R2 credentials. Set R2_ACCOUNT_ID, R2_ACCESS_KEY, R2_SECRET_KEY.')
     process.exit(1)
   }
+}
+
+/**
+ * 发布模式（全量 / 单类型 --publish）必须有公开下载地址 —— 没有它就上传不了，
+ * 而 generate-pack 仍然会把 manifest 换成本次的新统计（新日期、新张数），
+ * 下载页于是显示"已更新"、点下去还是旧包（另一条线的审查 P1）。
+ * 所以宁可在入口直接失败，也不要"跳过上传但照写统计"。
+ * 离线预览（--type=、不带 --publish）不需要它。
+ */
+function assertPublishEnv(mode) {
+  if (mode !== 'full' && mode !== 'single-publish') return
+  if (R2_PACKS_PUBLIC_URL) return
+  console.error('缺少 R2_PACKS_PUBLIC_URL —— 发布模式下它是必需的。')
+  console.error('  没有它会上传不了包，而 manifest 仍会被换成本次的新统计，')
+  console.error('  于是下载页显示"已更新"、下到的还是旧包。')
+  console.error('  只想看生成结果请用：--type=<realType>（离线预览，不碰 R2 与 manifest）。')
+  process.exit(1)
 }
 
 const s3 = new S3Client({
@@ -397,7 +417,10 @@ async function prefetchOne(map, packName) {
         console.warn(`  ${map.r2Key}: no audio file found in archive`)
       }
     }
-    const bgEntry = findZipEntry(zip, meta.backgroundFile)
+    // ⚠️ 必须是 let：下面 NSV 回退会**重新赋值**。写成 const 会在赋值时抛
+    // "Assignment to constant variable"，而那个异常被下面的 catch 吞掉 —— 表现只是
+    // 一句 warn，包照样发出去，只是这张图没有曲绘（另一条线的静态审查 P2）。
+    let bgEntry = findZipEntry(zip, meta.backgroundFile)
     if (meta.backgroundFile && !bgEntry) {
       console.warn(`  ${map.r2Key}: backgroundFile "${meta.backgroundFile}" not found in archive`)
     }
@@ -728,7 +751,26 @@ function splitIntoPacks(entries, packSizes, mode = SPLIT_MODE) {
   return packs
 }
 
-async function generatePack(targetType, { publish = true } = {}) {
+/**
+ * 提示"手上这份清单不能当收缩基准"。判据函数在 pack-publish.js（与清单形状放一起，可单测），
+ * 这里只负责把话说清楚 —— 不说的话，站长会以为"本次不做判定"是漏了。
+ */
+function warnIfBaselineNotComparable(manifest) {
+  const packs = (manifest && manifest.packs) || []
+  if (packs.length === 0 || hasComparableBaseline(manifest)) return
+  console.warn(
+    '注意:现有清单来自更早的覆盖式键时代（条目都没有 objectKey），本次不做「比上一版少图」判定；' +
+      '从这次发布起才有基准。',
+  )
+}
+
+async function generatePack(targetType, {
+  publish = true,
+  // 上一版清单：用来区分「本来未上传」与「上一版有、现在丢失」—— 后者要拒绝发布。
+  previousManifest = null,
+  // 显式放行内容缺口（少图 / 无音频）。只从 CLI 的 --allow-content-gaps 传进来。
+  allowContentGaps = false,
+} = {}) {
   targetType = normalizeRealType(targetType)
   if (PACK_EXCLUDED_REAL_TYPES.has(targetType)) {
     console.log(`[${targetType}] Skipped: pending classification types are not downloadable packs`)
@@ -893,6 +935,44 @@ async function generatePack(targetType, { publish = true } = {}) {
     }
   }
 
+  // ---- 「本来未上传」与「上一版有、现在丢了」必须分开（R10 第 1 条）----
+  //
+  // 数据引用了某个槽位、R2 里却没有对应文件、身份又挂靠不到别的副本时，这个槽位
+  // **不会进任何包**（只出现在身份报告里）。过去这种情况只打一行 warn 就继续 ——
+  // 于是「上一版 100 张、这次 99 张」会安静地发布出去：包变小了，清单里却是新日期。
+  //
+  // 基准取**上一版清单里这个类型的张数**：
+  //   · 本次不比上一版少 → 视为「本来就没上传」（允许，已有明确统计与报告）
+  //   · 本次比上一版少   → 视为「上一版有、现在丢失」→ **拒绝发布**
+  //     （确认是数据侧正常收缩时，用 --allow-content-gaps 继续）
+  const previousSlots = previousManifestSlotTotal(previousManifest, targetType)
+  const missingMainSlots = unresolved.filter((u) => !u.isNsv)
+  // 判定是纯函数（pack-publish.js），与清单形状放在一起，这样"少几张才算问题"有单测钉着。
+  const { lost: slotLoss, blocked: slotLossBlocked } = evaluateSlotLoss({
+    previousSlots,
+    currentSlots: uniqueSlotTotal,
+    allowContentGaps,
+  })
+  if (slotLossBlocked) {
+    const sample = missingMainSlots.slice(0, 5).map((u) => u.r2Key)
+    console.error(`[${targetType}] 比上一版少 ${slotLoss} 张（上一版 ${previousSlots} 张 → 本次 ${uniqueSlotTotal} 张）—— 拒绝发布（本轮不更新任何包）。`)
+    console.error(
+      `  数据里有 ${missingMainSlots.length} 个主图槽位在 R2 找不到文件、身份也无法挂靠：` +
+        (sample.length ? sample.join(', ') + (missingMainSlots.length > sample.length ? ' …' : '') : '（无可列出的槽位）'),
+    )
+    console.error('  若这些文件**上一版有、现在丢了**：先补回 R2 再重跑，别急着发布。')
+    console.error('  若确认是数据侧正常收缩（删比赛、改槽位）：加 --allow-content-gaps 继续。')
+    return {
+      realType: targetType,
+      status: STATUS_FAILED,
+      reason: 'slots-lost',
+      detail: `上一版 ${previousSlots} 张 → 本次 ${uniqueSlotTotal} 张（少 ${slotLoss}）`,
+      plannedSlots: mapsToProcess.length,
+      packs: [],
+      identity: { conflicts, unresolved },
+    }
+  }
+
   const outputDir = path.join(__dirname, '..', 'output')
   if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir, { recursive: true })
 
@@ -983,6 +1063,9 @@ async function generatePack(targetType, { publish = true } = {}) {
       processedEntries: processed,
       plannedSlots,
       processedSlots,
+      // 有谱面最终没有音频（原包没有、借主图也失败）→ 这张图在游戏里没声音。
+      // 过去只打一行 warn 就照发（另一条线的审查 P2），现在算内容缺口：该包不发布。
+      audioMissing: audioMissingKeys.length,
     })
     console.log(`[${targetType} ${partNum}] Pack generated: ${(stats.size / 1024 / 1024).toFixed(1)}MB, ${processed} entries (${processedSlots} slots)`)
 
@@ -1017,6 +1100,12 @@ async function generatePack(targetType, { publish = true } = {}) {
           (contentVerdict.detail ? `(${contentVerdict.detail})` : '') +
           (skippedMaps.length
             ? ` — 未进来:${skippedMaps.slice(0, 5).map((s) => s.key).join(', ')}${skippedMaps.length > 5 ? ' …' : ''}`
+            : '') +
+          // 失败时把无音频的键尽量列全（默认 20 个）—— 站长要照着补传，只给 5 个就得反复试。
+          (contentVerdict.reason === 'audio-missing' && audioMissingKeys.length
+            ? ` — 无音频(${audioMissingKeys.length} 张):` +
+              audioMissingKeys.slice(0, 20).join(', ') +
+              (audioMissingKeys.length > 20 ? ` …还有 ${audioMissingKeys.length - 20} 张` : '')
             : ''),
       )
       try {
@@ -1040,6 +1129,16 @@ async function generatePack(targetType, { publish = true } = {}) {
       const buf = fs.readFileSync(outputPath)
       const hash = crypto.createHash('sha256').update(buf).digest('hex').slice(0, 8)
       console.log(`  [${targetType} ${partNum}] 预览（未上传）对象键会是 ${objectKeyFor(targetType, partNum, hash)}`)
+    }
+    // 发布模式却没有公开地址 → main 的 assertPublishEnv 已经拦过；这里再兜一道，
+    // 因为「不上传却把 manifest 换成新统计」正是 R10 禁止的半发布状态。
+    // 置成 failed 就够：下面的上传分支条件本来就不成立，而 summarizeRun 会因此
+    // 判定整次不可发布（不写 manifest、不删孤儿）。
+    if (publish && !R2_PACKS_PUBLIC_URL) {
+      packEntry.status = STATUS_FAILED
+      packEntry.reason = 'r2-upload'
+      packEntry.detail = 'R2_PACKS_PUBLIC_URL 未配置 —— 无法上传，也就不能只更新统计'
+      console.error(`  [${targetType} ${partNum}] ${packEntry.detail}`)
     }
     if (R2_PACKS_PUBLIC_URL && publish) {
       const buf = fs.readFileSync(outputPath)
@@ -1316,6 +1415,7 @@ async function main() {
   }
 
   assertR2Env()
+  assertPublishEnv(cli.mode)
   for (const w of cli.warnings) {
     if (w.code === 'excluded-type') {
       console.warn(`注意:${w.type} 属于 Pending 族,不产出下载包。`)
@@ -1371,8 +1471,18 @@ async function main() {
     //   · 发布（--publish）—— 上传 R2 + **只替换该类型**的清单条目（其他类型与人工链接原样保留）
     // 过去是"更新对象却不更新清单",于是线上会出现旧计数/旧 part 列表。
     const publish = cli.mode === 'single-publish'
+    // 同全量：旧清单要在生成前读（收缩判定用它当基准）。
+    let singleOldManifest = { packs: [], lastGenerated: '' }
+    if (fs.existsSync(MANIFEST_PATH)) {
+      singleOldManifest = JSON.parse(fs.readFileSync(MANIFEST_PATH, 'utf-8'))
+    }
+    warnIfBaselineNotComparable(singleOldManifest)
     console.log(`单类型模式:${cli.targetType} —— ${publish ? '发布（上传 R2 + 更新该类型清单条目）' : '仅离线预览（不碰 R2 与 manifest）'}`)
-    const result = await generatePack(cli.targetType, { publish })
+    const result = await generatePack(cli.targetType, {
+      publish,
+      previousManifest: singleOldManifest,
+      allowContentGaps: cli.allowContentGaps,
+    })
 
     console.log('\nDone:', JSON.stringify(result.packs.map((p) => ({
       key: p.key, mapCount: p.mapCount, sizeMB: p.sizeMB, status: p.status, outputPath: p.outputPath,
@@ -1390,8 +1500,8 @@ async function main() {
     } else if (!publish) {
       console.log('\n离线预览完成:包在 output/ 下,未上传 R2、未改动 manifest。要发布请加 --publish。')
     } else {
-      let oldManifest = { packs: [], lastGenerated: '' }
-      if (fs.existsSync(MANIFEST_PATH)) oldManifest = JSON.parse(fs.readFileSync(MANIFEST_PATH, 'utf-8'))
+      // 复用生成前读到的那一份（收缩判定与清单组装必须看同一版）。
+      const oldManifest = singleOldManifest
       const { packs, pendingMirrors } = buildManifestPacks({
         typeResults: [result], oldManifest, preserveOtherTypes: true,
       })
@@ -1424,17 +1534,23 @@ async function main() {
     }
   }
 
-  console.log(`Generating packs for ${allTypes.size} types: ${[...allTypes].join(', ')}`)
-  const typeResults = []
-  for (const type of allTypes) {
-    typeResults.push(await generatePack(type))
-  }
-
+  // 旧清单必须在**生成之前**读：类型级的"比上一版少了多少张"判定要拿它当基准
+  //（R10：区分"本来未上传"与"上一版有、现在丢失"）。生成之后再读就晚了。
   const manifestPath = MANIFEST_PATH
   const prevManifestPath = PREV_MANIFEST_PATH
   let oldManifest = { packs: [], lastGenerated: '' }
   if (fs.existsSync(manifestPath)) {
     oldManifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'))
+  }
+  warnIfBaselineNotComparable(oldManifest)
+
+  console.log(`Generating packs for ${allTypes.size} types: ${[...allTypes].join(', ')}`)
+  const typeResults = []
+  for (const type of allTypes) {
+    typeResults.push(await generatePack(type, {
+      previousManifest: oldManifest,
+      allowContentGaps: cli.allowContentGaps,
+    }))
   }
 
   const summary = summarizeRun(typeResults)

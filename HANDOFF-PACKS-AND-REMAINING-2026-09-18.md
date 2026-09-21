@@ -111,11 +111,15 @@
 3. **「两个缺」必须分开**：JSON 里没这个类型的槽位 = `skipped`（保留旧包与旧条目，**不算失败**）；有槽位但 R2 里没有可读文件 = `no-available-files`（**失败**）。混为一谈就会把线上整类包当孤儿清掉。
 4. **对象键是内容寻址的**：`{realType}_{part}.{sha256 前 8}.osz`。不要退回固定键 —— 那会让「传到一半失败」变成半新半旧。R2 与 Drive **用同一个名字**。
 5. **Drive 的例外**：清单条目**没有 `objectKey`** 的历史数据仍按名字覆盖上传。改成新建会在 Drive 里产生同名副本，而线上旧清单的链接还指着老 id。
-6. **孤儿清理必须独立**：真删只在 `node scripts/gc-pack-objects.mjs --clean-orphans`，它读**已提交**的清单 + 保留期（默认 24h）。`generate-pack.js` 里传 `--clean-orphans` 会**直接报错**。
+6. **孤儿清理必须独立**：真删只在 `node scripts/gc-pack-objects.mjs --clean-orphans`，它读**已提交**的清单 + 保留期（默认 24h）。`generate-pack.js` 里传 `--clean-orphans` 会**直接报错**。自 2026-09-21 起它还会**先用 git 核实**清单确实"已提交且已推送"（`evaluateManifestLiveness`，判断不了时只警告；`--allow-uncommitted` 可强行放行）——
+   只有"确认后再删"的提示是不够的：提交或部署失败时，本地清单引用新键、线上还在用旧键。
 7. **CLI 的硬错误**：`--type=` 空值/空白、裸 `--offline`、重复指定不同类型、未知选项 —— 全部 `exit 2`。加新参数时记得同步 `parsePackCli` 与 `describeCliError`，并补测试。
 8. **`buildManifestPacks` 的两种模式**：全量发布用默认（未涉及的类型会消失，这是设计意图）；**单类型发布必须开 `preserveOtherTypes`**，否则重建出来的清单只剩一个类型，等于把别的包全变成孤儿。
 9. **`pendingMirrors` 只增不减**：由 `upload-to-gdrive.js` 在同步成功后清账。别写成每轮从空 Set 重建。
-10. **测试桩必须返回真实 `Response`**：`classifyGithubFailure` 会 `res.clone()` 读响应体，假对象会抛 `TypeError` 被 handler 兜成 500 —— 会让本该失败的用例「通过」。
+10. **发布模式必须有公开地址**（2026-09-21 加）：`assertPublishEnv` 在入口拦 `full` / `single-publish`，缺 `R2_PACKS_PUBLIC_URL` 直接 `exit 1`；`generatePack` 里还有一道兜底把该包置 `failed`。**不要**把它降级成 warn —— 「不上传却换统计」会做出"清单说更新了、下载还是旧包"。
+11. **类型比上一版少图 → 整次不发布**（`slots-lost`，2026-09-21 加）：「本来未上传」是常态、允许；「上一版有、现在丢了」会拦。基准是旧清单该类型 `mapCount` 之和，**且只认带 `objectKey` 的条目**（= 这条链产出过的发布）—— 旧的覆盖式键清单不能比：实测它停在 8-13，CJ 记着 222 张而数据里 CJ 只剩 179 张（FCJ 重新分类带走的），拿它当基准会误拦一次正常发布。所以**旧清单必须在生成之前读**（全量与单类型两处都要，别挪回生成后面）。确认是数据侧正常收缩时用 `--allow-content-gaps`。
+12. **有谱面无音频 = 内容缺口**（`audio-missing`，2026-09-21 加）：`audioMissing` 进 `evaluatePack`。一个包里有任何一张图最终没有音频（原包没有任何音频且借主图也失败），该包不发布、整次取消 —— 与"少了一张"同一档；NSV 借不到主图音频也走这条。
+13. **测试桩必须返回真实 `Response`**：`classifyGithubFailure` 会 `res.clone()` 读响应体，假对象会抛 `TypeError` 被 handler 兜成 500 —— 会让本该失败的用例「通过」。
 
 ## 5. 怎么验收（照抄即可）
 

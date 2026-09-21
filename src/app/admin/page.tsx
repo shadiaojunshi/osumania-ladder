@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useMemo, useRef, type SetStateAction } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { tournaments as allTournaments } from '@/generated/tournaments'
 import { browserTournamentsWithDrafts } from '@/lib/mapBrowserRows'
 import Link from 'next/link'
@@ -15,6 +15,12 @@ import { RealTypeConflictChecker } from '@/components/admin/RealTypeConflictChec
 import { RealTypeMapBrowser } from '@/components/admin/RealTypeMapBrowser'
 import { AdminsManager } from '@/components/admin/AdminsManager'
 import { TrashManager } from '@/components/admin/TrashManager'
+import { SuggestionReview } from '@/components/admin/SuggestionReview'
+import { useAdminDrafts } from '@/components/admin/useAdminDrafts'
+import { applySuggestPlan } from '@/lib/suggestions/apply'
+import { planIdentity, planSatisfied, type ReviewPreview, type ReviewState, type SuggestionRef } from '@/lib/suggestions/review'
+import { stageRequest, reviewRequest } from '@/lib/suggestions/adminClient'
+import { stableJson } from '@/lib/suggestions/fingerprint'
 import { AuditLog } from '@/components/admin/AuditLog'
 import type { Tournament } from '@/lib/types'
 import { useT, type MessageKey } from '@/lib/i18n'
@@ -50,7 +56,7 @@ interface TournamentListItem {
   sha: string
 }
 
-type Tab = 'create' | 'manage' | 'references' | 'refLadder' | 'difficultyFit' | 'upload' | 'packs' | 'realTypeMaps' | 'rtConflict' | 'admins' | 'trash' | 'audit'
+type Tab = 'feedback' | 'create' | 'manage' | 'references' | 'refLadder' | 'difficultyFit' | 'upload' | 'packs' | 'realTypeMaps' | 'rtConflict' | 'admins' | 'trash' | 'audit'
 
 // 每份暂存草稿都要带「编辑基准」:读取该文件时的 blob sha。
 //   baseSha: string → 编辑既有文件,提交时用它做乐观锁
@@ -61,6 +67,7 @@ interface StagedEntry {
   baseSha: string | null
   baseline: Tournament | null
   legacy?: boolean
+  suggestions?: { ref: SuggestionRef; review: ReviewState }[]
 }
 
 interface EditConflict {
@@ -72,6 +79,12 @@ interface EditConflict {
 
 const STAGED_TOURNAMENTS_KEY_V1 = 'osumania-ladder:staged-tournaments:v1'
 const STAGED_TOURNAMENTS_KEY = 'osumania-ladder:staged-tournaments:v2'
+
+interface PendingFeedbackBatch {
+  items: { id: string; tournament: Tournament; baseSha: string | null }[]
+  suggestionBatch: { id: string; refs: SuggestionRef[] }
+  snapshot: Record<string, StagedEntry>
+}
 
 export default function AdminPage() {
   const t = useT()
@@ -93,21 +106,15 @@ export default function AdminPage() {
   const [submitStatus, setSubmitStatus] = useState<{ type: 'success' | 'error' | 'local'; message: string; conflict?: boolean; conflicts?: FieldConflict[] } | null>(null)
   const [conflicts, setConflicts] = useState<EditConflict[]>([])
   const [saveSignal, setSaveSignal] = useState(0)
-  const [stagedChanges, setStagedChangesState] = useState<Record<string, StagedEntry>>({})
-  // Async fetches can finish together. Resolve patches against the latest draft
-  // synchronously; do not rely on React running a queued updater before status.
-  const stagedChangesRef = useRef(stagedChanges)
-  const setStagedChanges = useCallback((action: SetStateAction<Record<string, StagedEntry>>) => {
-    const next = typeof action === 'function' ? action(stagedChangesRef.current) : action
-    stagedChangesRef.current = next
-    setStagedChangesState(next)
-  }, [])
+  const drafts = useAdminDrafts<StagedEntry>(user?.uid)
+  const { entries: stagedChanges, entriesRef: stagedChangesRef, setEntries: setStagedChanges, ready: stagedChangesLoaded, readAux, writeAux } = drafts
+  const [draftId, setDraftId] = useState('')
+  const [pendingFeedback, setPendingFeedback] = useState(false)
   const [browserSaved, setBrowserSaved] = useState<Record<string, Tournament>>({})
   const browserTournaments = useMemo(
     () => browserTournamentsWithDrafts(allTournaments, browserSaved, stagedChanges),
     [browserSaved, stagedChanges],
   )
-  const [stagedChangesLoaded, setStagedChangesLoaded] = useState(false)
   const [tab, setTab] = useState<Tab>('create')
   const [loadingList, setLoadingList] = useState(false)
   // 编辑/新建表单是否有未保存修改(由 TournamentForm 冒泡上来),用于切栏拦截
@@ -116,59 +123,141 @@ export default function AdminPage() {
   const [uploadDirty, setUploadDirty] = useState(false)
 
   useEffect(() => {
-    const sanitize = (value: unknown, id: string): StagedEntry | null => {
-      if (!value || typeof value !== 'object') return null
-      const entry = value as Partial<StagedEntry>
-      const data = entry.data as Tournament | undefined
-      if (!data || data.id !== id) return null
-      return {
-        data,
-        baseSha: typeof entry.baseSha === 'string' ? entry.baseSha : null,
-        baseline: (entry.baseline as Tournament | undefined) ?? null,
-        legacy: !!entry.legacy,
-      }
-    }
-
-    try {
-      const rawV2 = window.localStorage.getItem(STAGED_TOURNAMENTS_KEY)
-      if (rawV2) {
-        const parsed = JSON.parse(rawV2) as Record<string, unknown>
-        const valid: Record<string, StagedEntry> = {}
-        for (const [id, value] of Object.entries(parsed)) {
-          const entry = sanitize(value, id)
-          if (entry) valid[id] = entry
-        }
-        setStagedChanges(valid)
-      } else {
-        // v1 旧格式只有整份 JSON、没有编辑基准。迁移为 legacy 草稿:
-        // 可以查看/导出,但不能直接提交(否则会静默覆盖别人已保存的改动)。
-        const rawV1 = window.localStorage.getItem(STAGED_TOURNAMENTS_KEY_V1)
-        if (rawV1) {
-          const parsed = JSON.parse(rawV1) as Record<string, Tournament>
-          const migrated: Record<string, StagedEntry> = {}
-          for (const [id, value] of Object.entries(parsed)) {
-            if (!value || value.id !== id) continue
-            migrated[id] = { data: value, baseSha: null, baseline: null, legacy: true }
-          }
-          setStagedChanges(migrated)
-          window.localStorage.removeItem(STAGED_TOURNAMENTS_KEY_V1)
-        }
-      }
-    } catch {
-      window.localStorage.removeItem(STAGED_TOURNAMENTS_KEY)
-    } finally {
-      setStagedChangesLoaded(true)
-    }
-  }, [setStagedChanges])
-
-  useEffect(() => {
     if (!stagedChangesLoaded) return
-    if (Object.keys(stagedChanges).length === 0) {
-      window.localStorage.removeItem(STAGED_TOURNAMENTS_KEY)
-    } else {
-      window.localStorage.setItem(STAGED_TOURNAMENTS_KEY, JSON.stringify(stagedChanges))
+    const id = readAux<string>('draftId') ?? crypto.randomUUID()
+    writeAux('draftId', id)
+    queueMicrotask(() => { setDraftId(id); setPendingFeedback(!!readAux('pendingBatch')) })
+  }, [stagedChangesLoaded, readAux, writeAux])
+
+  const claimLegacyDrafts = () => {
+    if (!window.confirm('确认这些旧草稿属于你？导入会保留旧存储备份；同名新草稿不会被覆盖。')) return
+    try {
+      const rawV2 = localStorage.getItem(STAGED_TOURNAMENTS_KEY)
+      const old = JSON.parse(rawV2 ?? localStorage.getItem(STAGED_TOURNAMENTS_KEY_V1) ?? '{}')
+      // 在 ref 上算好再交出去：数出**真正导入了几份**（全是重名时一份也没进，
+      // 报"已导入"就是假消息 —— 旧横幅又不会消失，用户会以为没生效而反复点击）。
+      // 不用函数式 updater 计数：那要靠 updater 同步执行才读得到，是个脆弱假设。
+      const next = { ...stagedChangesRef.current }
+      let imported = 0
+      for (const [id, value] of Object.entries(old)) {
+        if (next[id] || !value || typeof value !== 'object') continue
+        const entry = rawV2 ? value as StagedEntry : { data: value as Tournament, baseSha: null, baseline: null, legacy: true }
+        if (entry.data?.id === id) { next[id] = entry; imported++ }
+      }
+      setStagedChanges(next)
+      // 认领过就不再提示（标记只在**写入成功之后**才记，导入失败时横幅留着）。
+      drafts.claimLegacy()
+      setSubmitStatus({ type: 'local', message: imported > 0 ? `旧草稿已导入 ${imported} 份，原备份保留。` : '没有可导入的旧草稿（同名草稿已存在或旧数据为空）。' })
+    } catch (e) { setSubmitStatus({ type: 'error', message: (e as Error).message }) }
+  }
+
+  const handleAcceptSuggestion = async (preview: ReviewPreview) => {
+    if (drafts.readAux('pendingBatch')) throw new Error('请先恢复上次保存结果')
+    const id = preview.tournament.id
+    const ref: SuggestionRef = { id: preview.item.id, date: preview.item.receivedAt.slice(0, 10), revision: preview.item.review.revision, draftId }
+    const prepare = () => {
+      const existing = stagedChangesRef.current[id]
+      if (existing?.legacy) throw new Error('请先处理该比赛的旧版无基准草稿')
+      if (existing?.suggestions?.some(s => s.ref.id === ref.id)) throw new Error('这条建议已经在暂存中')
+      if (existing && existing.baseSha !== preview.sha) throw new Error('现有草稿与权威版本不同，请先保存或合并这份草稿，再采纳建议')
+      const base = existing ?? { data: preview.tournament, baseSha: preview.sha, baseline: preview.tournament }
+      const data = structuredClone(base.data)
+      if (planIdentity(data, preview.plan) !== planIdentity(preview.tournament, preview.plan)) throw new Error('草稿已替换谱面，请先处理冲突')
+      const result = applySuggestPlan({ draft: data, plan: preview.plan, suggestionId: ref.id, revision: ref.revision })
+      if (!result.ok) throw new Error(result.detail)
+      // Different proposals for the same field must be resolved explicitly.
+      for (const source of base.suggestions ?? []) if (!planSatisfied(data, source.review)) throw new Error('与已经采纳的建议冲突，请先取消原建议关联')
+      return { ...base, data }
     }
-  }, [stagedChanges, stagedChangesLoaded])
+    prepare()
+    const result = await stageRequest(ref, preview.planHash)
+    const claimed = { ...ref, revision: result.review.revision }
+    try {
+      const entry = prepare()
+      setStagedChanges(current => ({ ...current, [id]: { ...entry, suggestions: [...(entry.suggestions ?? []), { ref: claimed, review: result.review }] } }))
+      setSubmitStatus({ type: 'local', message: '建议已进入暂存，保存全部后才发布。' })
+    } catch (error) {
+      try { await reviewRequest('release', claimed) } catch { /* lease expires; UI may reclaim after refresh */ }
+      throw error
+    }
+  }
+
+  const handleReleaseSuggestion = async (ref: SuggestionRef) => {
+    if (drafts.readAux('pendingBatch')) throw new Error('请先恢复上次保存结果')
+    await reviewRequest('release', ref)
+    setStagedChanges(current => Object.fromEntries(Object.entries(current).map(([id, entry]) => [id, { ...entry, suggestions: entry.suggestions?.filter(s => s.ref.id !== ref.id) }])))
+  }
+
+  const syncFeedback = async () => {
+    setBatchSubmitting(true)
+    try {
+      const pending = drafts.readAux<string[]>('finalizations') ?? []
+      const left: string[] = []
+      for (const batchId of pending) {
+        try {
+          const res = await fetch('/api/suggestions/finalize', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ batchId }) })
+          const body = await res.json()
+          if (!res.ok || body.pending?.length) left.push(batchId)
+        } catch { left.push(batchId) }
+      }
+      drafts.writeAux('finalizations', left)
+      setSubmitStatus({ type: left.length ? 'error' : 'success', message: left.length ? `数据已保存，${left.length} 个批次的审核状态仍待同步，可稍后再试。` : '已保存的审核状态全部同步完成。' })
+    } catch (e) { setSubmitStatus({ type: 'error', message: (e as Error).message }) }
+    finally { setBatchSubmitting(false) }
+  }
+
+  const handleFeedbackSave = async () => {
+    setBatchSubmitting(true)
+    setSubmitStatus(null)
+    try {
+      let pending = drafts.readAux<PendingFeedbackBatch>('pendingBatch')
+      if (!pending) {
+        const snapshot = structuredClone(stagedChangesRef.current)
+        const entries = Object.entries(snapshot)
+        if (!entries.length) return
+        if (entries.some(([, e]) => e.legacy)) throw new Error('旧版无基准草稿不能提交')
+        const refs = entries.flatMap(([, e]) => (e.suggestions ?? []).map(s => s.ref))
+        if (!refs.length || refs.length > 50) throw new Error('每批支持 1 至 50 条反馈建议')
+        for (const [, entry] of entries) for (const source of entry.suggestions ?? []) {
+          if (!planSatisfied(entry.data, source.review)) throw new Error(`建议 ${source.ref.id} 的值已被手改覆盖，请取消关联后再保存`)
+        }
+        pending = { snapshot, items: entries.map(([id, e]) => ({ id, tournament: e.data, baseSha: e.baseSha })), suggestionBatch: { id: crypto.randomUUID(), refs } }
+        drafts.writeAux('pendingBatch', pending)
+        setPendingFeedback(true)
+      }
+      const res = await fetch('/api/tournaments/batch', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items: pending.items, suggestionBatch: pending.suggestionBatch, summary: `Review feedback (${pending.suggestionBatch.refs.length} suggestions)` }) })
+      const body = await res.json()
+      if (!res.ok) {
+        if (body.code === 'EDIT_CONFLICT' || body.code === 'SUGGESTION_BATCH_CANCELLED') {
+          // Server guarantees no candidate was published and releases all claims.
+          drafts.writeAux('pendingBatch', null); setPendingFeedback(false)
+        }
+        throw new Error(body.error ?? `HTTP ${res.status}`)
+      }
+      if (!body.success || typeof body.commit !== 'string' || !Array.isArray(body.files)) throw new Error('保存结果不完整，保留原批次并重试')
+      const waiting = drafts.readAux<string[]>('finalizations') ?? []
+      // Record recovery before removing any draft. Reload after a crash replays this batch.
+      drafts.writeAux('finalizations', [...new Set([...waiting, pending.suggestionBatch.id])])
+      const snapshot = pending.snapshot
+      const savedIds = new Set(pending.suggestionBatch.refs.map(r => r.id))
+      setStagedChanges(current => {
+        const next = { ...current }
+        for (const item of pending!.items) {
+          const entry = next[item.id]
+          if (!entry) continue
+          if (stableJson(entry) === stableJson(snapshot[item.id])) delete next[item.id]
+          else next[item.id] = { ...entry, baseSha: body.files.find((f: { id: string }) => f.id === item.id)?.sha ?? entry.baseSha, baseline: item.tournament, suggestions: entry.suggestions?.filter(s => !savedIds.has(s.ref.id)) }
+        }
+        return next
+      })
+      setBrowserSaved(current => ({ ...current, ...Object.fromEntries(pending!.items.map(item => [item.id, item.tournament])) }))
+      drafts.writeAux('pendingBatch', null); setPendingFeedback(false)
+      if (!body.pendingSuggestions?.length) drafts.writeAux('finalizations', waiting.filter(id => id !== pending!.suggestionBatch.id))
+      setSubmitStatus({ type: 'success', message: `已一次保存 ${pending.items.length} 场比赛。提交 ${body.commit.slice(0, 8)}${body.pendingSuggestions?.length ? '；数据已保存，审核状态待同步。' : '；审核状态已同步。'}` })
+      fetchList()
+    } catch (e) { setSubmitStatus({ type: 'error', message: (e as Error).message }) }
+    finally { setBatchSubmitting(false) }
+  }
 
   // 角色判断
   const has = useCallback(
@@ -185,8 +274,7 @@ export default function AdminPage() {
     // 要测后端必须用 `wrangler pages dev` 而不是 `next dev`。
     // process.env.NODE_ENV 在打包时被替换为字面量,prod build 会 tree-shake 这段。
     if (process.env.NODE_ENV === 'development') {
-      setUser({ uid: 'dev', username: 'dev-owner', role: 'owner' })
-      setAuthLoading(false)
+      queueMicrotask(() => { setUser({ uid: 'dev', username: 'dev-owner', role: 'owner' }); setAuthLoading(false) })
       return
     }
     fetch('/api/auth/me')
@@ -230,6 +318,10 @@ export default function AdminPage() {
 
   const handleSubmit = async () => {
     if (!tournament) return
+    if (drafts.readAux('pendingBatch') || stagedChangesRef.current[tournament.id]?.suggestions?.length) {
+      setSubmitStatus({ type: 'error', message: '此比赛关联反馈建议，请使用反馈审核中的保存全部或恢复上次保存。' })
+      return
+    }
     if (editingLegacy) {
       setSubmitStatus({ type: 'error', message: t('admin.base.legacyBlocked') })
       return
@@ -376,6 +468,7 @@ export default function AdminPage() {
       return
     }
     const entry: StagedEntry = {
+      suggestions: stagedChangesRef.current[tournament.id]?.suggestions,
       data: tournament,
       baseSha: editingId ? editingSha : null,
       baseline: editingId ? editingBaseline : null,
@@ -429,6 +522,10 @@ export default function AdminPage() {
   }
 
   const handleSubmitStaged = async () => {
+    if (drafts.readAux('pendingBatch') || Object.values(stagedChangesRef.current).some(e => e.suggestions?.length)) {
+      await handleFeedbackSave()
+      return
+    }
     const entries = Object.entries(stagedChanges)
     if (entries.length === 0) return
 
@@ -507,8 +604,12 @@ export default function AdminPage() {
     }
   }
 
-  const handleClearStaged = () => {
+  const handleClearStaged = async () => {
+    if (drafts.readAux('pendingBatch')) { setSubmitStatus({ type: 'error', message: '请先恢复上次保存结果，再清空暂存。' }); return }
     if (!window.confirm(t('admin.stage.clearConfirm'))) return
+    try {
+      for (const entry of Object.values(stagedChangesRef.current)) for (const source of entry.suggestions ?? []) await handleReleaseSuggestion(source.ref)
+    } catch (e) { setSubmitStatus({ type: 'error', message: (e as Error).message }); return }
     setStagedChanges({})
     setSubmitStatus(null)
   }
@@ -626,6 +727,7 @@ export default function AdminPage() {
 
   // 载入最新版本 = 以权威内容为准重新开始(会先确认)。刻意不做"旧 JSON 配新 SHA 直接提交"。
   const handleReloadLatest = async (id: string) => {
+    if (stagedChangesRef.current[id]?.suggestions?.length) { setSubmitStatus({ type: 'error', message: '请先在反馈审核取消这份草稿的建议关联，再载入最新版本。' }); return }
     if (!window.confirm(t('admin.stage.reloadLatestConfirm', { id }))) return
     const loaded = await fetchAuthoritative(id)
     if (!loaded) {
@@ -828,9 +930,20 @@ export default function AdminPage() {
           {tabBtn('rtConflict', t('admin.tab.rtConflict'))}
           {isAdmin && tabBtn('trash', t('admin.tab.trash'))}
           {isAdmin && tabBtn('admins', t('admin.tab.admins'))}
+          {isAdmin && tabBtn('feedback', t('admin.tab.feedback'))}
           {isAdmin && tabBtn('audit', t('admin.tab.audit'))}
         </div>
 
+        {drafts.error && <p role="alert" className="mb-4 text-red-600">{drafts.error}</p>}
+        {drafts.legacy && <div className="mb-4 rounded border border-amber-300 p-3 text-sm">发现旧版未归属账号的草稿。保留在本机，不会自动合并到当前账号。<button className="ml-3 underline" onClick={claimLegacyDrafts}>确认归属并导入旧草稿</button></div>}
+        {pendingFeedback && tab !== 'feedback' && <p className="mb-4 text-amber-700">上次反馈保存结果待确认，请进入“反馈审核”恢复。</p>}
+        {tab === 'feedback' && isAdmin && stagedChangesLoaded && <SuggestionReview
+          draftId={draftId} onStage={handleAcceptSuggestion} onSave={handleSubmitStaged} onClear={handleClearStaged}
+          count={Object.keys(stagedChanges).length} busy={batchSubmitting} status={submitStatus?.message}
+          linked={Object.values(stagedChanges).flatMap(e => (e.suggestions ?? []).map(s => s.ref))}
+          onRelease={handleReleaseSuggestion} pending={pendingFeedback} onRecover={handleFeedbackSave} onSync={syncFeedback}
+        />}
+        <fieldset disabled={!stagedChangesLoaded || batchSubmitting || pendingFeedback}>
         {tab === 'create' && (
           <>
             {editingId && (
@@ -947,6 +1060,7 @@ export default function AdminPage() {
         {tab === 'trash' && isAdmin && <TrashManager />}
         {tab === 'admins' && isAdmin && <AdminsManager />}
         {tab === 'audit' && isAdmin && <AuditLog />}
+        </fieldset>
       </main>
     </div>
   )

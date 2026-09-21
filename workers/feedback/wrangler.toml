@@ -21,13 +21,13 @@ bucket_name = "osumania-ladder-suggestions"
 # 而"每天最多 300 条"是给用户的承诺，不能在没有原子计数的前提下开放入口。
 #
 # 启用前先核对当前套餐对 Durable Objects 的支持与定价（第 2 节）。
-# [[durable_objects.bindings]]
-# name = "QUOTA"
-# class_name = "QuotaCoordinator"
+[[durable_objects.bindings]]
+name = "QUOTA"
+class_name = "QuotaCoordinator"
 #
-# [[migrations]]
-# tag = "v1"
-# new_sqlite_classes = ["QuotaCoordinator"]
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["QuotaCoordinator"]
 
 [vars]
 # ⚠️ 总开关，**默认关闭**。方案第 9 节第 1 步的前置条件（额度逐项实测、

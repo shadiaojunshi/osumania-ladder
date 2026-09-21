@@ -6,13 +6,13 @@
 //   2. Reject cross-site WRITE requests (R21).
 //   3. Let the public auth endpoints through (login/callback/logout/me handle
 //      their own session logic).
-//   4. Require a valid session for everything else; 401 otherwise.
+//   4. Require a contributor session for remaining management endpoints.
 //   5. Attach the resolved user to context.data.user so downstream handlers
 //      can do role checks without re-parsing the cookie.
 //
 // Role enforcement (contributor vs admin vs owner) happens IN each endpoint,
 // because the required role differs per operation (e.g. delete needs admin,
-// create needs contributor). The middleware only guarantees "is logged in".
+// create needs contributor). The middleware guarantees at least contributor.
 //
 // ── R21 的跨站写防护 ──
 // 写方法（POST / PUT / PATCH / DELETE）必须来自本站，否则 403 `BAD_ORIGIN`：
@@ -30,7 +30,7 @@
 //     本站请求照旧"没登录 401 / 没权限 403"（未改动原有语义）。
 
 import { jsonResponse, noContent } from './_lib/cors'
-import { getSessionUser, type AuthEnv, type SessionUser } from './_lib/auth'
+import { getSessionUser, hasRole, type AuthEnv, type SessionUser } from './_lib/auth'
 
 export interface OriginEnv extends AuthEnv {
   /** 逗号分隔的额外允许写入的 origin（本站之外的域名才需要配）。 */
@@ -43,6 +43,8 @@ const PUBLIC_PATHS = new Set([
   '/api/auth/callback',
   '/api/auth/logout',
   '/api/auth/me',
+  // Dedicated published-catalog reader: quota and cache checks live in the handler.
+  '/api/charts',
 ])
 
 const WRITE_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE'])
@@ -103,6 +105,9 @@ export const onRequest: PagesFunction<OriginEnv> = async (context) => {
   if (!user) {
     return jsonResponse({ error: '未登录或会话已过期', code: 'NO_SESSION' }, 401)
   }
+  // Public pages use static data or /api/charts. A normal osu! account does not
+  // need live GitHub reads, R2 listings or the full archive download proxy.
+  if (!hasRole(user, 'contributor')) return jsonResponse({ error: '需要 contributor 及以上权限', code: 'FORBIDDEN' }, 403)
 
   // Make the user available to downstream handlers.
   ;(context.data as { user?: SessionUser }).user = user

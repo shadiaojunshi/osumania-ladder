@@ -9,8 +9,6 @@
 // 第 3 节的原话："R2 普通前缀不是 IAM 安全边界；同一绑定通常能访问整个桶，不能因为叫
 // `suggest/` 就认为碰不到其他数据。" 所以隔离靠"不给绑定"，不靠路径前缀。
 
-import type { RateDecision } from './policy.ts'
-
 export interface Env {
   /** 独立的建议桶。**关掉公开读取**（第 3 节）。 */
   SUGGESTIONS: R2Bucket
@@ -35,20 +33,7 @@ export interface Env {
    * 免费边缘限流与内存计数只能尽力而为、必须明说会有超调。既然"每天最多 300 条"
    * 是给用户的承诺，就不能在没有原子计数的前提下开放入口。
    */
-  QUOTA?: QuotaCoordinator
-}
-
-export type QuotaKind = 'verification' | 'acceptance'
-
-/**
- * 原子额度协调器。实现方（Durable Object）必须在**同一个串行事务**里
- * 调 `policy.ts` 的决策函数：通过才 +1，否则原样返回拒绝决定。
- *
- * 把决策留在 `policy.ts` 而不是各写一份，是为了"给定计数该不该放行"这条规则只有
- * 一个实现 —— DO 里那份只是调用它。
- */
-export interface QuotaCoordinator {
-  reserve(ipHash: string, kind: QuotaKind): Promise<RateDecision>
+  QUOTA?: DurableObjectNamespace
 }
 
 export function writesEnabled(env: Env): boolean {

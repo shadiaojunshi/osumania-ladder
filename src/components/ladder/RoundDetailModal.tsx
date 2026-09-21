@@ -5,6 +5,7 @@
 // 纯静态数据渲染,零请求 —— 不会碰 Cloudflare 免费额度。
 
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
+import Link from 'next/link'
 import type { AnimationEvent as ReactAnimationEvent } from 'react'
 import {
   FloatingFocusManager,
@@ -19,6 +20,7 @@ import { useT } from '@/lib/i18n'
 import { ManiaChartButton } from '@/components/chart/ManiaChartButton'
 import { normalizeRealType, isPendingRealType } from '@/lib/realType'
 import { REAL_TYPES } from '@/lib/realTypeCatalog'
+import { isUsableBeatmapId } from '@/lib/beatmapIds'
 
 const realTypeNames = new Map(Object.values(REAL_TYPES).flat().map(({ id, name }) => [id, name]))
 
@@ -116,6 +118,8 @@ export function RoundDetailModal({
       >
         <FloatingFocusManager context={context} initialFocus={closeBtnRef} returnFocus={false} modal>
           <div
+            // Floating UI exposes a callback setter here, not a read of ref.current.
+            // eslint-disable-next-line react-hooks/refs
             ref={refs.setFloating}
             {...getFloatingProps()}
             role="dialog"
@@ -183,8 +187,11 @@ function MapRow({
       {patternLabel}
     </span>
   )
-  // 只有有效正整数 BID 才渲染 osu! 链接;没有 BID 的是普通文本,不伪装成可点击。
-  const hasBID = typeof map.beatmapId === 'number' && Number.isInteger(map.beatmapId) && map.beatmapId > 0
+  // 只有有效 BID 才渲染 osu! 链接;没有 BID 的是普通文本,不伪装成可点击。
+  // 判据用**唯一实现** `isUsableBeatmapId`:占位值 0/1/负数一律不可用(见 beatmapIds.ts)。
+  // 这里原来写的是 `> 0`,会把占位值 1 当成真 BID —— 渲染出 osu.ppy.sh/b/1,
+  // 并把 beatmapId=1 带进反馈链接,正是 beatmapIds.ts 记的那类事故。
+  const hasBID = isUsableBeatmapId(map.beatmapId)
   const slot = (
     <span className="w-14 shrink-0 font-mono text-xs text-gray-500 dark:text-neutral-400">{map.slot}</span>
   )
@@ -194,6 +201,8 @@ function MapRow({
     </span>
   )
   // 按钮不能放进 <a> 里(交互元素嵌套),所以作为链接的兄弟节点摆在行尾。
+  const feedbackUrl = '/feedback?' + new URLSearchParams({ tournamentId, roundId, slot: map.slot, ...(hasBID ? { beatmapId: String(map.beatmapId) } : {}) })
+  const feedbackButton = <Link href={feedbackUrl} prefetch={false} className="shrink-0 rounded px-1.5 py-0.5 text-[11px] text-purple-700 dark:text-purple-300">{t('header.nav.feedback')}</Link>
   const chartButton = (
     <ManiaChartButton
       target={{ beatmapId: map.beatmapId, tournamentId, roundId, slot: map.slot }}
@@ -211,6 +220,7 @@ function MapRow({
         </div>
         {diff}
         {chartButton}
+        {feedbackButton}
       </div>
     )
   }
@@ -233,6 +243,7 @@ function MapRow({
         {diff}
       </a>
       {chartButton}
+        {feedbackButton}
     </div>
   )
 }

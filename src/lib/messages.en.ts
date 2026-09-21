@@ -2,6 +2,8 @@ import type { messagesZh } from './messages.zh'
 
 // 类型保证 en 和 zh 的 key 完全一致;漏一个 TS 就报错。
 export const messagesEn: Record<keyof typeof messagesZh, string> = {
+  'header.nav.feedback': 'Feedback',
+  'admin.tab.feedback': 'Feedback review',
   'roundDetail.realType': 'Pattern type',
   'roundDetail.pendingType': 'Pending',
   // ---------- Header ----------
@@ -26,6 +28,9 @@ export const messagesEn: Record<keyof typeof messagesZh, string> = {
   'search.more': 'Show more ({count} remaining)',
   'header.nav.download': 'Pack Downloads',
   'header.nav.admin': 'Admin',
+  'player.loggedOut': 'Not signed in',
+  'player.login': 'Not signed in · Sign in with osu!',
+  'player.account': '{name} · View account',
 
   // ---------- ControlBar ----------
   'control.zoom': 'Zoom',
@@ -783,4 +788,12 @@ export const messagesEn: Record<keyof typeof messagesZh, string> = {
   'chart.error.rateLimited': 'Too many reads. Wait a moment and retry.',
   'chart.error.invalid': 'This file cannot be visualised (not a mania beatmap, or the .osu is corrupt).',
   'chart.error.unavailable': 'Failed to read the beatmap. Please retry.',
+
+  // ---------- Welcome modal ----------
+  // The welcome **body** is not translated: it is the original announcement text
+  // (src/lib/welcomeText.ts) and must be shown verbatim. Only the buttons live here.
+  'welcome.dontShowAgain': "Don't show again",
+  'welcome.start': 'Start browsing',
+  'welcome.close': 'Close',
+  'welcome.reopen': 'About',
 }

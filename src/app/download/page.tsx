@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { PlayerAvatar } from '@/components/PlayerAvatar'
 import packsManifest from '@data/packs-manifest.json'
 import { useT, type MessageKey } from '@/lib/i18n'
 import { isMirrorPending, readPendingMirrors } from '@/lib/packMirrors'
@@ -59,7 +60,11 @@ export default function DownloadPage() {
             <h1 className="text-xl font-bold text-gray-900 dark:text-neutral-100">{t('download.title')}</h1>
             <p className="text-sm text-gray-500 dark:text-neutral-400 mt-0.5">{t('download.subtitle')}</p>
           </div>
-          <Link href="/" className="text-sm text-purple-600 hover:text-purple-800 dark:text-purple-300 dark:hover:text-purple-200">{t('download.back')}</Link>
+          <div className="flex items-center gap-4">
+            <Link href="/" className="text-sm text-purple-600 hover:text-purple-800 dark:text-purple-300 dark:hover:text-purple-200">{t('download.back')}</Link>
+            <Link href="/feedback" prefetch={false} className="text-sm text-purple-600 dark:text-purple-300">{t('header.nav.feedback')}</Link>
+            <PlayerAvatar />
+          </div>
         </div>
       </header>
 

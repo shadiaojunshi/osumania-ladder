@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { PlayerAvatar } from '@/components/PlayerAvatar'
 import { useViewStore } from '@/stores/viewStore'
 import { tournaments } from '@/generated/tournaments'
 import { useT, type MessageKey } from '@/lib/i18n'
@@ -34,7 +35,7 @@ export function Header() {
   const t = useT()
 
   return (
-    <header className="ladder-header border-b border-gray-200 dark:border-neutral-800 flex items-center px-2 sm:px-4 gap-2 sm:gap-4 shrink-0 flex-wrap xl:flex-nowrap min-h-14 py-1 xl:py-0 xl:h-14 bg-white dark:bg-neutral-950">
+    <header className="ladder-header relative border-b border-gray-200 dark:border-neutral-800 flex items-center pl-2 sm:pl-4 pr-14 2xl:pr-4 gap-2 sm:gap-4 shrink-0 flex-wrap 2xl:flex-nowrap min-h-14 py-1 2xl:py-0 2xl:h-14 bg-white dark:bg-neutral-950">
       <h1 className="text-base sm:text-lg font-bold whitespace-nowrap">
         <span className="text-purple-700 dark:text-purple-300">{t('header.brand')}</span><span className="hidden sm:inline">{t('header.titleFull')}</span><span className="sm:hidden">{t('header.titleCompact')}</span>
       </h1>
@@ -86,7 +87,8 @@ export function Header() {
         ))}
       </div>
 
-      <div className="xl:ml-auto flex items-center gap-1 sm:gap-2 flex-wrap">
+      <div className="2xl:ml-auto flex items-center gap-1 sm:gap-2 flex-wrap">
+        <Link href="/feedback" prefetch={false} className="rounded border border-purple-200 px-2 py-1 text-sm text-purple-700 dark:border-purple-800 dark:text-purple-300">{t('header.nav.feedback')}</Link>
         <input
           type="search"
           placeholder={t('header.search.placeholder')}
@@ -107,6 +109,9 @@ export function Header() {
         >
           {t('header.nav.admin')}
         </Link>
+      </div>
+      <div className="absolute right-2 top-2 sm:right-4 2xl:static 2xl:shrink-0">
+        <PlayerAvatar />
       </div>
     </header>
   )

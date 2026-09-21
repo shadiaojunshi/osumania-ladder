@@ -110,7 +110,9 @@ export function applySuggestPlan({
     return { ok: false, code: 'noop', detail: '这条建议与当前数据没有差异，没有可采纳的改动' }
   }
 
-  const round = draft.rounds.find((item) => item.id === plan.roundId)
+  const rounds = draft.rounds.filter((item) => item.id === plan.roundId)
+  if (draft.id !== plan.tournamentId || rounds.length > 1) return { ok: false, code: 'superseded', detail: '比赛或轮次身份发生变化' }
+  const round = rounds[0]
   if (!round) {
     return { ok: false, code: 'round-missing', detail: `草稿里没有轮次 ${plan.roundId}` }
   }
@@ -185,6 +187,15 @@ export function applySuggestPlan({
   // 改过任何难度就重算本轮 summary（与编辑器逐图改难度同一个口径）。
   if (touchedDifficulty) {
     round.difficulty = recalcDifficulty(round.maps)
+    // Clear only affected summary overrides: reopening the editor must not
+    // redistribute a newly reviewed per-map difficulty back to the old average.
+    const td = structuredClone(round.typeDifficulties ?? {})
+    for (const { map, write } of resolved) {
+      if (write.field === 'realType') continue
+      const axis = write.field === 'difficultyLn' || map.type === 'LN' ? 'ln' : 'rf'
+      if (td[map.type]) delete td[map.type][axis]
+    }
+    round.typeDifficulties = td
   }
 
   return { ok: true, records, roundDifficultyRecalculated: touchedDifficulty }

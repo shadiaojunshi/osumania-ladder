@@ -25,6 +25,7 @@ import type {
   SuggestReferenceValue,
   SuggestSubmission,
   SuggestTarget,
+  TextProposal,
 } from './types.ts'
 
 export const SUGGEST_LIMITS = {
@@ -40,6 +41,7 @@ export const SUGGEST_LIMITS = {
   maxDifficulty: DIFFICULTY_MAX,
   /** 新增的上限（functions 侧没有对应项，不需要镜像断言）。 */
   maxReasonLength: 500,
+  maxMessageLength: 1000,
   maxAliasLength: 60,
   maxEvidenceUrls: 2,
   maxRequestIdLength: 36,
@@ -285,7 +287,12 @@ const PROPOSAL_FIELDS: Record<string, readonly string[]> = {
 export function validateProposal(value: unknown): SuggestValidation<SuggestProposal> {
   if (!isPlainObject(value)) return fail('proposal', 'NOT_OBJECT', 'proposal 必须是对象')
   const kind = value.kind
-  if (typeof kind !== 'string' || !(kind in PROPOSAL_FIELDS)) {
+  // 用 hasOwnProperty 而不是 `in`：`in` 会走原型链，`kind: "toString"` / `"__proto__"`
+  // 之类会通过判据，随后 `PROPOSAL_FIELDS[kind]` 拿到继承来的函数/对象，
+  // 让校验层自己抛 TypeError —— 于是本该 400 的畸形请求变成 503，
+  // 客户端还会当成"可重试"提示玩家再试（而同一条请求永远不可能成功）。
+  // 与 functions/api/_lib/auth.ts 的角色判据同一写法，那边已有测试锁原型链键。
+  if (typeof kind !== 'string' || !Object.prototype.hasOwnProperty.call(PROPOSAL_FIELDS, kind)) {
     return fail('proposal.kind', 'UNKNOWN_KIND', `proposal.kind 必须是 ${SUGGEST_KINDS.join(' / ')} 之一`)
   }
   const extra = unknownFields(value, PROPOSAL_FIELDS[kind])
@@ -453,7 +460,8 @@ export function validateSubmission(raw: unknown): SuggestValidation<SuggestSubmi
   const token = boundedString(raw.turnstileToken, 'turnstileToken', SUGGEST_LIMITS.maxTurnstileTokenLength)
   if (!token.ok) return token
 
-  const proposal = validateProposal(raw.proposal)
+  const proposal = isPlainObject(raw.proposal) && raw.proposal.kind === 'text'
+    ? validateTextProposal(raw.proposal) : validateProposal(raw.proposal)
   if (!proposal.ok) return proposal
 
   return {
@@ -470,6 +478,16 @@ export function validateSubmission(raw: unknown): SuggestValidation<SuggestSubmi
       turnstileToken: token.value,
     },
   }
+}
+
+function validateTextProposal(raw: Record<string, unknown>): SuggestValidation<TextProposal> {
+  if (unknownFields(raw, ['kind', 'message', 'target']).length) return fail('proposal', 'UNKNOWN_FIELD', '文字反馈含未知字段')
+  const message = boundedString(typeof raw.message === 'string' ? raw.message.trim() : raw.message, 'message', SUGGEST_LIMITS.maxMessageLength)
+  if (!message.ok) return message
+  if (raw.target === undefined) return { ok: true, value: { kind: 'text', message: message.value } }
+  const target = validateTarget(raw.target, { requireSlot: isPlainObject(raw.target) && raw.target.slot !== undefined })
+  if (!target.ok) return target
+  return { ok: true, value: { kind: 'text', message: message.value, target: target.value } }
 }
 
 /** 落盘前丢掉 token（方案第 6 节）。 */

@@ -40,21 +40,30 @@ function fakeR2(map = new Map()) {
       const text = map.get(key)
       return { async text() { return text } }
     },
-    async put(key, body) {
+    async put(key, body, options) {
+      if (options?.onlyIf && map.has(key)) return null
       map.set(key, String(body))
+      return { etag: "created" }
     },
   }
 }
 
 function fakeCoordinator(decisions = {}) {
-  const calls = []
+  const calls = [], reservations = new Map()
   return {
     calls,
-    async reserve(ipHash, kind) {
+    idFromName: name => name,
+    get() { return { async fetch(url, init) {
+      const { ipHash, kind, requestId, payloadHash } = JSON.parse(init.body)
       calls.push({ ipHash, kind })
-      const preset = decisions[kind]
-      return preset ?? { allow: true }
-    },
+      if (decisions[kind]) return Response.json(decisions[kind])
+      if (kind === 'verification') return Response.json({ allow: true })
+      const existing = reservations.get(requestId)
+      if (existing && existing.payloadHash !== payloadHash) return Response.json({ allow: false, status: 409, code: 'DUPLICATE_CONFLICT' })
+      const reservation = existing ?? { id: requestId, receivedAt: FIXED_NOW.toISOString(), payloadHash }
+      reservations.set(requestId, reservation)
+      return Response.json({ allow: true, reservation })
+    } } },
   }
 }
 
@@ -173,14 +182,14 @@ test('预算：IP 窗口超限 → 429；窗口按分钟数换算 Retry-After', 
 })
 
 test('预算：IP 日额度超限 → 429', () => {
-  const d = policy.decideAcceptanceGate({ ...ZERO, ipDaily: 30 }, { now: FIXED_NOW })
+  const d = policy.decideAcceptanceGate({ ...ZERO, ipDaily: 10 }, { now: FIXED_NOW })
   assert.equal(d.status, 429)
   assert.equal(d.scope, 'ip-daily')
 })
 
 test('预算：都在额度内 → 放行', () => {
   assert.deepEqual(policy.decideVerificationGate({ ...ZERO, ipAttemptsThisMinute: 9 }), { allow: true })
-  assert.deepEqual(policy.decideAcceptanceGate({ ...ZERO, ipWindow: 4, ipDaily: 29 }), { allow: true })
+  assert.deepEqual(policy.decideAcceptanceGate({ ...ZERO, ipWindow: 4, ipDaily: 9 }), { allow: true })
 })
 
 // ---------------------------------------------------------------------------
@@ -465,7 +474,7 @@ test('编排：配置缺项 → 503（fail-closed，不半开着跑）', async (
 
 test('编排：方法不对 → 405；Origin 不在白名单 → 403 且**不回 CORS 头**', async () => {
   const env = makeEnv()
-  const getRes = await handleSubmit(new Request('https://x/', { method: 'GET' }), env, deps())
+  const getRes = await handleSubmit(new Request('https://x/v1/suggestions', { method: 'GET' }), env, deps())
   assert.equal(getRes.status, 405)
 
   const { res } = await run(post(body(), { Origin: 'https://evil.example' }), env)
@@ -476,7 +485,7 @@ test('编排：方法不对 → 405；Origin 不在白名单 → 403 且**不回
 test('编排：白名单内的预检 → 204 + CORS 头回显该 Origin', async () => {
   const env = makeEnv()
   const res = await handleSubmit(
-    new Request('https://x/', { method: 'OPTIONS', headers: { Origin: ORIGIN } }),
+    new Request('https://x/v1/suggestions', { method: 'OPTIONS', headers: { Origin: ORIGIN } }),
     env,
     deps(),
   )
@@ -587,7 +596,7 @@ test('编排：同 requestId 换了内容 → 409，且不覆盖已写的那条'
   assert.equal(env.__bucket.map.get(`suggest/items/2026/09/20/${REQUEST_ID}.json`), before, '原记录不能被改动')
 })
 
-test('编排：读 R2 失败 → 500，不冒险继续写', async () => {
+test('编排：读 R2 失败 → 503，不冒险继续写', async () => {
   const env = makeEnv({
     SUGGESTIONS: {
       async get() { throw new Error('R2 read down') },
@@ -595,11 +604,11 @@ test('编排：读 R2 失败 → 500，不冒险继续写', async () => {
     },
   })
   const { res, json } = await run(post(), env)
-  assert.equal(res.status, 500)
+  assert.equal(res.status, 503)
   assert.equal(json.code, 'INTERNAL')
 })
 
-test('编排：写 R2 失败 → 500（不能返回"已收到"）', async () => {
+test('编排：写 R2 失败 → 503（不能返回"已收到"）', async () => {
   const env = makeEnv({
     SUGGESTIONS: {
       async get() { return null },
@@ -607,7 +616,7 @@ test('编排：写 R2 失败 → 500（不能返回"已收到"）', async () => 
     },
   })
   const { res, json } = await run(post(), env)
-  assert.equal(res.status, 500)
+  assert.equal(res.status, 503)
   assert.equal(json.code, 'INTERNAL')
 })
 

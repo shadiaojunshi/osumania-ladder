@@ -72,6 +72,7 @@ function slotOf(map: SuggestMapLike): string {
 // ---------------------------------------------------------------------------
 
 export type LocateFailureCode =
+  | 'round-ambiguous'
   | 'round-not-found'
   | 'slot-required'
   | 'slot-not-found'
@@ -107,7 +108,9 @@ export function locateSuggestTarget(
   rounds: readonly SuggestRoundLike[],
   proposal: SuggestProposal,
 ): LocateResult {
-  const round = rounds.find((item) => item.id === proposal.target.roundId)
+  const matches = rounds.filter((item) => item.id === proposal.target.roundId)
+  if (matches.length > 1) return { ok: false, code: 'round-ambiguous', detail: '轮次 ID 重复，请先修复比赛数据' }
+  const round = matches[0]
   if (!round) {
     return { ok: false, code: 'round-not-found', detail: `轮次 ${proposal.target.roundId} 不在当前数据里` }
   }

@@ -1,6 +1,8 @@
 // 中文文案。所有 UI 字符串集中在此;新增 key 同步加到 messages.en.ts(类型会强制要求一致)。
 // 规则: {var} 占位符;命名按 area.subarea.key,扁平化方便查找。
 export const messagesZh = {
+  'header.nav.feedback': '反馈',
+  'admin.tab.feedback': '反馈审核',
   'roundDetail.realType': '实际键型',
   'roundDetail.pendingType': '待分类',
   // ---------- Header ----------
@@ -25,6 +27,9 @@ export const messagesZh = {
   'search.more': '显示更多（还有 {count} 项）',
   'header.nav.download': '下载合包',
   'header.nav.admin': '录入数据',
+  'player.loggedOut': '没登录',
+  'player.login': '没登录 · 点击登录 osu!',
+  'player.account': '{name} · 查看账号',
 
   // ---------- ControlBar ----------
   'control.zoom': '缩放',
@@ -782,4 +787,12 @@ export const messagesZh = {
   'chart.error.rateLimited': '读取太频繁了，稍等一下再试。',
   'chart.error.invalid': '这个文件没法可视化（不是 mania 谱面，或 .osu 已损坏）。',
   'chart.error.unavailable': '读取失败，请重试。',
+
+  // ---------- 欢迎框 (WelcomeModal) ----------
+  // 注意：欢迎框**正文**不在张表里（那是站长给的公告原文，见 src/lib/welcomeText.ts），
+  // 这里只有界面按钮的文案。
+  'welcome.dontShowAgain': '不再显示',
+  'welcome.start': '开始浏览',
+  'welcome.close': '关闭',
+  'welcome.reopen': '关于本站',
 } as const

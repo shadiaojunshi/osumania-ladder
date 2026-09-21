@@ -209,7 +209,7 @@ d:/osumania ladder/              ← 注意路径带空格，bash 里用引号
   C 全名（等于放弃内容寻址）/ D 全名+哈希前缀（即上面的孤儿误判 + 斜杠问题）/
   F 给 R2 设 `Content-Disposition` 让浏览器存成好看的名字（对象键不动，代价最小，但**网盘那条路管不了**，
   且 CF 公开域名 `pub-xxx.r2.dev` 是否透传该头**未实测**）。**站长："算了，懒得改了" —— 全部搁置。**
-  另注：玩家在 osu! 里按 `.osu` 的 `Title`（= `4K Tournament {名字} Pack {n}`）找图，下载页显示的也是这个好看名字；`.osz` 文件名很少被玩家看到 —— 这也是上一条不建议改名的原因之一。osu! 内部 `Title = "4K Tournament {名字} Pack {n}"`、`Artist = "Various Artists"`、`Creator = "various mappers,compiled by the osu!mania Ladder Team"`、`BeatmapID=0`、`BeatmapSetID=-1`、`Source/Tags` 清空。
+  另注：玩家在 osu! 里按 `.osu` 的 `Title`（= `4K Tournament {名字} Pack {n}`）找图，下载页显示的也是这个好看名字；`.osz` 文件名很少被玩家看到 —— 这也是上一条不建议改名的原因之一。osu! 内部 `Title = "4K Tournament {名字} Pack {n}"`、`Artist = "Various Artists"`、`Creator = "Various Mappers, Compiled by the osu!mania Ladder Team"`、`BeatmapID=0`、`BeatmapSetID=-1`、`Source/Tags` 清空。（Creator 原来是全小写 `various mappers,compiled by…`，2026-09-21 改成标题大小写 —— 这个串只被写进 .osu，没有任何脚本读它来识别包；但改它同样会改包内 .osu 字节，属于下面 §5.4 那类"重新合包=成绩断"，和待跑的全量合包是同一次。）
 - **下载并发 = `PACK_DOWNLOAD_CONCURRENCY`**（默认 8、上限 32、非法值回退默认；`resolveDownloadConcurrency()`）：
   `scripts/generate-pack.js` 里**不得再出现写死的并发数**（有源码守门测试）。两个 workflow 都设成 `12`。
   这是"不改架构就能提速"的唯一旋钮 —— 瓶颈在每条记录的网络往返，不在脚本本身。

@@ -10,9 +10,11 @@
     "start": "node scripts/serve-static.mjs",
     "dev:api": "wrangler pages dev out",
     "lint": "eslint .",
+    "pretypecheck": "node scripts/generate-tournaments.js",
     "typecheck": "tsc --noEmit",
+    "pretypecheck:functions": "node scripts/generate-tournaments.js",
     "typecheck:functions": "tsc -p functions/tsconfig.json --noEmit",
-    "typecheck:workers": "tsc -p workers/feedback/tsconfig.json --noEmit",
+    "typecheck:workers": "tsc -p workers/feedback/tsconfig.json --noEmit && tsc -p workers/charts/tsconfig.json --noEmit",
     "verify": "npm run typecheck && npm run typecheck:functions && npm run typecheck:workers && npm run lint && npm test"
   },
   "keywords": [],

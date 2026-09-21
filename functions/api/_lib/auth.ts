@@ -265,13 +265,20 @@ export async function resolveRole(env: AuthEnv, uid: string): Promise<Role> {
 
 // ---------- main entry: who is calling ----------
 
+export async function getSessionIdentity(
+  request: Request,
+  env: Pick<AuthEnv, 'SESSION_SECRET'>,
+): Promise<TokenPayload | null> {
+  const token = readCookie(request, COOKIE_NAME)
+  if (!token) return null
+  return parseSessionToken(token, env.SESSION_SECRET)
+}
+
 export async function getSessionUser(
   request: Request,
   env: AuthEnv,
 ): Promise<SessionUser | null> {
-  const token = readCookie(request, COOKIE_NAME)
-  if (!token) return null
-  const payload = await parseSessionToken(token, env.SESSION_SECRET)
+  const payload = await getSessionIdentity(request, env)
   if (!payload) return null
   const role = await resolveRole(env, payload.uid)
   return { uid: payload.uid, username: payload.username, role }

@@ -4,13 +4,18 @@ on:
   workflow_dispatch:
     inputs:
       realType:
-        description: '指定 realType（留空=全部类型）。只处理该类型；默认仅离线预览，不碰 R2 与清单'
+        description: '**留空 = 全量发布（想正常合包就别填这个）**。填某个 realType 就只处理它，且默认只是离线预览、不碰 R2 与清单'
         required: false
         default: ''
       publish:
-        description: '指定 realType 时是否发布（true=上传 R2 并更新该类型的清单条目；false=仅离线预览）'
+        description: '**仅在填了 realType 时才有意义**：true = 上传 R2 并只替换该类型的清单条目；false = 仅离线预览。realType 留空时请保持 false'
         required: false
         default: 'false'
+      syncDrive:
+        description: '单类型发布时是否也同步 Google Drive（默认否）。开了以后只有真正变过的包会上传，代价很小'
+        type: boolean
+        required: false
+        default: false
       allowContentGaps:
         description: '确认有意移除或替换旧谱面，允许数量/内容收缩（不放行缺音频或损坏文件）'
         type: boolean
@@ -35,6 +40,19 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+
+      - name: Validate inputs
+        # publish=true 却没有 realType 是**矛盾输入**：全量模式本来就是发布，--publish 只对单类型有意义。
+        # CLI 也会拒（exit 2），但那要等 npm ci 跑完之后才看到；这里提前 2 秒给出可操作的说法。
+        env:
+          REAL_TYPE: ${{ github.event.inputs.realType }}
+          PUBLISH: ${{ github.event.inputs.publish }}
+        run: |
+          set -euo pipefail
+          if [ "$PUBLISH" = "true" ] && [ -z "$REAL_TYPE" ]; then
+            echo "::error title=输入组合不对::publish=true 必须同时填写 realType。若你只是想做全量发布，把这两个输入都留空/保持默认再跑一次（全量模式默认就是发布）。"
+            exit 2
+          fi
 
       - run: npm ci
 
@@ -66,9 +84,11 @@ jobs:
           node scripts/generate-pack.js "${args[@]}"
 
       - name: Upload to Google Drive
-        # 只在全量发布时跑。单类型发布(--type + --publish)不更新 Drive，
-        # 该类型的镜像会在下一次整套 Drive 重传时补上（清单里的 pendingMirrors 标了这件事）。
-        if: github.event.inputs.realType == ''
+        # 全量发布一定跑。单类型发布(--type + --publish)默认**不**跑 —— 该类型的镜像留给下一次
+        # 整套 Drive 重传（清单里的 pendingMirrors 标着这件事）。
+        # 2026-09-21 起可以用 syncDrive=true 显式要求单类型也同步：Drive 文件名是内容寻址的，
+        # 所以只有内容真的变过的包会上传，代价远小于手动跑整套（那会把清单里 50+ 个包全过一遍）。
+        if: github.event.inputs.realType == '' || github.event.inputs.syncDrive == 'true'
         run: node scripts/upload-to-gdrive.js
         env:
           GDRIVE_CLIENT_ID: ${{ secrets.GDRIVE_CLIENT_ID }}

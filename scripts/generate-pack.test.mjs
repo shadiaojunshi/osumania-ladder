@@ -21,6 +21,7 @@ process.env.R2_SECRET_KEY = 'test-secret'
 
 const require = createRequire(import.meta.url)
 const { rewriteOsu, packCountFor, packSizeFor, compareTournamentsForSources, writeIdentityReport, countIdentityIssues, resolveDownloadConcurrency, DEFAULT_DOWNLOAD_CONCURRENCY, MAX_DOWNLOAD_CONCURRENCY, splitIntoPacks, resolveSplitMode, DEFAULT_SPLIT_MODE } = require('./generate-pack.js')
+const generatePackSource = fs.readFileSync(new URL('./generate-pack.js', import.meta.url), 'utf8')
 
 const sampleOsu = (od, hp = 5) => [
   'osu file format v14',
@@ -107,6 +108,12 @@ test('其余改写照旧:标题/艺术家/作者/版本/ID/来源/标签/音频/
   assert.match(out, /\nTags:\n/)
   assert.match(out, /\nAudioFilename: audio\.mp3\n/)
   assert.match(out, /^0,0,"bg\.jpg"/m)
+})
+
+test('发布包作者使用标题大小写', () => {
+  assert.match(generatePackSource, /newCreator:\s*'Various Mappers, Compiled by the osu!mania Ladder Team'/)
+  assert.match(generatePackSource, /Creator:Various Mappers, Compiled by the osu!mania Ladder Team/)
+  assert.doesNotMatch(generatePackSource, /various mappers,compiled by the osu!mania Ladder Team/)
 })
 
 test('谱面音符与时间轴不被触碰(只改目标行)', () => {

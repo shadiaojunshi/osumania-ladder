@@ -1024,3 +1024,31 @@ test('撤销后重新上线：不继承已经不在清单里的 gdriveFileId', (
   assert.equal(back.gdriveFileId, undefined, '不该继承 —— 下线的条目已经不在上一版清单里了')
   // 于是 upload-to-gdrive 会走"按文件名找同名文件"分支（同名即同内容），而不是拿旧 id 去 update。
 })
+
+
+test('② 守门：generate-packs 的输入组合校验要早于 npm ci，CLI 侧同样要拒', () => {
+  // 起因（2026-09-21）：站长在表单里填了 publish=true 却没填 realType —— 那是**矛盾输入**
+  // （全量模式本来就是发布），CLI 按设计 exit 2 拒掉。脚本侧没问题，但错误要等 npm ci 之后
+  // 才出现；这里钉住"工作流提前拦住 + 说明不能写成容易误填的措辞"。
+  const src = readFileSync(new URL('../.github/workflows/generate-packs.yml', import.meta.url), 'utf-8')
+  const at = (needle) => {
+    const i = src.indexOf(needle)
+    assert.ok(i >= 0, `workflow 里找不到 ${needle}`)
+    return i
+  }
+  assert.ok(src.includes('name: Validate inputs'), '要有输入组合校验步骤')
+  assert.ok(at('name: Validate inputs') < at('- run: npm ci'), '校验必须早于 npm ci，否则白等一分钟')
+  assert.ok(src.includes('publish=true 必须同时填写 realType'), '提示要说清怎么改')
+  assert.ok(src.includes('留空 = 全量发布'), 'realType 的说明要点明"留空即全量发布"，否则还会有人误填')
+  // 单类型发布要不要同步 Drive 得能选：默认不跑（留给下一次整套重传），开关打开才跑。
+  assert.ok(
+    src.includes("|| github.event.inputs.syncDrive == 'true'"),
+    'Drive 步骤要保留单类型同步的开关（否则单类型发布永远碰不到 Drive）',
+  )
+  assert.ok(src.includes('syncDrive:'), '工作流要声明 syncDrive 输入')
+
+  // 脚本自己也拦得住（工作流只是提前给提示，不是唯一防线）
+  const r = cli(['--publish'])
+  assert.equal(r.ok, false)
+  assert.equal(r.errors[0].error, 'requires-type')
+})

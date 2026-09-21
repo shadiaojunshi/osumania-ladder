@@ -1,0 +1,16 @@
+name = "osumania-ladder-chart-quota"
+main = "src/index.ts"
+compatibility_date = "2026-09-01"
+workers_dev = false
+preview_urls = false
+
+[[durable_objects.bindings]]
+name = "CHART_QUOTA"
+class_name = "ChartQuota"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["ChartQuota"]
+
+# Pages must bind CHART_QUOTA to this script's ChartQuota class.
+# No R2, KV, GitHub, session or osu! secrets belong on this quota-only Worker.

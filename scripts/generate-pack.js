@@ -502,7 +502,7 @@ async function prefetchOne(map, packName) {
     const rewritten = rewriteOsu(osuContent, {
       newTitle: packName,
       newArtist: 'Various Artists',
-      newCreator: 'various mappers,compiled by the osu!mania Ladder Team',
+      newCreator: 'Various Mappers, Compiled by the osu!mania Ladder Team',
       newVersion,
       newAudioFilename: newAudioName,
       newBgFilename: newBgName,
@@ -551,7 +551,7 @@ Title:DELETE THIS DIFFICULTY
 TitleUnicode:DELETE THIS DIFFICULTY
 Artist:placeholder
 ArtistUnicode:placeholder
-Creator:various mappers,compiled by the osu!mania Ladder Team
+Creator:Various Mappers, Compiled by the osu!mania Ladder Team
 Version:delete this
 BeatmapID:0
 BeatmapSetID:-1

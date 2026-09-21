@@ -3,7 +3,7 @@ import { isValidTournamentId } from '../_lib/tournamentId.ts'
 import { hasRole, type SessionUser } from '../_lib/auth.ts'
 import { mapObjectKey, validateRoundId, validateSlot } from '../_lib/mapKeys.ts'
 
-interface Env {
+export interface RawChartEnv {
   R2_BUCKET?: R2Bucket
   OSU_PROXY_URL?: string
   OSU_PROXY_SECRET?: string
@@ -28,11 +28,20 @@ function textResponse(text: string, status = 200, extraHeaders: Record<string, s
   })
 }
 
-export const onRequestOptions: PagesFunction<Env> = async () => {
+export const onRequestOptions: PagesFunction<RawChartEnv> = async () => {
   return new Response(null, { status: 204, headers: corsHeaders() })
 }
 
-export const onRequestGet: PagesFunction<Env> = async ({ request, env, data }) => {
+export const onRequestGet: PagesFunction<RawChartEnv> = async ({ request, env, data }) => {
+  const user = (data as { user?: SessionUser })?.user ?? null
+  if (!hasRole(user, 'contributor')) return textResponse('contributor access required', 403)
+  return readRawChart(request, env)
+}
+
+/** Internal reader. Public callers must validate the published target and reserve
+ * quota before invoking this function. It has no HTTP route of its own. */
+export async function readRawChart(request: Request, env: RawChartEnv, maxAttempts = 2): Promise<Response> {
+  const deadline = Date.now() + 25000
   const url = new URL(request.url)
   const id = url.searchParams.get('id')
   const fields = ['tournamentId', 'roundId', 'slot'] as const
@@ -50,8 +59,6 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env, data }) =
 
   if (hasSlot) {
     // Match the existing private R2 metadata endpoint's contributor access.
-    const user = (data as { user?: SessionUser })?.user ?? null
-    if (!hasRole(user, 'contributor')) return textResponse('contributor access required', 403)
     // Never substitute an online chart when an uploaded competition version is
     // unreadable or mismatched. Only a genuinely absent object may fall back.
     if (!env.R2_BUCKET) return textResponse('R2 storage is not configured', 503)
@@ -66,6 +73,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env, data }) =
     let object: R2Object | null = null
     try {
       for (const candidate of candidates) {
+        if (Date.now() >= deadline) throw new Error('read timeout')
         object = await env.R2_BUCKET.head(candidate)
         if (object) {
           key = candidate
@@ -80,6 +88,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env, data }) =
       if (request.headers.get('If-None-Match') === headers.ETag) return new Response(null, { status: 304, headers })
       const getRange = async (start: number, end: number) => {
         try {
+          if (Date.now() >= deadline) throw new Error('read timeout')
           const part = await env.R2_BUCKET!.get(key, {
             range: { offset: start, length: end - start },
             onlyIf: { etagMatches: object!.etag },
@@ -109,7 +118,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env, data }) =
       : `https://osu.ppy.sh/osu/${id}`
     let upstream: Response | null = null
     let lastError: unknown = null
-    for (let attempt = 0; attempt < 2; attempt += 1) {
+    for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
       try {
         upstream = await fetch(upstreamUrl, {
           headers: {
@@ -121,10 +130,10 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env, data }) =
         })
         if (upstream.ok) break
         if (upstream.status !== 429 && upstream.status < 500) break
-        if (attempt < 1) await new Promise((resolve) => setTimeout(resolve, 800))
+        if (attempt + 1 < maxAttempts) await new Promise((resolve) => setTimeout(resolve, 800))
       } catch (error) {
         lastError = error
-        if (attempt < 1) await new Promise((resolve) => setTimeout(resolve, 300))
+        if (attempt + 1 < maxAttempts) await new Promise((resolve) => setTimeout(resolve, 300))
       }
     }
 
@@ -139,10 +148,32 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env, data }) =
       )
     }
 
-    const body = await upstream.text()
+    const body = await readBoundedChart(upstream)
     if (!body.includes('[HitObjects]')) return textResponse('downloaded file is not a valid osu beatmap', 502)
     return textResponse(body, 200, { 'X-Beatmap-Source': source })
   } catch (error) {
     return textResponse(`osu beatmap download failed: ${error instanceof Error ? error.message : String(error)}`, 502)
   }
+}
+
+async function readBoundedChart(response: Response) {
+  const max = 8 * 1024 * 1024
+  if (Number(response.headers.get('Content-Length')) > max) { await response.body?.cancel(); throw new Error('chart too large') }
+  const reader = response.body?.getReader()
+  if (!reader) throw new Error('empty chart')
+  const chunks: Uint8Array[] = []
+  let size = 0
+  try {
+    for (;;) {
+      const { done, value } = await reader.read()
+      if (done) break
+      size += value.byteLength
+      if (size > max) throw new Error('chart too large')
+      chunks.push(value)
+    }
+  } finally { await reader.cancel() }
+  const bytes = new Uint8Array(size)
+  let offset = 0
+  for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.byteLength }
+  return new TextDecoder().decode(bytes)
 }

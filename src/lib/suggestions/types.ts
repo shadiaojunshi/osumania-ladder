@@ -11,6 +11,9 @@ export const SUGGESTION_SCHEMA_VERSION = 1
 
 export type SuggestKind = 'slot.realType' | 'slot.difficulty' | 'round.reference'
 
+/** Free text is reviewed manually; it can never become an automatic data patch. */
+export interface TextProposal { kind: 'text'; message: string; target?: SuggestTarget }
+
 export interface SuggestTarget {
   tournamentId: string
   roundId: string
@@ -42,7 +45,8 @@ export interface SuggestReferenceValue {
   tbLn: number
 }
 
-/** 用户选中的参考轮 + offset：采纳时要用它重新算一遍，不能无提示套用后来更新过的参考数据。 */
+/** Target round + global ladder offset. The six submitted values are snapshots;
+ * review shows those exact values and never silently substitutes a newer ladder. */
 export interface SuggestReferenceSource {
   tournamentId: string
   roundId: string
@@ -68,7 +72,7 @@ export interface SuggestSubmission {
   datasetVersion: string
   /** 相关目标字段的快照摘要，只用于冲突提示。 */
   baseFingerprint: string
-  proposal: SuggestProposal
+  proposal: SuggestProposal | TextProposal
   /** 可选，≤500 字。整轮参考强烈提示补理由，但不强迫。 */
   reason?: string
   /** 首版不做文件上传：最多 2 个 https 证据链接，仅在界面上当外链展示。 */
@@ -82,7 +86,7 @@ export interface SuggestSubmission {
 /** 落盘时不含 turnstileToken（方案第 6 节：验证后不持久保存）。 */
 export type SuggestStoredSubmission = Omit<SuggestSubmission, 'turnstileToken'>
 
-export type SuggestStatus = 'pending' | 'staged' | 'applied' | 'ignored'
+export type SuggestStatus = 'pending' | 'staged' | 'applied' | 'ignored' | 'resolved'
 
 /** unstage = 撤销暂存回 pending；applied 只能由 finalize 写入，不接受直接指定。 */
 export type SuggestReviewAction = 'stage' | 'unstage' | 'ignore'
@@ -108,6 +112,6 @@ export interface SuggestRecord {
 /** 提交被拒时对外统一的形状（不回显内部字段名以外的任何服务端信息）。 */
 export interface SuggestRejection {
   ok: false
-  code: 'BAD_REQUEST' | 'TOO_LARGE' | 'TURNSTILE_FAILED' | 'RATE_LIMITED' | 'DUPLICATE_CONFLICT' | 'INTERNAL'
+  code: 'BAD_REQUEST' | 'TOO_LARGE' | 'TURNSTILE_FAILED' | 'RATE_LIMITED' | 'DUPLICATE_CONFLICT' | 'INTERNAL' | 'DISABLED' | 'BUDGET_EXHAUSTED'
   errors: { field: string; code: string; message: string }[]
 }

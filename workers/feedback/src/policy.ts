@@ -34,7 +34,7 @@ export interface RateLimits {
 export const DEFAULT_LIMITS: RateLimits = {
   ipWindowMinutes: 10,
   ipWindowMax: 5,
-  ipDailyMax: 30,
+  ipDailyMax: 10,
   ipAttemptsPerMinute: 10,
   globalDailyAccepted: 300,
   globalDailyVerifications: 2000,

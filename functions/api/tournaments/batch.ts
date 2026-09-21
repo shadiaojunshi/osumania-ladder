@@ -17,6 +17,8 @@
 import { jsonResponse, noContent } from '../_lib/cors'
 import { hasRole, type AuthEnv, type SessionUser } from '../_lib/auth'
 import { writeAudit } from '../_lib/audit'
+import { beginSuggestionBatch, cancelSuggestionBatch, recordCandidate, recoverCandidate, finishSuggestionBatch, type BatchLease } from '../_lib/suggestionBatch'
+import { ReviewError, reviewFailure, type SuggestionsEnv } from '../_lib/suggestions'
 import {
   classifyGithubFailure,
   githubFetch,
@@ -35,7 +37,7 @@ import {
   type TreeEntry,
 } from '../_lib/batchConflicts'
 
-interface Env extends AuthEnv {
+interface Env extends AuthEnv, SuggestionsEnv {
   GITHUB_TOKEN: string
   GITHUB_REPO: string
 }
@@ -156,7 +158,13 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, data }) 
     item.tournament = validated.value
   }
 
+  let suggestionLease: BatchLease | undefined
   try {
+    const suggestionBatch = (payload as { suggestionBatch?: unknown }).suggestionBatch
+    if (suggestionBatch !== undefined) {
+      suggestionLease = await beginSuggestionBatch(env, user!, suggestionBatch, items)
+      if (suggestionLease.journal.commit) return jsonResponse(await recoverCandidate(env, user!, suggestionLease))
+    }
     // 1. 取分支当前 HEAD commit sha（整批共用同一个基准）
     const refRes = await gh(`/git/ref/heads/${BRANCH}`, env)
     // 这是整条链的"门":凭据失效/失去仓库权限时 GitHub 对所有端点都回 404,
@@ -175,6 +183,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, data }) 
     const currentTree = await resolveTreeShas(env, baseCommitSha, baseTreeSha, ids)
     const conflicts = evaluateBatchConflicts(items, currentTree)
     if (conflicts.length > 0) {
+      if (suggestionLease) await cancelSuggestionBatch(env, suggestionLease)
       return jsonResponse({
         error: '有文件在你编辑期间被他人改动，本次未保存任何文件。请载入最新版本后重新应用你的改动。',
         code: 'EDIT_CONFLICT',
@@ -211,13 +220,14 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, data }) 
     const treeJson = (await treeRes.json()) as { sha: string }
 
     // 6. 创建 commit
-    const message = summary || `Batch update tournaments (${ids.length} files)`
+    const message = (summary || `Batch update tournaments (${ids.length} files)`) + (suggestionLease ? `\n\nSuggestion-Batch: ${suggestionLease.journal.id}` : '')
     const newCommitRes = await gh('/git/commits', env, {
       method: 'POST',
       body: JSON.stringify({ message, tree: treeJson.sha, parents: [baseCommitSha] }),
     })
     if (!newCommitRes.ok) await failUpstream(newCommitRes, env)
     const newCommitJson = (await newCommitRes.json()) as { sha: string }
+    if (suggestionLease) await recordCandidate(env, suggestionLease, newCommitJson.sha, baseCommitSha, files)
 
     // 7. 更新分支 ref 指向新 commit（非强制更新）
     const updateRes = await gh(`/git/refs/heads/${BRANCH}`, env, {
@@ -227,6 +237,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, data }) 
     if (!updateRes.ok) {
       // 在比对之后、更新之前有人推进了 HEAD。返回冲突,绝不"拿旧数据换新 SHA 重试"。
       if (updateRes.status === 409 || updateRes.status === 422) {
+        if (suggestionLease) return reviewFailure(new ReviewError('发布分支已变化，请使用“恢复上次保存结果”确认并释放原批次。', 409, 'SUGGESTION_PENDING'))
         return jsonResponse({
           error: '分支在你保存期间被更新，本次未保存任何文件。请载入最新版本后重新应用你的改动。',
           code: 'EDIT_CONFLICT',
@@ -245,8 +256,17 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, data }) 
       ip: request.headers.get('CF-Connecting-IP') ?? undefined,
     })
 
-    return jsonResponse({ success: true, count: ids.length, commit: newCommitJson.sha, files })
+    let pendingSuggestions: string[] = []
+    if (suggestionLease) {
+      pendingSuggestions = suggestionLease.journal.refs.map(ref => ref.id)
+      try { pendingSuggestions = (await finishSuggestionBatch(env, user!, suggestionLease.journal.id)).pending } catch { /* retry without another data commit */ }
+    }
+    return jsonResponse({ success: true, count: ids.length, commit: newCommitJson.sha, files, pendingSuggestions })
   } catch (e) {
+    if (suggestionLease && !suggestionLease.journal.commit) {
+      try { await cancelSuggestionBatch(env, suggestionLease) } catch { /* preserve request for recovery */ }
+    }
+    if (e instanceof ReviewError) return reviewFailure(e)
     // 上游故障(R14):回 502 + 分类码,不再把 GitHub 的原始状态码裹进 500 文案里。
     if (isUpstreamError(e)) return upstreamFailureResponse(e.upstream)
     return jsonResponse({ error: (e as Error).message }, 500)

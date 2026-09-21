@@ -4,7 +4,8 @@
 // 顺带返回 env binding 健康状态用于诊断(KV/R2 是否绑定到当前环境)。
 
 import { jsonResponse } from '../_lib/cors'
-import { getSessionUser, type AuthEnv } from '../_lib/auth'
+import { getSessionIdentity, resolveRole, type AuthEnv } from '../_lib/auth'
+import { buildPlayerProfileCookie } from '../../../src/lib/playerProfile'
 
 interface DiagEnv extends AuthEnv {
   R2_BUCKET?: R2Bucket
@@ -17,9 +18,11 @@ export const onRequestGet: PagesFunction<DiagEnv> = async ({ request, env }) => 
     SESSION_SECRET: !!env.SESSION_SECRET,
     BOOTSTRAP_OWNER_UID: !!env.BOOTSTRAP_OWNER_UID,
   }
-  const user = await getSessionUser(request, env)
-  if (!user) {
-    return jsonResponse({ user: null, bindings }, 200)
+  const identity = await getSessionIdentity(request, env)
+  if (!identity) {
+    return jsonResponse({ user: null, bindings }, 200, { 'Set-Cookie': buildPlayerProfileCookie(null) })
   }
-  return jsonResponse({ user, bindings }, 200)
+  const user = { uid: identity.uid, username: identity.username, role: await resolveRole(env, identity.uid) }
+  // Also upgrades existing sessions. Keep the original expiry rather than extending it on refresh.
+  return jsonResponse({ user, bindings }, 200, { 'Set-Cookie': buildPlayerProfileCookie(identity) })
 }

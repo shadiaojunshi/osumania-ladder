@@ -15,6 +15,7 @@ register(new URL('./_ts-extension-loader.mjs', import.meta.url))
 
 const { applySuggestPlan } = await import('../src/lib/suggestions/apply.ts')
 const { planSuggestChange } = await import('../src/lib/suggestions/patch.ts')
+const { validateProposal } = await import('../src/lib/suggestions/validation.ts')
 
 // ---------------------------------------------------------------------------
 // 夹具
@@ -219,9 +220,21 @@ test('采纳：草稿里同槽位出现两张 → 不猜（slot-ambiguous）', (
   assert.equal(r.code, 'slot-ambiguous')
 })
 
-test('采纳：难度 0 不写（validation 已挡，apply 也不接受把 0 当值写进去）', () => {
+// 原来这条测试名写作"apply 也不接受把 0 当值写进去"，但正文造的是**同值**计划
+// （6.1 → 6.1，与上面那条 noop 用例重复），0 从头到尾没被构造过 —— 名字与断言不符，
+// 而且那句话本身是假的：apply 只负责把 after 写进去，自己不做 0 校验，手造一个
+// `{field:'difficulty', after:0}` 的计划会被照单接受。难度 0 到不了生产路径，是因为
+// **唯一入口 validation 拒 0**（slot difficulty 拒 0、roundReference 只写 >0），
+// 属于"防线只有一道"，不是"两道都有"。这条测试改为断言真实成立的两件事。
+test('采纳：难度 0 由 validation 挡住；同值建议走 noop（apply 自身不做 0 校验）', () => {
+  const zero = validateProposal({
+    kind: 'slot.difficulty',
+    target: { tournamentId: 't', roundId: 'r', slot: 'HB1', beatmapId: 123 },
+    value: { difficulty: 0 },
+  })
+  assert.equal(zero.ok, false, '难度 0 必须在边界被拒（这是唯一一道防线）')
+
   const draft = tournament()
-  // 绕过 validation 直接造一个 after=0 的计划：当前是 0、建议写 0 → noop
   const plan = planSuggestChange({ rounds: draft.rounds, proposal: difficultyProposal({ difficulty: 6.1 }) })
   assert.equal(plan.noop, true, '与当前值相同')
   const r = applySuggestPlan({ draft, plan, suggestionId: 's-10', revision: 1 })

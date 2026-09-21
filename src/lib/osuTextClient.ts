@@ -2,14 +2,14 @@
 
 // 取 .osu 文本 + 构建可视化模型。
 //
-// 数据来源与难度估算完全一致:`GET /api/osu/raw`
-//   - 带 tournamentId/roundId/slot → 读 R2 里的比赛上传版本(需要 contributor)
-//   - 只带 id                      → 回退 osu.ppy.sh / 代理的线上版本
-// 普通访客在公开页读不到 R2 私有版本,这里会自动降级到线上版本并如实标记来源。
+// 数据来源:`GET /api/charts`
+//   - 只接受构建时发布的比赛/轮次/槽位/BID 组合
+//   - 服务端缓存并按全站/按 IP 预算读取，普通访客无需登录
+//   - 未发布的后台谱面仍由 admin 专用的 `/api/osu/raw` 读取
 //
 // 三级缓存(网络层统一按 ETag 失效):
 //   1. 30 秒内重复打开直接命中,完全不发请求(换图后最多滞后 30 秒)
-//   2. 超时后走 ETag 再校验,没变就只花一次 HEAD
+//   2. 超时后走 ETag 再校验，未变化时返回 304，不重复传输正文
 //   3. 解析 + 分页布局结果按 text 引用缓存,重复打开零计算
 
 import { buildManiaChart, parseManiaBeatmap, type ManiaChartModel } from './maniaChart'
@@ -58,6 +58,7 @@ const MAX_RETRY_DELAY_MS = 8_000
 const textCache = new Map<string, TextEntry>()
 const modelCache = new Map<string, ManiaChartPayload>()
 const inFlight = new Map<string, Promise<ManiaChartPayload>>()
+const cooldowns = new Map<string, { until: number; error: OsuTextError }>()
 let lastRequestAt = 0
 let unavailableUntil = 0
 
@@ -67,8 +68,8 @@ function put<K, V>(map: Map<K, V>, key: K, value: V, max: number) {
   while (map.size > max) map.delete(map.keys().next().value as K)
 }
 
-function buildQueries(target: ManiaChartTarget): { primary: string; fallback: string | null } {
-  const hasId = Number.isSafeInteger(target.beatmapId) && (target.beatmapId as number) > 0
+function buildQuery(target: ManiaChartTarget): string {
+  const hasId = Number.isSafeInteger(target.beatmapId) && (target.beatmapId as number) > 1
   const hasSlot = Boolean(target.tournamentId && target.roundId && target.slot)
 
   if (hasSlot) {
@@ -78,12 +79,9 @@ function buildQueries(target: ManiaChartTarget): { primary: string; fallback: st
     params.set('slot', target.slot as string)
     // 带上 BID 让服务端在多难度 .osz 里挑对那一个。
     if (hasId) params.set('id', String(target.beatmapId))
-    return {
-      primary: params.toString(),
-      fallback: hasId ? new URLSearchParams({ id: String(target.beatmapId) }).toString() : null,
-    }
+    return params.toString()
   }
-  if (hasId) return { primary: new URLSearchParams({ id: String(target.beatmapId) }).toString(), fallback: null }
+  if (hasId) return new URLSearchParams({ id: String(target.beatmapId) }).toString()
   throw new OsuTextError(400, 'invalid beatmap location')
 }
 
@@ -91,9 +89,9 @@ function parseRetryAfter(response: Response | null, attempt: number): number {
   const header = response?.headers.get('Retry-After')?.trim()
   if (header) {
     const seconds = Number(header)
-    if (Number.isFinite(seconds)) return Math.min(MAX_RETRY_DELAY_MS, Math.max(0, seconds * 1000))
+    if (Number.isFinite(seconds)) return Math.min(86400000, Math.max(0, seconds * 1000))
     const stamp = Date.parse(header)
-    if (Number.isFinite(stamp)) return Math.min(MAX_RETRY_DELAY_MS, Math.max(0, stamp - Date.now()))
+    if (Number.isFinite(stamp)) return Math.min(86400000, Math.max(0, stamp - Date.now()))
   }
   return Math.min(MAX_RETRY_DELAY_MS, RETRY_BACKOFF_MS * 2 ** attempt)
 }
@@ -115,13 +113,16 @@ function readSource(response: Response): ChartSource {
 
 /** 拉一次原始文本;429/5xx 按 Retry-After 退避重试。返回 null 表示 304(沿用旧条目)。 */
 async function fetchText(query: string, cached: TextEntry | undefined): Promise<TextEntry | null> {
+  const cooldown = cooldowns.get(query)
+  if (cooldown && cooldown.until > Date.now()) throw cooldown.error
+  cooldowns.delete(query)
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt += 1) {
     await pace()
     const controller = new AbortController()
     const timer = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
     let response: Response
     try {
-      response = await fetch(`/api/osu/raw?${query}`, {
+      response = await fetch(`/api/charts?${query}`, {
         signal: controller.signal,
         cache: 'no-store',
         headers: cached?.etag ? { 'If-None-Match': cached.etag } : {},
@@ -139,12 +140,20 @@ async function fetchText(query: string, cached: TextEntry | undefined): Promise<
         const text = await response.text()
         return { text, etag: response.headers.get('ETag'), source: readSource(response), fetchedAt: Date.now() }
       }
+      const detail = (await response.text().catch(() => '')).trim()
+      const error = new OsuTextError(response.status, detail || undefined)
       if (response.status === 429 || response.status >= 500) {
-        unavailableUntil = Math.max(unavailableUntil, Date.now() + parseRetryAfter(response, attempt))
+        const delay = parseRetryAfter(response, attempt)
+        // Do not shorten a daily quota cooldown to eight seconds and retry it.
+        // A per-target cooldown still allows other cached charts to be opened.
+        if (response.status === 429 || delay > MAX_RETRY_DELAY_MS || ['CHART_DISABLED', 'CHART_REQUEST_BUDGET', 'CHART_SOURCE_BUDGET'].includes(detail)) {
+          put(cooldowns, query, { until: Date.now() + Math.max(1000, delay), error }, 100)
+          throw error
+        }
+        unavailableUntil = Math.max(unavailableUntil, Date.now() + delay)
         if (attempt < MAX_RETRIES) continue
       }
-      const detail = await response.text().catch(() => '')
-      throw new OsuTextError(response.status, detail.trim() || undefined)
+      throw error
     } finally {
       window.clearTimeout(timer)
     }
@@ -160,7 +169,7 @@ async function resolveText(query: string, forceRefresh: boolean): Promise<{ entr
   }
   const fresh = await fetchText(query, cached)
   if (fresh === null && cached) {
-    // 304:内容没变,但把信任窗口续上,避免每次打开都打一次 HEAD。
+    // 304: 内容没变，续上信任窗口，避免每次打开都重新校验。
     const renewed: TextEntry = { ...cached, fetchedAt: Date.now() }
     put(textCache, query, renewed, MAX_TEXT_CACHE)
     return { entry: renewed, cached: true }
@@ -186,25 +195,19 @@ function toPayload(entry: TextEntry, cached: boolean): ManiaChartPayload {
 
 /** 取谱面并构建可渲染模型。`retry` 为 true 时跳过全部缓存强制重取。 */
 export function loadManiaChart(target: ManiaChartTarget, retry = false): Promise<ManiaChartPayload> {
-  const { primary, fallback } = buildQueries(target)
-  if (retry) unavailableUntil = 0
+  const primary = buildQuery(target)
+  if (retry) {
+    unavailableUntil = 0
+    cooldowns.delete(primary)
+  }
 
   const flightKey = `${primary}|${retry ? 'force' : 'normal'}`
   const pending = inFlight.get(flightKey)
   if (pending) return pending
 
   const request = (async () => {
-    try {
-      const { entry, cached } = await resolveText(primary, retry)
-      return toPayload(entry, cached)
-    } catch (error) {
-      // 公开页访客读不到 R2:401/403 且有 BID 时降级到线上版本。
-      if (fallback && error instanceof OsuTextError && (error.status === 401 || error.status === 403)) {
-        const { entry, cached } = await resolveText(fallback, retry)
-        return toPayload(entry, cached)
-      }
-      throw error
-    }
+    const { entry, cached } = await resolveText(primary, retry)
+    return toPayload(entry, cached)
   })().finally(() => inFlight.delete(flightKey))
 
   inFlight.set(flightKey, request)

@@ -6,8 +6,8 @@
 // 100MB 的 body 进来、我们全读进内存才发现超限。正确做法是边读边数，一超限就
 // `cancel()` 掉这个流（第 2 节原话："超出即取消流"）。
 
-/** 正文硬上限。方案第 4 节第 2 条：实读最多 8 KiB。 */
-export const MAX_BODY_BYTES = 8 * 1024
+/** Includes up to 1000 Chinese characters, evidence URLs and the Turnstile token. */
+export const MAX_BODY_BYTES = 16 * 1024
 
 export type RequestShapeFailure =
   | 'method-not-allowed'

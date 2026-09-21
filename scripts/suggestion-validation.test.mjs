@@ -368,9 +368,27 @@ test('proposal.kind 不认识就拒，不退回"最像的那个"', () => {
       `${kind} 应该能过`,
     )
   }
-  for (const kind of ['', 'SLOT.REALTYPE', 'difficulty', null, 1, undefined]) {
+  // 原型链上的键必须和普通乱串一样被拒：`kind in PROPOSAL_FIELDS` 走原型链，
+  // 会让 "toString"/"__proto__" 通过判据，随后把继承来的函数当字段列表用 →
+  // 校验层自己抛 TypeError → 本该 400 的畸形请求变成 503，客户端还提示"可重试"。
+  // 这些键必须走 return fail(...)，**不能抛**（抛了本测试也会红，但要红在断言上）。
+  for (const kind of ['', 'SLOT.REALTYPE', 'difficulty', null, 1, undefined, 'toString', 'constructor', '__proto__', 'valueOf', 'hasOwnProperty']) {
     const result = validateProposal({ kind, target: {}, value: {} })
     assert.equal(result.ok, false, `${JSON.stringify(kind)} 必须被拒`)
     assert.equal(result.errors[0].field, 'proposal.kind')
+    assert.equal(result.errors[0].code, 'UNKNOWN_KIND')
   }
+})
+
+test('文字反馈可直接提交，正文有 1000 字上限且目标可选', () => {
+  const base = submission({
+    baseFingerprint: 'text-feedback',
+    proposal: { kind: 'text', message: '建议检查整轮参考难度。' },
+  })
+  const result = validateSubmission(base)
+  assert.equal(result.ok, true)
+  if (result.ok) assert.equal(result.value.proposal.kind, 'text')
+  assert.equal(validateSubmission({ ...base, proposal: { kind: 'text', message: 'x'.repeat(SUGGEST_LIMITS.maxMessageLength + 1) } }).ok, false)
+  assert.equal(validateSubmission({ ...base, proposal: { kind: 'text', message: ' ', target: { tournamentId: 'cup', roundId: 'final', slot: 'RC1' } } }).ok, false)
+  assert.equal(validateSubmission({ ...base, proposal: { kind: 'text', message: '这张谱面建议复核', target: { tournamentId: 'cup', roundId: 'final', slot: 'RC1', beatmapId: 123 } } }).ok, true)
 })

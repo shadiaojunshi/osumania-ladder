@@ -5,6 +5,7 @@ import { tournaments as allTournaments } from '@/generated/tournaments'
 import { useT } from '@/lib/i18n'
 import { REAL_TYPES } from '@/lib/realTypeCatalog'
 import { normalizeRealType } from '@/lib/realType'
+import { packAsTargetGroups } from '@/lib/packAs'
 import {
   browserOptionGroups,
   buildMapBrowserRows,
@@ -24,9 +25,11 @@ interface Props {
   canStage?: boolean
   stagedCount?: number
   onStageMapChange?: (change: { tournamentId: string; roundId: string; roundIndex: number; slot: string; beatmapId?: number; realType: string }) => void
+  /** 「临时归包」的暂存：只改合包归属，不动 `realType`。传 undefined 表示清空。 */
+  onStagePackAsChange?: (change: { tournamentId: string; roundId: string; roundIndex: number; slot: string; beatmapId?: number; packAs?: string }) => void
 }
 
-export function RealTypeMapBrowser({ canStage = false, stagedCount = 0, onStageMapChange }: Props) {
+export function RealTypeMapBrowser({ canStage = false, stagedCount = 0, onStageMapChange, onStagePackAsChange }: Props) {
   const t = useT()
   const [selectedRealType, setSelectedRealType] = useState(REAL_TYPES.RC[0].id)
   const [selectedTournamentId, setSelectedTournamentId] = useState('all')
@@ -62,6 +65,11 @@ export function RealTypeMapBrowser({ canStage = false, stagedCount = 0, onStageM
 
   const getConversionGroups = (row: MapBrowserRow) => conversionGroupsFor(row.category, row.realType)
 
+  // 「临时归包」的目标：所有**会产出下载包**的键型（排除 Pending 分类队列 ——
+  // 归过去等于哪个包都不进）。全目录一次算好，与当前行的大类无关：
+  // 临时归包本来就是跨大类临时凑数用的。
+  const packAsOptionGroups = useMemo(() => packAsTargetGroups(), [])
+
   const handleConversion = (row: MapBrowserRow, realType: string) => {
     const canonical = normalizeRealType(realType)
     setOverrides((current) => ({ ...current, [row.key]: canonical }))
@@ -72,6 +80,20 @@ export function RealTypeMapBrowser({ canStage = false, stagedCount = 0, onStageM
       slot: row.slot,
       beatmapId: row.beatmapId,
       realType: canonical,
+    })
+  }
+
+  // 「临时归包」：只在合包时换包，`realType` 一个字不改（所以这里不碰 overrides ——
+  // 那一行仍然属于它真实的键型，键型筛选的结果不该因为临时归包而变）。
+  // 选「（不临时归类）」= 清空，传 undefined，JSON 里不落脏值。
+  const handlePackAs = (row: MapBrowserRow, value: string) => {
+    onStagePackAsChange?.({
+      tournamentId: row.tournamentId,
+      roundId: row.roundId,
+      roundIndex: row.roundIndex,
+      slot: row.slot,
+      beatmapId: row.beatmapId,
+      packAs: value === '' ? undefined : value,
     })
   }
 
@@ -159,6 +181,7 @@ export function RealTypeMapBrowser({ canStage = false, stagedCount = 0, onStageM
                 <th className="px-4 py-2 text-right font-medium">{t('realTypeMaps.col.link')}</th>
                 <th className="px-4 py-2 text-right font-medium">{t('realTypeMaps.col.chart')}</th>
                 {canStage && <th className="px-4 py-2 font-medium">{t('realTypeMaps.col.convert')}</th>}
+                {canStage && <th className="px-4 py-2 font-medium">{t('realTypeMaps.col.packAs')}</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-neutral-800">
@@ -217,6 +240,30 @@ export function RealTypeMapBrowser({ canStage = false, stagedCount = 0, onStageM
                         title={t('realTypeMaps.convertTitle')}
                       >
                         {getConversionGroups(row).map((group) => (
+                          <optgroup key={group.category} label={group.category}>
+                            {group.options.map((option) => (
+                              <option key={option.id} value={option.id}>{option.name}</option>
+                            ))}
+                          </optgroup>
+                        ))}
+                      </select>
+                    </td>
+                  )}
+                  {canStage && (
+                    <td className="px-4 py-2.5">
+                      <select
+                        value={row.packAs ?? ''}
+                        onChange={(event) => handlePackAs(row, event.target.value)}
+                        // 被临时归类时标成琥珀色：一眼能看出这一行"不在自己本来的包里"。
+                        className={`max-w-40 rounded border px-2 py-1 text-xs ${
+                          row.packAs
+                            ? 'border-amber-400 bg-amber-50 text-amber-800 dark:border-amber-700 dark:bg-amber-900/20 dark:text-amber-200'
+                            : 'border-gray-300 bg-white text-gray-800 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200'
+                        }`}
+                        title={t('realTypeMaps.packAsTitle')}
+                      >
+                        <option value="">{t('realTypeMaps.packAsNone')}</option>
+                        {packAsOptionGroups.map((group) => (
                           <optgroup key={group.category} label={group.category}>
                             {group.options.map((option) => (
                               <option key={option.id} value={option.id}>{option.name}</option>

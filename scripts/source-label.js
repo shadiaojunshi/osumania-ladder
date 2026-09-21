@@ -1,5 +1,12 @@
 'use strict'
 
+/**
+ * 把 `sources` 编成包内 `.osu` 的 Version 前缀：`(MWC 4K 2026 QF RC1 & ...) Artist - Title`。
+ *
+ * ⚠️ 这里**只管括号里的内容**。`[真实键型]`（临时归类，`map.packAs`）加在**括号外面**，
+ * 由 `generate-pack.js` 的 `packAsPrefixFor` 拼 —— 因为括号本身是调用方（Version 模板）
+ * 加的，前缀要落在它前面：`[Inverse](PFC S3 ST4) Artist - Title`。
+ */
 function formatSources(sources, isNsv) {
   const nsvSuffix = isNsv ? ' NSV' : ''
   const displaySlot = (slot) => (slot === 'TB1' ? 'TB' : slot)

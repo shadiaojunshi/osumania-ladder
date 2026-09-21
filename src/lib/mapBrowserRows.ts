@@ -15,6 +15,7 @@
 
 import { REAL_TYPES, categoryOfRaw, type MapCategory, type RealTypeOption } from './realTypeCatalog.ts'
 import { normalizeRealType } from './realType.ts'
+import { isValidPackAs } from './packAs.ts'
 import { findDuplicateRoundMaps, mapIdentityKey, type DuplicateRoundMapWarning } from './tournamentDiagnostics.ts'
 import type { Tournament } from './types.ts'
 
@@ -36,6 +37,8 @@ export interface MapBrowserRow {
   type: string
   /** 已规范化（历史别名 `WC` → `LNWC`）。 */
   realType: string
+  /** 「临时归类到别的键型包」（合包时生效，不改 realType）。空 = 没填。 */
+  packAs?: string
   name: string
   difficulty: number
   difficultyLn?: number
@@ -98,6 +101,8 @@ export function buildMapBrowserRows(
           slot: map.slot,
           type: map.type,
           realType,
+          // 只带出"填了"的值：空串/空白当没填（判读在 src/lib/packAs.ts）。
+          ...(isValidPackAs(map.packAs) ? { packAs: map.packAs } : {}),
           name: map.name,
           difficulty: map.difficulty,
           difficultyLn: map.difficultyLn,

@@ -23,3 +23,7 @@ tsconfig.tsbuildinfo
 .workbuddy/
 osu-toolbox/
 ManiaMapAnalyser.by.Leo_Black/
+
+# AI 生成的宣传图（2.5MB PNG，本地素材，不是站点资源）。随产物一起留在磁盘上，
+# 不纳入版本管理 —— 要用的话另存/另传，别指望从 git 里翻出来。
+generated-images/

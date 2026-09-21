@@ -123,6 +123,13 @@
 
 ## 5. 怎么验收（照抄即可）
 
+> 排查「同 BID 但内容不同」：`node scripts/compare-osz.mjs a.osz b.osz [--json]`（2026-09-21 加）。
+> 它用的"内容"就是 `mapIdentity.js` 的 `canonicalContent`（`[General] Mode` + `[Difficulty]` +
+> `[TimingPoints]` + `[HitObjects]`，**不含 Metadata/Events**），所以与合包口径一致；
+> 输出逐段差异 + 结论（倍速版 / 只有难度设置不同 / 被 cut / 真的两张谱）。
+> 文件从 R2 桶下载即可，本地运行、不需要凭据。`scripts/compare-osz.test.mjs` 有 18 例 + 6 处变异。
+
+
 ```bash
 npm run verify                                  # 前端 TS → 后端 TS → lint → 测试（一条龙；lint 现在会失败，见下）
 npm test                                        # 期望 599/599

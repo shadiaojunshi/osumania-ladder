@@ -8,6 +8,9 @@ export interface BeatmapMeta {
   // true = 这张图的难度不参与统计(本轮/该键型的平均值)也不进 ladder 框高。
   // 默认不勾选(字段缺席即参与),判断统一走 src/lib/difficultyCount.ts。
   excludeFromDifficulty?: boolean
+  // 「临时归类到别的键型包」:只在**合包**时把这张图放进所填键型的包,realType 一个字不改。
+  // 默认不填(字段缺席即按 realType 正常进包),判断统一走 src/lib/packAs.ts。
+  packAs?: string
   beatmapId?: number
   beatmapsetId?: number
   oszUrl?: string

@@ -547,6 +547,47 @@ export default function AdminPage() {
       : { type: 'error', message: t('realTypeMaps.stageFailed', { id: change.tournamentId }) })
   }
 
+  // 「临时归包」的暂存:与 handleStageMapChange 同构(取权威版本 → 打补丁 → 存草稿),
+  // 唯一的区别是补的那一行 —— 这里写 `packAs` 而不是 `realType`,**真实键型一个字不动**。
+  // `packAs === undefined` = 取消临时归类,delete 掉字段,JSON 里不落脏值。
+  const handleStagePackAs = async (change: {
+    tournamentId: string
+    roundId: string
+    roundIndex: number
+    slot: string
+    beatmapId?: number
+    packAs?: string
+  }) => {
+    let fetchedBase: StagedEntry | null = null
+    if (!stagedChanges[change.tournamentId]) {
+      const loaded = await fetchAuthoritative(change.tournamentId)
+      if (!loaded) {
+        setSubmitStatus({ type: 'error', message: t('realTypeMaps.stageFailed', { id: change.tournamentId }) })
+        return
+      }
+      fetchedBase = { data: loaded.tournament, baseSha: loaded.sha, baseline: loaded.tournament, legacy: false }
+    }
+
+    let stagedOk = false
+    setStagedChanges((current) => {
+      const base = current[change.tournamentId] ?? fetchedBase
+      if (!base) return current
+      const draft = JSON.parse(JSON.stringify(base.data)) as Tournament
+      const round = draft.rounds[change.roundIndex] || draft.rounds.find((item) => item.id === change.roundId)
+      const map = round?.maps.find((item) =>
+        item.slot === change.slot && (change.beatmapId ? item.beatmapId === change.beatmapId : true),
+      )
+      if (!map) return current
+      if (change.packAs) map.packAs = change.packAs
+      else delete map.packAs
+      stagedOk = true
+      return { ...current, [change.tournamentId]: { ...base, data: draft } }
+    })
+    setSubmitStatus(stagedOk
+      ? { type: 'local', message: t('realTypeMaps.stagedPackAs') }
+      : { type: 'error', message: t('realTypeMaps.stageFailed', { id: change.tournamentId }) })
+  }
+
   // 把某份草稿导出成 JSON 文件:冲突时先留一份,再决定载入最新版本。
   const handleExportDraft = (id: string) => {
     const entry = stagedChanges[id]
@@ -873,6 +914,7 @@ export default function AdminPage() {
             canStage={has('contributor')}
             stagedCount={Object.keys(stagedChanges).length}
             onStageMapChange={handleStageMapChange}
+            onStagePackAsChange={handleStagePackAs}
           />
         )}
 

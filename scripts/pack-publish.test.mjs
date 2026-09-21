@@ -710,14 +710,32 @@ test('② hasComparableBaseline：这份清单到底能不能当基准', () => {
   assert.equal(hasComparableBaseline(null), false)
 })
 
-test('② 守门：仓库里现存的清单真的会被判成"不可比"（否则 CJ 那类会误拦）', () => {
-  // 这条是对着**真实清单文件**的断言：如果哪天它出现了 objectKey，说明已经跑过一次真发布，
-  // 那时这条用例会失败 —— 那是提醒我把它改成"应当可比"，而不是出了 bug。
+test('② 守门：真实清单的"可比性"判定必须与它自己的内容一致', () => {
+  // ⚠️ 这条**刻意不写死某个值**。最初它断言"现有清单不可比"，并注明"哪天跑过真发布就会失败" ——
+  // 那在 2026-09-21 真发生了（TE 发了一版，清单里出现了第一个 objectKey）。
+  // 但"对着随仓库演进的真实数据断言一个快照值"本身就是错的写法：它拦不住任何 bug，
+  // 只会在每次正常发布后变红。改成钉住两条**真正的不变量**：
   const manifest = JSON.parse(readFileSync(new URL('../data/packs-manifest.json', import.meta.url), 'utf8'))
-  assert.equal(
-    hasComparableBaseline(manifest), false,
-    '现有清单没有 objectKey（还没跑过真发布）→ 不该被拿来当收缩基准',
+  const packs = (manifest.packs || []).filter(Boolean)
+
+  // ① 判据不能与数据脱节：有 objectKey 就必须判为可比。否则一个已经发布过的清单会被
+  //    当成"没基准"，收缩判定静默失效 —— 那正是它要防的 fail-open。
+  const anyKey = packs.some((p) => p.objectKey)
+  assert.equal(hasComparableBaseline(manifest), anyKey, '可比性判据必须与"有没有 objectKey"一致')
+
+  // ② 旧时代条目一律不得计入基准。这是实测踩过的坑：清单停在 8-13 时 CJ 记着 222 张，
+  //    而数据里只剩 179 张（FCJ 重新分类带走的）—— 那种条目混进基准会误拦正常发布。
+  const typesWithNoKey = new Set(
+    packs.filter((p) => !p.objectKey).map((p) => p.realType).filter(Boolean),
   )
+  for (const realType of typesWithNoKey) {
+    const keyed = packs.filter((p) => p.realType === realType && p.objectKey)
+    if (keyed.length > 0) continue // 该类型既有旧条目又有新条目 → 由 ① 覆盖，不在这里断言
+    assert.equal(
+      previousManifestSlotTotal(manifest, realType), 0,
+      `${realType} 只有不带 objectKey 的条目 → 基准必须是 0（不能拿旧时代条目去比）`,
+    )
+  }
 })
 
 test('② 守门：判定被跳过时必须在日志里说出来（别说不出声地不判）', () => {

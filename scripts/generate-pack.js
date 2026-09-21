@@ -1,6 +1,9 @@
 const { S3Client, ListObjectsV2Command, GetObjectCommand, PutObjectCommand } = require('@aws-sdk/client-s3')
 const JSZip = require('jszip')
 const { formatSources } = require('./source-label')
+// 「临时归类到别的键型包」(map.packAs) 的判读。镜像在 src/lib/packAs.ts，
+// 两份靠 scripts/pack-as.test.mjs 锁住一致。**改一边就得改另一边**。
+const { packRealTypeFor, isPackAsOverridden, realTypeDisplayName } = require('./pack-as')
 const { ZipArchive } = require('archiver')
 const fs = require('fs')
 const path = require('path')
@@ -152,6 +155,29 @@ function sanitizeFileName(name) {
     .replace(/,/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()
+}
+
+/**
+ * 包内 `.osu` 的 Version 串里，`[真实键型]` 前缀的拼法（`map.packAs`，2026-09-21 站长要求）。
+ *
+ * 一张图被**临时归类到别的键型包**时，玩家得知道"这张图的版面其实不是这个键型的"。
+ * 站长的格式（逐字）：`[inverse](PFC S3 .......)......` —— 方括号在**圆括号外面、紧贴**，
+ * 中间没有空格（圆括号里的来源标签是既有的东西，一个字不动）。
+ *
+ * 名字取**界面目录的展示名**（`realTypeDisplayName`，如 `Inverse`），不是 `REAL_TYPE_NAMES`
+ * 那份包显示名 —— 站长在归类下拉里看到的就是前者（两份实测有 49 处不同）。
+ *
+ * ⚠️ 含 `/` 的展示名（如 `Speed/Generic`）会被 `sanitizeFileName` 去掉斜杠，
+ * 变成 `[SpeedGeneric]`。这是既有清理规则，此处不特殊处理。
+ */
+function packAsPrefixFor(borrowed, realType) {
+  if (!borrowed) return ''
+  const name = realTypeDisplayName(realType)
+  // 名字取不到（realType 空/缺失 —— 后端校验要求必填，但老数据可能不合规）：
+  // 宁可不加前缀，也不要在发布出去的 Version 串里塞一个 `[]`。谱面文件名是
+  // 内容寻址的，这种脏字符一旦发布就改不动了（改了就断成绩）。
+  if (!name) return ''
+  return `[${name}]`
 }
 
 function parseOsu(content) {
@@ -399,8 +425,15 @@ async function prefetchOne(map, packName) {
 
     // sources 里第一条永远是"第一次出现"(mapsToProcess 已按年份+id 排过序,
     // 去重时先来先占),所以合并后的排序继承第一次出现的 difficulty 不会跳。
+    //
+    // 前缀：这张图（合并后的簇）**只要有任一来源**是被临时归类进来的（packAs），
+    // 就在来源标签前加 `[真实键型全名]`。判据取"任一"而不是"全部"：
+    // 簇里只要有一处承认了自己是借来的，就该告诉玩家 —— 一张图不会因为另一处
+    // 恰好是本键型就变回本键型。取的 realType 用**簇代表值**（第一个成员），
+    // 与 difficulty/slot 等其它字段的既有取法一致。
+    const borrowed = map.sources.some((s) => s && s.packAsOverridden)
     const sourcesLabel = formatSources(map.sources, map.isNsv)
-    const newVersion = `(${sourcesLabel}) ${meta.artist || 'Unknown'} - ${meta.title || 'Unknown'} [${meta.creator || 'Unknown'}] (${meta.version || 'Normal'})`
+    const newVersion = `${packAsPrefixFor(borrowed, map.realType)}(${sourcesLabel}) ${meta.artist || 'Unknown'} - ${meta.title || 'Unknown'} [${meta.creator || 'Unknown'}] (${meta.version || 'Normal'})`
     const safeVersion = sanitizeFileName(newVersion)
 
     // 先定位真实文件(大小写不敏感),再用真实文件名的扩展名命名。
@@ -781,6 +814,11 @@ async function generatePack(targetType, {
 
   const mapsToProcess = []
   const r2PathClaims = new Map()
+  // 本来属于这个键型、却被 `packAs` 临时挪去别的包的槽位数。
+  // **这会让本键型的包变小**，于是撞上收缩护栏（R10）—— 而那个护栏列的是
+  // "R2 里找不到文件的槽位"，此时一个都列不出来。不给这个数，站长的下一步就是死胡同：
+  // 「少了 1 张，但哪个槽位都没缺」。见下面 slotLossBlocked 里的提示。
+  let movedOutSlots = 0
 
   const tournamentsList = files.map(file =>
     JSON.parse(fs.readFileSync(path.join(tournamentsDir, file), 'utf-8'))
@@ -790,7 +828,15 @@ async function generatePack(targetType, {
   for (const tournament of tournamentsList) {
     for (const round of tournament.rounds) {
       for (const map of round.maps) {
-        if (normalizeRealType(map.realType) === targetType) {
+        // 进哪个包看 **packAs 优先**（站长 2026-09-21：冷门键型暂时塞进大包，
+        // 但真实键型不变）。realType 仍是身份/报告/冲突检测的依据，一个字不改 ——
+        // 只有"这次把它放进哪个包"这一件事被覆盖。
+        // 两边都过一遍 normalizeRealType：历史别名（如 WC→LNWC）在 packAs 里也认，
+        // 否则一个 packAs="WC" 的槽位**哪个包都进不去**（WC 不是真实类型）。
+        const packKey = normalizeRealType(packRealTypeFor(map))
+        // 本该进这个包、却被临时归类挪走了（只数是**本键型**的，别的键型的挪动与本包无关）
+        if (packKey !== targetType && normalizeRealType(map.realType) === targetType) movedOutSlots++
+        if (packKey === targetType) {
           const r2Key = `maps/${tournament.id}/${round.id}/${map.slot}.osz`
           const claim = r2PathClaims.get(r2Key)
           if (claim && (claim.beatmapId !== (map.beatmapId || null) || claim.name !== map.name)) {
@@ -814,6 +860,10 @@ async function generatePack(targetType, {
             difficulty: map.difficulty || 0,
             beatmapId: map.beatmapId || null,
             r2Key,
+            // 这张图是不是被临时塞进来的（包 ≠ 真实键型）——决定包内标签要不要加
+            // `[真实键型全名]` 前缀，也用来统计"这个包里有几张不是本键型的"。
+            packAsOverridden: isPackAsOverridden(map),
+            realType: normalizeRealType(map.realType),
           })
         }
       }
@@ -845,7 +895,14 @@ async function generatePack(targetType, {
   //     身份能确认时要挂到别的副本上（过去这里直接 continue，标签就没了）。
   const rawEntries = []
   for (const m of mapsToProcess) {
-    const src = { tournamentAbbr: m.tournamentAbbr, roundAbbr: m.roundAbbr, slot: m.slot }
+    // `packAsOverridden` 一路带到 sources 上：包内标签要不要加 `[真实键型]` 前缀，
+    // 就是靠它判的（见 prefetchOne 里 formatSources 的调用点）。
+    const src = {
+      tournamentAbbr: m.tournamentAbbr,
+      roundAbbr: m.roundAbbr,
+      slot: m.slot,
+      packAsOverridden: m.packAsOverridden === true,
+    }
     rawEntries.push({
       ...m, isNsv: false, source: src,
       exists: r2Keys.has(m.r2Key), metadataKey: null, contentKey: null,
@@ -962,6 +1019,12 @@ async function generatePack(targetType, {
     )
     console.error('  若这些文件**上一版有、现在丢了**：先补回 R2 再重跑，别急着发布。')
     console.error('  若确认是数据侧正常收缩（删比赛、改槽位）：加 --allow-content-gaps 继续。')
+    // 临时归类（packAs）会**主动**让包变小，撞上同一道护栏。这种情况①上一条提示
+    // 一个槽位都列不出来（文件没丢），②是站长自己刚做的操作 —— 说清楚，别让人以为丢图了。
+    if (movedOutSlots > 0) {
+      console.error(`  ⚠ 其中 ${movedOutSlots} 张是**被临时归类（packAs）挪去别的包**的：这不是文件丢失。`)
+      console.error('    确认这是有意的 → 加 --allow-content-gaps 重新发布；旧包（含那些图）会被本次的新包替换。')
+    }
     return {
       realType: targetType,
       status: STATUS_FAILED,
@@ -1068,6 +1131,16 @@ async function generatePack(targetType, {
       audioMissing: audioMissingKeys.length,
     })
     console.log(`[${targetType} ${partNum}] Pack generated: ${(stats.size / 1024 / 1024).toFixed(1)}MB, ${processed} entries (${processedSlots} slots)`)
+
+    // 这个包里有多少张是**临时归类**进来的（包 ≠ 真实键型）。站长需要知道自己塞了多少：
+    // 这些图在包内已经带了 `[真实键型]` 前缀，但包本身看起来还是纯本键型的 ——
+    // 数量多到一定程度就该考虑给那个键型单独成包了。
+    // 判据与包内前缀**完全一致**（任一来源被临时归类）：簇的 `packAsOverridden` 只是
+    // 第一个成员的值，合并簇会少算 —— 玩家在标签上看到几个方括号，日志里就该是几张。
+    const borrowedInPack = chunk.filter((e) => (e.sources || []).some((s) => s && s.packAsOverridden)).length
+    if (borrowedInPack > 0) {
+      console.log(`  [${targetType} ${partNum}] 其中 ${borrowedInPack} 张是临时归类进来的（真实键型见标签方括号）`)
+    }
 
     const packEntry = {
       realType: targetType,
@@ -1222,6 +1295,11 @@ function writeIdentityReport(typeResults, outPath = IDENTITY_REPORT_PATH, option
     ...(options.note ? [options.note, ''] : []),
     '',
     '只列**需要人工核对**的项：同一个 BID / 同一组元数据下内容不同的谱面（已阻止合并，各自打包），',
+    '',
+    '> 判读这一堆"内容不同"用 `node scripts/compare-osz.mjs a.osz b.osz`：它会逐段比对',
+    '> `[Difficulty]` / `[TimingPoints]` / `[HitObjects]`（与合包同一口径）并给出结论 ——',
+    '> 倍速版（真不同但设计内）/ 只有难度设置不同（假不同）/ 被 cut 过 / 真的两张谱。',
+    '> 两个文件从 packs 桶或 maps 桶下载即可，本地就能跑，不需要 R2 凭据。',
     '指向的文件缺失、身份无法确认的引用（来源标签未挂靠），以及**内容摘要相同但身份来源不同**',
     '（现在的实现既不合并不报冲突，只在这里列出来量化规模）。内容等价的多路径引用属正常合并，只在运行日志里。',
     '',
@@ -1628,6 +1706,8 @@ if (require.main === module) {
 module.exports = {
   rewriteOsu,
   normalizeRealType,
+  // 包内 `[真实键型]` 前缀的拼法（纯函数，导出给单测）
+  packAsPrefixFor,
   REAL_TYPE_NAMES,
   packCountFor,
   packSizeFor,

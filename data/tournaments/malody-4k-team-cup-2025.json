@@ -935,7 +935,8 @@
           "type": "SV",
           "realType": "PDSV",
           "name": "t+pazolite - Lilac Feel [SV1 Epilogue of Traveler Lv.???]",
-          "difficulty": 0
+          "difficulty": 0,
+          "packAs": "SVMX"
         },
         {
           "slot": "TB",

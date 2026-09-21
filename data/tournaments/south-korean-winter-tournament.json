@@ -25,7 +25,8 @@
           "name": "Wooden - LiMiNAL DRiVE [Stage 1: Void]",
           "difficulty": 0,
           "beatmapId": 5472585,
-          "beatmapsetId": 2491080
+          "beatmapsetId": 2491080,
+          "packAs": "SVMX"
         },
         {
           "slot": "ST2",

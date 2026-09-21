@@ -892,7 +892,8 @@
           "name": "Camellia - magical, very magical world [mystical, vastly mystical wonder]",
           "difficulty": 14.05,
           "beatmapId": 5840805,
-          "beatmapsetId": 2608896
+          "beatmapsetId": 2608896,
+          "packAs": "SA"
         },
         {
           "slot": "RCX-2",

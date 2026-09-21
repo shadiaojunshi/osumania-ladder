@@ -79,7 +79,8 @@
           "name": "Vorso - SFX [Stage 1: MBAPPE]",
           "difficulty": 0,
           "beatmapId": 4671492,
-          "beatmapsetId": 2206443
+          "beatmapsetId": 2206443,
+          "packAs": "SVMX"
         },
         {
           "slot": "MST1",

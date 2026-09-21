@@ -90,7 +90,8 @@
           "name": "Altermis - Deus Ex Machina (Cut Ver.) [Stage 8: Genesis]",
           "difficulty": 0,
           "beatmapId": 5212235,
-          "beatmapsetId": 2403261
+          "beatmapsetId": 2403261,
+          "packAs": "LNWC"
         }
       ],
       "bestOf": 8,
@@ -627,7 +628,8 @@
           "name": "Fractal Dreamers - Ad Astra [Chasing the Spark Beyond 1.05x]",
           "difficulty": 10.2,
           "beatmapId": 5257869,
-          "beatmapsetId": 2418145
+          "beatmapsetId": 2418145,
+          "packAs": "DE"
         },
         {
           "slot": "HB1",
@@ -787,7 +789,8 @@
           "name": "goreshit - satori de pon! [Blah! 1.0x]",
           "difficulty": 10.2,
           "beatmapId": 5268217,
-          "beatmapsetId": 2421576
+          "beatmapsetId": 2421576,
+          "packAs": "JW"
         },
         {
           "slot": "LN5",
@@ -955,7 +958,8 @@
           "name": "Kobaryo - Vicious Heroism [when the heroism is vicious (edit)]",
           "difficulty": 12.2,
           "beatmapId": 5279845,
-          "beatmapsetId": 2425512
+          "beatmapsetId": 2425512,
+          "packAs": "DE"
         },
         {
           "slot": "LN5",
@@ -1132,7 +1136,8 @@
           "name": "Barber - Technologic (FrenchFaces Remix) [kilo tek tek tek tek tekcft. Znow ww w. 1.2x (264bpm) OD7.5]",
           "difficulty": 13.2,
           "beatmapId": 5290922,
-          "beatmapsetId": 2429383
+          "beatmapsetId": 2429383,
+          "packAs": "JW"
         },
         {
           "slot": "LN5",
@@ -1309,7 +1314,8 @@
           "name": "BEMANI Sound  \"HuMeR\" Team feat. Fernweh - Sakazuki [WALL OF PAIN]",
           "difficulty": 13.7,
           "beatmapId": 5298640,
-          "beatmapsetId": 2432103
+          "beatmapsetId": 2432103,
+          "packAs": "JW"
         },
         {
           "slot": "LN5",

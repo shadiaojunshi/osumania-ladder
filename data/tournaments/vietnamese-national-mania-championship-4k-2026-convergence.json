@@ -148,7 +148,7 @@
         {
           "slot": "LN1",
           "type": "LN",
-          "realType": "PDLN",
+          "realType": "RE",
           "name": "Minato Aqua - Shiroi Yuki no Princess wa [Koyori's Aquanother]",
           "difficulty": 7.8,
           "beatmapId": 5841024,
@@ -450,7 +450,7 @@
         {
           "slot": "RC7",
           "type": "RC",
-          "realType": "PDRC",
+          "realType": "DP",
           "name": "Magnetude - Signals [Transmission From The Unknown [1.05]]",
           "difficulty": 10.89,
           "beatmapId": 5869593,

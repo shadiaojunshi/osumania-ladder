@@ -177,7 +177,8 @@
           "name": "WOVOP - Jiu Shi Yue [Mon3tr_Miku's NOODLE_LN]",
           "difficulty": 0,
           "beatmapId": 5198152,
-          "beatmapsetId": 2398586
+          "beatmapsetId": 2398586,
+          "packAs": "DE"
         },
         {
           "slot": "LN3",

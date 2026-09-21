@@ -897,7 +897,8 @@
           "name": "Machine Girl - Cyan Hardcore [3 33]",
           "difficulty": 12.3,
           "beatmapId": 4362111,
-          "beatmapsetId": 2082891
+          "beatmapsetId": 2082891,
+          "packAs": "SA"
         },
         {
           "slot": "LN1",

@@ -376,7 +376,7 @@
         {
           "slot": "GM",
           "type": "HB",
-          "realType": "OHB",
+          "realType": "MXHB",
           "name": "Ayatsuno Yuni - How to be mine [!]",
           "difficulty": 0,
           "beatmapId": 5765032,

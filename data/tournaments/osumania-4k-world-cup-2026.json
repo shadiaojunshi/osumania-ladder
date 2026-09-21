@@ -917,6 +917,192 @@
           "ln": 13.51
         }
       }
+    },
+    {
+      "id": "round-7",
+      "name": "Grand Finals",
+      "abbreviation": "GF",
+      "order": 7,
+      "difficulty": {
+        "min": 12.04,
+        "max": 14,
+        "average": 13.35
+      },
+      "maps": [
+        {
+          "slot": "RC1",
+          "type": "RC",
+          "realType": "SS",
+          "name": "KikuoHana - Hikari yo [Reprieve (cut)]",
+          "difficulty": 13.5,
+          "beatmapId": 5893699,
+          "beatmapsetId": 2623905
+        },
+        {
+          "slot": "RC2",
+          "type": "RC",
+          "realType": "JS",
+          "name": "Diao Ye Zong feat. Kushi - Yuumeikyou o Wakatsu Koto (Cut Ver.) [Sakura no Hana]",
+          "difficulty": 13.07,
+          "beatmapId": 5893740,
+          "beatmapsetId": 2623926
+        },
+        {
+          "slot": "RC3",
+          "type": "RC",
+          "realType": "SA",
+          "name": "Imperial Circus Dead Decadence - Yuuaku no Inori - Anima immortalis est. - [Mors certa, hora incerta]",
+          "difficulty": 13.85,
+          "beatmapId": 5893831,
+          "beatmapsetId": 2623987
+        },
+        {
+          "slot": "RC4",
+          "type": "RC",
+          "realType": "FCJ",
+          "name": "NGHTHYP - Acid Dash [Frenzy]",
+          "difficulty": 13.09,
+          "beatmapId": 5893713,
+          "beatmapsetId": 2623909
+        },
+        {
+          "slot": "RC5",
+          "type": "RC",
+          "realType": "MTC",
+          "name": "J-CORE SLi//CER - Now THAT'S what I call Mashcore! [MASHCORE BABY (Cut)]",
+          "difficulty": 12.04,
+          "beatmapId": 5893720,
+          "beatmapsetId": 2623914
+        },
+        {
+          "slot": "RC6",
+          "type": "RC",
+          "realType": "DP",
+          "name": "Metal Scar Radio - Guided by Echoes [Homecoming 1.05x]",
+          "difficulty": 13.43,
+          "beatmapId": 5893839,
+          "beatmapsetId": 2623990
+        },
+        {
+          "slot": "RC7",
+          "type": "RC",
+          "realType": "MX",
+          "name": "yamazaki - tanshinjuu [Somnambulant feat. em2]",
+          "difficulty": 13.01,
+          "beatmapId": 5893723,
+          "beatmapsetId": 2623916
+        },
+        {
+          "slot": "RC8",
+          "type": "RC",
+          "realType": "STC",
+          "name": "Various Artists - Legend-Changer [Kikuka-Shou]",
+          "difficulty": 13.13,
+          "beatmapId": 5893726,
+          "beatmapsetId": 2623917
+        },
+        {
+          "slot": "HB1",
+          "type": "HB",
+          "realType": "HB1",
+          "name": "Camellia feat. Camellia - Thule [Snaefellsjokull]",
+          "difficulty": 13.6,
+          "beatmapId": 5630362,
+          "beatmapsetId": 2542686,
+          "difficultyLn": 14
+        },
+        {
+          "slot": "HB2",
+          "type": "HB",
+          "realType": "HB2",
+          "name": "Camellia - Tera I/O (Cut Ver.) [Total CPU Overload]",
+          "difficulty": 13,
+          "beatmapId": 5893783,
+          "beatmapsetId": 2623954,
+          "difficultyLn": 13.2
+        },
+        {
+          "slot": "HB3",
+          "type": "HB",
+          "realType": "HB3",
+          "name": "Sydosys - Kronos [Sein zum Tode]",
+          "difficulty": 13,
+          "beatmapId": 5893739,
+          "beatmapsetId": 2623925,
+          "difficultyLn": 13.2
+        },
+        {
+          "slot": "HB4",
+          "type": "HB",
+          "realType": "HB4",
+          "name": "Shining - 21st Century Schizoid Man (Cut Ver.) [Trepidare]",
+          "difficulty": 13.2,
+          "beatmapId": 5,
+          "difficultyLn": 13.47
+        },
+        {
+          "slot": "LN1",
+          "type": "LN",
+          "realType": "TE",
+          "name": "Suzumu feat. GUMI - Jinrui Gofun Mae Kasetsu [lleh gnimit]",
+          "difficulty": 13,
+          "beatmapId": 5893743,
+          "beatmapsetId": 2623929
+        },
+        {
+          "slot": "LN2",
+          "type": "LN",
+          "realType": "DE",
+          "name": "CS4W - EX-ris [Reminiscence]",
+          "difficulty": 13.5,
+          "beatmapId": 6
+        },
+        {
+          "slot": "LN3",
+          "type": "LN",
+          "realType": "LNWC",
+          "name": "UtataP feat. Yuzuki Yukari - Shiawase ni Nareru Kakushi Command ga Arurashii [in a Loop...]",
+          "difficulty": 13.4,
+          "beatmapId": 5893746,
+          "beatmapsetId": 2623932
+        },
+        {
+          "slot": "LN4",
+          "type": "LN",
+          "realType": "JW",
+          "name": "Ludicin - Clinozoisite (Cut Ver.) [Epidosis (MWC Edit)]",
+          "difficulty": 13.2,
+          "beatmapId": 5893755,
+          "beatmapsetId": 2623936
+        },
+        {
+          "slot": "TB",
+          "type": "TB",
+          "realType": "TB",
+          "name": "Gardens - Twin Bloom [Ramification]",
+          "difficulty": 13.3,
+          "beatmapId": 5893787,
+          "beatmapsetId": 2623957,
+          "difficultyLn": 13.6
+        }
+      ],
+      "typeDifficulties": {
+        "RC": {
+          "rf": 13.3
+        },
+        "HB": {
+          "rf": 13.2,
+          "ln": 13.47
+        },
+        "LN": {
+          "ln": 13.27
+        },
+        "SV": {},
+        "TB": {
+          "rf": 13.3,
+          "ln": 13.6
+        }
+      }
     }
   ],
   "customTypes": [],

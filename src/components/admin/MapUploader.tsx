@@ -492,9 +492,14 @@ export function MapUploader({ onDirtyChange }: { onDirtyChange?: (dirty: boolean
         const builtName = meta.artist && meta.title
           ? `${meta.artist} - ${meta.title}${meta.version ? ` [${meta.version}]` : ''}`
           : undefined
-        if (builtName && !cur?.name) patch.name = builtName
-        if (meta.beatmapId && !cur?.beatmapId) patch.beatmapId = meta.beatmapId
-        if (meta.beatmapsetId && !cur?.beatmapsetId) patch.beatmapsetId = meta.beatmapsetId
+        // 判"缺"必须与提交端 `hasRemoteValue` 同口径(占位名 = 没有曲名、占位 ID = 没有 ID):
+        // 用朴素 `!cur?.name` 的话,`name` 是槽位记号的槽位在这里就被当成"已有名字",
+        // 补丁根本不发 —— 上传了一张真谱面,行上却还是那行小字。
+        // 2026-09-21 补:上一轮只把「一键补全」那条路径改成了共享判读,这条**手传**路径漏了,
+        // 同一个洞。
+        if (builtName && (!cur?.name || isPlaceholderName(cur.name, slot))) patch.name = builtName
+        if (meta.beatmapId && !isUsableBeatmapId(cur?.beatmapId)) patch.beatmapId = meta.beatmapId
+        if (meta.beatmapsetId && !isUsableBeatmapId(cur?.beatmapsetId)) patch.beatmapsetId = meta.beatmapsetId
         if (Object.keys(patch).length > 0) {
           stagePatches(new Map([[`${roundId}/${slot}`, patch]]), 'fill')
         }

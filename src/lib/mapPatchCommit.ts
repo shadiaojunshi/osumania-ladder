@@ -23,7 +23,7 @@
 // 而 Node 的 ESM 解析器不会为省略扩展名的相对路径补 `.ts`(那个测试也没注册
 // `_ts-extension-loader.mjs`,它只为 `functions/` 源码而设)。同目录的既有先例
 // 也一样 —— 运行期 import 带 `.ts`,`import type` 才可以省。
-import { isPlaceholderName } from './beatmapIds.ts'
+import { isPlaceholderName, isUsableBeatmapId } from './beatmapIds.ts'
 
 export interface MapPatch {
   name?: string | null
@@ -64,9 +64,10 @@ function isPresent(map: Record<string, unknown>, field: PatchField): boolean {
 /**
  * 这个字段在**提交时**算不算"远端已经有值"（fill 补丁据此决定跳不跳）。
  *
- * 比 `isPresent` 多一条:`name` 等于槽位名时**不算有值**(占位名)。
+ * 比 `isPresent` 多两条:`name` 等于槽位名时不算有值(占位名);`beatmapId` /
+ * `beatmapsetId` 是占位 ID(0 / 1 / 负数)时**也不算有值**。
  *
- * 为什么:全库有 214 处槽位的 `name` 与 `slot` 完全同名(`"name": "RC1"` 且
+ * 为什么 name 那条:全库有 214 处槽位的 `name` 与 `slot` 完全同名(`"name": "RC1"` 且
  * `"slot": "RC1"`,见 `isPlaceholderName`;2026-09-20 按 `data/tournaments/**`
  * 实测统计,4987 个槽位里带槽位记号的共 226 处 —— 另有 12 处是"记号但不与 slot
  * 同名"(ASC 2025 资格赛 8 处 `ST1`/`SV1` 那类、NMWC 2025 两处 `RC4`/`RC5`·`RC6`、
@@ -75,12 +76,19 @@ function isPresent(map: Record<string, unknown>, field: PatchField): boolean {
  * 而 `isPresent` 只看"非空"→ 占位名挡住了真曲名,**永远补不进去**,
  * 那些槽位会停在"半吊子"状态(BID 是真值、曲名仍是记号)。
  *
+ * 为什么 ID 那条(2026-09-21 补):**同一个洞的另一半**。占位名修好之后,`beatmapId: 1`
+ * 仍然被 `isPresent` 当成"有值",于是"占位 ID + 缺曲名"的槽位补得到名字、补不到 ID。
+ * 判据必须与 `isUsableBeatmapId` 同口径 —— 那个函数存在的全部意义就是不让占位 ID
+ * 当真实 ID 用(`/api/maps/meta` 靠它挡住"把 1 当有效 setId 返回、前端又写回 JSON")。
+ * 全库当前 0 处(2026-09-18 清过 MKTC 那批 36 张),这里是防它复活,不是修存量。
+ *
  * 注意这一条只管**提交时跳不跳**;删掉 R2 文件后要退回什么,是另一处判断
  * (见 `planFileDelete`),两者别混。
  */
 function hasRemoteValue(map: Record<string, unknown>, field: PatchField): boolean {
   if (!isPresent(map, field)) return false
   if (field === 'name' && isPlaceholderName(map[field], map.slot)) return false
+  if (field !== 'name' && !isUsableBeatmapId(map[field])) return false
   return true
 }
 
@@ -238,6 +246,9 @@ function readSlotInfo(map: Record<string, unknown>): MapPatch {
  *
  * 存档值里若是**占位名**(`name === slot`,如 `"RC1"`),退回时记成空 —— 它当初也是
  * 从那个 .osz 里读出来的,而且槽位名上方已经显示过了,再当曲名挂一遍没有信息量。
+ * **占位 ID**(0/1/负数)同理退回成空:那些数字不是"这槽位的 BID",是模板默认值,
+ * 挂回行上只会让人以为这里有张真图(`isUsableBeatmapId` 的同一口径)。
+ * 判读放在这里、不放进 `buildSlotBaseline`,理由见上面那段 —— 基准是存档的忠实快照。
  */
 export interface FileDeletePlan {
   /** 池里这条要不要丢。 */
@@ -257,8 +268,8 @@ export function planFileDelete(
     dropStaged: entry !== undefined,
     rollback: {
       name: typeof info.name === 'string' && info.name !== '' && !isPlaceholderName(info.name, slot) ? info.name : null,
-      beatmapId: info.beatmapId ?? null,
-      beatmapsetId: info.beatmapsetId ?? null,
+      beatmapId: isUsableBeatmapId(info.beatmapId) ? info.beatmapId : null,
+      beatmapsetId: isUsableBeatmapId(info.beatmapsetId) ? info.beatmapsetId : null,
     },
   }
 }

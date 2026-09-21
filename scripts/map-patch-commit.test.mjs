@@ -445,3 +445,48 @@ test('跨比赛:sameStagedPatch 比较来源与字段', () => {
   assert.equal(sameStagedPatch({ patch: { name: 'a' }, origin: 'fill' }, { patch: { name: 'a' }, origin: 'explicit' }), false)
   assert.equal(sameStagedPatch({ patch: { name: 'a' }, origin: 'fill' }, { patch: { name: 'a', beatmapId: 1 }, origin: 'fill' }), false)
 })
+
+// ---------------------------------------------------------------------------
+// 2026-09-21:占位 **ID** 那一半。「占位名 = 没有曲名」修好之后,ID 侧还有同一个洞 ——
+// 判据只认"字段非空",于是 `beatmapId: 1`(占位)挡在 fill 补丁前面,
+// `hasRemoteValue` 说"远端有值"→ 真 BID 永远补不进去。
+// 全库当前 0 处(2026-09-18 清过 MKTC 那批),但 `/api/maps/meta` 用 `isUsableBeatmapId`
+// 挡占位 ID 的全部意义就是防它复活 —— 提交端必须同口径。
+// ---------------------------------------------------------------------------
+
+test('占位 ID 不算远端已有值：beatmapId=1 必须能被真 BID 覆盖（fill）', () => {
+  const data = [{ id: 'r1', maps: [{ slot: 'RC1', name: 'Camellia - Ghost [MX]', beatmapId: 1, beatmapsetId: 1 }] }]
+  const res = applyStagedPatches(data, new Map([
+    ['r1/RC1', { patch: { beatmapId: 5165500, beatmapsetId: 2387506 }, origin: 'fill' }],
+  ]))
+  assert.deepEqual(res.skippedRemote, [], '占位 ID 不该挡真 BID')
+  assert.equal(data[0].maps[0].beatmapId, 5165500)
+  assert.equal(data[0].maps[0].beatmapsetId, 2387506)
+})
+
+test('占位 ID 不算远端已有值：0 / 负数 一律不算（与 isUsableBeatmapId 同口径）', () => {
+  for (const bad of [0, -1, -2387506]) {
+    const data = [{ id: 'r1', maps: [{ slot: 'RC1', beatmapId: bad, beatmapsetId: bad }] }]
+    const res = applyStagedPatches(data, new Map([
+      ['r1/RC1', { patch: { beatmapId: 5165500, beatmapsetId: 2387506 }, origin: 'fill' }],
+    ]))
+    assert.deepEqual(res.skippedRemote, [], `beatmapId=${bad} 不该挡真 BID`)
+    assert.equal(data[0].maps[0].beatmapId, 5165500)
+  }
+})
+
+test('真 BID 照旧挡住 fill 补丁（别修过头）', () => {
+  const data = [{ id: 'r1', maps: [{ slot: 'RC1', beatmapId: 111, beatmapsetId: 222 }] }]
+  const res = applyStagedPatches(data, new Map([
+    ['r1/RC1', { patch: { beatmapId: 999 }, origin: 'fill' }],
+  ]))
+  assert.deepEqual(res.skippedRemote, [{ key: 'r1/RC1', fields: ['beatmapId'] }])
+  assert.equal(data[0].maps[0].beatmapId, 111, '真 BID 不该被 fill 覆盖')
+})
+
+test('删除回滚:存档里的占位 ID 不该挂回行上（与占位名同样处理）', () => {
+  const fill = { patch: { name: 'From Osz [NM]', beatmapId: 111 }, origin: 'fill' }
+  const plan = planFileDelete(fill, { name: 'X - Y [Z]', beatmapId: 1, beatmapsetId: -1 }, 'RC1')
+  assert.deepEqual(plan.rollback, { name: 'X - Y [Z]', beatmapId: null, beatmapsetId: null },
+    '占位 ID 退回时要记成 null,不要把 1 / -1 再写进行上')
+})

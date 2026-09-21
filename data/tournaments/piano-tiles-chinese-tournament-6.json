@@ -13,9 +13,9 @@
       "order": 1,
       "isQualifier": true,
       "difficulty": {
-        "min": 0,
-        "max": 0,
-        "average": 0
+        "min": 4.35,
+        "max": 9.5,
+        "average": 7.17
       },
       "maps": [
         {
@@ -32,7 +32,7 @@
           "type": "RC",
           "realType": "MTC",
           "name": "Ludicin - Signal [Stage 2: Encryption]",
-          "difficulty": 0,
+          "difficulty": 4.35,
           "beatmapId": 5199858,
           "beatmapsetId": 2399216
         },
@@ -41,7 +41,7 @@
           "type": "LN",
           "realType": "RE",
           "name": "Jun Kuroda & Hagane - AKI-ZAKURA [Stage 3: Solace]",
-          "difficulty": 0,
+          "difficulty": 5.3,
           "beatmapId": 5199867,
           "beatmapsetId": 2399222
         },
@@ -50,7 +50,7 @@
           "type": "LN",
           "realType": "DE",
           "name": "yax03 - down (Cut Ver.) [Stage 4: Even if the sky is falling down]",
-          "difficulty": 0,
+          "difficulty": 6.7,
           "beatmapId": 5199934,
           "beatmapsetId": 2399258
         },
@@ -59,7 +59,7 @@
           "type": "RC",
           "realType": "JS",
           "name": "Umeboshi Chazuke - Hacha-Mecha Traveler! [Stage 5: Hyperchaos Express]",
-          "difficulty": 0,
+          "difficulty": 6.6,
           "beatmapId": 5199866,
           "beatmapsetId": 2399221
         },
@@ -68,7 +68,7 @@
           "type": "RC",
           "realType": "DP",
           "name": "AL-1S - BIBBIDIBA w/ UZQueen [Stage 6: :dancer:]",
-          "difficulty": 0,
+          "difficulty": 7.05,
           "beatmapId": 5199865,
           "beatmapsetId": 2399220
         },
@@ -77,15 +77,23 @@
           "type": "HB",
           "realType": "MNTB",
           "name": "Aoi - Welkius [Stage 7: Gate of Ascension]",
-          "difficulty": 0,
+          "difficulty": 9.1,
           "beatmapId": 5199871,
-          "beatmapsetId": 2399224
+          "beatmapsetId": 2399224,
+          "difficultyLn": 9.5
         }
       ],
       "typeDifficulties": {
-        "RC": {},
-        "HB": {},
-        "LN": {},
+        "RC": {
+          "rf": 6
+        },
+        "HB": {
+          "rf": 9.1,
+          "ln": 9.5
+        },
+        "LN": {
+          "ln": 6
+        },
         "SV": {},
         "TB": {}
       }

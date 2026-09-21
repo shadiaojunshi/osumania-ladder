@@ -272,7 +272,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "TC",
+          "realType": "ADP",
           "name": "AAAA - w = addict [Typing]",
           "difficulty": 4.45,
           "beatmapId": 5211828,

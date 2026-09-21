@@ -13,9 +13,9 @@
       "order": 1,
       "isQualifier": true,
       "difficulty": {
-        "min": 0,
-        "max": 0,
-        "average": 0
+        "min": 5.12,
+        "max": 9.57,
+        "average": 7.48
       },
       "maps": [
         {
@@ -32,7 +32,7 @@
           "type": "RC",
           "realType": "MX",
           "name": "QWertism - Adrenaline Blaster [Stage 2: Jacklet Blaster]",
-          "difficulty": 0,
+          "difficulty": 5.12,
           "beatmapId": 4442633,
           "beatmapsetId": 2115580
         },
@@ -41,7 +41,7 @@
           "type": "RC",
           "realType": "TC",
           "name": "JOYRYDE - IM GONE [Stage 3: TEMPO]",
-          "difficulty": 0,
+          "difficulty": 9.57,
           "beatmapId": 4442673,
           "beatmapsetId": 2115592
         },
@@ -50,7 +50,7 @@
           "type": "LN",
           "realType": "CO",
           "name": "KARUT - Spiral Rider [Stage 4: Accelerator]",
-          "difficulty": 0,
+          "difficulty": 8.4,
           "beatmapId": 4442648,
           "beatmapsetId": 2115584
         },
@@ -59,7 +59,7 @@
           "type": "LN",
           "realType": "LNTC",
           "name": "niki feat. Reol - WAVE [Stage 5: Sin]",
-          "difficulty": 0,
+          "difficulty": 7.4,
           "beatmapId": 4442663,
           "beatmapsetId": 2115589
         },
@@ -68,24 +68,33 @@
           "type": "HB",
           "realType": "HB2",
           "name": "nitro - [line:theta] [Stage 6: Agathos]",
-          "difficulty": 0,
+          "difficulty": 6.2,
           "beatmapId": 4442655,
-          "beatmapsetId": 2115585
+          "beatmapsetId": 2115585,
+          "difficultyLn": 6.8
         },
         {
           "slot": "ST7",
           "type": "HB",
           "realType": "HB3",
           "name": "Alle-Star, Enkoded, lingoturbo & ZEEMEE - Hallucination [Stage 7: Phosphenes]",
-          "difficulty": 0,
+          "difficulty": 7.2,
           "beatmapId": 4442684,
-          "beatmapsetId": 2115598
+          "beatmapsetId": 2115598,
+          "difficultyLn": 7.6
         }
       ],
       "typeDifficulties": {
-        "RC": {},
-        "HB": {},
-        "LN": {},
+        "RC": {
+          "rf": 7.35
+        },
+        "HB": {
+          "rf": 6.7,
+          "ln": 7.2
+        },
+        "LN": {
+          "ln": 7.9
+        },
         "SV": {},
         "TB": {}
       }

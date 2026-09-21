@@ -780,7 +780,7 @@
         {
           "slot": "RC5",
           "type": "RC",
-          "realType": "TC",
+          "realType": "WTC",
           "name": "LeaF - Breakcore WTF!? [xD]",
           "difficulty": 12.84,
           "beatmapId": 5880806,
@@ -807,7 +807,7 @@
         {
           "slot": "RC8",
           "type": "RC",
-          "realType": "WTC",
+          "realType": "TC",
           "name": "Nanahoshi Kangengakudan - MAKE A LOSER (Instrumental Ver.) [Anacrusis]",
           "difficulty": 12.7,
           "beatmapId": 5880813,

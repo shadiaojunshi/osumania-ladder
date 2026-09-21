@@ -30,7 +30,7 @@
           "slot": "RC1",
           "type": "RC",
           "realType": "TC",
-          "name": "RC1",
+          "name": "Symmetori - YO-KAI Disco (Symmetori Remix) [Stage 2: Monogatari with. ska]",
           "difficulty": 11.36,
           "beatmapId": 5152769,
           "beatmapsetId": 2383217
@@ -39,7 +39,7 @@
           "slot": "RC2",
           "type": "RC",
           "realType": "SA",
-          "name": "RC2",
+          "name": "AIHISNA - Seisou Shoujo no Chuuyuu Gensoukyoku [Stage 7: Incandescent]",
           "difficulty": 12.6,
           "beatmapId": 5152779,
           "beatmapsetId": 2383220
@@ -48,7 +48,7 @@
           "slot": "RC3",
           "type": "RC",
           "realType": "WTC",
-          "name": "RC3",
+          "name": "Rory in early 20s - Wa Yoderi [Stage 8: Wuchi De]",
           "difficulty": 12.69,
           "beatmapId": 5152835,
           "beatmapsetId": 2383249
@@ -57,7 +57,7 @@
           "slot": "LN1",
           "type": "LN",
           "realType": "LNMX",
-          "name": "LN1",
+          "name": "TAMAONSEN - COZMIC DRIVE feat. Youko (Cut ver.) [Stage 4: Space Ride]",
           "difficulty": 10,
           "beatmapId": 5152803,
           "beatmapsetId": 2383231
@@ -66,7 +66,7 @@
           "slot": "LN2",
           "type": "LN",
           "realType": "DE",
-          "name": "LN2",
+          "name": "Lime - Pixel Planet [Stage 5: May This Journey Lead us Starward]",
           "difficulty": 12.6,
           "beatmapId": 5152839,
           "beatmapsetId": 2383253
@@ -75,7 +75,7 @@
           "slot": "HB1",
           "type": "HB",
           "realType": "HB2",
-          "name": "HB1",
+          "name": "Xceon - Fuyutsubaki ft. Kanae Asaba [Stage 3: Loneliness]",
           "difficulty": 10,
           "difficultyLn": 10.2,
           "beatmapId": 5152767,
@@ -85,7 +85,7 @@
           "slot": "HB2",
           "type": "HB",
           "realType": "HB1",
-          "name": "HB2",
+          "name": "CHUBAY - Doukei no Fanfare [Stage 6: Aspiration]",
           "difficulty": 11.6,
           "difficultyLn": 12,
           "beatmapId": 5152811,

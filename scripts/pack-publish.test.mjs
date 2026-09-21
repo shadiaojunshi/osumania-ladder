@@ -973,3 +973,54 @@ test('generate-pack.js 走的是这两个纯函数，不再有内联副本', () 
   // 内联副本一旦回潮，测试就管不着了（这两处逻辑的 bug 都是"少一句话"型）。
   assert.doesNotMatch(src, /reason: 'moved-out',\s*\n\s*plannedSlots/, '别把判定写回 generate-pack.js 里')
 })
+
+// ---------------------------------------------------------------------------
+// 包下线之后：Drive 侧那个文件还有归属吗？（2026-09-21 审查提过一次假警报）
+// ---------------------------------------------------------------------------
+//
+// 审查结论说"下线吃掉 pendingMirrors 标记 ⇒ Drive 文件永久失管"。跑真实函数后确认**不成立**：
+// 归属走的是另一条路（`computeOrphans` 拿上一版清单）。这里把判据钉住，免得下次又照着
+// "pendingMirrors 里没有它"重新报一遍。
+
+test('包下线后 pendingMirrors 确实不再提它 —— 但那是对的（孤儿报告才是它的归属）', () => {
+  const oldManifest = {
+    packs: [
+      { realType: 'IN', part: 1, objectKey: 'IN_1.a1.osz', mapCount: 3, totalMaps: 3, gdriveFileId: 'DRIVE_IN', gdriveObjectKey: 'IN_1.a1.osz' },
+      { realType: 'SS', part: 1, objectKey: 'SS_1.b1.osz', mapCount: 100, totalMaps: 100 },
+    ],
+    pendingMirrors: ['IN_1.osz'],
+  }
+  const typeResults = [
+    { realType: 'IN', status: STATUS_OK, reason: 'moved-out', plannedSlots: 0, packs: [] },
+    { realType: 'SS', status: STATUS_OK, packs: [pack('SS#1', { objectKey: 'SS_1.c1.osz' })] },
+  ]
+  const { packs, pendingMirrors } = buildManifestPacks({ typeResults, oldManifest, today: '2026-09-21' })
+
+  // ① 条目没了 —— 这正是修复 1 的目的
+  assert.equal(packs.filter((p) => p.realType === 'IN').length, 0)
+  // ② 标记也没了。单看这一条像"失管"，但它只是"这个包还在线上且镜像旧"的标记，
+  //    包都不在线了，留着它反而会让下载页对一个不存在的包报警。
+  assert.deepEqual(pendingMirrors, [])
+  // ③ 真正的归属：上线前那版清单里还有 IN 的条目，于是 computeOrphans 会把它列出来。
+  //    （这一步在 upload-to-gdrive.js，这里只锁"上一版清单确实还留着那条"这个前提。）
+  const inPrev = (structuredClone(oldManifest).packs).find((p) => p.realType === 'IN')
+  assert.equal(inPrev.gdriveFileId, 'DRIVE_IN', '上一版清单还留着它 ⇒ 孤儿报告拿得到这个 id')
+})
+
+test('撤销后重新上线：不继承已经不在清单里的 gdriveFileId', () => {
+  // previous 是 byKey.get(realType#part)，取自 oldPacks —— 下线的包不在里面，
+  // 所以"继承到一个已删的 Drive id"这条路走不通。
+  const afterRetire = {
+    packs: [{ realType: 'SS', part: 1, objectKey: 'SS_1.c1.osz', mapCount: 103, totalMaps: 103, gdriveFileId: 'DRIVE_SS', gdriveObjectKey: 'SS_1.c1.osz' }],
+  }
+  const typeResults = [
+    // 撤销：图回到 IN，内容没变 ⇒ objectKey 回到原来那一串（内容寻址，确实会回到同一个键）
+    { realType: 'IN', status: STATUS_OK, packs: [pack('IN#1', { realType: 'IN', objectKey: 'IN_1.a1.osz', mapCount: 3, totalMaps: 3 })] },
+    { realType: 'SS', status: STATUS_OK, packs: [pack('SS#1', { objectKey: 'SS_1.c1.osz' })] },
+  ]
+  const { packs } = buildManifestPacks({ typeResults, oldManifest: afterRetire, today: '2026-09-22' })
+  const back = packs.find((p) => p.realType === 'IN')
+  assert.equal(back.objectKey, 'IN_1.a1.osz')
+  assert.equal(back.gdriveFileId, undefined, '不该继承 —— 下线的条目已经不在上一版清单里了')
+  // 于是 upload-to-gdrive 会走"按文件名找同名文件"分支（同名即同内容），而不是拿旧 id 去 update。
+})

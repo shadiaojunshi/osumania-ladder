@@ -350,6 +350,14 @@ function buildManifestPacks({ typeResults = [], oldManifest = {}, today, preserv
 
   packs.sort((a, b) => (a.realType === b.realType ? (a.part || 1) - (b.part || 1) : a.realType.localeCompare(b.realType)))
   // 只保留"清单里仍存在的条目"的标记：包都下线了，镜像标记也没意义了。
+  //
+  // ⚠️ 包下线（含"整个键型被 packAs 挪走"那种）时标记被吃掉，看起来像"Drive 上那个文件
+  // 就此没人管了"—— **不是**。下线掉的文件走的是另一条路：`computeOrphans` 拿的是
+  // **上一版**清单（`packs-manifest.previous.json`，generate-pack 在重建前转储的那份），
+  // 已下线的条目还在里面，而它又不在本次的 `referencedObjectKeys` 里 ⇒ 正好落进孤儿报告。
+  // 撤销后重新上线同理不会"继承到已删的 id"：`previous`（byKey 取自 oldPacks）里已经没这条，
+  // `gdriveFileId` 不被继承 → 走 upload-to-gdrive 的"按文件名找同名文件"分支（同名即同内容）。
+  // 两件事都用真实函数跑过（2026-09-21），别再照着"看起来像"改。
   const present = new Set(packs.map((p) => `${p.realType}_${p.part || 1}.osz`))
   return { packs, pendingMirrors: [...pendingMirrors].filter((k) => present.has(k)).sort() }
 }

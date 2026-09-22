@@ -26062,1106 +26062,26 @@
       "realType": "TB",
       "name": "4K Tournament Tiebreaker Pack 1",
       "part": 1,
-      "objectKey": "TB_1.a7182584.osz",
-      "mapCount": 83,
+      "objectKey": "TB_1.b39dbb7d.osz",
+      "mapCount": 48,
       "totalMaps": 327,
-      "lastUpdated": "2026-09-21",
+      "lastUpdated": "2026-09-22",
       "links": {
-        "r2": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/TB_1.a7182584.osz",
-        "googleDrive": "https://drive.google.com/uc?id=1Qae5HeNWE6KQdhi2IB04D8dRPKuqLxY5&export=download",
+        "r2": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/TB_1.b39dbb7d.osz",
+        "googleDrive": "https://drive.google.com/uc?id=16RpkHsfPg1SOt8gCVdU5DFc6mEVO9T7c&export=download",
         "drive123": "https://1837946809.share.123pan.cn/123pan/wqewTd-z3obh"
       },
-      "gdriveFileId": "1Qae5HeNWE6KQdhi2IB04D8dRPKuqLxY5",
-      "sizeMB": 761,
-      "contentEntries": [
-        {
-          "contentKey": "887999158703f770",
-          "paths": [
-            "maps/roasted-duck-cup-2025/round-4/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "5cccb1985d2aef9b",
-          "paths": [
-            "maps/roasted-duck-cup-2025/round-6/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "a85f9577f7bfc61d",
-          "paths": [
-            "maps/roasted-duck-cup-2025/round-7/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "173f7e2f7114d7c5",
-          "paths": [
-            "maps/roasted-duck-cup-2025/round-8/TB.osz",
-            "maps/gb-cup-2026-in-real-life/round-2/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "a6dc8862692b1e59",
-          "paths": [
-            "maps/roasted-duck-cup-2025/round-9/INNERTB.osz"
-          ]
-        },
-        {
-          "contentKey": "3da4854ad639fe5c",
-          "paths": [
-            "maps/gbc-2025-spring-A-and-B/round-2/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "590626994df34e9a",
-          "paths": [
-            "maps/po-fang-cup-s3/round-2/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "748c4e2910ac3d89",
-          "paths": [
-            "maps/po-fang-cup-s3/round-3/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "7447d73693def4a5",
-          "paths": [
-            "maps/po-fang-cup-s3/round-4/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "66552cc57a890e62",
-          "paths": [
-            "maps/the-gb-cup-2024-spring/round-1/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "7643a6855f92b8d3",
-          "paths": [
-            "maps/gbc-2025-spring-A-and-B/round-3/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "b2519059e1df0696",
-          "paths": [
-            "maps/gbc-2025-spring-A-and-B/round-1/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "26131c8499d979b0",
-          "paths": [
-            "maps/gbc-2025-spring-A-and-B/round-4/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "28edf7f0bb97fa6d",
-          "paths": [
-            "maps/the-gb-cup-2024-spring/round-3/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "ba8c2c959463c571",
-          "paths": [
-            "maps/gbc-2025-spring-A-and-B/round-5/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "45718ce260ba570d",
-          "paths": [
-            "maps/gbc-2025-spring-A-and-B/round-6/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "5871ff8e89d4cb58",
-          "paths": [
-            "maps/the-gb-cup-2024-spring/round-4/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "f96ed162c8dd0467",
-          "paths": [
-            "maps/the-gb-cup-2024-spring/round-2/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "eac1ff14e27c4a4c",
-          "paths": [
-            "maps/the-gb-cup-2024-spring/round-5/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "449b87e06b5658b7",
-          "paths": [
-            "maps/gbc-2025-spring-A-and-B/round-8/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "e88ed414c8e7c148",
-          "paths": [
-            "maps/4-digit-osumania-world-cup-2024/round-2/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "eb7eac6a7fd8bfe1",
-          "paths": [
-            "maps/south-korean-winter-tournament/round-2/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "00c5ea7af9967304",
-          "paths": [
-            "maps/malody-4k-team-cup-2025/round-2/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "2ce53e3abb729e09",
-          "paths": [
-            "maps/vietnamese-rewind-mania-championship/round-2/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "1dc8c2babeb8f183",
-          "paths": [
-            "maps/japanese-mania-championship-3/round-2/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "2e6ac403a398d2a8",
-          "paths": [
-            "maps/4-digit-osumania-world-cup-2024/round-3/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "d4adb43c3bd72097",
-          "paths": [
-            "maps/4-digit-osumania-world-cup-2024/round-4/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "fa30136ebe443253",
-          "paths": [
-            "maps/south-korean-winter-tournament/round-3/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "db2d9e72c6f2ae3e",
-          "paths": [
-            "maps/osumania-4k-world-cup-2023/round-2/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "7e70c877536850e6",
-          "paths": [
-            "maps/cat-yum-cup/round-2/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "19eb87c1cb19057b",
-          "paths": [
-            "maps/osumania-chinese-national-cup-4k-2026-rebirth/round-2/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "4d85714d16121bbc",
-          "paths": [
-            "maps/vietnamese-rewind-mania-championship/round-3/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "665c298f64ddccae",
-          "paths": [
-            "maps/japanese-mania-championship-3/round-3/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "f9a7061f08d224fa",
-          "paths": [
-            "maps/malody-4k-team-cup-2025/round-3/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "88ae27aa24f99f47",
-          "paths": [
-            "maps/vietnamese-national-mania-championship-4k-2025/round-2/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "895065cd49f80a03",
-          "paths": [
-            "maps/vietnamese-national-mania-championship-4k-2025/round-3/TB.osz",
-            "maps/osumania-chilean-tournament-4k-2026/round-2/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "114ccd5cacfdda90",
-          "paths": [
-            "maps/cat-yum-cup/round-3/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "f4815bc604ce4c84",
-          "paths": [
-            "maps/japanese-mania-championship-3/round-4/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "da472aebf1099fb3",
-          "paths": [
-            "maps/osumania-chinese-national-cup-4k-2026-rebirth/round-3/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "81fcc399fb2f7463",
-          "paths": [
-            "maps/osumania-4k-world-cup-2023/round-3/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "476a3eb423e5b71e",
-          "paths": [
-            "maps/the-gb-cup-2024-spring/round-17/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "8dcbe3fb68abd847",
-          "paths": [
-            "maps/vietnamese-rewind-mania-championship/round-4/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "e7b338cf9e08c023",
-          "paths": [
-            "maps/south-korean-winter-tournament/round-4/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "2d529d82a2e7b2ca",
-          "paths": [
-            "maps/cat-yum-cup/round-4/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "8852f68da18bcb57",
-          "paths": [
-            "maps/osumania-4k-world-cup-2023/round-4/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "17d3943e42c2c4fa",
-          "paths": [
-            "maps/4-digit-osumania-world-cup-2024/round-5/TB.osz",
-            "maps/the-third-impact/round-3/TB1.osz"
-          ]
-        },
-        {
-          "contentKey": "3ef9520aaeeb7ffd",
-          "paths": [
-            "maps/4-digit-osumania-world-cup-2024/round-6/TB.osz",
-            "maps/the-third-impact/round-5/TB1.osz"
-          ]
-        },
-        {
-          "contentKey": "181a829954fc565c",
-          "paths": [
-            "maps/the-gb-cup-2024-spring/round-19/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "907590f7f1486186",
-          "paths": [
-            "maps/osumania-chinese-national-cup-4k-2026-rebirth/round-4/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "a598d5453fb7e6ab",
-          "paths": [
-            "maps/south-korean-winter-tournament/round-5/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "5ed37ec179d95495",
-          "paths": [
-            "maps/taiwan-ninja-mania-cup/round-6/MP3.osz"
-          ]
-        },
-        {
-          "contentKey": "78ea77a816db3f92",
-          "paths": [
-            "maps/the-gb-cup-2024-spring/round-16/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "8c9397751c9260f4",
-          "paths": [
-            "maps/china-lan-2025-mania/round-2/TB1.osz"
-          ]
-        },
-        {
-          "contentKey": "b2ef61076e48fe9f",
-          "paths": [
-            "maps/vietnamese-rewind-mania-championship/round-5/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "77363f591e93a549",
-          "paths": [
-            "maps/malody-4k-team-cup-2025/round-4/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "7386937d30c0abb3",
-          "paths": [
-            "maps/4-digit-osumania-world-cup-2024/round-7/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "d094f44b8fecd4c7",
-          "paths": [
-            "maps/the-gb-cup-2024-spring/round-18/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "adbb4f44bce12b48",
-          "paths": [
-            "maps/south-korean-winter-tournament/round-6/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "b8f8ee61095eabcc",
-          "paths": [
-            "maps/malody-4k-team-cup-2025/round-5/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "0d091dd423818676",
-          "paths": [
-            "maps/japanese-mania-championship-3/round-5/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "1f2a5d941902f0f2",
-          "paths": [
-            "maps/cat-yum-cup/round-5/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "ea57e3105df3ff17",
-          "paths": [
-            "maps/osumania-4k-world-cup-2023/round-5/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "fe2d8e22d509946a",
-          "paths": [
-            "maps/china-lan-2025-mania/round-3/TB1.osz"
-          ]
-        },
-        {
-          "contentKey": "71539974338f9e7d",
-          "paths": [
-            "maps/osumania-chinese-national-cup-4k-2026-rebirth/round-5/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "ef453158a0961b3b",
-          "paths": [
-            "maps/vietnamese-rewind-mania-championship/round-6/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "11bce5eeea9d2d84",
-          "paths": [
-            "maps/malody-4k-team-cup-2025/round-6/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "0a105875c56e4f9a",
-          "paths": [
-            "maps/cat-yum-cup/round-6/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "cbc72f892a0d1c97",
-          "paths": [
-            "maps/the-gb-cup-2024-spring/round-20/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "986b595d8f7a0e6a",
-          "paths": [
-            "maps/osumania-4k-world-cup-2023/round-6/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "1bccd5af142e5660",
-          "paths": [
-            "maps/vietnamese-national-mania-championship-4k-2025/round-4/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "73b3e1d62caae66b",
-          "paths": [
-            "maps/vietnamese-national-mania-championship-4k-2025/round-5/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "57255594f5d2dcaa",
-          "paths": [
-            "maps/vietnamese-national-mania-championship-4k-2025/round-6/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "95667ab77d5d3fc8",
-          "paths": [
-            "maps/japanese-mania-championship-3/round-6/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "751590760188c0fd",
-          "paths": [
-            "maps/japanese-mania-championship-3/round-7/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "563246467852a668",
-          "paths": [
-            "maps/osumania-chinese-national-cup-4k-2026-rebirth/round-6/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "fe2ac7f5e512928f",
-          "paths": [
-            "maps/china-lan-2025-mania/round-4/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "52bb8a007550c88a",
-          "paths": [
-            "maps/vietnamese-national-mania-championship-4k-2025/round-7/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "4cfb106f4a71b199",
-          "paths": [
-            "maps/cat-yum-cup/round-7/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "24c8e98645e168d7",
-          "paths": [
-            "maps/osumania-chinese-national-cup-4k-2026-rebirth/round-7/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "da2ca01014fc6496",
-          "paths": [
-            "maps/osumania-4k-world-cup-2023/round-7/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "a1c2db1fefa5c054",
-          "paths": [
-            "maps/cat-yum-cup/round-8/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "be612151ce2bd49a",
-          "paths": [
-            "maps/malody-4k-team-cup-2025/round-7/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "6298e0e7d691a6bc",
-          "paths": [
-            "maps/osumania-chinese-national-cup-4k-2026-rebirth/round-8/TB.osz"
-          ]
-        }
-      ],
-      "gdriveObjectKey": "TB_1.a7182584.osz"
-    },
-    {
-      "realType": "TB",
-      "name": "4K Tournament Tiebreaker Pack 2",
-      "part": 2,
-      "objectKey": "TB_2.2857cd2c.osz",
-      "mapCount": 82,
-      "totalMaps": 327,
-      "lastUpdated": "2026-09-21",
-      "links": {
-        "r2": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/TB_2.2857cd2c.osz",
-        "googleDrive": "https://drive.google.com/uc?id=16dWkQKiGwXAjE7U0IPWKS9CaoJHB8lPs&export=download",
-        "drive123": "https://1837946809.share.123pan.cn/123pan/wqewTd-R0Ybh"
+      "staleMirrorLinks": {
+        "drive123": "https://1837946809.share.123pan.cn/123pan/wqewTd-z3obh"
       },
-      "gdriveFileId": "16dWkQKiGwXAjE7U0IPWKS9CaoJHB8lPs",
-      "sizeMB": 769,
+      "gdriveFileId": "16RpkHsfPg1SOt8gCVdU5DFc6mEVO9T7c",
+      "gdriveObjectKey": "TB_1.b39dbb7d.osz",
+      "sizeMB": 438,
       "contentEntries": [
-        {
-          "contentKey": "07498b24b86a8349",
-          "paths": [
-            "maps/po-fang-cup-s4/round-2/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "d900156511b7dd6f",
-          "paths": [
-            "maps/po-fang-cup-s4/round-3/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "9dbca501b3a58d17",
-          "paths": [
-            "maps/po-fang-cup-s4/round-5/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "6f3549568b9e6f9c",
-          "paths": [
-            "maps/two-shot-cup-2/round-2/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "eb604143cc030b15",
-          "paths": [
-            "maps/two-shot-cup-2/round-3/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "b03f30223e0a54a1",
-          "paths": [
-            "maps/two-shot-cup-2/round-4/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "8247cd2396f93b3b",
-          "paths": [
-            "maps/two-shot-cup-2/round-6/TB.osz",
-            "maps/gbc-2025-spring-A-and-B/round-7/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "4de158b57d70a2af",
-          "paths": [
-            "maps/the-gb-cup-2024-spring/round-6/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "bf7f2082ba8b9f42",
-          "paths": [
-            "maps/china-university-cup-4k-2026/round-2/TB1.osz"
-          ]
-        },
-        {
-          "contentKey": "4f2ca2fab4ed553f",
-          "paths": [
-            "maps/the-gb-cup-2024-spring/round-7/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "deeb1fb72ad556d9",
-          "paths": [
-            "maps/the-gb-cup-2024-spring/round-8/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "8676789aed598e33",
-          "paths": [
-            "maps/4-digit-osumania-world-cup-2023/round-2/TB1.osz"
-          ]
-        },
-        {
-          "contentKey": "95c19f1eeeb38cb5",
-          "paths": [
-            "maps/two-shot-cup-2/round-7/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "f9299058a9ae618e",
-          "paths": [
-            "maps/hlc-season3/round-2/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "cdf7472f7777e16a",
-          "paths": [
-            "maps/hlc-season3/round-3/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "079e6f437cdf326b",
-          "paths": [
-            "maps/china-university-cup-4k-2026/round-4/TB1.osz",
-            "maps/two-shot-cup-2/round-8/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "1c9c71bc50a1ffac",
-          "paths": [
-            "maps/4-digit-osumania-world-cup-2023/round-3/TB1.osz"
-          ]
-        },
-        {
-          "contentKey": "f737d346dc2285b7",
-          "paths": [
-            "maps/the-gb-cup-2024-spring/round-9/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "c63e1322bcd238f1",
-          "paths": [
-            "maps/gb-cup-2024-autumn/round-2/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "04923e660f14d19e",
-          "paths": [
-            "maps/hlc-season3/round-4/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "6c4c42aaaf00475b",
-          "paths": [
-            "maps/gb-cup-2025-autumn/round-2/TB1.osz"
-          ]
-        },
-        {
-          "contentKey": "15d0a87b5362a2f9",
-          "paths": [
-            "maps/technically-a-tech-tournament/round-2/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "84e2d45780133f04",
-          "paths": [
-            "maps/solo-score-rush/round-2/FS/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "054b8f7b648e9023",
-          "paths": [
-            "maps/hlc-season3/round-5/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "e233dd2786fff179",
-          "paths": [
-            "maps/china-university-cup-4k-2026/round-5/TB1.osz"
-          ]
-        },
-        {
-          "contentKey": "b598c50139e434a9",
-          "paths": [
-            "maps/the-gb-cup-2024-spring/round-10/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "ee504bdbaf12c6a9",
-          "paths": [
-            "maps/gb-cup-2024-autumn/round-3/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "0ef3929b82b379b9",
-          "paths": [
-            "maps/two-shot-cup-2/round-9/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "d669357eb59dd970",
-          "paths": [
-            "maps/osumania-4k-chinese-national-cup-2025/round-2/TB1.osz"
-          ]
-        },
-        {
-          "contentKey": "b6f576eb9444cc47",
-          "paths": [
-            "maps/4-digit-osumania-world-cup-2023/round-4/TB1.osz"
-          ]
-        },
-        {
-          "contentKey": "5522cdb55861c974",
-          "paths": [
-            "maps/technically-a-tech-tournament/round-3/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "c465d6e9b92bccda",
-          "paths": [
-            "maps/gb-cup-2025-autumn/round-3/TB1.osz"
-          ]
-        },
-        {
-          "contentKey": "eaea87df663b9066",
-          "paths": [
-            "maps/solo-score-rush/round-3/FS/TB.osz",
-            "maps/mexico-mania-tournament-4k-2026/round-2/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "f26b387bb8a4cc39",
-          "paths": [
-            "maps/china-university-cup-4k-2026/round-3/TB1.osz"
-          ]
-        },
-        {
-          "contentKey": "6b93a481c02042b6",
-          "paths": [
-            "maps/osumania-4k-world-cup-2024/round-2/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "e1e8e857caa15fa4",
-          "paths": [
-            "maps/osumania-4k-chinese-national-cup-2025/round-3/TB1.osz"
-          ]
-        },
-        {
-          "contentKey": "0852743c30fd666c",
-          "paths": [
-            "maps/osumania-4k-world-cup-2024/round-3/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "1189404880ad4498",
-          "paths": [
-            "maps/4-digit-osumania-world-cup-2023/round-5/TB1.osz"
-          ]
-        },
-        {
-          "contentKey": "9918144739f25d8c",
-          "paths": [
-            "maps/technically-a-tech-tournament/round-4/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "736774709f3ad953",
-          "paths": [
-            "maps/gb-cup-2024-autumn/round-4/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "1b015ba039a22aa5",
-          "paths": [
-            "maps/gb-cup-2025-autumn/round-4/TB1.osz"
-          ]
-        },
-        {
-          "contentKey": "844454896036acb5",
-          "paths": [
-            "maps/gb-cup-2024-autumn/round-5/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "2e312c8f5e0fc3ea",
-          "paths": [
-            "maps/solo-score-rush/round-4/FS/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "65997ce4f8668578",
-          "paths": [
-            "maps/jack-house-cup-2026/round-2/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "560aaa81db1c8e28",
-          "paths": [
-            "maps/gb-cup-2025-autumn/round-5/TB1.osz"
-          ]
-        },
-        {
-          "contentKey": "0ddbf4ac305f4a4e",
-          "paths": [
-            "maps/gb-cup-2024-autumn/round-6/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "130786432766d385",
-          "paths": [
-            "maps/china-university-cup-4k-2026/round-6/TB1.osz"
-          ]
-        },
-        {
-          "contentKey": "e48df81c9c6e7b7d",
-          "paths": [
-            "maps/jack-house-cup-2025/round-2/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "6b30b3b3aff2d743",
-          "paths": [
-            "maps/technically-a-tech-tournament/round-5/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "ac0b1f7efaf353b8",
-          "paths": [
-            "maps/taiwan-ninja-mania-cup/round-6/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "aa07e542bc6f4f7f",
-          "paths": [
-            "maps/osumania-4k-world-cup-2024/round-4/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "605126f2bc5d0f88",
-          "paths": [
-            "maps/osumania-4k-chinese-national-cup-2025/round-4/TB1.osz"
-          ]
-        },
-        {
-          "contentKey": "605126f2bc5d0f88",
-          "paths": [
-            "maps/osumania-4k-chinese-national-cup-2025/round-4/TB1.nsv.osz"
-          ]
-        },
-        {
-          "contentKey": "3c2fc89d8ba6fca0",
-          "paths": [
-            "maps/solo-score-rush/round-5/FS/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "e9140dc829984f89",
-          "paths": [
-            "maps/solo-score-rush/round-6/FS/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "4c0ce47ac1e332c2",
-          "paths": [
-            "maps/4-digit-osumania-world-cup-2023/round-6/TB1.osz"
-          ]
-        },
-        {
-          "contentKey": "76b166f4bf57806f",
-          "paths": [
-            "maps/gb-cup-2025-autumn/round-6/TB1.osz"
-          ]
-        },
-        {
-          "contentKey": "7a0a4221ef1d5487",
-          "paths": [
-            "maps/gb-cup-2024-autumn/round-7/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "6df5b22bd4a73b45",
-          "paths": [
-            "maps/osumania-4k-world-cup-2024/round-5/TB.osz",
-            "maps/gb-cup-2026-in-real-life/round-3/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "076f814ab41c2185",
-          "paths": [
-            "maps/jack-house-cup-2026/round-3/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "58e5a64b59a43ca3",
-          "paths": [
-            "maps/jack-house-cup-2025/round-3/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "d76806d5e5c37a93",
-          "paths": [
-            "maps/osumania-4k-chinese-national-cup-2025/round-5/TB1.osz"
-          ]
-        },
-        {
-          "contentKey": "6a018dd0399f57a9",
-          "paths": [
-            "maps/4-digit-osumania-world-cup-2023/round-7/TB1.osz"
-          ]
-        },
-        {
-          "contentKey": "2934c6fbee867967",
-          "paths": [
-            "maps/gb-cup-2025-autumn/round-7/TB1.osz"
-          ]
-        },
-        {
-          "contentKey": "581a959726784f31",
-          "paths": [
-            "maps/technically-a-tech-tournament/round-6/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "c80ec87040a0b79a",
-          "paths": [
-            "maps/osumania-4k-world-cup-2024/round-6/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "aef26e3e3b1ec809",
-          "paths": [
-            "maps/solo-score-rush/round-8/FS/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "d86a0445ab7f67c4",
-          "paths": [
-            "maps/osumania-4k-chinese-national-cup-2025/round-6/TB1.osz"
-          ]
-        },
-        {
-          "contentKey": "d3b9ec26332ae9a8",
-          "paths": [
-            "maps/technically-a-tech-tournament/round-8/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "1c04458174344e48",
-          "paths": [
-            "maps/jack-house-cup-2025/round-4/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "c3c3c14338935f95",
-          "paths": [
-            "maps/technically-a-tech-tournament/round-7/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "94300085ee0f5b50",
-          "paths": [
-            "maps/osumania-4k-chinese-national-cup-2025/round-7/TB1.osz"
-          ]
-        },
-        {
-          "contentKey": "e0f44ae6d284520d",
-          "paths": [
-            "maps/solo-score-rush/round-8-f/FS/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "90874e0f9069dd3b",
-          "paths": [
-            "maps/jack-house-cup-2026/round-4/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "5ede8c19b137cd81",
-          "paths": [
-            "maps/osumania-4k-world-cup-2024/round-7/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "7c452e5bae6c67c1",
-          "paths": [
-            "maps/jack-house-cup-2025/round-5/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "e0d22109f109c399",
-          "paths": [
-            "maps/jack-house-cup-2026/round-5/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "8d47bbddbac61cb4",
-          "paths": [
-            "maps/osumania-4k-chinese-national-cup-2025/round-8/TB1.osz"
-          ]
-        },
-        {
-          "contentKey": "1664349d548b7290",
-          "paths": [
-            "maps/solo-score-rush/round-9/FS/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "bacb68005caff9f5",
-          "paths": [
-            "maps/jack-house-cup-2026/round-6/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "4ceec06101ca3077",
-          "paths": [
-            "maps/jack-house-cup-2025/round-6/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "e51501dc94d8fc09",
-          "paths": [
-            "maps/jack-house-cup-2025/round-7/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "e0af83f5be942b15",
-          "paths": [
-            "maps/jack-house-cup-2026/round-7/TB.osz"
-          ]
-        }
-      ],
-      "gdriveObjectKey": "TB_2.2857cd2c.osz"
-    },
-    {
-      "realType": "TB",
-      "name": "4K Tournament Tiebreaker Pack 3",
-      "part": 3,
-      "objectKey": "TB_3.64a559f1.osz",
-      "mapCount": 79,
-      "totalMaps": 327,
-      "lastUpdated": "2026-09-21",
-      "links": {
-        "r2": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/TB_3.64a559f1.osz",
-        "googleDrive": "https://drive.google.com/uc?id=1BPFhPlZDV8fCftcsQnjzIj5MWZfM3-hf&export=download",
-        "drive123": "https://1837946809.share.123pan.cn/123pan/wqewTd-wXCbh"
-      },
-      "gdriveFileId": "1BPFhPlZDV8fCftcsQnjzIj5MWZfM3-hf",
-      "sizeMB": 788,
-      "contentEntries": [
-        {
-          "contentKey": "f996f18da1e98ab3",
-          "paths": [
-            "maps/osumania-ln-tournament-4/round-2/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "9099353b4a7da86d",
-          "paths": [
-            "maps/osumania-ln-tournament-4/round-3/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "47c2aedf8c97790c",
-          "paths": [
-            "maps/osumania-ln-tournament-4/round-4/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "803d5811a266b544",
-          "paths": [
-            "maps/osumania-ln-tournament-4/round-5/TB.osz"
-          ]
-        },
         {
           "contentKey": "71e412f68de42265",
           "paths": [
             "maps/osumania-ln-tournament-4/round-6/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "4770d02b556604f2",
-          "paths": [
-            "maps/osumania-ln-tournament-4/round-7/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "4120196cc55755fd",
-          "paths": [
-            "maps/osumania-ln-tournament-4/round-8/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "087ea2abd342e573",
-          "paths": [
-            "maps/just-a-summer-tournament/round-2/TB.osz"
           ]
         },
         {
@@ -27195,106 +26115,71 @@
           ]
         },
         {
-          "contentKey": "85f9e66b07e9f31d",
+          "contentKey": "66552cc57a890e62",
           "paths": [
-            "maps/winter-osumania-grand-slam-tournament-2025/round-2/TB.osz"
+            "maps/the-gb-cup-2024-spring/round-1/TB.osz"
           ]
         },
         {
-          "contentKey": "e030918bb3256707",
+          "contentKey": "6f3549568b9e6f9c",
           "paths": [
-            "maps/winter-osumania-grand-slam-tournament-2025/round-3/TB.osz"
+            "maps/two-shot-cup-2/round-2/TB.osz"
           ]
         },
         {
-          "contentKey": "aa436c14b4069534",
+          "contentKey": "28edf7f0bb97fa6d",
           "paths": [
-            "maps/winter-osumania-grand-slam-tournament-2025/round-4/TB.osz"
+            "maps/the-gb-cup-2024-spring/round-3/TB.osz"
           ]
         },
         {
-          "contentKey": "eba45a56ce8dd9b1",
+          "contentKey": "eb604143cc030b15",
           "paths": [
-            "maps/winter-osumania-grand-slam-tournament-2025/round-5/TB.osz",
-            "maps/china-osumania-4k-intermidiate-tournament-2026/round-4/TB.osz"
+            "maps/two-shot-cup-2/round-3/TB.osz"
           ]
         },
         {
-          "contentKey": "1ca22c3960f646ee",
+          "contentKey": "b03f30223e0a54a1",
           "paths": [
-            "maps/winter-osumania-grand-slam-tournament-2025/round-6/TB.osz"
+            "maps/two-shot-cup-2/round-4/TB.osz"
           ]
         },
         {
-          "contentKey": "0b4b6cf2dd3d815a",
+          "contentKey": "f96ed162c8dd0467",
           "paths": [
-            "maps/winter-osumania-grand-slam-tournament-2025/round-7/TB.osz"
+            "maps/the-gb-cup-2024-spring/round-2/TB.osz"
           ]
         },
         {
-          "contentKey": "f164c47d342e4ebc",
+          "contentKey": "8247cd2396f93b3b",
           "paths": [
-            "maps/winter-osumania-grand-slam-tournament-2025/round-8/TB.osz"
+            "maps/two-shot-cup-2/round-6/TB.osz",
+            "maps/gbc-2025-spring-A-and-B/round-7/TB.osz"
           ]
         },
         {
-          "contentKey": "4ca1aff582af0872",
+          "contentKey": "bf7f2082ba8b9f42",
           "paths": [
-            "maps/soundwave-mania-2/round-2/TB.osz"
+            "maps/china-university-cup-4k-2026/round-2/TB1.osz"
           ]
         },
         {
-          "contentKey": "89d64026482c3da2",
+          "contentKey": "95c19f1eeeb38cb5",
           "paths": [
-            "maps/japanese-mania-championship-2/round-2/TB.osz"
+            "maps/two-shot-cup-2/round-7/TB.osz"
           ]
         },
         {
-          "contentKey": "145e76398ded650d",
+          "contentKey": "079e6f437cdf326b",
           "paths": [
-            "maps/soundwave-mania-2/round-3/TB.osz"
+            "maps/china-university-cup-4k-2026/round-4/TB1.osz",
+            "maps/two-shot-cup-2/round-8/TB.osz"
           ]
         },
         {
-          "contentKey": "1ea50041f3306a9e",
+          "contentKey": "41fc0dd7ba641acc",
           "paths": [
-            "maps/china-osumania-4k-intermidiate-tournament-2026/round-2/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "fee3b103a03e68d3",
-          "paths": [
-            "maps/japanese-mania-championship-2/round-3/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "5ab2c693ae922a72",
-          "paths": [
-            "maps/japanese-mania-championship-2/round-3/TB.nsv.osz"
-          ]
-        },
-        {
-          "contentKey": "56674972887a844c",
-          "paths": [
-            "maps/gbc2025sex/round-2/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "6d7a766bf7d28694",
-          "paths": [
-            "maps/taiwan-ninja-mania-cup/round-3/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "996df434a4208f2f",
-          "paths": [
-            "maps/asia-suiji-cup-2025/round-2/TB1.osz"
-          ]
-        },
-        {
-          "contentKey": "46540710f74d2332",
-          "paths": [
-            "maps/china-osumania-4k-intermidiate-tournament-2026/round-3/TB.osz"
+            "maps/osumania-4k-chinese-national-cup-2024/round-2/TB.osz"
           ]
         },
         {
@@ -27304,15 +26189,9 @@
           ]
         },
         {
-          "contentKey": "a8cc938b5034be5a",
+          "contentKey": "1dc8c2babeb8f183",
           "paths": [
-            "maps/gbc2025sex/round-1/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "dffa4c1d9027a88f",
-          "paths": [
-            "maps/taiwan-ninja-mania-cup/round-2/TB.osz"
+            "maps/japanese-mania-championship-3/round-2/TB.osz"
           ]
         },
         {
@@ -27322,239 +26201,123 @@
           ]
         },
         {
-          "contentKey": "4cb788880e4be8ee",
+          "contentKey": "c09dc3af475c336d",
           "paths": [
-            "maps/china-osumania-4k-intermidiate-tournament-2026/round-5/TB.osz"
+            "maps/touhou-project-mania-cup-4th/round-2/TB.osz"
           ]
         },
         {
-          "contentKey": "bb786732f275839f",
+          "contentKey": "e233dd2786fff179",
           "paths": [
-            "maps/gbc2025sex/round-3/TB.osz"
+            "maps/china-university-cup-4k-2026/round-5/TB1.osz"
           ]
         },
         {
-          "contentKey": "dc1ecdd9c17facf0",
+          "contentKey": "b598c50139e434a9",
           "paths": [
-            "maps/gbc2025sex/round-4/TB.osz"
+            "maps/the-gb-cup-2024-spring/round-10/TB.osz"
           ]
         },
         {
-          "contentKey": "63bf441ed7ff57ca",
+          "contentKey": "0ef3929b82b379b9",
           "paths": [
-            "maps/japanese-mania-championship-2/round-4/TB.osz"
+            "maps/two-shot-cup-2/round-9/TB.osz"
           ]
         },
         {
-          "contentKey": "75f18a365d9fccf1",
+          "contentKey": "3f42f2863f6d5ed8",
           "paths": [
-            "maps/japanese-mania-championship-2/round-4/TB.nsv.osz"
+            "maps/taiwan-ninja-mania-cup/round-5/TB.osz"
           ]
         },
         {
-          "contentKey": "8fcf5dc75aaa70c1",
+          "contentKey": "db2d9e72c6f2ae3e",
           "paths": [
-            "maps/soundwave-mania-2/round-4/TB.osz"
+            "maps/osumania-4k-world-cup-2023/round-2/TB.osz"
           ]
         },
         {
-          "contentKey": "fc6b3fdf4897c1bd",
+          "contentKey": "f26b387bb8a4cc39",
           "paths": [
-            "maps/china-osumania-4k-intermidiate-tournament-2026/round-6/TB.osz",
-            "maps/gbc2025sex/round-5/TB.osz"
+            "maps/china-university-cup-4k-2026/round-3/TB1.osz"
           ]
         },
         {
-          "contentKey": "cc9a0b15c7072341",
+          "contentKey": "665c298f64ddccae",
           "paths": [
-            "maps/just-a-summer-tournament/round-3/TB.osz"
+            "maps/japanese-mania-championship-3/round-3/TB.osz"
           ]
         },
         {
-          "contentKey": "e7447d4e861b519a",
+          "contentKey": "114ccd5cacfdda90",
           "paths": [
-            "maps/osumania-4k-world-cup-2025/round-2/TB.osz"
+            "maps/cat-yum-cup/round-3/TB.osz"
           ]
         },
         {
-          "contentKey": "cbb9afefcb89a1f4",
+          "contentKey": "524bbb5de1a986de",
           "paths": [
-            "maps/gbc2025sex/round-7/TB.osz"
+            "maps/touhou-project-mania-cup-4th/round-6/TB.osz"
           ]
         },
         {
-          "contentKey": "2a50b3b51c8086b8",
+          "contentKey": "f4815bc604ce4c84",
           "paths": [
-            "maps/asia-suiji-cup-2025/round-3/TB1.osz"
+            "maps/japanese-mania-championship-3/round-4/TB.osz"
           ]
         },
         {
-          "contentKey": "fc6aa4c288c02b40",
+          "contentKey": "da472aebf1099fb3",
           "paths": [
-            "maps/osu-philippines-nationals-2025-osumania-4k/round-2/TB.osz"
+            "maps/osumania-chinese-national-cup-4k-2026-rebirth/round-3/TB.osz"
           ]
         },
         {
-          "contentKey": "bc4bbf0d2cded00d",
+          "contentKey": "81fcc399fb2f7463",
           "paths": [
-            "maps/asia-suiji-cup-2025/round-4/TB1.osz"
+            "maps/osumania-4k-world-cup-2023/round-3/TB.osz"
           ]
         },
         {
-          "contentKey": "ac99940f48b47808",
+          "contentKey": "c1df577ecd5d5ce0",
           "paths": [
-            "maps/the-gb-cup-2024-spring/round-15/TB.osz"
+            "maps/osumania-4k-chinese-national-cup-2024/round-3/TB.osz"
           ]
         },
         {
-          "contentKey": "84c34342ef73feef",
+          "contentKey": "130786432766d385",
           "paths": [
-            "maps/just-a-summer-tournament/round-1/ST8.osz"
+            "maps/china-university-cup-4k-2026/round-6/TB1.osz"
           ]
         },
         {
-          "contentKey": "e61cd599a30dd9eb",
+          "contentKey": "6b30b3b3aff2d743",
           "paths": [
-            "maps/just-a-summer-tournament/round-4/TB.osz"
+            "maps/technically-a-tech-tournament/round-5/TB.osz"
           ]
         },
         {
-          "contentKey": "13b72f40b57dffe2",
+          "contentKey": "8852f68da18bcb57",
           "paths": [
-            "maps/soundwave-mania-2/round-5/TB.osz"
+            "maps/osumania-4k-world-cup-2023/round-4/TB.osz"
           ]
         },
         {
-          "contentKey": "5ebf5367412f1aea",
+          "contentKey": "0d091dd423818676",
           "paths": [
-            "maps/osumania-4k-world-cup-2025/round-3/TB.osz"
+            "maps/japanese-mania-championship-3/round-5/TB.osz"
           ]
         },
         {
-          "contentKey": "9ef5410f5c575307",
+          "contentKey": "ea57e3105df3ff17",
           "paths": [
-            "maps/the-gb-cup-2024-spring/round-14/TB.osz"
+            "maps/osumania-4k-world-cup-2023/round-5/TB.osz"
           ]
         },
         {
-          "contentKey": "abb7ea80adc31775",
+          "contentKey": "71539974338f9e7d",
           "paths": [
-            "maps/japanese-mania-championship-2/round-5/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "605126f2bc5d0f88",
-          "paths": [
-            "maps/japanese-mania-championship-2/round-5/TB.nsv.osz"
-          ]
-        },
-        {
-          "contentKey": "b55f7c4634f9edc1",
-          "paths": [
-            "maps/china-osumania-4k-intermidiate-tournament-2026/round-7/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "a7ad9d79006bdd6e",
-          "paths": [
-            "maps/soundwave-mania-2/round-6/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "b6205ffdfdf76a87",
-          "paths": [
-            "maps/osumania-4k-world-cup-2025/round-4/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "e0ca13a9cead754f",
-          "paths": [
-            "maps/just-a-summer-tournament/round-5/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "e7b338cf9e08c023",
-          "paths": [
-            "maps/osu-philippines-nationals-2025-osumania-4k/round-3/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "bcaaaebbb9eaedcc",
-          "paths": [
-            "maps/the-gb-cup-2024-spring/round-13/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "cf8fabf975ac5d32",
-          "paths": [
-            "maps/japanese-mania-championship-2/round-6/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "ebcf601c00bdcb46",
-          "paths": [
-            "maps/japanese-mania-championship-2/round-6/TB.nsv.osz"
-          ]
-        },
-        {
-          "contentKey": "70800513e077e0a9",
-          "paths": [
-            "maps/gbc2025sex/round-8/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "2a6b87af69d093bd",
-          "paths": [
-            "maps/asia-suiji-cup-2025/round-6/TB1.osz"
-          ]
-        },
-        {
-          "contentKey": "8ead8e48e5953bcb",
-          "paths": [
-            "maps/gbc2025sex/round-6/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "fc8e317848e936b3",
-          "paths": [
-            "maps/just-a-summer-tournament/round-6/TB.osz",
-            "maps/mexico-mania-tournament-4k-2026/round-5/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "0972683d1fb9ff1c",
-          "paths": [
-            "maps/asia-suiji-cup-2025/round-5/TB1.osz"
-          ]
-        },
-        {
-          "contentKey": "df54ee11d5c50a92",
-          "paths": [
-            "maps/osumania-4k-world-cup-2025/round-5/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "2a7d5f51b8c517c8",
-          "paths": [
-            "maps/osu-philippines-nationals-2025-osumania-4k/round-4/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "f1ded0f517366053",
-          "paths": [
-            "maps/osumania-chilean-tournament-4k-2026/round-4/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "1ec2c19e5720721a",
-          "paths": [
-            "maps/osumania-chilean-tournament-4k-2026/round-5/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "7658f7c3a2f5f8ca",
-          "paths": [
-            "maps/osumania-4k-world-cup-2025/round-6/TB.osz"
+            "maps/osumania-chinese-national-cup-4k-2026-rebirth/round-5/TB.osz"
           ]
         },
         {
@@ -27564,112 +26327,73 @@
           ]
         },
         {
+          "contentKey": "0a105875c56e4f9a",
+          "paths": [
+            "maps/cat-yum-cup/round-6/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "986b595d8f7a0e6a",
+          "paths": [
+            "maps/osumania-4k-world-cup-2023/round-6/TB.osz"
+          ]
+        },
+        {
           "contentKey": "671b4ff801c4b2ad",
           "paths": [
             "maps/just-a-summer-tournament/round-8/TB.osz"
           ]
         },
         {
-          "contentKey": "048f1eea428c036d",
+          "contentKey": "95667ab77d5d3fc8",
           "paths": [
-            "maps/japanese-mania-championship-2/round-7/TB.osz"
+            "maps/japanese-mania-championship-3/round-6/TB.osz"
           ]
         },
         {
-          "contentKey": "d6515b8213d8cb1e",
+          "contentKey": "751590760188c0fd",
           "paths": [
-            "maps/osu-philippines-nationals-2025-osumania-4k/round-5/TB.osz",
-            "maps/soundwave-mania-2/round-7/TB.osz"
+            "maps/japanese-mania-championship-3/round-7/TB.osz"
           ]
         },
         {
-          "contentKey": "6173ad8fc0262840",
+          "contentKey": "da2ca01014fc6496",
           "paths": [
-            "maps/soundwave-mania-2/round-8/TB.osz"
+            "maps/osumania-4k-world-cup-2023/round-7/TB.osz"
           ]
         },
         {
-          "contentKey": "849ebe23b18bff9b",
+          "contentKey": "6298e0e7d691a6bc",
           "paths": [
-            "maps/osumania-4k-world-cup-2025/round-7/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "9530a41afdeb00f4",
-          "paths": [
-            "maps/osu-philippines-nationals-2025-osumania-4k/round-6/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "1b43f216c4270f02",
-          "paths": [
-            "maps/just-a-summer-tournament/round-9/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "ba3c98a837146d2c",
-          "paths": [
-            "maps/osumania-chilean-tournament-4k-2026/round-6/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "3697b57e46b47c5f",
-          "paths": [
-            "maps/soundwave-mania-2/round-8/SHOWTB.osz"
+            "maps/osumania-chinese-national-cup-4k-2026-rebirth/round-8/TB.osz"
           ]
         }
-      ],
-      "gdriveObjectKey": "TB_3.64a559f1.osz"
+      ]
     },
     {
       "realType": "TB",
-      "name": "4K Tournament Tiebreaker Pack 4",
-      "part": 4,
-      "objectKey": "TB_4.2e4cd89d.osz",
-      "mapCount": 83,
+      "name": "4K Tournament Tiebreaker Pack 2",
+      "part": 2,
+      "objectKey": "TB_2.04a7c086.osz",
+      "mapCount": 48,
       "totalMaps": 327,
-      "lastUpdated": "2026-09-21",
+      "lastUpdated": "2026-09-22",
       "links": {
-        "r2": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/TB_4.2e4cd89d.osz",
-        "googleDrive": "https://drive.google.com/uc?id=1n4y8aSPV2wjmnkUpFZcreNouVKlNq3se&export=download",
-        "drive123": "https://1837946809.share.123pan.cn/123pan/wqewTd-L3obh"
+        "r2": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/TB_2.04a7c086.osz",
+        "googleDrive": "https://drive.google.com/uc?id=1kNbcl0MhHskYxe_0O3hpfmmtI0COn5jZ&export=download",
+        "drive123": "https://1837946809.share.123pan.cn/123pan/wqewTd-R0Ybh"
       },
-      "sizeMB": 805,
+      "staleMirrorLinks": {
+        "drive123": "https://1837946809.share.123pan.cn/123pan/wqewTd-R0Ybh"
+      },
+      "gdriveFileId": "1kNbcl0MhHskYxe_0O3hpfmmtI0COn5jZ",
+      "gdriveObjectKey": "TB_2.04a7c086.osz",
+      "sizeMB": 444,
       "contentEntries": [
         {
-          "contentKey": "15e7362d2eef2740",
+          "contentKey": "4770d02b556604f2",
           "paths": [
-            "maps/piano-tiles-chinese-tournament-6/round-3/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "6f6dcd37e19ccebf",
-          "paths": [
-            "maps/piano-tiles-chinese-tournament-6/round-4/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "b7085ddae283f7bf",
-          "paths": [
-            "maps/piano-tiles-chinese-tournament-6/round-5/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "ccef1a925b311133",
-          "paths": [
-            "maps/piano-tiles-chinese-tournament-6/round-6/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "74d718ab36762021",
-          "paths": [
-            "maps/piano-tiles-chinese-tournament-6/round-7/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "a87b9994fd33d81f",
-          "paths": [
-            "maps/abstraction-cup/round-6/TB.osz"
+            "maps/osumania-ln-tournament-4/round-7/TB.osz"
           ]
         },
         {
@@ -27679,9 +26403,46 @@
           ]
         },
         {
-          "contentKey": "4c8269a0edbe91f6",
+          "contentKey": "e030918bb3256707",
           "paths": [
-            "maps/newcomers-mania-world-cup-2025/round-3/TB.osz"
+            "maps/winter-osumania-grand-slam-tournament-2025/round-3/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "f164c47d342e4ebc",
+          "paths": [
+            "maps/winter-osumania-grand-slam-tournament-2025/round-8/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "887999158703f770",
+          "paths": [
+            "maps/roasted-duck-cup-2025/round-4/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "5cccb1985d2aef9b",
+          "paths": [
+            "maps/roasted-duck-cup-2025/round-6/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "a85f9577f7bfc61d",
+          "paths": [
+            "maps/roasted-duck-cup-2025/round-7/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "173f7e2f7114d7c5",
+          "paths": [
+            "maps/roasted-duck-cup-2025/round-8/TB.osz",
+            "maps/gb-cup-2026-in-real-life/round-2/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "a6dc8862692b1e59",
+          "paths": [
+            "maps/roasted-duck-cup-2025/round-9/INNERTB.osz"
           ]
         },
         {
@@ -27722,57 +26483,27 @@
           ]
         },
         {
-          "contentKey": "d41fd4c15c874f4b",
+          "contentKey": "5871ff8e89d4cb58",
           "paths": [
-            "maps/newcomers-mania-world-cup-2025/round-4/TB.osz"
+            "maps/the-gb-cup-2024-spring/round-4/TB.osz"
           ]
         },
         {
-          "contentKey": "efaeaa0719dcb302",
+          "contentKey": "eac1ff14e27c4a4c",
           "paths": [
-            "maps/newcomers-mania-world-cup-2025/round-5/TB.osz"
+            "maps/the-gb-cup-2024-spring/round-5/TB.osz"
           ]
         },
         {
-          "contentKey": "68d81f55ac5aadab",
+          "contentKey": "4de158b57d70a2af",
           "paths": [
-            "maps/newcomers-mania-world-cup-2025/round-6/TB.osz"
+            "maps/the-gb-cup-2024-spring/round-6/TB.osz"
           ]
         },
         {
-          "contentKey": "fa7b17f654ca7bde",
+          "contentKey": "4ca1aff582af0872",
           "paths": [
-            "maps/honglongcup-season-4/round-2/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "e97093845e193438",
-          "paths": [
-            "maps/piano-tiles-chinese-tournament-6/round-2/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "cce663d343a8378d",
-          "paths": [
-            "maps/newcomers-mania-world-cup-2025/round-7/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "41fc0dd7ba641acc",
-          "paths": [
-            "maps/osumania-4k-chinese-national-cup-2024/round-2/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "519b2de27f349369",
-          "paths": [
-            "maps/newcomers-mania-world-cup-2025/round-8/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "bd52abd82db76183",
-          "paths": [
-            "maps/honglongcup-season-4/round-3/TB.osz"
+            "maps/soundwave-mania-2/round-2/TB.osz"
           ]
         },
         {
@@ -27782,45 +26513,9 @@
           ]
         },
         {
-          "contentKey": "89748c3952997982",
+          "contentKey": "84e2d45780133f04",
           "paths": [
-            "maps/taiwan-ninja-mania-cup/round-4/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "c09dc3af475c336d",
-          "paths": [
-            "maps/touhou-project-mania-cup-4th/round-2/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "cd5b0725dc124ff6",
-          "paths": [
-            "maps/abstraction-cup/round-2/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "bcf0869b56ccf6c3",
-          "paths": [
-            "maps/coe-2026-mania-tournament/round-2/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "3f42f2863f6d5ed8",
-          "paths": [
-            "maps/taiwan-ninja-mania-cup/round-5/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "f6d431c7fee1fce2",
-          "paths": [
-            "maps/osumania-4k-world-cup-2026/round-2/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "577bf411950d8829",
-          "paths": [
-            "maps/touhou-project-mania-cup-4th/round-4/TB.osz"
+            "maps/solo-score-rush/round-2/FS/TB.osz"
           ]
         },
         {
@@ -27830,39 +26525,28 @@
           ]
         },
         {
-          "contentKey": "fd19ea85fe4bf664",
+          "contentKey": "eaea87df663b9066",
           "paths": [
-            "maps/honglongcup-season-4/round-4/TB.osz"
+            "maps/solo-score-rush/round-3/FS/TB.osz",
+            "maps/mexico-mania-tournament-4k-2026/round-2/TB.osz"
           ]
         },
         {
-          "contentKey": "1f089b7ac7a0461b",
+          "contentKey": "6b93a481c02042b6",
           "paths": [
-            "maps/vietnamese-national-mania-championship-4k-2026-convergence/round-2/TB.osz"
+            "maps/osumania-4k-world-cup-2024/round-2/TB.osz"
           ]
         },
         {
-          "contentKey": "b2e38cf4d0308e79",
+          "contentKey": "0852743c30fd666c",
           "paths": [
-            "maps/gb-cup-2025-spring-ex/round-1/TB1.osz"
+            "maps/osumania-4k-world-cup-2024/round-3/TB.osz"
           ]
         },
         {
-          "contentKey": "25c8b30a5e50d3fd",
+          "contentKey": "ac99940f48b47808",
           "paths": [
-            "maps/honglongcup-season-4/round-5/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "8a98e02aa35f74bf",
-          "paths": [
-            "maps/mexico-mania-tournament-4k-2026/round-3/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "524bbb5de1a986de",
-          "paths": [
-            "maps/touhou-project-mania-cup-4th/round-6/TB.osz"
+            "maps/the-gb-cup-2024-spring/round-15/TB.osz"
           ]
         },
         {
@@ -27878,21 +26562,21 @@
           ]
         },
         {
-          "contentKey": "33bd23c346bbb60c",
+          "contentKey": "13b72f40b57dffe2",
           "paths": [
-            "maps/osumania-4k-world-cup-2026/round-3/TB.osz"
+            "maps/soundwave-mania-2/round-5/TB.osz"
           ]
         },
         {
-          "contentKey": "3899509bd668a059",
+          "contentKey": "9ef5410f5c575307",
           "paths": [
-            "maps/touhou-project-mania-cup-4th/round-5/TB.osz"
+            "maps/the-gb-cup-2024-spring/round-14/TB.osz"
           ]
         },
         {
-          "contentKey": "c1df577ecd5d5ce0",
+          "contentKey": "aa07e542bc6f4f7f",
           "paths": [
-            "maps/osumania-4k-chinese-national-cup-2024/round-3/TB.osz"
+            "maps/osumania-4k-world-cup-2024/round-4/TB.osz"
           ]
         },
         {
@@ -27902,27 +26586,9 @@
           ]
         },
         {
-          "contentKey": "42d488b6d54ee817",
+          "contentKey": "5ed37ec179d95495",
           "paths": [
-            "maps/abstraction-cup/round-1/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "a6ebbcff02841040",
-          "paths": [
-            "maps/vietnamese-national-mania-championship-4k-2026-convergence/round-3/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "37196259a7e2716a",
-          "paths": [
-            "maps/mexico-mania-tournament-4k-2026/round-4/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "ead6edfa25daf780",
-          "paths": [
-            "maps/osumania-4k-world-cup-2026/round-4/TB.osz"
+            "maps/taiwan-ninja-mania-cup/round-6/MP3.osz"
           ]
         },
         {
@@ -27932,21 +26598,16 @@
           ]
         },
         {
-          "contentKey": "f6782f8848fb4ade",
+          "contentKey": "bcaaaebbb9eaedcc",
           "paths": [
-            "maps/osumania-4k-chinese-national-cup-2024/round-6/TB.osz"
+            "maps/the-gb-cup-2024-spring/round-13/TB.osz"
           ]
         },
         {
-          "contentKey": "7b0f05f0a0d40f27",
+          "contentKey": "6df5b22bd4a73b45",
           "paths": [
-            "maps/chinese-extraterrestrials-tournament-4k-2026/round-2/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "3d4723b53f01be62",
-          "paths": [
-            "maps/coe-2026-mania-tournament/round-3/TB.osz"
+            "maps/osumania-4k-world-cup-2024/round-5/TB.osz",
+            "maps/gb-cup-2026-in-real-life/round-3/TB.osz"
           ]
         },
         {
@@ -27956,58 +26617,33 @@
           ]
         },
         {
-          "contentKey": "23f73f82058d5ed7",
-          "paths": [
-            "maps/vietnamese-national-mania-championship-4k-2026-convergence/round-4/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "b8b9ffc6fc526f60",
-          "paths": [
-            "maps/gb-cup-2025-spring-ex/round-2/TB1.osz",
-            "maps/osumania-chilean-tournament-4k-2026/round-3/TB.osz"
-          ]
-        },
-        {
           "contentKey": "46b05e5ca18f2cf3",
           "paths": [
             "maps/touhou-project-mania-cup-4th/round-7/TB.osz"
           ]
         },
         {
-          "contentKey": "877ee8bd1b67a704",
+          "contentKey": "581a959726784f31",
           "paths": [
-            "maps/abstraction-cup/round-5/TB.osz"
+            "maps/technically-a-tech-tournament/round-6/TB.osz"
           ]
         },
         {
-          "contentKey": "ec0f8d72fe3d2174",
+          "contentKey": "f1ded0f517366053",
           "paths": [
-            "maps/touhou-project-mania-cup-4th/round-8/TB.osz"
+            "maps/osumania-chilean-tournament-4k-2026/round-4/TB.osz"
           ]
         },
         {
-          "contentKey": "a632fa0b7409524a",
+          "contentKey": "1ec2c19e5720721a",
           "paths": [
-            "maps/gb-cup-2025-spring-ex/round-3/TB1.osz"
+            "maps/osumania-chilean-tournament-4k-2026/round-5/TB.osz"
           ]
         },
         {
-          "contentKey": "73d7e1527187617d",
+          "contentKey": "c80ec87040a0b79a",
           "paths": [
-            "maps/mexico-mania-tournament-4k-2026/round-6/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "caacc55eef5c1682",
-          "paths": [
-            "maps/vietnamese-national-mania-championship-4k-2026-convergence/round-5/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "68ebec583d1e424f",
-          "paths": [
-            "maps/chinese-extraterrestrials-tournament-4k-2026/round-3/TB.osz"
+            "maps/osumania-4k-world-cup-2024/round-6/TB.osz"
           ]
         },
         {
@@ -28017,15 +26653,301 @@
           ]
         },
         {
-          "contentKey": "dd29860d053669fd",
+          "contentKey": "f7c22cbf50cbff0f",
           "paths": [
-            "maps/korean-extraterrestrials-tournament-2/round-2/TB.osz"
+            "maps/osumania-4k-chilean-national-cup-2025/round-6/TB.osz"
           ]
         },
         {
-          "contentKey": "b397d9b6f87e7746",
+          "contentKey": "4cfb106f4a71b199",
           "paths": [
-            "maps/osumania-4k-world-cup-2026/round-5/TB.osz"
+            "maps/cat-yum-cup/round-7/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "5ede8c19b137cd81",
+          "paths": [
+            "maps/osumania-4k-world-cup-2024/round-7/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "1b43f216c4270f02",
+          "paths": [
+            "maps/just-a-summer-tournament/round-9/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "ba3c98a837146d2c",
+          "paths": [
+            "maps/osumania-chilean-tournament-4k-2026/round-6/TB.osz"
+          ]
+        }
+      ]
+    },
+    {
+      "realType": "TB",
+      "name": "4K Tournament Tiebreaker Pack 3",
+      "part": 3,
+      "objectKey": "TB_3.9f5a2239.osz",
+      "mapCount": 47,
+      "totalMaps": 327,
+      "lastUpdated": "2026-09-22",
+      "links": {
+        "r2": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/TB_3.9f5a2239.osz",
+        "googleDrive": "https://drive.google.com/uc?id=1JZMkJbckEWHj-1nDcWNG6wy-kDLobUPD&export=download",
+        "drive123": "https://1837946809.share.123pan.cn/123pan/wqewTd-wXCbh"
+      },
+      "staleMirrorLinks": {
+        "drive123": "https://1837946809.share.123pan.cn/123pan/wqewTd-wXCbh"
+      },
+      "gdriveFileId": "1JZMkJbckEWHj-1nDcWNG6wy-kDLobUPD",
+      "gdriveObjectKey": "TB_3.9f5a2239.osz",
+      "sizeMB": 449,
+      "contentEntries": [
+        {
+          "contentKey": "4120196cc55755fd",
+          "paths": [
+            "maps/osumania-ln-tournament-4/round-8/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "aa436c14b4069534",
+          "paths": [
+            "maps/winter-osumania-grand-slam-tournament-2025/round-4/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "07498b24b86a8349",
+          "paths": [
+            "maps/po-fang-cup-s4/round-2/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "d900156511b7dd6f",
+          "paths": [
+            "maps/po-fang-cup-s4/round-3/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "9dbca501b3a58d17",
+          "paths": [
+            "maps/po-fang-cup-s4/round-5/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "b2519059e1df0696",
+          "paths": [
+            "maps/gbc-2025-spring-A-and-B/round-1/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "ba8c2c959463c571",
+          "paths": [
+            "maps/gbc-2025-spring-A-and-B/round-5/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "4f2ca2fab4ed553f",
+          "paths": [
+            "maps/the-gb-cup-2024-spring/round-7/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "fa7b17f654ca7bde",
+          "paths": [
+            "maps/honglongcup-season-4/round-2/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "deeb1fb72ad556d9",
+          "paths": [
+            "maps/the-gb-cup-2024-spring/round-8/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "56674972887a844c",
+          "paths": [
+            "maps/gbc2025sex/round-2/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "f737d346dc2285b7",
+          "paths": [
+            "maps/the-gb-cup-2024-spring/round-9/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "bd52abd82db76183",
+          "paths": [
+            "maps/honglongcup-season-4/round-3/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "cd5b0725dc124ff6",
+          "paths": [
+            "maps/abstraction-cup/round-2/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "d669357eb59dd970",
+          "paths": [
+            "maps/osumania-4k-chinese-national-cup-2025/round-2/TB1.osz"
+          ]
+        },
+        {
+          "contentKey": "577bf411950d8829",
+          "paths": [
+            "maps/touhou-project-mania-cup-4th/round-4/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "fd19ea85fe4bf664",
+          "paths": [
+            "maps/honglongcup-season-4/round-4/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "e7447d4e861b519a",
+          "paths": [
+            "maps/osumania-4k-world-cup-2025/round-2/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "fc6aa4c288c02b40",
+          "paths": [
+            "maps/osu-philippines-nationals-2025-osumania-4k/round-2/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "25c8b30a5e50d3fd",
+          "paths": [
+            "maps/honglongcup-season-4/round-5/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "8a98e02aa35f74bf",
+          "paths": [
+            "maps/mexico-mania-tournament-4k-2026/round-3/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "2e312c8f5e0fc3ea",
+          "paths": [
+            "maps/solo-score-rush/round-4/FS/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "5ebf5367412f1aea",
+          "paths": [
+            "maps/osumania-4k-world-cup-2025/round-3/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "476a3eb423e5b71e",
+          "paths": [
+            "maps/the-gb-cup-2024-spring/round-17/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "2d529d82a2e7b2ca",
+          "paths": [
+            "maps/cat-yum-cup/round-4/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "605126f2bc5d0f88",
+          "paths": [
+            "maps/osumania-4k-chinese-national-cup-2025/round-4/TB1.osz"
+          ]
+        },
+        {
+          "contentKey": "605126f2bc5d0f88",
+          "paths": [
+            "maps/osumania-4k-chinese-national-cup-2025/round-4/TB1.nsv.osz"
+          ]
+        },
+        {
+          "contentKey": "b6205ffdfdf76a87",
+          "paths": [
+            "maps/osumania-4k-world-cup-2025/round-4/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "42d488b6d54ee817",
+          "paths": [
+            "maps/abstraction-cup/round-1/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "3c2fc89d8ba6fca0",
+          "paths": [
+            "maps/solo-score-rush/round-5/FS/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "37196259a7e2716a",
+          "paths": [
+            "maps/mexico-mania-tournament-4k-2026/round-4/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "78ea77a816db3f92",
+          "paths": [
+            "maps/the-gb-cup-2024-spring/round-16/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "e7b338cf9e08c023",
+          "paths": [
+            "maps/osu-philippines-nationals-2025-osumania-4k/round-3/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "f6782f8848fb4ade",
+          "paths": [
+            "maps/osumania-4k-chinese-national-cup-2024/round-6/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "d094f44b8fecd4c7",
+          "paths": [
+            "maps/the-gb-cup-2024-spring/round-18/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "70800513e077e0a9",
+          "paths": [
+            "maps/gbc2025sex/round-8/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "df54ee11d5c50a92",
+          "paths": [
+            "maps/osumania-4k-world-cup-2025/round-5/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "2a7d5f51b8c517c8",
+          "paths": [
+            "maps/osu-philippines-nationals-2025-osumania-4k/round-4/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "ec0f8d72fe3d2174",
+          "paths": [
+            "maps/touhou-project-mania-cup-4th/round-8/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "73d7e1527187617d",
+          "paths": [
+            "maps/mexico-mania-tournament-4k-2026/round-6/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "7658f7c3a2f5f8ca",
+          "paths": [
+            "maps/osumania-4k-world-cup-2025/round-6/TB.osz"
           ]
         },
         {
@@ -28041,21 +26963,306 @@
           ]
         },
         {
-          "contentKey": "ed2ef87a551360fc",
+          "contentKey": "d6515b8213d8cb1e",
           "paths": [
-            "maps/gb-cup-2025-spring-ex/round-4/TB1.osz"
+            "maps/osu-philippines-nationals-2025-osumania-4k/round-5/TB.osz",
+            "maps/soundwave-mania-2/round-7/TB.osz"
           ]
         },
         {
-          "contentKey": "f7c22cbf50cbff0f",
+          "contentKey": "c3c3c14338935f95",
           "paths": [
-            "maps/osumania-4k-chilean-national-cup-2025/round-6/TB.osz"
+            "maps/technically-a-tech-tournament/round-7/TB.osz"
           ]
         },
         {
-          "contentKey": "60b057d4ec1fd249",
+          "contentKey": "849ebe23b18bff9b",
           "paths": [
-            "maps/korean-extraterrestrials-tournament-2/round-3/TB.osz"
+            "maps/osumania-4k-world-cup-2025/round-7/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "9530a41afdeb00f4",
+          "paths": [
+            "maps/osu-philippines-nationals-2025-osumania-4k/round-6/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "a1c2db1fefa5c054",
+          "paths": [
+            "maps/cat-yum-cup/round-8/TB.osz"
+          ]
+        }
+      ]
+    },
+    {
+      "realType": "TB",
+      "name": "4K Tournament Tiebreaker Pack 4",
+      "part": 4,
+      "objectKey": "TB_4.4d5b6f1f.osz",
+      "mapCount": 47,
+      "totalMaps": 327,
+      "lastUpdated": "2026-09-22",
+      "links": {
+        "r2": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/TB_4.4d5b6f1f.osz",
+        "googleDrive": "https://drive.google.com/uc?id=1ugfywABXe2-I4KmW-pq9AgifiUfw7Fxr&export=download",
+        "drive123": "https://1837946809.share.123pan.cn/123pan/wqewTd-L3obh"
+      },
+      "staleMirrorLinks": {
+        "drive123": "https://1837946809.share.123pan.cn/123pan/wqewTd-L3obh"
+      },
+      "gdriveFileId": "1ugfywABXe2-I4KmW-pq9AgifiUfw7Fxr",
+      "gdriveObjectKey": "TB_4.4d5b6f1f.osz",
+      "sizeMB": 466,
+      "contentEntries": [
+        {
+          "contentKey": "f996f18da1e98ab3",
+          "paths": [
+            "maps/osumania-ln-tournament-4/round-2/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "3da4854ad639fe5c",
+          "paths": [
+            "maps/gbc-2025-spring-A-and-B/round-2/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "45718ce260ba570d",
+          "paths": [
+            "maps/gbc-2025-spring-A-and-B/round-6/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "f9299058a9ae618e",
+          "paths": [
+            "maps/hlc-season3/round-2/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "1ea50041f3306a9e",
+          "paths": [
+            "maps/china-osumania-4k-intermidiate-tournament-2026/round-2/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "cdf7472f7777e16a",
+          "paths": [
+            "maps/hlc-season3/round-3/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "e88ed414c8e7c148",
+          "paths": [
+            "maps/4-digit-osumania-world-cup-2024/round-2/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "46540710f74d2332",
+          "paths": [
+            "maps/china-osumania-4k-intermidiate-tournament-2026/round-3/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "c63e1322bcd238f1",
+          "paths": [
+            "maps/gb-cup-2024-autumn/round-2/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "04923e660f14d19e",
+          "paths": [
+            "maps/hlc-season3/round-4/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "2e6ac403a398d2a8",
+          "paths": [
+            "maps/4-digit-osumania-world-cup-2024/round-3/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "054b8f7b648e9023",
+          "paths": [
+            "maps/hlc-season3/round-5/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "4cb788880e4be8ee",
+          "paths": [
+            "maps/china-osumania-4k-intermidiate-tournament-2026/round-5/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "ee504bdbaf12c6a9",
+          "paths": [
+            "maps/gb-cup-2024-autumn/round-3/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "d4adb43c3bd72097",
+          "paths": [
+            "maps/4-digit-osumania-world-cup-2024/round-4/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "bb786732f275839f",
+          "paths": [
+            "maps/gbc2025sex/round-3/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "fc6b3fdf4897c1bd",
+          "paths": [
+            "maps/china-osumania-4k-intermidiate-tournament-2026/round-6/TB.osz",
+            "maps/gbc2025sex/round-5/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "f6d431c7fee1fce2",
+          "paths": [
+            "maps/osumania-4k-world-cup-2026/round-2/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "e1e8e857caa15fa4",
+          "paths": [
+            "maps/osumania-4k-chinese-national-cup-2025/round-3/TB1.osz"
+          ]
+        },
+        {
+          "contentKey": "1f089b7ac7a0461b",
+          "paths": [
+            "maps/vietnamese-national-mania-championship-4k-2026-convergence/round-2/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "88ae27aa24f99f47",
+          "paths": [
+            "maps/vietnamese-national-mania-championship-4k-2025/round-2/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "736774709f3ad953",
+          "paths": [
+            "maps/gb-cup-2024-autumn/round-4/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "895065cd49f80a03",
+          "paths": [
+            "maps/vietnamese-national-mania-championship-4k-2025/round-3/TB.osz",
+            "maps/osumania-chilean-tournament-4k-2026/round-2/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "844454896036acb5",
+          "paths": [
+            "maps/gb-cup-2024-autumn/round-5/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "33bd23c346bbb60c",
+          "paths": [
+            "maps/osumania-4k-world-cup-2026/round-3/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "0ddbf4ac305f4a4e",
+          "paths": [
+            "maps/gb-cup-2024-autumn/round-6/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "b55f7c4634f9edc1",
+          "paths": [
+            "maps/china-osumania-4k-intermidiate-tournament-2026/round-7/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "a7ad9d79006bdd6e",
+          "paths": [
+            "maps/soundwave-mania-2/round-6/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "17d3943e42c2c4fa",
+          "paths": [
+            "maps/4-digit-osumania-world-cup-2024/round-5/TB.osz",
+            "maps/the-third-impact/round-3/TB1.osz"
+          ]
+        },
+        {
+          "contentKey": "3ef9520aaeeb7ffd",
+          "paths": [
+            "maps/4-digit-osumania-world-cup-2024/round-6/TB.osz",
+            "maps/the-third-impact/round-5/TB1.osz"
+          ]
+        },
+        {
+          "contentKey": "a6ebbcff02841040",
+          "paths": [
+            "maps/vietnamese-national-mania-championship-4k-2026-convergence/round-3/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "ead6edfa25daf780",
+          "paths": [
+            "maps/osumania-4k-world-cup-2026/round-4/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "7386937d30c0abb3",
+          "paths": [
+            "maps/4-digit-osumania-world-cup-2024/round-7/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "7a0a4221ef1d5487",
+          "paths": [
+            "maps/gb-cup-2024-autumn/round-7/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "23f73f82058d5ed7",
+          "paths": [
+            "maps/vietnamese-national-mania-championship-4k-2026-convergence/round-4/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "d76806d5e5c37a93",
+          "paths": [
+            "maps/osumania-4k-chinese-national-cup-2025/round-5/TB1.osz"
+          ]
+        },
+        {
+          "contentKey": "caacc55eef5c1682",
+          "paths": [
+            "maps/vietnamese-national-mania-championship-4k-2026-convergence/round-5/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "b397d9b6f87e7746",
+          "paths": [
+            "maps/osumania-4k-world-cup-2026/round-5/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "1bccd5af142e5660",
+          "paths": [
+            "maps/vietnamese-national-mania-championship-4k-2025/round-4/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "73b3e1d62caae66b",
+          "paths": [
+            "maps/vietnamese-national-mania-championship-4k-2025/round-5/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "57255594f5d2dcaa",
+          "paths": [
+            "maps/vietnamese-national-mania-championship-4k-2025/round-6/TB.osz"
           ]
         },
         {
@@ -28071,6 +27278,281 @@
           ]
         },
         {
+          "contentKey": "52bb8a007550c88a",
+          "paths": [
+            "maps/vietnamese-national-mania-championship-4k-2025/round-7/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "94300085ee0f5b50",
+          "paths": [
+            "maps/osumania-4k-chinese-national-cup-2025/round-7/TB1.osz"
+          ]
+        },
+        {
+          "contentKey": "14c4b2dd72326dab",
+          "paths": [
+            "maps/osumania-4k-chinese-national-cup-2024/round-8/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "f98fba7976b9947b",
+          "paths": [
+            "maps/osumania-4k-chinese-national-cup-2024/round-9/TB.osz"
+          ]
+        }
+      ]
+    },
+    {
+      "realType": "TB",
+      "name": "4K Tournament Tiebreaker Pack 5",
+      "part": 5,
+      "objectKey": "TB_5.827d9ecb.osz",
+      "mapCount": 47,
+      "totalMaps": 327,
+      "lastUpdated": "2026-09-22",
+      "links": {
+        "r2": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/TB_5.827d9ecb.osz",
+        "googleDrive": "https://drive.google.com/uc?id=1GghUle7Pm08Esc2AS7An5SdZ8MqynQ8L&export=download"
+      },
+      "sizeMB": 438,
+      "contentEntries": [
+        {
+          "contentKey": "9099353b4a7da86d",
+          "paths": [
+            "maps/osumania-ln-tournament-4/round-3/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "087ea2abd342e573",
+          "paths": [
+            "maps/just-a-summer-tournament/round-2/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "a87b9994fd33d81f",
+          "paths": [
+            "maps/abstraction-cup/round-6/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "85f9e66b07e9f31d",
+          "paths": [
+            "maps/winter-osumania-grand-slam-tournament-2025/round-2/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "eba45a56ce8dd9b1",
+          "paths": [
+            "maps/winter-osumania-grand-slam-tournament-2025/round-5/TB.osz",
+            "maps/china-osumania-4k-intermidiate-tournament-2026/round-4/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "eb7eac6a7fd8bfe1",
+          "paths": [
+            "maps/south-korean-winter-tournament/round-2/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "00c5ea7af9967304",
+          "paths": [
+            "maps/malody-4k-team-cup-2025/round-2/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "2ce53e3abb729e09",
+          "paths": [
+            "maps/vietnamese-rewind-mania-championship/round-2/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "6c4c42aaaf00475b",
+          "paths": [
+            "maps/gb-cup-2025-autumn/round-2/TB1.osz"
+          ]
+        },
+        {
+          "contentKey": "15d0a87b5362a2f9",
+          "paths": [
+            "maps/technically-a-tech-tournament/round-2/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "dc1ecdd9c17facf0",
+          "paths": [
+            "maps/gbc2025sex/round-4/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "fa30136ebe443253",
+          "paths": [
+            "maps/south-korean-winter-tournament/round-3/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "c465d6e9b92bccda",
+          "paths": [
+            "maps/gb-cup-2025-autumn/round-3/TB1.osz"
+          ]
+        },
+        {
+          "contentKey": "4d85714d16121bbc",
+          "paths": [
+            "maps/vietnamese-rewind-mania-championship/round-3/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "f9a7061f08d224fa",
+          "paths": [
+            "maps/malody-4k-team-cup-2025/round-3/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "1b015ba039a22aa5",
+          "paths": [
+            "maps/gb-cup-2025-autumn/round-4/TB1.osz"
+          ]
+        },
+        {
+          "contentKey": "84c34342ef73feef",
+          "paths": [
+            "maps/just-a-summer-tournament/round-1/ST8.osz"
+          ]
+        },
+        {
+          "contentKey": "560aaa81db1c8e28",
+          "paths": [
+            "maps/gb-cup-2025-autumn/round-5/TB1.osz"
+          ]
+        },
+        {
+          "contentKey": "8dcbe3fb68abd847",
+          "paths": [
+            "maps/vietnamese-rewind-mania-championship/round-4/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "e7b338cf9e08c023",
+          "paths": [
+            "maps/south-korean-winter-tournament/round-4/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "a598d5453fb7e6ab",
+          "paths": [
+            "maps/south-korean-winter-tournament/round-5/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "76b166f4bf57806f",
+          "paths": [
+            "maps/gb-cup-2025-autumn/round-6/TB1.osz"
+          ]
+        },
+        {
+          "contentKey": "8c9397751c9260f4",
+          "paths": [
+            "maps/china-lan-2025-mania/round-2/TB1.osz"
+          ]
+        },
+        {
+          "contentKey": "b2ef61076e48fe9f",
+          "paths": [
+            "maps/vietnamese-rewind-mania-championship/round-5/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "77363f591e93a549",
+          "paths": [
+            "maps/malody-4k-team-cup-2025/round-4/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "7b0f05f0a0d40f27",
+          "paths": [
+            "maps/chinese-extraterrestrials-tournament-4k-2026/round-2/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "adbb4f44bce12b48",
+          "paths": [
+            "maps/south-korean-winter-tournament/round-6/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "b8f8ee61095eabcc",
+          "paths": [
+            "maps/malody-4k-team-cup-2025/round-5/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "2934c6fbee867967",
+          "paths": [
+            "maps/gb-cup-2025-autumn/round-7/TB1.osz"
+          ]
+        },
+        {
+          "contentKey": "877ee8bd1b67a704",
+          "paths": [
+            "maps/abstraction-cup/round-5/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "fe2d8e22d509946a",
+          "paths": [
+            "maps/china-lan-2025-mania/round-3/TB1.osz"
+          ]
+        },
+        {
+          "contentKey": "ef453158a0961b3b",
+          "paths": [
+            "maps/vietnamese-rewind-mania-championship/round-6/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "11bce5eeea9d2d84",
+          "paths": [
+            "maps/malody-4k-team-cup-2025/round-6/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "68ebec583d1e424f",
+          "paths": [
+            "maps/chinese-extraterrestrials-tournament-4k-2026/round-3/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "dd29860d053669fd",
+          "paths": [
+            "maps/korean-extraterrestrials-tournament-2/round-2/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "d86a0445ab7f67c4",
+          "paths": [
+            "maps/osumania-4k-chinese-national-cup-2025/round-6/TB1.osz"
+          ]
+        },
+        {
+          "contentKey": "d3b9ec26332ae9a8",
+          "paths": [
+            "maps/technically-a-tech-tournament/round-8/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "fe2ac7f5e512928f",
+          "paths": [
+            "maps/china-lan-2025-mania/round-4/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "60b057d4ec1fd249",
+          "paths": [
+            "maps/korean-extraterrestrials-tournament-2/round-3/TB.osz"
+          ]
+        },
+        {
           "contentKey": "69da796c4b8963b6",
           "paths": [
             "maps/korean-extraterrestrials-tournament-2/round-4/TB.osz"
@@ -28083,15 +27565,9 @@
           ]
         },
         {
-          "contentKey": "4d6ffac248720057",
+          "contentKey": "be612151ce2bd49a",
           "paths": [
-            "maps/abstraction-cup/round-7/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "14c4b2dd72326dab",
-          "paths": [
-            "maps/osumania-4k-chinese-national-cup-2024/round-8/TB.osz"
+            "maps/malody-4k-team-cup-2025/round-7/TB.osz"
           ]
         },
         {
@@ -28107,15 +27583,9 @@
           ]
         },
         {
-          "contentKey": "f98fba7976b9947b",
+          "contentKey": "8d47bbddbac61cb4",
           "paths": [
-            "maps/osumania-4k-chinese-national-cup-2024/round-9/TB.osz"
-          ]
-        },
-        {
-          "contentKey": "e2e8e23e9cc4d4f1",
-          "paths": [
-            "maps/abstraction-cup/round-8/TB.osz"
+            "maps/osumania-4k-chinese-national-cup-2025/round-8/TB1.osz"
           ]
         },
         {
@@ -28125,20 +27595,616 @@
           ]
         },
         {
-          "contentKey": "0a11baf6475e2581",
-          "paths": [
-            "maps/korean-extraterrestrials-tournament-2/round-6/TB.osz"
-          ]
-        },
-        {
           "contentKey": "4d6e598e360c612d",
           "paths": [
             "maps/chinese-extraterrestrials-tournament-4k-2026/round-7/TB.osz"
           ]
         }
       ],
-      "gdriveObjectKey": "TB_4.2e4cd89d.osz",
-      "gdriveFileId": "1n4y8aSPV2wjmnkUpFZcreNouVKlNq3se"
+      "gdriveObjectKey": "TB_5.827d9ecb.osz",
+      "gdriveFileId": "1GghUle7Pm08Esc2AS7An5SdZ8MqynQ8L"
+    },
+    {
+      "realType": "TB",
+      "name": "4K Tournament Tiebreaker Pack 6",
+      "part": 6,
+      "objectKey": "TB_6.783dfb1f.osz",
+      "mapCount": 47,
+      "totalMaps": 327,
+      "lastUpdated": "2026-09-22",
+      "links": {
+        "r2": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/TB_6.783dfb1f.osz",
+        "googleDrive": "https://drive.google.com/uc?id=1uxidIQDVG2KVeQnkvv8_RVCF0hw-ZgH0&export=download"
+      },
+      "sizeMB": 439,
+      "contentEntries": [
+        {
+          "contentKey": "47c2aedf8c97790c",
+          "paths": [
+            "maps/osumania-ln-tournament-4/round-4/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "1ca22c3960f646ee",
+          "paths": [
+            "maps/winter-osumania-grand-slam-tournament-2025/round-6/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "7643a6855f92b8d3",
+          "paths": [
+            "maps/gbc-2025-spring-A-and-B/round-3/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "449b87e06b5658b7",
+          "paths": [
+            "maps/gbc-2025-spring-A-and-B/round-8/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "8676789aed598e33",
+          "paths": [
+            "maps/4-digit-osumania-world-cup-2023/round-2/TB1.osz"
+          ]
+        },
+        {
+          "contentKey": "145e76398ded650d",
+          "paths": [
+            "maps/soundwave-mania-2/round-3/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "6d7a766bf7d28694",
+          "paths": [
+            "maps/taiwan-ninja-mania-cup/round-3/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "1c9c71bc50a1ffac",
+          "paths": [
+            "maps/4-digit-osumania-world-cup-2023/round-3/TB1.osz"
+          ]
+        },
+        {
+          "contentKey": "dffa4c1d9027a88f",
+          "paths": [
+            "maps/taiwan-ninja-mania-cup/round-2/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "89748c3952997982",
+          "paths": [
+            "maps/taiwan-ninja-mania-cup/round-4/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "bcf0869b56ccf6c3",
+          "paths": [
+            "maps/coe-2026-mania-tournament/round-2/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "b6f576eb9444cc47",
+          "paths": [
+            "maps/4-digit-osumania-world-cup-2023/round-4/TB1.osz"
+          ]
+        },
+        {
+          "contentKey": "5522cdb55861c974",
+          "paths": [
+            "maps/technically-a-tech-tournament/round-3/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "cc9a0b15c7072341",
+          "paths": [
+            "maps/just-a-summer-tournament/round-3/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "19eb87c1cb19057b",
+          "paths": [
+            "maps/osumania-chinese-national-cup-4k-2026-rebirth/round-2/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "b2e38cf4d0308e79",
+          "paths": [
+            "maps/gb-cup-2025-spring-ex/round-1/TB1.osz"
+          ]
+        },
+        {
+          "contentKey": "1189404880ad4498",
+          "paths": [
+            "maps/4-digit-osumania-world-cup-2023/round-5/TB1.osz"
+          ]
+        },
+        {
+          "contentKey": "e61cd599a30dd9eb",
+          "paths": [
+            "maps/just-a-summer-tournament/round-4/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "65997ce4f8668578",
+          "paths": [
+            "maps/jack-house-cup-2026/round-2/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "e48df81c9c6e7b7d",
+          "paths": [
+            "maps/jack-house-cup-2025/round-2/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "181a829954fc565c",
+          "paths": [
+            "maps/the-gb-cup-2024-spring/round-19/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "907590f7f1486186",
+          "paths": [
+            "maps/osumania-chinese-national-cup-4k-2026-rebirth/round-4/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "e9140dc829984f89",
+          "paths": [
+            "maps/solo-score-rush/round-6/FS/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "4c0ce47ac1e332c2",
+          "paths": [
+            "maps/4-digit-osumania-world-cup-2023/round-6/TB1.osz"
+          ]
+        },
+        {
+          "contentKey": "076f814ab41c2185",
+          "paths": [
+            "maps/jack-house-cup-2026/round-3/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "58e5a64b59a43ca3",
+          "paths": [
+            "maps/jack-house-cup-2025/round-3/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "3d4723b53f01be62",
+          "paths": [
+            "maps/coe-2026-mania-tournament/round-3/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "8ead8e48e5953bcb",
+          "paths": [
+            "maps/gbc2025sex/round-6/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "b8b9ffc6fc526f60",
+          "paths": [
+            "maps/gb-cup-2025-spring-ex/round-2/TB1.osz",
+            "maps/osumania-chilean-tournament-4k-2026/round-3/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "6a018dd0399f57a9",
+          "paths": [
+            "maps/4-digit-osumania-world-cup-2023/round-7/TB1.osz"
+          ]
+        },
+        {
+          "contentKey": "a632fa0b7409524a",
+          "paths": [
+            "maps/gb-cup-2025-spring-ex/round-3/TB1.osz"
+          ]
+        },
+        {
+          "contentKey": "aef26e3e3b1ec809",
+          "paths": [
+            "maps/solo-score-rush/round-8/FS/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "cbc72f892a0d1c97",
+          "paths": [
+            "maps/the-gb-cup-2024-spring/round-20/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "6173ad8fc0262840",
+          "paths": [
+            "maps/soundwave-mania-2/round-8/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "1c04458174344e48",
+          "paths": [
+            "maps/jack-house-cup-2025/round-4/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "563246467852a668",
+          "paths": [
+            "maps/osumania-chinese-national-cup-4k-2026-rebirth/round-6/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "ed2ef87a551360fc",
+          "paths": [
+            "maps/gb-cup-2025-spring-ex/round-4/TB1.osz"
+          ]
+        },
+        {
+          "contentKey": "90874e0f9069dd3b",
+          "paths": [
+            "maps/jack-house-cup-2026/round-4/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "4d6ffac248720057",
+          "paths": [
+            "maps/abstraction-cup/round-7/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "7c452e5bae6c67c1",
+          "paths": [
+            "maps/jack-house-cup-2025/round-5/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "e0d22109f109c399",
+          "paths": [
+            "maps/jack-house-cup-2026/round-5/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "bacb68005caff9f5",
+          "paths": [
+            "maps/jack-house-cup-2026/round-6/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "e2e8e23e9cc4d4f1",
+          "paths": [
+            "maps/abstraction-cup/round-8/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "4ceec06101ca3077",
+          "paths": [
+            "maps/jack-house-cup-2025/round-6/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "0a11baf6475e2581",
+          "paths": [
+            "maps/korean-extraterrestrials-tournament-2/round-6/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "e51501dc94d8fc09",
+          "paths": [
+            "maps/jack-house-cup-2025/round-7/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "e0af83f5be942b15",
+          "paths": [
+            "maps/jack-house-cup-2026/round-7/TB.osz"
+          ]
+        }
+      ],
+      "gdriveObjectKey": "TB_6.783dfb1f.osz",
+      "gdriveFileId": "1uxidIQDVG2KVeQnkvv8_RVCF0hw-ZgH0"
+    },
+    {
+      "realType": "TB",
+      "name": "4K Tournament Tiebreaker Pack 7",
+      "part": 7,
+      "objectKey": "TB_7.14621181.osz",
+      "mapCount": 43,
+      "totalMaps": 327,
+      "lastUpdated": "2026-09-22",
+      "links": {
+        "r2": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/TB_7.14621181.osz",
+        "googleDrive": "https://drive.google.com/uc?id=1Mg8OIbElS6dI0VmXq1520rDU-xhFnMxL&export=download"
+      },
+      "sizeMB": 450,
+      "contentEntries": [
+        {
+          "contentKey": "803d5811a266b544",
+          "paths": [
+            "maps/osumania-ln-tournament-4/round-5/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "15e7362d2eef2740",
+          "paths": [
+            "maps/piano-tiles-chinese-tournament-6/round-3/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "6f6dcd37e19ccebf",
+          "paths": [
+            "maps/piano-tiles-chinese-tournament-6/round-4/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "b7085ddae283f7bf",
+          "paths": [
+            "maps/piano-tiles-chinese-tournament-6/round-5/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "ccef1a925b311133",
+          "paths": [
+            "maps/piano-tiles-chinese-tournament-6/round-6/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "74d718ab36762021",
+          "paths": [
+            "maps/piano-tiles-chinese-tournament-6/round-7/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "0b4b6cf2dd3d815a",
+          "paths": [
+            "maps/winter-osumania-grand-slam-tournament-2025/round-7/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "4c8269a0edbe91f6",
+          "paths": [
+            "maps/newcomers-mania-world-cup-2025/round-3/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "590626994df34e9a",
+          "paths": [
+            "maps/po-fang-cup-s3/round-2/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "748c4e2910ac3d89",
+          "paths": [
+            "maps/po-fang-cup-s3/round-3/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "7447d73693def4a5",
+          "paths": [
+            "maps/po-fang-cup-s3/round-4/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "d41fd4c15c874f4b",
+          "paths": [
+            "maps/newcomers-mania-world-cup-2025/round-4/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "efaeaa0719dcb302",
+          "paths": [
+            "maps/newcomers-mania-world-cup-2025/round-5/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "26131c8499d979b0",
+          "paths": [
+            "maps/gbc-2025-spring-A-and-B/round-4/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "68d81f55ac5aadab",
+          "paths": [
+            "maps/newcomers-mania-world-cup-2025/round-6/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "89d64026482c3da2",
+          "paths": [
+            "maps/japanese-mania-championship-2/round-2/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "e97093845e193438",
+          "paths": [
+            "maps/piano-tiles-chinese-tournament-6/round-2/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "cce663d343a8378d",
+          "paths": [
+            "maps/newcomers-mania-world-cup-2025/round-7/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "fee3b103a03e68d3",
+          "paths": [
+            "maps/japanese-mania-championship-2/round-3/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "5ab2c693ae922a72",
+          "paths": [
+            "maps/japanese-mania-championship-2/round-3/TB.nsv.osz"
+          ]
+        },
+        {
+          "contentKey": "996df434a4208f2f",
+          "paths": [
+            "maps/asia-suiji-cup-2025/round-2/TB1.osz"
+          ]
+        },
+        {
+          "contentKey": "519b2de27f349369",
+          "paths": [
+            "maps/newcomers-mania-world-cup-2025/round-8/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "a8cc938b5034be5a",
+          "paths": [
+            "maps/gbc2025sex/round-1/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "63bf441ed7ff57ca",
+          "paths": [
+            "maps/japanese-mania-championship-2/round-4/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "75f18a365d9fccf1",
+          "paths": [
+            "maps/japanese-mania-championship-2/round-4/TB.nsv.osz"
+          ]
+        },
+        {
+          "contentKey": "8fcf5dc75aaa70c1",
+          "paths": [
+            "maps/soundwave-mania-2/round-4/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "7e70c877536850e6",
+          "paths": [
+            "maps/cat-yum-cup/round-2/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "cbb9afefcb89a1f4",
+          "paths": [
+            "maps/gbc2025sex/round-7/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "2a50b3b51c8086b8",
+          "paths": [
+            "maps/asia-suiji-cup-2025/round-3/TB1.osz"
+          ]
+        },
+        {
+          "contentKey": "9918144739f25d8c",
+          "paths": [
+            "maps/technically-a-tech-tournament/round-4/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "bc4bbf0d2cded00d",
+          "paths": [
+            "maps/asia-suiji-cup-2025/round-4/TB1.osz"
+          ]
+        },
+        {
+          "contentKey": "3899509bd668a059",
+          "paths": [
+            "maps/touhou-project-mania-cup-4th/round-5/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "abb7ea80adc31775",
+          "paths": [
+            "maps/japanese-mania-championship-2/round-5/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "605126f2bc5d0f88",
+          "paths": [
+            "maps/japanese-mania-championship-2/round-5/TB.nsv.osz"
+          ]
+        },
+        {
+          "contentKey": "ac0b1f7efaf353b8",
+          "paths": [
+            "maps/taiwan-ninja-mania-cup/round-6/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "e0ca13a9cead754f",
+          "paths": [
+            "maps/just-a-summer-tournament/round-5/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "cf8fabf975ac5d32",
+          "paths": [
+            "maps/japanese-mania-championship-2/round-6/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "ebcf601c00bdcb46",
+          "paths": [
+            "maps/japanese-mania-championship-2/round-6/TB.nsv.osz"
+          ]
+        },
+        {
+          "contentKey": "2a6b87af69d093bd",
+          "paths": [
+            "maps/asia-suiji-cup-2025/round-6/TB1.osz"
+          ]
+        },
+        {
+          "contentKey": "fc8e317848e936b3",
+          "paths": [
+            "maps/just-a-summer-tournament/round-6/TB.osz",
+            "maps/mexico-mania-tournament-4k-2026/round-5/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "0972683d1fb9ff1c",
+          "paths": [
+            "maps/asia-suiji-cup-2025/round-5/TB1.osz"
+          ]
+        },
+        {
+          "contentKey": "1f2a5d941902f0f2",
+          "paths": [
+            "maps/cat-yum-cup/round-5/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "048f1eea428c036d",
+          "paths": [
+            "maps/japanese-mania-championship-2/round-7/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "e0f44ae6d284520d",
+          "paths": [
+            "maps/solo-score-rush/round-8-f/FS/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "24c8e98645e168d7",
+          "paths": [
+            "maps/osumania-chinese-national-cup-4k-2026-rebirth/round-7/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "1664349d548b7290",
+          "paths": [
+            "maps/solo-score-rush/round-9/FS/TB.osz"
+          ]
+        },
+        {
+          "contentKey": "3697b57e46b47c5f",
+          "paths": [
+            "maps/soundwave-mania-2/round-8/SHOWTB.osz"
+          ]
+        }
+      ],
+      "gdriveObjectKey": "TB_7.14621181.osz",
+      "gdriveFileId": "1Mg8OIbElS6dI0VmXq1520rDU-xhFnMxL"
     },
     {
       "realType": "TC",
@@ -30331,5 +30397,5 @@
       "to": "SA"
     }
   },
-  "lastGenerated": "2026-09-21T10:09:09.419Z"
+  "lastGenerated": "2026-09-22T15:16:36.123Z"
 }

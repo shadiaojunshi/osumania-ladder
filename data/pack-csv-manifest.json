@@ -1,3 +1,18 @@
 {
-  "collections": []
+  "collections": [
+    {
+      "realType": "SS",
+      "url": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/csv/SS.7271cf03d8d7fed8.csv",
+      "objectKey": "csv/SS.7271cf03d8d7fed8.csv",
+      "sourceObjectKeys": [
+        "SS_1.5c269899.osz",
+        "SS_2.39a30186.osz",
+        "SS_3.9be8e703.osz"
+      ],
+      "mapCount": 232,
+      "missingIdCount": 5,
+      "nsvCount": 0,
+      "exportedAt": "2026-09-22T13:03:34.671Z"
+    }
+  ]
 }

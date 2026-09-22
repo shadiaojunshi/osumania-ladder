@@ -16,6 +16,22 @@ const {
 // 这些用例只用内存里的 fake Drive,不接触真实凭据 / R2 / GitHub。
 const noDelay = async () => {}
 
+test('TB scoped Drive sync never touches other files or 123 links', async () => {
+  const { drive, calls } = makeFakeDrive()
+  const other = { realType: 'TE', part: 1, objectKey: 'TE_1.new.osz', gdriveFileId: 'old-te', links: { drive123: 'https://123.example/keep', googleDrive: 'https://drive.google.com/file/d/old-te/view' } }
+  const tb = { realType: 'TB', part: 1, objectKey: 'TB_1.new.osz', links: { drive123: 'https://123.example/tb-old' } }
+  const original = structuredClone(other)
+  const result = await runDriveSync({ drive, packs: [other, tb], prevPacks: [
+    { realType: 'TE', part: 2, gdriveFileId: 'other-retired' }, { realType: 'TB', part: 2, gdriveFileId: 'tb-retired' },
+  ], makeBody: () => () => 'body', delay: noDelay, targetType: 'TB' })
+  assert.deepEqual(other, original)
+  assert.equal(tb.links.drive123, 'https://123.example/tb-old')
+  assert.deepEqual(result.succeeded, ['TB_1.osz'])
+  assert.deepEqual(calls.create, ['TB_1.new.osz'])
+  assert.deepEqual(result.orphans.map(o => o.id), ['tb-retired'])
+  assert.deepEqual(calls.delete, [])
+})
+
 function httpError(code, message, reason) {
   const err = new Error(message)
   err.code = code

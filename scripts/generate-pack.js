@@ -584,7 +584,8 @@ SliderTickRate:1
 const PACK_SINGLE_MAX = 120
 const PACK_SPLIT_STEP = 90
 
-function packCountFor(total) {
+function packCountFor(total, realType) {
+  if (realType === 'TB') return Math.max(1, Math.ceil(total / 50))
   if (total <= PACK_SINGLE_MAX) return 1
   if (total <= 200) return 2
   if (total <= 270) return 3
@@ -786,6 +787,29 @@ function splitIntoPacks(entries, packSizes, mode = SPLIT_MODE) {
     }
   }
   return packs
+}
+
+// TB counts playable charts, including NSV (but not the delete-this placeholder).
+// Keep the usual tournament distribution when possible. Paired main/NSV charts
+// can overshoot a target by one, so rebalance those cases without splitting pairs.
+function splitForType(entries, realType, mode = SPLIT_MODE) {
+  const parts = packCountFor(entries.length, realType)
+  const sizes = Array.from({ length: parts }, (_, i) => packSizeFor(entries.length, i, parts))
+  const usual = splitIntoPacks(entries, sizes, mode)
+  if (realType !== 'TB' || (Math.max(...usual.map(p => p.length)) <= 50
+    && Math.max(...usual.map(p => p.length)) - Math.min(...usual.map(p => p.length)) <= 1)) return usual
+  const packs = sizes.map(() => [])
+  const atoms = buildAtoms(entries).map((items, index) => ({ items, index }))
+    .sort((a, b) => b.items.length - a.items.length || a.index - b.index)
+  const counts = sizes.map(() => 0)
+  for (const atom of atoms) {
+    const min = Math.min(...counts)
+    const index = counts.indexOf(min)
+    packs[index].push(atom)
+    counts[index] += atom.items.length
+  }
+  if (counts.some(n => n > 50)) throw new Error('TB 分包超过 50 张，拒绝发布')
+  return packs.map(p => p.sort((a, b) => a.index - b.index).flatMap(a => a.items))
 }
 
 /**
@@ -1063,11 +1087,11 @@ async function generatePack(targetType, {
   const outputDir = path.join(__dirname, '..', 'output')
   if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir, { recursive: true })
 
-  const totalPacks = packCountFor(available.length)
+  const totalPacks = packCountFor(available.length, targetType)
   const packSizes = Array.from({ length: totalPacks }, (_, i) => packSizeFor(available.length, i, totalPacks))
   // 切包方案见 SPLIT_MODE:默认"以整场比赛为单位轮流发牌",避免第一个包把最高优先级的比赛
   // 整批吞下;旧的连续切仍可用 PACK_SPLIT_MODE=sequence 复现(见 splitIntoPacks)。
-  const packChunks = splitIntoPacks(available, packSizes)
+  const packChunks = splitForType(available, targetType)
   console.log(`[${targetType}] 分包:${available.length} 张 → ${totalPacks} 包 (${packSizes.join(' / ')}) 方案=${SPLIT_MODE}`)
   const results = []
 
@@ -1600,7 +1624,7 @@ async function main() {
     if (fs.existsSync(MANIFEST_PATH)) {
       singleOldManifest = JSON.parse(fs.readFileSync(MANIFEST_PATH, 'utf-8'))
     }
-    if (publish) assertSinglePublishSafe(plan.routing, singleOldManifest.packRouting)
+    if (publish) assertSinglePublishSafe(plan.routing, singleOldManifest.packRouting, cli.targetType)
     warnIfBaselineNotComparable(singleOldManifest)
     console.log(`单类型模式:${cli.targetType} —— ${publish ? '发布（上传 R2 + 更新该类型清单条目）' : '仅离线预览（不碰 R2 与 manifest）'}`)
     const result = await generatePack(cli.targetType, {
@@ -1633,13 +1657,14 @@ async function main() {
         typeResults: [result], oldManifest, preserveOtherTypes: true,
       })
       reportContentCoverage(oldManifest.packs, packs, cli.allowContentGaps)
-      const manifest = { packs, packRouting: plan.routing, lastGenerated: new Date().toISOString() }
+      const manifest = { ...oldManifest, packs, lastGenerated: new Date().toISOString() }
+      delete manifest.pendingMirrors
       if (pendingMirrors.length > 0) manifest.pendingMirrors = pendingMirrors
       fs.writeFileSync(MANIFEST_PATH, JSON.stringify(manifest, null, 2) + '\n')
       console.log(`\n已更新 manifest 里 ${cli.targetType} 的条目（其他类型与人工链接原样保留）。`)
       console.log('注意:单类型发布**不写** packs-manifest.previous.json、**不清理**孤儿 —— 这两件只有全量发布才做。')
       if (pendingMirrors.length > 0) {
-        console.warn(`该类型的镜像链接仍指向旧内容:${pendingMirrors.join(', ')}（Drive 需整套重跑）`)
+        console.warn(`该类型的镜像链接仍指向旧内容:${pendingMirrors.join(', ')}（请运行 Drive 同步；TB 可用 --type=TB 单独同步）`)
       }
     }
 
@@ -1757,6 +1782,7 @@ module.exports = {
   compareTournamentsForSources,
   // 切包方案：纯函数，导出给单测（三种方案的分布 / 原子不被切开 / 容量守恒）
   splitIntoPacks,
+  splitForType,
   buildAtoms,
   groupByTournament,
   resolveSplitMode,

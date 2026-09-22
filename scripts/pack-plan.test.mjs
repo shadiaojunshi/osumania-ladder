@@ -33,6 +33,37 @@ test('single publish refuses active migrations and cancelling the last migration
   assert.doesNotThrow(() => assertSinglePublishSafe({}, {}))
 })
 
+test('TB-only publishing accepts unchanged routing but blocks changes in either direction', () => {
+  const route = { a: { from: 'IN', to: 'TB' }, b: { from: 'TE', to: 'ORC' } }
+  assert.doesNotThrow(() => assertSinglePublishSafe(route, route, 'TB'))
+  assert.doesNotThrow(() => assertSinglePublishSafe({ b: route.b }, {}, 'TB'))
+  assert.throws(() => assertSinglePublishSafe(route, {}, 'TB'), /全量发布/)
+  assert.throws(() => assertSinglePublishSafe({}, route, 'TB'), /全量发布/)
+  assert.throws(() => assertSinglePublishSafe({ a: { from: 'TB', to: 'TE' } }, { a: { from: 'TB', to: 'ORC' } }, 'TB'), /全量发布/)
+})
+
+test('TB-only CLI preserves every other pack and manual link, including unpublished routing changes', async () => {
+  const previous = JSON.parse(readFileSync(new URL('../data/packs-manifest.json', import.meta.url), 'utf8'))
+  const maps = [{ realType: 'TB', slot: 'TB' }, { realType: 'TE', packAs: 'ORC', slot: 'LN1' }]
+  // Keep the published routes to/from TB unchanged; unrelated changes are not published.
+  previous.packRouting = { unrelated: { from: 'TE', to: 'IN' } }
+  const result = await runMain({ maps, previous, argv: ['--type=TB', '--publish'],
+    generate: type => ({ realType: type, status: 'ok', packs: previous.packs.filter(p => p.realType === 'TB').flatMap(p =>
+      [p.contentEntries.slice(0, 42), p.contentEntries.slice(42)].filter(e => e.length).map((entries, i) => ({
+        ...p, part: (p.part - 1) * 2 + i + 1, objectKey: `TB_${p.part}_${i}.new.osz`, status: 'ok', contentEntries: entries,
+        mapCount: entries.length, links: { r2: `https://packs.example/TB_${p.part}_${i}.new.osz` },
+      }))),
+    }),
+  })
+  assert.equal(result.error, undefined)
+  assert.deepEqual(result.calls, ['TB'])
+  const next = result.writes.find(w => w.file.endsWith('packs-manifest.json')).data
+  require('./check-tb-publish-scope').assertTbOnlyChange(previous, next)
+  for (const p of next.packs.filter(p => p.realType === 'TB' && p.links.drive123)) {
+    assert.equal(p.staleMirrorLinks.drive123, p.links.drive123)
+  }
+})
+
 test('new maps cannot mask lost content, including NSV; explicit removal can be allowed', () => {
   const old = [{ contentEntries: [content('main'), content('nsv')] }]
   const next = [{ contentEntries: [content('main'), content('borrowed1'), content('borrowed2')] }]

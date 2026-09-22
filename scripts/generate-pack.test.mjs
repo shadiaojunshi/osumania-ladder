@@ -23,6 +23,39 @@ const require = createRequire(import.meta.url)
 const { rewriteOsu, packCountFor, packSizeFor, compareTournamentsForSources, writeIdentityReport, countIdentityIssues, resolveDownloadConcurrency, DEFAULT_DOWNLOAD_CONCURRENCY, MAX_DOWNLOAD_CONCURRENCY, splitIntoPacks, resolveSplitMode, DEFAULT_SPLIT_MODE } = require('./generate-pack.js')
 const generatePackSource = fs.readFileSync(new URL('./generate-pack.js', import.meta.url), 'utf8')
 
+test('TB alone uses the strict 50-chart cap and evenly splits all counts', () => {
+  const { splitForType } = require('./generate-pack.js')
+  for (const total of [1, 49, 50, 51, 100, 101, 120, 332, 500]) {
+    const entries = Array.from({ length: total }, (_, i) => ({ r2Key: `maps/cup/r/TB${i}.osz`, tournamentId: `cup${Math.floor(i / 9)}` }))
+    const chunks = splitForType(entries, 'TB')
+    assert.equal(chunks.length, Math.ceil(total / 50))
+    assert.ok(chunks.every(c => c.length <= 50))
+    assert.equal(new Set(chunks.flat()).size, total)
+    assert.ok(Math.max(...chunks.map(c => c.length)) - Math.min(...chunks.map(c => c.length)) <= 1)
+    assert.deepEqual(chunks, splitForType(entries, 'TB'))
+    const originalParts = packCountFor(total)
+    assert.deepEqual(splitForType(entries, 'CJ'), splitIntoPacks(entries, Array.from({ length: originalParts }, (_, i) => packSizeFor(total, i, originalParts))))
+  }
+})
+
+test('TB counts NSV too and never separates its main chart or exceeds 50', () => {
+  const { splitForType } = require('./generate-pack.js')
+  for (const pairs of [25, 26, 49, 50, 51, 74, 100, 166]) for (const singles of [0, 1, 3, 17]) {
+    const entries = Array.from({ length: pairs }, (_, i) => [
+      { r2Key: `maps/cup/r/${i}.osz`, tournamentId: 'cup' },
+      { r2Key: `maps/cup/r/${i}.nsv.osz`, isNsv: true, tournamentId: 'cup' },
+    ]).flat().concat(Array.from({ length: singles }, (_, i) => ({ r2Key: `maps/other/r/${i}.osz`, tournamentId: 'other' })))
+    for (const mode of ['tournament', 'sequence', 'entry']) {
+      const chunks = splitForType(entries, 'TB', mode)
+      assert.equal(chunks.length, Math.ceil(entries.length / 50))
+      assert.equal(new Set(chunks.flat()).size, entries.length)
+      assert.ok(chunks.every(c => c.length <= 50))
+      assert.ok(Math.max(...chunks.map(c => c.length)) - Math.min(...chunks.map(c => c.length)) <= 2)
+      for (const c of chunks) for (const e of c.filter(e => e.isNsv)) assert.ok(c.some(m => m.r2Key === e.r2Key.replace('.nsv.osz', '.osz')))
+    }
+  }
+})
+
 const sampleOsu = (od, hp = 5) => [
   'osu file format v14',
   '',

@@ -313,6 +313,14 @@ function buildManifestPacks({ typeResults = [], oldManifest = {}, today, preserv
       const key = `${r.realType}#${part}`
       const previous = byKey.get(key)
       const links = mergeLinks(previous?.links, r.links)
+      const staleMirrorLinks = { ...previous?.staleMirrorLinks }
+      // Repartitioning TB changes what each part contains. Keep manually entered
+      // URLs, but do not present old 123/Baidu/etc. parts as the new partition.
+      if (r.realType === 'TB' && r.objectKey && r.objectKey !== previous?.objectKey) {
+        for (const [mirror, url] of Object.entries(previous?.links || {})) {
+          if (mirror !== 'r2' && mirror !== 'googleDrive') staleMirrorLinks[mirror] = url
+        }
+      }
       packs.push({
         realType: r.realType,
         name: r.name,
@@ -323,6 +331,7 @@ function buildManifestPacks({ typeResults = [], oldManifest = {}, today, preserv
         totalMaps: r.totalMaps,
         lastUpdated: dateOf,
         links,
+        ...(Object.keys(staleMirrorLinks).length ? { staleMirrorLinks } : {}),
         // 文件 id 要继承：Drive 侧靠它 update 同一个文件，否则每次都会新建一个副本。
         gdriveFileId: previous?.gdriveFileId,
         // Drive 上那个文件对应的是哪个内容键。与本次 objectKey 相同才算"已经是这一版"，
@@ -460,7 +469,7 @@ const CLI_USAGE = [
   '                            --type 合用。与 --publish / --offline 互斥。',
   '  --allow-content-gaps      确认有意移除或替换旧谱面后，允许数量/内容收缩；仍记录日志。',
   '                            不放行缺音频、下载失败或损坏的谱面。',
-  '  临时归包或撤销临时归包必须全量发布；单类型仅支持离线预览。',
+  '  临时归包或撤销临时归包必须全量发布；TB 可在涉及 TB 的归包记录未变时单独发布。',
   '  --help                    显示本说明',
   '',
   '孤儿清理不在这里:node scripts/gc-pack-objects.mjs（基于**已提交**的清单，默认只报告）。',

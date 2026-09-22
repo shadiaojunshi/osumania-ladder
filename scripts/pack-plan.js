@@ -23,7 +23,19 @@ function planPackRun(tournaments, { normalize, knownTypes, excludedTypes }) {
   return { types: [...types], routing }
 }
 
-function assertSinglePublishSafe(routing, previousRouting = {}) {
+function assertSinglePublishSafe(routing, previousRouting = {}, targetType) {
+  // A TB-only rebuild may coexist with already-published routing elsewhere.
+  // Any changed route touching TB still requires publishing both endpoints.
+  if (targetType === 'TB') {
+    for (const key of new Set([...Object.keys(routing), ...Object.keys(previousRouting)])) {
+      const now = routing[key], before = previousRouting[key]
+      if (![now?.from, now?.to, before?.from, before?.to].includes('TB')) continue
+      if (now?.from !== before?.from || now?.to !== before?.to) {
+        throw new Error(`${key}: TB 临时归包有变更，请全量发布，让来源包与目标包一起更新。`)
+      }
+    }
+    return
+  }
   // Previous routing matters when cancelling the last override. A single pack
   // cannot safely remove the old destination and restore the source together.
   if (Object.keys(routing).length || Object.keys(previousRouting).length) {

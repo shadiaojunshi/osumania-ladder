@@ -249,11 +249,12 @@ async function syncOnePack(drive, entry, makeBody, delay, log = console) {
 
 // 上传所有 pack。返回 { failed, succeeded, skipped, orphans }。
 // 只写内存中的 entry,不做任何删除——删除决定留给调用方,确保失败时不误删。
-async function runDriveSync({ drive, packs, prevPacks, makeBody, log = console, delay }) {
+async function runDriveSync({ drive, packs, prevPacks, makeBody, log = console, delay, targetType = null }) {
   const failed = []
   const succeeded = []
   let skipped = 0
   for (const entry of packs) {
+    if (targetType && entry.realType !== targetType) continue
     const manifestKey = `${entry.realType}_${entry.part}.osz`
     try {
       const { fileId, skipped: wasSkipped } = await syncOnePack(drive, entry, makeBody, delay, log)
@@ -278,7 +279,9 @@ async function runDriveSync({ drive, packs, prevPacks, makeBody, log = console, 
 
   const referencedIds = collectReferencedFileIds(packs)
   // 任一失败 → 本次不做任何孤儿清理(保留旧文件,便于重跑恢复)。
-  const orphans = failed.length === 0 ? computeOrphans(prevPacks, referencedIds) : []
+  const orphans = failed.length === 0 ? computeOrphans(
+    targetType ? (prevPacks || []).filter(p => p.realType === targetType) : prevPacks, referencedIds,
+  ) : []
   return { failed, succeeded, skipped, referencedIds, orphans }
 }
 
@@ -301,6 +304,10 @@ function assertNonEmptyPacks(packs) {
 }
 
 async function main() {
+  const args = process.argv.slice(2)
+  if (args.some(a => a !== '--type=TB' && a !== '--clean-orphans')) throw new Error('只支持 --type=TB 或 --clean-orphans')
+  const targetType = args.includes('--type=TB') ? 'TB' : null
+  if (targetType && args.includes('--clean-orphans')) throw new Error('TB 专项同步不能清理旧文件')
   assertDriveEnv()
   if (!fs.existsSync(MANIFEST_PATH)) {
     console.error('packs-manifest.json missing — generate-pack must run first')
@@ -309,6 +316,7 @@ async function main() {
   const manifest = JSON.parse(fs.readFileSync(MANIFEST_PATH, 'utf-8'))
   const packs = manifest.packs || []
   assertNonEmptyPacks(packs)
+  if (targetType && !packs.some(p => p.realType === targetType)) throw new Error('清单没有 TB 包，拒绝同步')
 
   // 旧 manifest(generate-pack.js 在重建前转储到这)用来识别孤儿 fileId
   let prevManifest = { packs: [] }
@@ -338,7 +346,7 @@ async function main() {
 
   let result
   try {
-    result = await runDriveSync({ drive, packs, prevPacks: prevManifest.packs, makeBody })
+    result = await runDriveSync({ drive, packs, prevPacks: prevManifest.packs, makeBody, targetType })
   } catch (err) {
     const msg = err && err.message
     if (isFatalAuthError(err)) {
@@ -394,7 +402,7 @@ async function main() {
   }
 
   // .previous 是过程产物,全部成功后才清掉避免被 commit
-  if (fs.existsSync(PREV_MANIFEST_PATH)) fs.unlinkSync(PREV_MANIFEST_PATH)
+  if (!targetType && fs.existsSync(PREV_MANIFEST_PATH)) fs.unlinkSync(PREV_MANIFEST_PATH)
 }
 
 if (require.main === module) {

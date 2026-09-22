@@ -4,17 +4,21 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { PlayerAvatar } from '@/components/PlayerAvatar'
 import packsManifest from '@data/packs-manifest.json'
+import csvManifest from '@data/pack-csv-manifest.json'
+import { currentPackCsv, type PackCsvCollection } from '@/lib/packCsv'
 import { useT, type MessageKey } from '@/lib/i18n'
 import { isMirrorPending, readPendingMirrors } from '@/lib/packMirrors'
 
 interface Pack {
   realType: string
+  objectKey?: string
   name: string
   part?: number
   mapCount: number
   totalMaps: number
   lastUpdated: string
   links: Record<string, string>
+  staleMirrorLinks?: Record<string, string>
   sizeMB: number
 }
 
@@ -69,6 +73,10 @@ export default function DownloadPage() {
       </header>
 
       <main className="max-w-4xl mx-auto px-6 py-8 space-y-8">
+        <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 dark:border-emerald-900 dark:bg-emerald-950/30">
+          <p className="text-sm font-medium text-emerald-900 dark:text-emerald-200">{t('download.csvIntro')}</p>
+          <p className="mt-1 text-xs leading-relaxed text-emerald-700 dark:text-emerald-300">{t('download.csvHint')}</p>
+        </div>
         {CATEGORIES.map(category => {
           const categoryGroups = category.types
             .map(type => ({ type, parts: groupsByType.get(type) }))
@@ -113,6 +121,7 @@ function PackGroup({ parts, pendingMirrors }: { parts: Pack[]; pendingMirrors: r
 
   const isMulti = parts.length > 1
   const [expanded, setExpanded] = useState(false)
+  const csv = currentPackCsv(parts, csvManifest.collections as PackCsvCollection[])
 
   // 单包时直接平铺,多包时折叠
   if (!isMulti) {
@@ -120,6 +129,8 @@ function PackGroup({ parts, pendingMirrors }: { parts: Pack[]; pendingMirrors: r
       <PackRow
         pack={parts[0]}
         hidePartLabel
+        csv={csv}
+        showCsv
         mirrorPending={isMirrorPending(pendingMirrors, parts[0].realType, parts[0].part)}
       />
     )
@@ -129,9 +140,10 @@ function PackGroup({ parts, pendingMirrors }: { parts: Pack[]; pendingMirrors: r
 
   return (
     <div className="bg-white dark:bg-neutral-900 rounded-lg border border-gray-200 dark:border-neutral-800 shadow-sm">
+      <div className="flex flex-wrap items-center gap-2 pr-4">
       <button
         onClick={() => setExpanded(!expanded)}
-        className="w-full p-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-neutral-800/50 transition"
+        className="min-w-0 flex-1 p-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-neutral-800/50 transition"
       >
         <div className="flex-1 text-left">
           <div className="flex items-center gap-2">
@@ -152,6 +164,8 @@ function PackGroup({ parts, pendingMirrors }: { parts: Pack[]; pendingMirrors: r
           )}
         </div>
       </button>
+        <div className="ml-4 my-3"><CsvDownload csv={csv} /></div>
+      </div>
 
       {expanded && (
         <div className="border-t border-gray-100 dark:border-neutral-800 divide-y divide-gray-100 dark:divide-neutral-800">
@@ -169,24 +183,40 @@ function PackGroup({ parts, pendingMirrors }: { parts: Pack[]; pendingMirrors: r
   )
 }
 
+function CsvDownload({ csv }: { csv?: PackCsvCollection }) {
+  const t = useT()
+  if (!csv) return <span className="text-xs text-gray-400 dark:text-neutral-500" title={t('download.csvUnavailableHint')}>{t('download.csvUnavailable')}</span>
+  return (
+    <a href={csv.url} download target="_blank" rel="noopener noreferrer"
+      title={t('download.csvDetails', { n: csv.mapCount, date: csv.exportedAt.slice(0, 10) })}
+      className="inline-flex whitespace-nowrap rounded-md bg-emerald-100 px-3 py-1.5 text-xs font-medium text-emerald-800 hover:bg-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-200 dark:hover:bg-emerald-900/70">
+      {t('download.csvButton')}
+    </a>
+  )
+}
+
 function PackRow({
   pack,
   indent,
   hidePartLabel,
   mirrorPending,
+  csv,
+  showCsv,
 }: {
   pack: Pack
   indent?: boolean
   hidePartLabel?: boolean
   /** 这个包的 Drive 镜像还是上一版（见 src/lib/packMirrors.ts）。 */
   mirrorPending?: boolean
+  csv?: PackCsvCollection
+  showCsv?: boolean
 }) {
   const t = useT()
   const hasLinks = Object.keys(pack.links).length > 0
   const progress = pack.totalMaps > 0 ? Math.round((pack.mapCount / pack.totalMaps) * 100) : 0
 
   return (
-    <div className={`flex items-center justify-between p-4 ${indent ? 'pl-9' : 'bg-white dark:bg-neutral-900 rounded-lg border border-gray-200 dark:border-neutral-800 shadow-sm'}`}>
+    <div className={`flex flex-wrap gap-3 items-center justify-between p-4 ${indent ? 'pl-9' : 'bg-white dark:bg-neutral-900 rounded-lg border border-gray-200 dark:border-neutral-800 shadow-sm'}`}>
       <div className="flex-1">
         <div className="flex items-center gap-2">
           {hidePartLabel ? (
@@ -215,11 +245,13 @@ function PackRow({
         )}
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex flex-wrap items-center gap-2">
+        {showCsv && <CsvDownload csv={csv} />}
         {hasLinks ? (
           Object.entries(pack.links).map(([key, url]) => {
-            // 只有 Drive 这一路会滞后：R2 是主链，写清单时它就已经指向新键了。
-            const stale = key === 'googleDrive' && mirrorPending === true
+            // Drive 同步前及尚未人工确认更新的网盘链接都标记为旧版。
+            const manualStale = pack.staleMirrorLinks?.[key] === url
+            const stale = (key === 'googleDrive' && mirrorPending === true) || manualStale
             return (
               <a
                 key={key}
@@ -230,6 +262,7 @@ function PackRow({
                 className={`px-3 py-1.5 text-xs font-medium bg-purple-50 text-purple-700 rounded-md hover:bg-purple-100 dark:bg-purple-900/30 dark:text-purple-200 dark:hover:bg-purple-900/50${stale ? ' ring-1 ring-amber-400 dark:ring-amber-600' : ''}`}
               >
                 {LINK_LABEL_KEYS[key] ? t(LINK_LABEL_KEYS[key]) : key}
+                {manualStale && <span> · {t('download.oldVersion')}</span>}
               </a>
             )
           })

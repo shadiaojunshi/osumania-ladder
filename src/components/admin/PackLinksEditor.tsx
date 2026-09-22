@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useT, type MessageKey } from '@/lib/i18n'
 
 interface Pack {
@@ -11,6 +11,7 @@ interface Pack {
   totalMaps: number
   lastUpdated: string
   links: Record<string, string>
+  staleMirrorLinks?: Record<string, string>
   sizeMB: number
 }
 
@@ -34,24 +35,26 @@ export function PackLinksEditor() {
   const [submitting, setSubmitting] = useState(false)
   const [status, setStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
 
-  const fetchManifest = async () => {
-    setLoading(true)
-    try {
-      const res = await fetch('/api/packs-manifest')
+  const fetchManifest = useCallback((signal?: AbortSignal) => {
+    return fetch('/api/packs-manifest', { signal }).then(res => {
       if (!res.ok) throw new Error()
-      const { manifest: m, sha: s } = await res.json()
+      return res.json()
+    }).then(({ manifest: m, sha: s }) => {
+      if (signal?.aborted) return
       setManifest(m)
       setSha(s)
-    } catch {
-      setStatus({ type: 'error', message: t('packs.loadFailed') })
-    } finally {
-      setLoading(false)
-    }
-  }
+    }).catch(() => {
+      if (!signal?.aborted) setStatus({ type: 'error', message: t('packs.loadFailed') })
+    }).finally(() => {
+      if (!signal?.aborted) setLoading(false)
+    })
+  }, [t])
 
-  // 取数函数必须先声明、再在 effect 里引用（否则命中 react-hooks/immutability
-  // 的 "Cannot access variable before it is declared"）。行为不变。
-  useEffect(() => { fetchManifest() }, [])
+  useEffect(() => {
+    const controller = new AbortController()
+    void fetchManifest(controller.signal)
+    return () => controller.abort()
+  }, [fetchManifest])
 
   const updateLink = (realType: string, part: number | undefined, linkKey: string, url: string) => {
     if (!manifest) return
@@ -77,7 +80,8 @@ export function PackLinksEditor() {
       })
       if (!res.ok) throw new Error()
       setStatus({ type: 'success', message: t('packs.saved') })
-      fetchManifest()
+      setLoading(true)
+      await fetchManifest()
     } catch {
       setStatus({ type: 'error', message: t('packs.saveFailed') })
     } finally {
@@ -111,7 +115,7 @@ export function PackLinksEditor() {
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {LINK_KEYS.map(lk => (
-                  <div key={lk.id} className="flex items-center gap-2">
+                  <div key={lk.id} className="flex flex-wrap items-center gap-2">
                     <span className="text-xs text-gray-500 dark:text-neutral-400 w-20 shrink-0">{t(lk.labelKey)}</span>
                     <input
                       type="url"
@@ -120,6 +124,19 @@ export function PackLinksEditor() {
                       placeholder="https://..."
                       className="flex-1 px-2 py-1 border border-gray-200 dark:border-neutral-700 rounded text-xs bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 placeholder:text-gray-400 dark:placeholder:text-neutral-500 focus:outline-none focus:border-purple-400"
                     />
+                    {pack.links[lk.id] && pack.staleMirrorLinks?.[lk.id] === pack.links[lk.id] && (
+                      <div className="w-full text-xs text-amber-700 dark:text-amber-300">
+                        {t('packs.staleMirror')}
+                        <button type="button" className="ml-2 underline" onClick={() => {
+                          setManifest(current => current && ({ ...current, packs: current.packs.map(p => {
+                            if (p.realType !== pack.realType || p.part !== pack.part) return p
+                            const staleMirrorLinks = { ...p.staleMirrorLinks }
+                            delete staleMirrorLinks[lk.id]
+                            return { ...p, staleMirrorLinks }
+                          }) }))
+                        }}>{t('packs.confirmMirrorUpdated')}</button>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

@@ -1,0 +1,52 @@
+name: Export Pack CSV Downloads
+
+on:
+  workflow_dispatch:
+    inputs:
+      realType:
+        description: '留空导出所有已发布键型；填写 TB / CJ 等只导出一个键型。不重新合包。'
+        required: false
+        default: ''
+        type: string
+
+concurrency:
+  group: packs-publish
+  cancel-in-progress: false
+
+jobs:
+  export-csv:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - name: Export original chart metadata to R2
+        env:
+          REAL_TYPE: ${{ inputs.realType }}
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY: ${{ secrets.R2_ACCESS_KEY }}
+          R2_SECRET_KEY: ${{ secrets.R2_SECRET_KEY }}
+          R2_BUCKET: osumania-ladder-maps
+          R2_PACKS_BUCKET: ${{ secrets.R2_PACKS_BUCKET }}
+          R2_PACKS_PUBLIC_URL: ${{ secrets.R2_PACKS_PUBLIC_URL }}
+        run: |
+          set -euo pipefail
+          args=()
+          if [ -n "$REAL_TYPE" ]; then args+=("--type=$REAL_TYPE"); fi
+          node --experimental-strip-types scripts/export-pack-csv.mjs "${args[@]}"
+      - name: Commit CSV download index only
+        run: bash scripts/commit-pack-results.sh data/pack-csv-manifest.json
+      - name: Keep download index
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pack-csv-download-index
+          path: data/pack-csv-manifest.json
+          retention-days: 30

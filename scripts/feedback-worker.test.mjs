@@ -431,26 +431,12 @@ test('幂等：已存在的对象读不懂 → conflict（不能当"已收到"�
   assert.equal(storeMod.checkIdempotency('{}', 'h1').action, 'conflict')
 })
 
-test('落盘：写失败就是失败，不能假装成功', async () => {
-  const failing = { async get() { return null }, async put() { throw new Error('R2 down') } }
-  const r = await storeMod.storeSuggestion(failing, {
-    id: 'x', receivedAt: FIXED_NOW, payloadHash: 'h', ipHash: 'iph', submission: { a: 1 },
-  })
-  assert.equal(r.ok, false)
-  assert.match(String(r.error), /R2 down/)
-})
-
-test('落盘：写入的对象里没有 turnstileToken，且状态是 pending/revision 1', async () => {
-  const map = new Map()
-  const r = await storeMod.storeSuggestion(storeMod.r2ObjectStore(fakeR2(map)), {
-    id: 'x', receivedAt: FIXED_NOW, payloadHash: 'h', ipHash: 'iph', submission: { proposal: 1 },
-  })
-  assert.equal(r.ok, true)
-  const stored = JSON.parse([...map.values()][0])
-  assert.equal(stored.status, 'pending')
-  assert.equal(stored.revision, 1)
-  assert.equal(JSON.stringify(stored).includes('turnstileToken'), false)
-})
+// 这里以前还有两条 `storeSuggestion` 的用例（写失败 → 不假装成功、落盘不含 token 且
+// `status: pending` / `revision: 1`）。那个函数是更早的骨架，**生产路径从不调用它** ——
+// 真正的落盘是 `index.ts` 里的条件创建（`onlyIf` + 条件写失败时重读判定 replay），
+// 而两份实现已经漂移：骨架写 `revision: 1`，真路径写 `revision: 0`。
+// 两条用例绿灯却是在给一条不跑的路背书，所以删掉；其中有价值的断言（`status` 是 pending、
+// 正文里没有 token）已并入下面的编排用例，对着真路径断言。
 
 // ---------------------------------------------------------------------------
 // 端到端编排（假 env + 真 Request/Response）
@@ -583,6 +569,9 @@ test('编排：成功 → 201 + 收据，对象落在按日期分层的键上且
   const stored = JSON.parse(env.__bucket.map.get(key))
   assert.equal(stored.payloadHash.length, 64)
   assert.equal(stored.ipHash.length, 32)
+  // 落盘记录的形状：新提交一律 pending（正文不可变，状态迁移走 reviews/）。
+  assert.equal(stored.status, 'pending')
+  assert.equal(stored.revision, 0, '审核状态 CAS 的基准是 0')
   assert.equal(JSON.stringify(stored).includes('token-abc'), false, 'turnstileToken 不落盘')
   // 两次闸门各走一次。
   assert.deepEqual(env.QUOTA.calls.map((c) => c.kind), ['verification', 'acceptance'])

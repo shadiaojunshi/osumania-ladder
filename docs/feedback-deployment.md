@@ -1,6 +1,6 @@
 # 反馈功能实现与部署交接
 
-更新：2026-09-21。代码已在本地实现；本轮没有提交、推送、部署或运行实际合包。历史规划见 `feedback-implementation-checklist.md`，以本文的当前状态为准。
+更新：2026-09-21。代码已在本地实现并已提交推送（`ba7e5b9` 起，含审查修复）；**尚未部署**，生产提交服务未开放。历史规划见 `feedback-implementation-checklist.md`，以本文的当前状态为准。
 
 ## 已实现的流程
 
@@ -66,4 +66,23 @@ Pages 原有登录、GitHub、KV 绑定继续使用。公开 Worker 不得绑定
 
 上线前需在预览环境完成：匿名正常提交与重复 UUID、Turnstile 失败、两位审核员竞争、采纳多条一次保存、保存断线恢复、状态补账、静态刷新不消耗 Functions/KV、关闭入口仍能浏览和使用后台。同时核对实际 Worker/DO/R2 操作增量、生命周期、CORS 和域名检查。
 
-当前完成的是本地代码与本地验证；生产提交服务尚未开放。本轮按用户要求不提交、不推送、不部署，不触发正在进行的合包。
+当前完成的是本地代码与本地验证；生产提交服务尚未开放。代码已提交推送，**仍未部署**，也不触发正在进行的合包。
+
+## 错误文案（2026-09-21 补）
+
+`src/lib/suggestions/{validation,patch}.ts` 的 `message` / `detail` 是**中文诊断原文**：它们是纯逻辑，被 `src/` + `functions/` + 独立 Worker 三边共用，服务端日志与审核页靠它读原因，所以**原文不动**。玩家看到的是 `src/lib/suggestions/errorText.ts` 按**错误码**选出的句子；码认不出来（前端上线早于服务端）退回原文，不会出现空白提示。
+
+在这之前有三处直接把内部文本露给玩家：提交失败时拼出裸机器码（`DISABLED` / `RATE_LIMITED` / `BUDGET_EXHAUSTED`，两种语言下都是乱码）、校验失败拼中文 `message` 与全角分号、预览区直接渲染 `patch.ts` 的中文 `detail`。
+
+- 校验码与计划码是**联合类型**，`errorText.ts` 的表用 `Record<码, [中文, 英文]>` 写 —— 新增一个码不补文案，`npm run typecheck` 直接报错。
+- 提交失败码来自**独立 Worker**（另一个构建单元，tsc 看不见），由 `scripts/suggest-error-text.test.mjs` 扫 Worker 源码的码字面量对账。
+- 计划失败的 `params`（轮次/槽位等插值值）由 `patch.ts` 提供，否则本地化句子只能丢掉具体 ID 或把中文夹进去。
+- **该测试不覆盖三处组件接线**：那三处只有 typecheck 与人工核对，没有自动化断言（组件逻辑没有便宜的运行时测试手段）。
+
+## 测试契约对账（2026-09-21 补）
+
+暂停记录里"旧测试保留部分旧假设、恢复时应统一测试契约，不能只看当前绿灯"那条，指的是这个：
+
+`workers/feedback/src/store.ts` 里曾有一个更早的 `storeSuggestion` + `r2ObjectStore` + `ObjectStore`「通用写入」版本。**生产从不调用它** —— 真正的落盘是 `index.ts` 编排里的条件创建（`onlyIf: { etagDoesNotMatch: '*' }`，条件写失败时重读一次判定 replay）。而且两份实现已经漂移：骨架写 `revision: 1`，真路径写 `revision: 0`（审核状态 CAS 的基准是 0）。
+
+它只被两条测试引用（写失败 → 不假装成功；落盘不含 token 且 `status` / `revision`）。这两条**绿灯，测的却是一条不跑的路** —— 比不测更危险，因为"落盘记录长什么样"看起来已经被覆盖了。已删掉骨架与那两条用例，其中有价值的断言（`status: 'pending'`、`revision: 0`、正文不含 token）并入了编排用例，对着真路径断言；把 `revision` 改回 1 会让它变红（已验）。

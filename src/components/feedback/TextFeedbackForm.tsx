@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { feedbackDatasetVersion } from '@/generated/feedbackDataset'
 import { usePrefsStore } from '@/stores/prefsStore'
 import { validateSubmission, stripToken, SUGGEST_LIMITS } from '@/lib/suggestions/validation'
+import { validationErrorText, submissionErrorText } from '@/lib/suggestions/errorText'
 import { stableJson } from '@/lib/suggestions/fingerprint'
 import { submitSuggestion, SubmissionError } from '@/lib/suggestions/client'
 import type { SuggestStoredSubmission, SuggestTarget } from '@/lib/suggestions/types'
@@ -66,7 +67,7 @@ export function TextFeedbackForm({ target, heading }: { target?: SuggestTarget; 
     //      而服务端压根没见过这个 token，白白多花一次验证。
     const validated = validateSubmission({ schemaVersion: 1, clientRequestId: crypto.randomUUID(), datasetVersion: feedbackDatasetVersion, baseFingerprint: 'text-feedback', proposal: { kind: 'text', message, ...(target ? { target } : {}) }, alias: alias.trim(), evidenceUrls: links.split('\n').map(s => s.trim()).filter(Boolean), turnstileToken: token })
     if (!validated.ok) {
-      setError(tr('内容有误，请修改后再提交：', 'Please fix these before submitting: ') + validated.errors.map(e => e.message).join('；'))
+      setError(validationErrorText(validated.errors, tr))
       setBusy(false)
       return
     }
@@ -82,7 +83,8 @@ export function TextFeedbackForm({ target, heading }: { target?: SuggestTarget; 
       setReceipt(result.id)
       try { localStorage.removeItem(key) } catch { /* receipt already confirmed */ }
     } catch (e) {
-      setError(tr('提交未确认，内容已保留：', 'Submission not confirmed; your text is retained: ') + (e as Error).message)
+      // 与 FeedbackForm 同一处理：`SubmissionError.message` 是机器码，不是句子。
+      setError(tr('提交未确认，内容已保留：', 'Submission not confirmed; your text is retained: ') + submissionErrorText((e as Error).message, tr))
       if (e instanceof SubmissionError && e.retryAfter) { const now = Date.now(); setClock(now); setRetryAt(now + e.retryAfter * 1000) }
     } finally { setBusy(false); setVerified({ content: '', token: '' }); setChallenge(n => n + 1) }
   }

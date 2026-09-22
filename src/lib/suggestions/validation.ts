@@ -55,15 +55,52 @@ const TOURNAMENT_ID_PATTERN = /^[a-zA-Z0-9][a-zA-Z0-9-]*$/
 const ROUND_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9_-]*$/
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
+/**
+ * 全部校验失败码。**是联合类型而不是 `string`**，为了让 `errorText.ts` 的文案表能用
+ * `Record<SuggestErrorCode, …>` 锁死：这里新增一个码，那边不补文案就 typecheck 报错
+ * （与 `messages.en.ts` 的 key parity 同一个套路）。
+ *
+ * `message` 保持中文原文：它是**服务端/日志/测试的诊断文本**，不是给玩家看的句子 ——
+ * 玩家看到的是 `errorText.ts` 按码选出来的本地化文案。
+ */
+export type SuggestErrorCode =
+  | 'NOT_STRING'
+  | 'EMPTY'
+  | 'TOO_LONG'
+  | 'CONTROL_CHAR'
+  | 'BACKSLASH'
+  | 'EMPTY_SEGMENT'
+  | 'CHARSET'
+  | 'UNKNOWN_REAL_TYPE'
+  | 'NOT_NUMBER'
+  | 'NOT_FINITE'
+  | 'NEGATIVE'
+  | 'ZERO_NOT_ALLOWED'
+  | 'OVER_LIMIT'
+  | 'NOT_OBJECT'
+  | 'UNKNOWN_FIELD'
+  | 'MISSING'
+  | 'ALL_ZERO'
+  | 'NOT_INTEGER'
+  | 'SLOT_NOT_ALLOWED'
+  | 'BAD_OFFSET'
+  | 'UNKNOWN_KIND'
+  | 'NOT_ARRAY'
+  | 'TOO_MANY'
+  | 'BAD_URL'
+  | 'NOT_HTTPS'
+  | 'BAD_VERSION'
+  | 'NOT_UUID'
+
 export interface SuggestFieldError {
   field: string
-  code: string
+  code: SuggestErrorCode
   message: string
 }
 
 export type SuggestValidation<T> = { ok: true; value: T } | { ok: false; errors: SuggestFieldError[] }
 
-function fail(field: string, code: string, message: string): SuggestValidation<never> {
+function fail(field: string, code: SuggestErrorCode, message: string): SuggestValidation<never> {
   return { ok: false, errors: [{ field, code, message }] }
 }
 

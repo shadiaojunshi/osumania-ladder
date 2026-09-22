@@ -85,6 +85,15 @@ export interface LocateCandidate {
   beatmapId: number | null
 }
 
+/**
+ * 失败信息里**给文案用的插值值**（键名与 `errorText.ts` 的模板一一对应）。
+ *
+ * 为什么 `detail` 之外还要单独给一份结构化的值：`detail` 是**中文诊断原文**
+ * （服务端/日志/测试用），而玩家看到的是按码选出的本地化句子。只照 `detail` 翻译的话，
+ * 「轮次 X 里没有槽位 Y」里的 X/Y 就没法填进英文句子里了 —— 要么丢信息，要么把中文夹进去。
+ */
+export type SuggestErrorParams = Record<string, string | number>
+
 export type LocateResult =
   | {
       ok: true
@@ -96,7 +105,13 @@ export type LocateResult =
       /** 轮次级建议没有单一类别，为 null —— 它是"不适用"，不是"SPECIAL"。 */
       category: MapCategory | null
     }
-  | { ok: false; code: LocateFailureCode; detail: string; candidates?: LocateCandidate[] }
+  | {
+      ok: false
+      code: LocateFailureCode
+      detail: string
+      params?: SuggestErrorParams
+      candidates?: LocateCandidate[]
+    }
 
 /**
  * 在权威数据里定位建议的目标。
@@ -112,7 +127,12 @@ export function locateSuggestTarget(
   if (matches.length > 1) return { ok: false, code: 'round-ambiguous', detail: '轮次 ID 重复，请先修复比赛数据' }
   const round = matches[0]
   if (!round) {
-    return { ok: false, code: 'round-not-found', detail: `轮次 ${proposal.target.roundId} 不在当前数据里` }
+    return {
+      ok: false,
+      code: 'round-not-found',
+      detail: `轮次 ${proposal.target.roundId} 不在当前数据里`,
+      params: { roundId: proposal.target.roundId },
+    }
   }
   const roundIndex = rounds.indexOf(round)
 
@@ -130,7 +150,12 @@ export function locateSuggestTarget(
     .map((map, index) => ({ map, index }))
     .filter((item) => slotOf(item.map) === wantedSlot)
   if (hits.length === 0) {
-    return { ok: false, code: 'slot-not-found', detail: `轮次 ${round.id} 里没有槽位 ${wantedSlot}` }
+    return {
+      ok: false,
+      code: 'slot-not-found',
+      detail: `轮次 ${round.id} 里没有槽位 ${wantedSlot}`,
+      params: { roundId: round.id, slot: wantedSlot },
+    }
   }
 
   const candidates = (list: typeof hits): LocateCandidate[] =>
@@ -148,6 +173,7 @@ export function locateSuggestTarget(
         ok: false,
         code: 'beatmap-mismatch',
         detail: `槽位 ${wantedSlot} 现在的 BID 是 ${actual ?? '（无/占位）'}，与提交时的 ${wantedBid} 对不上`,
+        params: { slot: wantedSlot },
         candidates: candidates(hits),
       }
     }
@@ -167,6 +193,7 @@ export function locateSuggestTarget(
       ok: false,
       code: 'slot-ambiguous',
       detail: `轮次 ${round.id} 里有 ${hits.length} 张 ${wantedSlot}，且建议没带可用的 BID，无法确定改哪一张`,
+      params: { roundId: round.id, slot: wantedSlot, hits: hits.length },
       candidates: candidates(hits),
     }
   }
@@ -176,6 +203,7 @@ export function locateSuggestTarget(
       ok: false,
       code: 'beatmap-mismatch',
       detail: `槽位 ${wantedSlot} 有 ${hits.length} 张，其中 BID 等于 ${wantedBid} 的有 ${matched.length} 张`,
+      params: { slot: wantedSlot },
       candidates: candidates(hits),
     }
   }
@@ -225,14 +253,18 @@ export interface SuggestPlan {
   noop: boolean
 }
 
+export type SuggestPlanFailureCode =
+  | LocateFailureCode
+  | 'field-not-applicable'
+  | 'no-fields'
+  | 'reference-mismatch'
+  | 'empty-reference'
+
 export interface SuggestPlanError {
-  code:
-    | LocateFailureCode
-    | 'field-not-applicable'
-    | 'no-fields'
-    | 'reference-mismatch'
-    | 'empty-reference'
+  code: SuggestPlanFailureCode
   detail: string
+  /** 文案插值值；见 `SuggestErrorParams`。 */
+  params?: SuggestErrorParams
   errors?: { field: string; message: string }[]
 }
 
@@ -271,6 +303,10 @@ export function planSuggestChange({
         ok: false,
         code: 'reference-mismatch',
         detail: `参考来源 ${proposal.reference.tournamentId}/${proposal.reference.roundId} 与目标 ${proposal.target.tournamentId}/${proposal.target.roundId} 不一致`,
+        params: {
+          reference: `${proposal.reference.tournamentId}/${proposal.reference.roundId}`,
+          target: `${proposal.target.tournamentId}/${proposal.target.roundId}`,
+        },
       }
     }
     const roundChanges = describeRoundRefChanges(located.round.maps, proposal.value)
@@ -333,6 +369,7 @@ export function planSuggestChange({
       ok: false,
       code: 'field-not-applicable',
       detail: `${category} 只用 ${allowed.join(' / ')}，这条建议却给了 ${rejected.join(' / ')}`,
+      params: { category, allowed: allowed.join(' / '), rejected: rejected.join(' / ') },
       errors: rejected.map((field) => ({
         field,
         message: `${category} 不写 ${field}`,

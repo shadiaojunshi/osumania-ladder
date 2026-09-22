@@ -33,6 +33,93 @@ Pages 原有登录、GitHub、KV 绑定继续使用。公开 Worker 不得绑定
 
 `workers/feedback/wrangler.toml` 是部署样例，需核实实际桶名、域名和账号套餐。`public/_routes.json` 仅将 `/api/*` 路由到 Pages Functions。没有前端环境变量时页面仍可浏览、填写，但明确显示“反馈提交暂未开放”。变量在构建时注入，修改后需重建前端；仅改运行时环境不会更新静态页面。
 
+## 上线操作顺序（2026-09-22 补，面板 + wrangler）
+
+下面每一步都写清了"点什么、期望看到什么"。**顺序不能换**：桶没建好 `wrangler deploy` 会直接失败；
+总开关开在验收之前，等于把没验过的入口放给公网。
+
+### 0. 前置确认（免费套餐够用）
+
+- R2 已启用（本站已有 maps / packs 桶，说明早就开了）。
+- Durable Objects：**Workers 免费套餐可用**，但只支持 SQLite 后端 —— `wrangler.toml` 用的正是
+  `new_sqlite_classes`，对得上。（2026-07-09 起新命名空间只能建 SQLite 后端；KV 后端一直是付费专属。）
+- 免费额度：DO 请求 10 万/天、SQLite 存储 5 GB/账号、Workers 10 万请求/天、R2 10 GB-月 + A 类 100 万/月。
+  本站反馈预算（300 接纳/天、2000 验证/天）远低于这些上限。
+- ⚠️ 2026-01-07 起 SQLite DO 存储超出免费额度开始计费；这不是"永远不花钱"的保证。
+
+### 1. 建正文桶
+
+面板 **R2 → Create bucket** → 名称 `osumania-ladder-suggestions` → 创建后**不要**开 Public access、
+**不要**绑自定义域。（等价命令：`npx wrangler r2 bucket create osumania-ladder-suggestions`）
+
+### 2. 建 Turnstile 站点
+
+面板 **Turnstile → Add site** → Hostname 填 `osumania-ladder.pages.dev` → Widget 模式选 Managed。
+建完拿两个值：**Site Key**（公开，进前端）和 **Secret Key**（服务端，只进 Worker secret）。
+**不需要**在面板配 action —— action 由前端 widget 渲染时指定（`feedback_submit`，见
+`TurnstileChallenge.tsx`），服务端按 siteverify 回值核对（`policy.ts` 的 `TURNSTILE_ACTION`）。
+
+### 3. 登录并部署 Worker（写入仍关闭）
+
+```bash
+cd workers/feedback
+npx wrangler login                          # 浏览器 OAuth；首次会让账号选一个 *.workers.dev 子域
+npx wrangler secret put TURNSTILE_SECRET    # 粘贴第 2 步的 Secret Key
+npx wrangler secret put IP_HASH_SALT        # 独立随机串，别复用别的盐
+npx wrangler deploy
+```
+
+生成盐（本机）：`node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`
+
+部署完会打印 `https://osumania-ladder-feedback.<你的子域>.workers.dev`。此时
+`FEEDBACK_WRITES_ENABLED` 在 `wrangler.toml` 里仍是 `"false"` —— **先别动它**。
+
+### 4. 验证 Worker 活着、且确实关着
+
+```bash
+curl -i -X POST https://osumania-ladder-feedback.<你的子域>.workers.dev/v1/suggestions \
+  -H 'Content-Type: application/json' -H 'Origin: https://osumania-ladder.pages.dev' -d '{}'
+```
+
+期望 `HTTP 503` + `{"ok":false,"code":"DISABLED"}` + `Retry-After: 3600`。
+这条同时证明了路由通、配置读得到、闸是关的。返回 404 = URL 写错；返回 500/1101 = 跑
+`npx wrangler tail` 看日志（日志里**不会**有 IP 或 ipHash，只有 clientRequestId）。
+
+### 5. Pages 加两个构建期变量并重建
+
+面板 **Workers & Pages → 该项目 → Settings → Variables and Secrets**，在 **Production** 加：
+
+| 变量 | 值 |
+| --- | --- |
+| `NEXT_PUBLIC_FEEDBACK_ENDPOINT` | `https://osumania-ladder-feedback.<你的子域>.workers.dev/v1/suggestions` |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | 第 2 步的 Site Key |
+
+然后 **Deployments → 最新一次 → Retry deployment**。`NEXT_PUBLIC_*` 是构建时内联的，只存变量不重建不生效。
+
+验证：`curl -s https://osumania-ladder.pages.dev/feedback | grep -c 反馈提交暂未开放` 应为 **0**。
+
+### 6. 验收（开总开关之前）
+
+- 匿名打开 `/feedback`，选一张谱，填一条，走完验证提交 → 看到"已收到，等待审核。收据编号：…"。
+- 不刷新再点一次 → 应返回**同一张收据**，不产生第二条。
+- 刷新 → 草稿还在；换隐身窗口 → 同 IP 当天第 10 条之后应被限流。
+- 后台"反馈审核"能看到这条；采纳到暂存、忽略各试一次；"保存全部"确认只产生一个数据 commit。
+- 把 Worker 写入改回 `false` 重新 deploy → 页面仍能浏览填写，提交提示"反馈提交暂未开放"。
+
+### 7. 开闸
+
+把 `workers/feedback/wrangler.toml` 的 `FEEDBACK_WRITES_ENABLED` 改成 `"true"` → `npx wrangler deploy`。
+**这一步不重建 Pages、不碰比赛数据。** 紧急关闭就是把它改回 `"false"` 再 deploy 一次。
+
+### 已知偏差：v1 走 workers.dev
+
+第 3 步给出的是 `*.workers.dev` 地址，而 `feedback-implementation-checklist.md` 第 142 行要求
+"默认 workers.dev 不得成为绕过边缘规则的另一入口"。
+现状下这是**权宜**：本站还没有自定义域，前端要能直接 POST 就只剩这个地址。
+已经到位的替代防线是 CORS 精确白名单（`ALLOWED_ORIGINS`）+ Turnstile hostname 核对 + 按 IP 的短窗口限流
++ 每日预算 —— 挡得住"别的网站拿这个入口刷"，挡不住"直接打这个域名的洪水"。要彻底合规得绑自定义域、
+关掉 `workers_dev`，代价是前端要改地址并重建一次。
+
 ## 额度与关闭方式
 
 默认 UTC 每日最多 300 个接纳预留、2000 次验证预留；全站每分钟最多 60 次验证。同 IP 每分钟最多 10 次验证、10 分钟最多 5 次接纳、每日最多 10 次接纳。预留后的网络或存储失败保守占用额度，重试原 UUID 不再扣接纳额度。按 IP 的短窗口在 UTC 换日重置；这不是跨午夜连续限速。

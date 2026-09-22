@@ -267,9 +267,9 @@
       "abbreviation": "RO16",
       "order": 3,
       "difficulty": {
-        "min": 0,
-        "max": 0,
-        "average": 0
+        "min": 3,
+        "max": 9.6,
+        "average": 5.75
       },
       "maps": [
         {
@@ -277,7 +277,7 @@
           "type": "RC",
           "realType": "FCJ",
           "name": "KOTOKO - Wing my Way [Moving On]",
-          "difficulty": 0,
+          "difficulty": 5.3,
           "beatmapId": 5223914,
           "beatmapsetId": 2407009
         },
@@ -286,7 +286,7 @@
           "type": "RC",
           "realType": "JS",
           "name": "MORE MORE JUMP! x Kagamine Rin - KILLER [Don't Blink! 1.05x]",
-          "difficulty": 0,
+          "difficulty": 6.1,
           "beatmapId": 5223876,
           "beatmapsetId": 2406993
         },
@@ -295,7 +295,7 @@
           "type": "RC",
           "realType": "SS",
           "name": "A than_Lily feat. Aitsuki Nakuru - Presenter* [Merry Christmas]",
-          "difficulty": 0,
+          "difficulty": 5.49,
           "beatmapId": 5223980,
           "beatmapsetId": 2407027
         },
@@ -304,7 +304,7 @@
           "type": "RC",
           "realType": "MX",
           "name": "Ice - L (osu! edit) [Easy]",
-          "difficulty": 0,
+          "difficulty": 6.9,
           "beatmapId": 5223883,
           "beatmapsetId": 2406995
         },
@@ -313,7 +313,7 @@
           "type": "RC",
           "realType": "DP",
           "name": "BewhY - GOTTASADAE [Authority]",
-          "difficulty": 0,
+          "difficulty": 5.37,
           "beatmapId": 3742950,
           "beatmapsetId": 1772232
         },
@@ -322,7 +322,7 @@
           "type": "LN",
           "realType": "RE",
           "name": "onoken feat. b - anqad [Vanishing Tale]",
-          "difficulty": 0,
+          "difficulty": 4.8,
           "beatmapId": 5223895,
           "beatmapsetId": 2407001
         },
@@ -331,7 +331,7 @@
           "type": "LN",
           "realType": "DE",
           "name": "skymuted & Evin a'k - memory at angels landing [tracing your voice in the hollow of sound]",
-          "difficulty": 0,
+          "difficulty": 5.9,
           "beatmapId": 5223875,
           "beatmapsetId": 2406992
         },
@@ -340,7 +340,7 @@
           "type": "LN",
           "realType": "LNMX",
           "name": "CTCT - To Where the Stars Align [PTCT : Stellar Chaser]",
-          "difficulty": 0,
+          "difficulty": 6.2,
           "beatmapId": 5224124,
           "beatmapsetId": 2407090
         },
@@ -349,34 +349,37 @@
           "type": "HB",
           "realType": "HB1",
           "name": "P3-Studio - Fantasia Sonata Flower [:person_with_probing_cane: :worm:]",
-          "difficulty": 0,
+          "difficulty": 5.7,
           "beatmapId": 5224161,
-          "beatmapsetId": 2407111
+          "beatmapsetId": 2407111,
+          "difficultyLn": 6.2
         },
         {
           "slot": "HB2",
           "type": "HB",
           "realType": "HB2",
           "name": "HALLPBE.S - Bang Bang [Gun [1.05x rate (edit)]]",
-          "difficulty": 0,
+          "difficulty": 4.8,
           "beatmapId": 3402883,
-          "beatmapsetId": 1666577
+          "beatmapsetId": 1666577,
+          "difficultyLn": 3
         },
         {
           "slot": "HB3",
           "type": "HB",
           "realType": "HB3",
           "name": "Matt Doe & Fools Of Wisdom - Anubis (D4VIS FLIP) [Death]",
-          "difficulty": 0,
+          "difficulty": 4.8,
           "beatmapId": 5223903,
-          "beatmapsetId": 2407004
+          "beatmapsetId": 2407004,
+          "difficultyLn": 4
         },
         {
           "slot": "EX1",
           "type": "RC",
           "realType": "ADP",
           "name": "The Ghost of 3.13 - Forgotten [Extra (275bpm)]",
-          "difficulty": 0,
+          "difficulty": 9.6,
           "beatmapId": 2478729,
           "beatmapsetId": 338665
         },
@@ -385,7 +388,7 @@
           "type": "LN",
           "realType": "LNMX",
           "name": "Tonari no Niwa wa Aoi (NIWASHI + Aoi) - Avalanx [Frozen Collab]",
-          "difficulty": 0,
+          "difficulty": 8.6,
           "beatmapId": 5224519,
           "beatmapsetId": 2407251
         },
@@ -403,17 +406,28 @@
           "type": "TB",
           "realType": "TB",
           "name": "Sad Keyboard Guy & Gardens - Illusory Truth [Synthetic Mirage (Edit)]",
-          "difficulty": 0,
+          "difficulty": 7,
           "beatmapId": 5223899,
-          "beatmapsetId": 2407003
+          "beatmapsetId": 2407003,
+          "difficultyLn": 7.4
         }
       ],
       "typeDifficulties": {
-        "RC": {},
-        "HB": {},
-        "LN": {},
+        "RC": {
+          "rf": 6.46
+        },
+        "HB": {
+          "rf": 5.1,
+          "ln": 4.4
+        },
+        "LN": {
+          "ln": 6.38
+        },
         "SV": {},
-        "TB": {}
+        "TB": {
+          "rf": 7,
+          "ln": 7.4
+        }
       }
     },
     {
@@ -422,9 +436,9 @@
       "abbreviation": "QF",
       "order": 4,
       "difficulty": {
-        "min": 0,
-        "max": 0,
-        "average": 0
+        "min": 3,
+        "max": 10.1,
+        "average": 6.87
       },
       "maps": [
         {
@@ -432,7 +446,7 @@
           "type": "RC",
           "realType": "FCJ",
           "name": "Natsume Itsuki - Fighting My Way [Aspiration]",
-          "difficulty": 0,
+          "difficulty": 7.05,
           "beatmapId": 5234481,
           "beatmapsetId": 2410683
         },
@@ -441,7 +455,7 @@
           "type": "RC",
           "realType": "JS",
           "name": "Ave Mujica - Ave Mujica [Masquerade+]",
-          "difficulty": 0,
+          "difficulty": 9.4,
           "beatmapId": 5234477,
           "beatmapsetId": 2410682
         },
@@ -450,7 +464,7 @@
           "type": "RC",
           "realType": "SS",
           "name": "Lime - BEYOND [Chronosia]",
-          "difficulty": 0,
+          "difficulty": 6.03,
           "beatmapId": 5234329,
           "beatmapsetId": 2410621
         },
@@ -459,7 +473,7 @@
           "type": "RC",
           "realType": "TC",
           "name": "Camellia feat. Nana Takahashi - Mushi no Sumu Tokoro [Another]",
-          "difficulty": 0,
+          "difficulty": 7.9,
           "beatmapId": 5234255,
           "beatmapsetId": 2410590
         },
@@ -468,7 +482,7 @@
           "type": "RC",
           "realType": "DP",
           "name": "Mili - Painful Death for the Lactose Intolerant [Stage 2: Conformity]",
-          "difficulty": 0,
+          "difficulty": 7.1,
           "beatmapId": 4821294,
           "beatmapsetId": 2264647
         },
@@ -477,7 +491,7 @@
           "type": "LN",
           "realType": "RE",
           "name": "Ethan Meixsell - Pride Before the Fall [Hard]",
-          "difficulty": 0,
+          "difficulty": 6.7,
           "beatmapId": 5234333,
           "beatmapsetId": 2410625
         },
@@ -486,7 +500,7 @@
           "type": "LN",
           "realType": "DE",
           "name": "seatrus - Dancing In The Blue [Hard [1.1x Rate]]",
-          "difficulty": 0,
+          "difficulty": 8,
           "beatmapId": 5234334,
           "beatmapsetId": 2410626
         },
@@ -495,7 +509,7 @@
           "type": "LN",
           "realType": "JW",
           "name": "HyuN feat. Aerial - Exodus [Departure]",
-          "difficulty": 0,
+          "difficulty": 6.4,
           "beatmapId": 5234338,
           "beatmapsetId": 2410629
         },
@@ -504,34 +518,37 @@
           "type": "HB",
           "realType": "HB1",
           "name": "kuro - Innocent Azure [FolAH x YouRuru's Shattered Memories]",
-          "difficulty": 0,
+          "difficulty": 7.6,
           "beatmapId": 5234440,
-          "beatmapsetId": 2410664
+          "beatmapsetId": 2410664,
+          "difficultyLn": 8.2
         },
         {
           "slot": "HB2",
           "type": "HB",
           "realType": "HB2",
           "name": "NIWASHI - Y [E]",
-          "difficulty": 0,
+          "difficulty": 6.8,
           "beatmapId": 5234339,
-          "beatmapsetId": 2410630
+          "beatmapsetId": 2410630,
+          "difficultyLn": 6.4
         },
         {
           "slot": "HB3",
           "type": "HB",
           "realType": "HB3",
           "name": "False Noise - Space Angel (Cut Ver.) [Ninaye's Insane]",
-          "difficulty": 0,
+          "difficulty": 7,
           "beatmapId": 4674264,
-          "beatmapsetId": 2114040
+          "beatmapsetId": 2114040,
+          "difficultyLn": 5.1
         },
         {
           "slot": "AC1",
           "type": "RC",
           "realType": "MX",
           "name": "xi - d e a t h  p i a n o ~for four pianos~ [i n s a n e]",
-          "difficulty": 0,
+          "difficulty": 3.01,
           "beatmapId": 5063207,
           "beatmapsetId": 2349815
         },
@@ -540,7 +557,7 @@
           "type": "LN",
           "realType": "RE",
           "name": "CRYCHIC - Haruhikage (TV Size) [Memories]",
-          "difficulty": 0,
+          "difficulty": 3,
           "beatmapId": 4657535,
           "beatmapsetId": 2200740
         },
@@ -549,7 +566,7 @@
           "type": "RC",
           "realType": "MX",
           "name": "cosMo@Bousou-P feat. HARU - LowSpeed Fake Lyric [Fake-Speed Riot]",
-          "difficulty": 0,
+          "difficulty": 10.1,
           "beatmapId": 5234327,
           "beatmapsetId": 2410620
         },
@@ -558,7 +575,7 @@
           "type": "LN",
           "realType": "LNMX",
           "name": "Aitsuki Nakuru - Rabbit Hole [Love Love Love]",
-          "difficulty": 0,
+          "difficulty": 10,
           "beatmapId": 5234314,
           "beatmapsetId": 2410612
         },
@@ -576,17 +593,28 @@
           "type": "TB",
           "realType": "TB",
           "name": "USAO & Kobaryo - WACCA ULTRA DREAM MEGAMIX [Echoes of Fragment]",
-          "difficulty": 0,
+          "difficulty": 9.6,
           "beatmapId": 5234332,
-          "beatmapsetId": 2410624
+          "beatmapsetId": 2410624,
+          "difficultyLn": 9
         }
       ],
       "typeDifficulties": {
-        "RC": {},
-        "HB": {},
-        "LN": {},
+        "RC": {
+          "rf": 7.23
+        },
+        "HB": {
+          "rf": 7.13,
+          "ln": 6.57
+        },
+        "LN": {
+          "ln": 6.82
+        },
         "SV": {},
-        "TB": {}
+        "TB": {
+          "rf": 9.6,
+          "ln": 9
+        }
       }
     },
     {

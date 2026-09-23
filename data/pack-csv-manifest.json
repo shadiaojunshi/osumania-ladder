@@ -1,6 +1,19 @@
 {
   "collections": [
     {
+      "realType": "CJ",
+      "url": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/csv/CJ.8dc2d3abd9a6247d.csv",
+      "objectKey": "csv/CJ.8dc2d3abd9a6247d.csv",
+      "sourceObjectKeys": [
+        "CJ_1.332f5db9.osz",
+        "CJ_2.4debc1d1.osz"
+      ],
+      "mapCount": 176,
+      "missingIdCount": 1,
+      "nsvCount": 0,
+      "exportedAt": "2026-09-23T13:15:04.274Z"
+    },
+    {
       "realType": "DE",
       "url": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/csv/DE.c506453f15588527.csv",
       "objectKey": "csv/DE.c506453f15588527.csv",
@@ -14,6 +27,34 @@
       "missingIdCount": 1,
       "nsvCount": 0,
       "exportedAt": "2026-09-23T00:42:02.113Z"
+    },
+    {
+      "realType": "JS",
+      "url": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/csv/JS.b7c441c4d9f09dde.csv",
+      "objectKey": "csv/JS.b7c441c4d9f09dde.csv",
+      "sourceObjectKeys": [
+        "JS_1.431adbaa.osz",
+        "JS_2.3137a7f4.osz",
+        "JS_3.87905d70.osz"
+      ],
+      "mapCount": 228,
+      "missingIdCount": 3,
+      "nsvCount": 0,
+      "exportedAt": "2026-09-23T13:15:04.274Z"
+    },
+    {
+      "realType": "SA",
+      "url": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/csv/SA.bf56e8dd91489a60.csv",
+      "objectKey": "csv/SA.bf56e8dd91489a60.csv",
+      "sourceObjectKeys": [
+        "SA_1.5a521ccc.osz",
+        "SA_2.21fc7ba3.osz",
+        "SA_3.8ac1172c.osz"
+      ],
+      "mapCount": 219,
+      "missingIdCount": 7,
+      "nsvCount": 0,
+      "exportedAt": "2026-09-23T13:15:04.274Z"
     },
     {
       "realType": "SS",

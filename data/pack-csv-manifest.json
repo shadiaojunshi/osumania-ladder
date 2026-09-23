@@ -1,6 +1,21 @@
 {
   "collections": [
     {
+      "realType": "DE",
+      "url": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/csv/DE.c506453f15588527.csv",
+      "objectKey": "csv/DE.c506453f15588527.csv",
+      "sourceObjectKeys": [
+        "DE_1.f9fd1a25.osz",
+        "DE_2.b72e3db8.osz",
+        "DE_3.58427a2e.osz",
+        "DE_4.51175087.osz"
+      ],
+      "mapCount": 332,
+      "missingIdCount": 1,
+      "nsvCount": 0,
+      "exportedAt": "2026-09-23T00:42:02.113Z"
+    },
+    {
       "realType": "SS",
       "url": "https://pub-57d98c57f9c147c6aecd5fd854b2d71c.r2.dev/csv/SS.7271cf03d8d7fed8.csv",
       "objectKey": "csv/SS.7271cf03d8d7fed8.csv",

@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       realType:
-        description: '留空导出所有已发布键型；填写 TB / CJ 等只导出一个键型。不重新合包。'
+        description: '留空导出所有已发布键型；填 TB 只导一个；用逗号一次导多个（如 ADP,CJ,CO）。不重新合包。'
         required: false
         default: ''
         type: string
@@ -28,6 +28,7 @@ jobs:
           node-version: 22
       - run: npm ci
       - name: Export original chart metadata to R2
+        # 并发读上限可加一行 `CSV_READ_CONCURRENCY: '12'` 调整（默认 8，上限 32）。
         env:
           REAL_TYPE: ${{ inputs.realType }}
           R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}

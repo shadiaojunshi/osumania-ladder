@@ -8,6 +8,80 @@ import { usableBeatmapId, usableBeatmapsetId } from '../src/lib/beatmapIds.ts'
 import identity from './mapIdentity.js'
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
+
+/**
+ * 并发读上限。导出时间基本全花在"逐条 Range 读 + 解析"上，这是唯一不用改架构就能提速的旋钮。
+ *
+ * 与 `generate-pack.js` 的 `PACK_DOWNLOAD_CONCURRENCY` 同一套规矩：非法值回退默认值
+ * （0 / 负数 / NaN / 空都不返回），上限 32 —— 再往上收益很小，更容易撞上游限流。
+ */
+export const DEFAULT_READ_CONCURRENCY = 8
+export const MAX_READ_CONCURRENCY = 32
+export function resolveReadConcurrency(raw = process.env.CSV_READ_CONCURRENCY) {
+  const n = Number(raw)
+  if (!Number.isFinite(n) || n < 1) return DEFAULT_READ_CONCURRENCY
+  return Math.min(Math.floor(n), MAX_READ_CONCURRENCY)
+}
+
+const READ_CONCURRENCY = resolveReadConcurrency()
+
+/**
+ * 把错误摊平成一行可读文本，**带上 name / code / HTTP 状态**。
+ *
+ * 起因：2026-09-22 那次导出挂在 `Error: DE Part 4: …: aborted`。只打 `message` 时
+ * `name` / `code`（这里是 `ECONNRESET`）/ `$metadata.httpStatusCode` 全丢了，
+ * 事后没法判断是一次网络抖动还是那个对象本身有问题 —— 只能靠重跑试探。
+ * 诊断信息宁可多带。
+ */
+export function describeError(error) {
+  if (!error) return 'unknown error'
+  const parts = [error.message || String(error)]
+  if (error.name && error.name !== 'Error') parts.push(`[${error.name}]`)
+  if (error.code) parts.push(`[${error.code}]`)
+  const status = error.$metadata?.httpStatusCode
+  if (status) parts.push(`[HTTP ${status}]`)
+  return parts.join(' ')
+}
+
+/**
+ * 重试 `fn`：专治 R2 偶发的传输中断。
+ *
+ * 为什么必须自己做：AWS SDK 的 `maxAttempts` 只在"响应体还没开始读"时重试；
+ * 读到一半连接被重置它不重试 —— 一次抖动就能毁掉整趟（索引最后才写，前面全白跑）。
+ *
+ * **不按错误类型分类**：分类要维护一张永远填不全的表，而多花的两次尝试只发生在
+ * 已经失败的路径上，代价可以忽略；确定性错误重试满 3 次后抛的还是同一个错。
+ */
+export async function withRetry(label, fn, { attempts = 3, delayMs = 1000 } = {}) {
+  let lastError
+  for (let attempt = 1; attempt <= attempts; attempt++) {
+    try { return await fn() } catch (error) {
+      lastError = error
+      if (attempt === attempts) break
+      const wait = delayMs * 2 ** (attempt - 1)
+      console.warn(`  ${label} 第 ${attempt}/${attempts} 次失败，${wait}ms 后重试：${describeError(error)}`)
+      await new Promise(resolve => setTimeout(resolve, wait))
+    }
+  }
+  throw lastError
+}
+
+// 并发执行 fn(item) 但限制同时只跑 limit 个，结果按 items 原顺序返回。
+// 与 `generate-pack.js` / `backfill-bid.mjs` 里的同名函数一致（本仓库的既有做法是各脚本自带一份）。
+async function mapWithConcurrency(items, limit, fn) {
+  const results = new Array(items.length)
+  let next = 0
+  async function worker() {
+    while (true) {
+      const i = next++
+      if (i >= items.length) return
+      results[i] = await fn(items[i], i)
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker))
+  return results
+}
+
 // Names follow the supplied Seekman CSV. Unavailable values are empty, never 0.
 // Do not claim Seekman's own export version, star ratings, ranked status or MD5:
 // R2 contains local edits and the range reader returns decoded text, not bytes.
@@ -85,11 +159,13 @@ export function parseChart(content, osuName) {
   }
 }
 
-export function planCollections(manifest, targetType) {
+/** `targetTypes` 留空导出全部；给数组就只导这些键型（可一次多个）。 */
+export function planCollections(manifest, targetTypes = []) {
   if (!Array.isArray(manifest.packs) || !manifest.packs.length) throw new Error('No published packs')
+  const wanted = new Set(targetTypes)
   const groups = new Map()
   for (const pack of manifest.packs) {
-    if (targetType && pack.realType !== targetType) continue
+    if (wanted.size && !wanted.has(pack.realType)) continue
     if (!/^[A-Za-z0-9]+$/.test(pack.realType)) throw new Error('Invalid pack type')
     if (!Array.isArray(pack.contentEntries) || !pack.contentEntries.length || !pack.objectKey) {
       throw new Error(`${pack.realType}: 缺少已发布内容记录，请先重新合包`)
@@ -103,19 +179,27 @@ export function planCollections(manifest, targetType) {
       }
     }
   }
-  if (!groups.size) throw new Error(`No published packs for ${targetType || 'export'}`)
+  // 要的每一个键型都必须有数据。只报"一个都没导到"是不够的：`--type=TB,TYPO` 里
+  // TYPO 查无数据时，若静默只导 TB，用户会以为两个都刷新了；而合并索引又会把 TYPO
+  // 的旧条目滤掉 —— 一次"成功"的运行产出跟用户的理解正好相反。宁可整趟白跑。
+  const missing = [...wanted].filter(realType => !groups.has(realType))
+  if (missing.length) throw new Error(`No published packs for ${missing.join(', ')}`)
+  if (!groups.size) throw new Error(`No published packs for ${targetTypes.join(',') || 'export'}`)
   return [...groups].sort(([a], [b]) => a.localeCompare(b)).map(([realType, packs]) => ({
     realType, packs: packs.sort((a, b) => a.part - b.part),
   }))
 }
 
-export async function exportCollections(manifest, { readChart, upload, publicUrl, exportedAt, targetType }) {
+export async function exportCollections(manifest, { readChart, upload, publicUrl, exportedAt, targetTypes = [], concurrency = DEFAULT_READ_CONCURRENCY }) {
   const collections = []
   // Cache only text metadata, not ZIP/audio buffers. The IO adapter streams ranges.
   const cache = new Map()
-  for (const { realType, packs } of planCollections(manifest, targetType)) {
-    const rows = []
-    for (const pack of packs) for (const entry of pack.contentEntries) {
+  for (const { realType, packs } of planCollections(manifest, targetTypes)) {
+    const tasks = []
+    for (const pack of packs) for (const entry of pack.contentEntries) tasks.push({ pack, entry })
+    console.log(`${realType}: 读取 ${tasks.length} 条…`)
+    // 并发只作用在"读一条"上；写 CSV 和传 R2 仍按集合串行，顺序与并发数无关。
+    const resolved = await mapWithConcurrency(tasks, concurrency, async ({ pack, entry }) => {
       let chart, sourcePath, lastError
       for (const key of entry.paths) {
         try {
@@ -128,13 +212,18 @@ export async function exportCollections(manifest, { readChart, upload, publicUrl
           chart = candidate.metadata; sourcePath = key; break
         } catch (error) { lastError = error }
       }
-      if (!chart) throw new Error(`${realType} Part ${pack.part}: ${entry.paths.join(', ')}: ${lastError?.message}`)
+      // 失败不在这里抛：并发下先抛的未必是顺序上第一条，报出来的就成了随机一条。
+      // 收进对象，等这一轮跑完再按原顺序取第一条失败 —— 与串行时报的完全一样。
+      if (!chart) return { error: new Error(`${realType} Part ${pack.part}: ${entry.paths.join(', ')}: ${describeError(lastError)}`) }
       const title = `osu!mania Ladder ${realType}`
-      rows.push({ ...chart, exported_at: exportedAt, playlist_title: title, playlist_author: 'osu!mania Ladder Team',
+      return { row: { ...chart, exported_at: exportedAt, playlist_title: title, playlist_author: 'osu!mania Ladder Team',
         playlist_description: 'Published pattern collection; local edits and NSV may differ from online originals.',
         source_collection: title, real_type: realType, pack_part: pack.part,
-        variant: sourcePath.endsWith('.nsv.osz') ? 'NSV' : 'main', content_key: entry.contentKey })
-    }
+        variant: sourcePath.endsWith('.nsv.osz') ? 'NSV' : 'main', content_key: entry.contentKey } }
+    })
+    const failure = resolved.find(r => r.error)
+    if (failure) throw failure.error
+    const rows = resolved.map(r => r.row)
     const body = Buffer.from(makeCsv(rows), 'utf8')
     const hash = crypto.createHash('sha256').update(body).digest('hex').slice(0, 16)
     const objectKey = `csv/${realType}.${hash}.csv`
@@ -148,10 +237,22 @@ export async function exportCollections(manifest, { readChart, upload, publicUrl
   return collections
 }
 
+/**
+ * 解析命令行，返回要导的键型数组；空数组 = 导出全部。
+ *
+ * 抽成纯函数只为一件事：可测。这里写错的代价是整趟 Action 白跑 40 分钟，
+ * 而它又是人工在 workflow_dispatch 输入框里敲的（`--type=ADP,CJ,CO`）。
+ */
+export function parseTypeArgs(args) {
+  if (args.length > 1 || (args.length && !/^--type=[A-Za-z0-9]+(,[A-Za-z0-9]+)*$/.test(args[0]))) {
+    throw new Error('Usage: export-pack-csv.mjs [--type=TB] / [--type=ADP,CJ,CO]（留空导出全部）')
+  }
+  // 去重：'ADP,ADP' 当一次算，免得合并索引时同一个键型滤两遍。
+  return args[0] ? [...new Set(args[0].slice(7).split(','))] : []
+}
+
 async function main() {
-  const args = process.argv.slice(2)
-  if (args.length > 1 || (args.length && !/^--type=[A-Za-z0-9]+$/.test(args[0]))) throw new Error('Usage: export-pack-csv.mjs [--type=TB]')
-  const targetType = args[0]?.slice(7)
+  const targetTypes = parseTypeArgs(process.argv.slice(2))
   for (const name of ['R2_ACCOUNT_ID', 'R2_ACCESS_KEY', 'R2_SECRET_KEY', 'R2_PACKS_PUBLIC_URL']) {
     if (!process.env[name]) throw new Error(`Missing ${name}`)
   }
@@ -166,8 +267,10 @@ async function main() {
   const oldIndex = JSON.parse(await fs.readFile(indexPath, 'utf8'))
   const exportedAt = new Date().toISOString()
   const collections = await exportCollections(manifest, {
-    targetType, publicUrl, exportedAt,
-    readChart: async key => {
+    targetTypes, publicUrl, exportedAt, concurrency: READ_CONCURRENCY,
+    // 整个"HEAD + 逐段读"包一层重试。重试会多花一次 HEAD，但换来的是：
+    // 段读中途被重置（正是 2026-09-22 那次挂掉的原因）不再毁掉整趟导出。
+    readChart: key => withRetry(`读取 ${key}`, async () => {
       const head = await s3.send(new HeadObjectCommand({ Bucket: mapsBucket, Key: key }))
       if (!head.ETag) throw new Error('Missing R2 ETag')
       return extractOsuFromOsz(head.ContentLength, async (start, end) => {
@@ -175,12 +278,17 @@ async function main() {
           Range: `bytes=${start}-${end - 1}`, IfMatch: head.ETag }))
         return result.Body.transformToByteArray()
       })
-    },
+    }),
     upload: ({ objectKey, body, realType }) => s3.send(new PutObjectCommand({ Bucket: packsBucket,
       Key: objectKey, Body: body, ContentType: 'text/csv; charset=utf-8',
       ContentDisposition: `attachment; filename="osu-mania-ladder-${realType}.csv"`, CacheControl: 'public, max-age=31536000, immutable' })),
   })
-  const result = targetType ? [...oldIndex.collections.filter(c => c.realType !== targetType), ...collections] : collections
+  // 保留本次没导的键型（它们的 CSV 仍然有效 —— 内容寻址，没重打包就不会失效），
+  // 只替换本次导到的那些（一起导多个时全都要滤掉，否则旧条目会盖回来）。
+  // 留空跑全量时不做保留：本次没导出来的键型说明它的包没了，旧 CSV 必须跟着消失。
+  const result = targetTypes.length
+    ? [...oldIndex.collections.filter(c => !targetTypes.includes(c.realType)), ...collections]
+    : collections
   // Only switch download links after ALL requested collections succeeded.
   await fs.writeFile(indexPath, JSON.stringify({ collections: result.sort((a, b) => a.realType.localeCompare(b.realType)) }, null, 2) + '\n')
 }

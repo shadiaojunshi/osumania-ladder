@@ -104,9 +104,9 @@
       "abbreviation": "RO32",
       "order": 2,
       "difficulty": {
-        "min": 4,
+        "min": 3.3,
         "max": 5,
-        "average": 4.25
+        "average": 4.06
       },
       "maps": [
         {
@@ -186,27 +186,30 @@
           "type": "HB",
           "realType": "HB1",
           "name": "U-ske feat. Natsume Itsuki - STIGMA [Phantasmal Collab]",
-          "difficulty": 0,
+          "difficulty": 4.9,
           "beatmapId": 5212234,
-          "beatmapsetId": 2403260
+          "beatmapsetId": 2403260,
+          "difficultyLn": 3.7
         },
         {
           "slot": "HB2",
           "type": "HB",
           "realType": "HB2",
           "name": "HIMEHINA - Kiss Kitsune [PTCT edit]",
-          "difficulty": 0,
+          "difficulty": 4,
           "beatmapId": 5211869,
-          "beatmapsetId": 2403093
+          "beatmapsetId": 2403093,
+          "difficultyLn": 4
         },
         {
           "slot": "HB3",
           "type": "HB",
           "realType": "HB3",
           "name": "Avans - Shapeshifter [Alptraum's Another]",
-          "difficulty": 0,
+          "difficulty": 3.6,
           "beatmapId": 4705094,
-          "beatmapsetId": 2210061
+          "beatmapsetId": 2210061,
+          "difficultyLn": 3.3
         },
         {
           "slot": "EX1",
@@ -250,7 +253,10 @@
         "RC": {
           "rf": 4.5
         },
-        "HB": {},
+        "HB": {
+          "rf": 4.17,
+          "ln": 3.67
+        },
         "LN": {
           "ln": 4
         },
@@ -623,9 +629,9 @@
       "abbreviation": "SF",
       "order": 5,
       "difficulty": {
-        "min": 0,
-        "max": 0,
-        "average": 0
+        "min": 2.5,
+        "max": 12.15,
+        "average": 8.41
       },
       "maps": [
         {
@@ -633,7 +639,7 @@
           "type": "RC",
           "realType": "FCJ",
           "name": "Falcom Sound Team jdk - Falcon Strike [War of the Dragon's Nest (140bpm)]",
-          "difficulty": 0,
+          "difficulty": 9,
           "beatmapId": 5246201,
           "beatmapsetId": 2414435
         },
@@ -642,7 +648,7 @@
           "type": "RC",
           "realType": "SA",
           "name": "UMISEA - Ocean wave Party Live [Party Time]",
-          "difficulty": 0,
+          "difficulty": 9.58,
           "beatmapId": 5245967,
           "beatmapsetId": 2414420
         },
@@ -651,7 +657,7 @@
           "type": "RC",
           "realType": "ADP",
           "name": "-45 - Inhigaku Plant [Forbidden (cut)]",
-          "difficulty": 0,
+          "difficulty": 9.46,
           "beatmapId": 5246323,
           "beatmapsetId": 2414441
         },
@@ -660,7 +666,7 @@
           "type": "RC",
           "realType": "ADP",
           "name": "Billain - Specialist [Theory 1.05x (182bpm)]",
-          "difficulty": 0,
+          "difficulty": 7.64,
           "beatmapId": 2978507,
           "beatmapsetId": 1445730
         },
@@ -669,7 +675,7 @@
           "type": "RC",
           "realType": "DP",
           "name": "Giga - G4L [Everyday x1.05]",
-          "difficulty": 0,
+          "difficulty": 9.78,
           "beatmapId": 4940569,
           "beatmapsetId": 2309443
         },
@@ -678,7 +684,7 @@
           "type": "LN",
           "realType": "CO",
           "name": "VNMC Sound Team - D!VE [Hytex x Lott // Deep Below Where I Belong]",
-          "difficulty": 0,
+          "difficulty": 7.6,
           "beatmapId": 4704336,
           "beatmapsetId": 2219384
         },
@@ -687,7 +693,7 @@
           "type": "LN",
           "realType": "DE",
           "name": "Aoi a.k.a. ALFOU - Fluctuate [Harmonic Distortion]",
-          "difficulty": 0,
+          "difficulty": 9.6,
           "beatmapId": 5245970,
           "beatmapsetId": 2414422
         },
@@ -696,7 +702,7 @@
           "type": "LN",
           "realType": "LNMX",
           "name": "Metomate - Tengai [Poignant Entanglement]",
-          "difficulty": 0,
+          "difficulty": 7.6,
           "beatmapId": 5246194,
           "beatmapsetId": 2414430
         },
@@ -705,34 +711,37 @@
           "type": "HB",
           "realType": "HB1",
           "name": "tn-shi - Annihilation in F# Minor [Fallen Angel’s Punishment (edit)]",
-          "difficulty": 0,
+          "difficulty": 9.4,
           "beatmapId": 5246313,
-          "beatmapsetId": 2414437
+          "beatmapsetId": 2414437,
+          "difficultyLn": 8.7
         },
         {
           "slot": "HB2",
           "type": "HB",
           "realType": "HB2",
           "name": "CTCT - Enigma of Smurfing [Fish and Chips, HXz and CTCT]",
-          "difficulty": 0,
+          "difficulty": 9.8,
           "beatmapId": 5245968,
-          "beatmapsetId": 2414421
+          "beatmapsetId": 2414421,
+          "difficultyLn": 8.6
         },
         {
           "slot": "HB3",
           "type": "HB",
           "realType": "HB3",
           "name": "Juka_Box feat. Miyo Takashiro - Natsu no Sora, Shoujo no Apollyon [Shadows of Forgotten Memories]",
-          "difficulty": 0,
+          "difficulty": 7.7,
           "beatmapId": 5245972,
-          "beatmapsetId": 2414424
+          "beatmapsetId": 2414424,
+          "difficultyLn": 8.2
         },
         {
           "slot": "AC1",
           "type": "RC",
           "realType": "TC",
           "name": "II-L - PIONEER-4 [Venture]",
-          "difficulty": 0,
+          "difficulty": 4.49,
           "beatmapId": 5246315,
           "beatmapsetId": 2414438
         },
@@ -741,7 +750,7 @@
           "type": "LN",
           "realType": "RE",
           "name": "Tamaru Yamada - Scarborough Fair [The Fair That Never Ends]",
-          "difficulty": 0,
+          "difficulty": 2.5,
           "beatmapId": 5246324,
           "beatmapsetId": 2414442
         },
@@ -750,7 +759,7 @@
           "type": "RC",
           "realType": "TC",
           "name": "katagiri x Frums - siren's eye [Prophet]",
-          "difficulty": 0,
+          "difficulty": 12.15,
           "beatmapId": 4925677,
           "beatmapsetId": 2304287
         },
@@ -759,7 +768,7 @@
           "type": "LN",
           "realType": "LNMX",
           "name": "seatrus + Mono. - Heaven's Wheel [Insane [1.05x Rate]]",
-          "difficulty": 0,
+          "difficulty": 11.95,
           "beatmapId": 5246209,
           "beatmapsetId": 2414436
         },
@@ -777,18 +786,29 @@
           "type": "TB",
           "realType": "TB",
           "name": "ikaruga_nex vs. Kagetora. - Grabinschrift der Goetter [Fallen Thrones]",
-          "difficulty": 0,
+          "difficulty": 10.2,
           "beatmapId": 5246195,
-          "beatmapsetId": 2414431
+          "beatmapsetId": 2414431,
+          "difficultyLn": 10.4
         }
       ],
       "bestOf": 11,
       "typeDifficulties": {
-        "RC": {},
-        "HB": {},
-        "LN": {},
+        "RC": {
+          "rf": 8.87
+        },
+        "HB": {
+          "rf": 8.97,
+          "ln": 8.5
+        },
+        "LN": {
+          "ln": 7.85
+        },
         "SV": {},
-        "TB": {}
+        "TB": {
+          "rf": 10.2,
+          "ln": 10.4
+        }
       }
     },
     {
@@ -797,9 +817,9 @@
       "abbreviation": "F",
       "order": 6,
       "difficulty": {
-        "min": 0,
-        "max": 0,
-        "average": 0
+        "min": 4.8,
+        "max": 12.8,
+        "average": 9.62
       },
       "maps": [
         {
@@ -807,7 +827,7 @@
           "type": "RC",
           "realType": "CJ",
           "name": "HHHxMMxST - Oboro [PTCT edit]",
-          "difficulty": 0,
+          "difficulty": 10.15,
           "beatmapId": 5257936,
           "beatmapsetId": 2418173
         },
@@ -816,7 +836,7 @@
           "type": "RC",
           "realType": "JS",
           "name": "natori - Absolute Zero [Frozen Rebellion 1.1x]",
-          "difficulty": 0,
+          "difficulty": 10.83,
           "beatmapId": 5257833,
           "beatmapsetId": 2418129
         },
@@ -825,7 +845,7 @@
           "type": "RC",
           "realType": "SS",
           "name": "Dimrain47 - At the Speed of Light (Cut Ver.) [Geometry Dash extreme demon BLOODBATH by Riot 100%.]",
-          "difficulty": 0,
+          "difficulty": 9.8,
           "beatmapId": 4713340,
           "beatmapsetId": 1802127
         },
@@ -834,7 +854,7 @@
           "type": "RC",
           "realType": "ADP",
           "name": "Voysol - ROGUE: MYTH [XXII]",
-          "difficulty": 0,
+          "difficulty": 10.3,
           "beatmapId": 4141993,
           "beatmapsetId": 1985425
         },
@@ -843,7 +863,7 @@
           "type": "RC",
           "realType": "MX",
           "name": "DiGiTAL WiNG - Virtuous suicide [Insane]",
-          "difficulty": 0,
+          "difficulty": 10.7,
           "beatmapId": 5257804,
           "beatmapsetId": 2418116
         },
@@ -852,7 +872,7 @@
           "type": "RC",
           "realType": "STC",
           "name": "Haruko Momoi - Eiyuu no Uta [STORM OF BLOOD]",
-          "difficulty": 0,
+          "difficulty": 10.7,
           "beatmapId": 3114832,
           "beatmapsetId": 1483232
         },
@@ -861,7 +881,7 @@
           "type": "LN",
           "realType": "CO",
           "name": "Empty Peperoncino - Hoshifuru Yoru ni [Seraphic]",
-          "difficulty": 0,
+          "difficulty": 9,
           "beatmapId": 5257790,
           "beatmapsetId": 2418108
         },
@@ -870,7 +890,7 @@
           "type": "LN",
           "realType": "DE",
           "name": "HyuN - Utsukushi Memories [FolAH x YouRuru's PES4_Shrimp Memories 210]",
-          "difficulty": 0,
+          "difficulty": 10.8,
           "beatmapId": 5257856,
           "beatmapsetId": 2418137
         },
@@ -879,7 +899,7 @@
           "type": "LN",
           "realType": "JW",
           "name": "JAKAZiD - Chromatic Burst [CHROMATIC TOWER]",
-          "difficulty": 0,
+          "difficulty": 9.6,
           "beatmapId": 4409231,
           "beatmapsetId": 2101769
         },
@@ -888,7 +908,7 @@
           "type": "LN",
           "realType": "LNTC",
           "name": "owl * tree feat. Benza - Fraq [Sydney brother]",
-          "difficulty": 0,
+          "difficulty": 9.1,
           "beatmapId": 5257822,
           "beatmapsetId": 2418124
         },
@@ -897,34 +917,37 @@
           "type": "HB",
           "realType": "HB1",
           "name": "Anayama Daisuke - Konton o Koeshi Warera ga Shinseinaru Chouritsunushi o Tataeyo [La louange a Quintus]",
-          "difficulty": 0,
+          "difficulty": 10,
           "beatmapId": 5257825,
-          "beatmapsetId": 2418127
+          "beatmapsetId": 2418127,
+          "difficultyLn": 10
         },
         {
           "slot": "HB2",
           "type": "HB",
           "realType": "HB2",
           "name": "Cyte - Melty Loud Nightcore [taboo]",
-          "difficulty": 0,
+          "difficulty": 9.2,
           "beatmapId": 4233466,
-          "beatmapsetId": 2031155
+          "beatmapsetId": 2031155,
+          "difficultyLn": 9
         },
         {
           "slot": "HB3",
           "type": "HB",
           "realType": "HB3",
           "name": "onumi - Spider Tank [Encroach 1.05x]",
-          "difficulty": 0,
+          "difficulty": 9.4,
           "beatmapId": 3588485,
-          "beatmapsetId": 1551057
+          "beatmapsetId": 1551057,
+          "difficultyLn": 9.2
         },
         {
           "slot": "AC1",
           "type": "RC",
           "realType": "DP",
           "name": "Moe Shop - Lovesick (w/ maisou) [addiction (expert)]",
-          "difficulty": 0,
+          "difficulty": 5.59,
           "beatmapId": 4786910,
           "beatmapsetId": 2250850
         },
@@ -933,7 +956,7 @@
           "type": "LN",
           "realType": "CO",
           "name": "Kyary Pamyu Pamyu - Yume no Hajima Ring Ring [A Goodbye to the Past, A Beginning of New Dream.]",
-          "difficulty": 0,
+          "difficulty": 4.8,
           "beatmapId": 4204888,
           "beatmapsetId": 2019212
         },
@@ -942,7 +965,7 @@
           "type": "RC",
           "realType": "WTC",
           "name": "onumi - PERSONALITY [MIRAGE OD 8]",
-          "difficulty": 0,
+          "difficulty": 12.72,
           "beatmapId": 3739939,
           "beatmapsetId": 1234328
         },
@@ -951,7 +974,7 @@
           "type": "LN",
           "realType": "LNMX",
           "name": "CS4W - Ignominiously [Fallen Into Disrepute [1.05x Rate]]",
-          "difficulty": 0,
+          "difficulty": 12.8,
           "beatmapId": 5257799,
           "beatmapsetId": 2418111
         },
@@ -969,17 +992,28 @@
           "type": "TB",
           "realType": "TB",
           "name": "RoughSketch feat. DD \"Nakata\" Metal - Booths of Fighters (Camellia's \"Barrage of Flurries\" Remix) [Testament of the Dimension Keeper]",
-          "difficulty": 0,
+          "difficulty": 11.6,
           "beatmapId": 4237690,
-          "beatmapsetId": 2032905
+          "beatmapsetId": 2032905,
+          "difficultyLn": 11.4
         }
       ],
       "typeDifficulties": {
-        "RC": {},
-        "HB": {},
-        "LN": {},
+        "RC": {
+          "rf": 10.1
+        },
+        "HB": {
+          "rf": 9.53,
+          "ln": 9.4
+        },
+        "LN": {
+          "ln": 9.35
+        },
         "SV": {},
-        "TB": {}
+        "TB": {
+          "rf": 11.6,
+          "ln": 11.4
+        }
       }
     },
     {

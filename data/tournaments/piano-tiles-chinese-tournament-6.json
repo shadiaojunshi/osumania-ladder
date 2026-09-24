@@ -1022,9 +1022,9 @@
       "abbreviation": "GF",
       "order": 7,
       "difficulty": {
-        "min": 0,
-        "max": 0,
-        "average": 0
+        "min": 5.2,
+        "max": 13.58,
+        "average": 10.49
       },
       "maps": [
         {
@@ -1032,7 +1032,7 @@
           "type": "RC",
           "realType": "FCJ",
           "name": "Kotone - Konkai no Soudou ni Tsukimashite. [:middle_finger: (edit)]",
-          "difficulty": 0,
+          "difficulty": 10.71,
           "beatmapId": 5268393,
           "beatmapsetId": 2421624
         },
@@ -1041,7 +1041,7 @@
           "type": "RC",
           "realType": "SA",
           "name": "HACHI - DONUT HOLE [three ducks]",
-          "difficulty": 0,
+          "difficulty": 11.05,
           "beatmapId": 5267971,
           "beatmapsetId": 2421530
         },
@@ -1050,7 +1050,7 @@
           "type": "RC",
           "realType": "SS",
           "name": "KOTOKO - Re-sublimity (kazeoff Bootleg) [Insane]",
-          "difficulty": 0,
+          "difficulty": 11.02,
           "beatmapId": 5211792,
           "beatmapsetId": 2403046
         },
@@ -1059,7 +1059,7 @@
           "type": "RC",
           "realType": "ADP",
           "name": "BilliumMoto - Stained Satin [Rust]",
-          "difficulty": 0,
+          "difficulty": 10.4,
           "beatmapId": 4948797,
           "beatmapsetId": 2312760
         },
@@ -1068,7 +1068,7 @@
           "type": "RC",
           "realType": "DP",
           "name": "N_u feat. zundamon - Momiagewo Shakaagewo [delicious mayo with deep-fried chicken]",
-          "difficulty": 0,
+          "difficulty": 11.37,
           "beatmapId": 4793426,
           "beatmapsetId": 2253532
         },
@@ -1077,7 +1077,7 @@
           "type": "RC",
           "realType": "MX",
           "name": "Unlucky Morpheus - Phantom Blood [Crescent dictate]",
-          "difficulty": 0,
+          "difficulty": 11.5,
           "beatmapId": 5268032,
           "beatmapsetId": 2419147
         },
@@ -1086,7 +1086,7 @@
           "type": "LN",
           "realType": "TE",
           "name": "yuikonnu - Uchouten Vivace [FeverTime]",
-          "difficulty": 0,
+          "difficulty": 10.7,
           "beatmapId": 4517805,
           "beatmapsetId": 2144947
         },
@@ -1095,7 +1095,7 @@
           "type": "LN",
           "realType": "DE",
           "name": "Gram - Knights of the Round Table [Sanctum of the End 1.05x]",
-          "difficulty": 0,
+          "difficulty": 11.1,
           "beatmapId": 5268016,
           "beatmapsetId": 2421540
         },
@@ -1104,7 +1104,7 @@
           "type": "LN",
           "realType": "JW",
           "name": "Daisuke Kurosawa x Masahiro \"Godspeed\" Aoki - Demon King of the Sixth Heaven [Kama]",
-          "difficulty": 0,
+          "difficulty": 10.7,
           "beatmapId": 5267946,
           "beatmapsetId": 2421516
         },
@@ -1113,7 +1113,7 @@
           "type": "LN",
           "realType": "SW",
           "name": "Sta feat. Ice - Cathedral [Exposure to a downpour of sunlight and a thousand chords held in]",
-          "difficulty": 0,
+          "difficulty": 11,
           "beatmapId": 3838235,
           "beatmapsetId": 1865981
         },
@@ -1122,34 +1122,37 @@
           "type": "HB",
           "realType": "HB1",
           "name": "AAAA - reach for your victory!!! [good luck]",
-          "difficulty": 0,
+          "difficulty": 11.4,
           "beatmapId": 5267983,
-          "beatmapsetId": 2421537
+          "beatmapsetId": 2421537,
+          "difficultyLn": 11.4
         },
         {
           "slot": "HB2",
           "type": "HB",
           "realType": "HB2",
           "name": "Twinfield feat. ChumuNote - Chaos Shotgun [Insane]",
-          "difficulty": 0,
+          "difficulty": 10,
           "beatmapId": 5267965,
-          "beatmapsetId": 2421525
+          "beatmapsetId": 2421525,
+          "difficultyLn": 9.9
         },
         {
           "slot": "HB3",
           "type": "HB",
           "realType": "HB3",
           "name": "KOAN Sound - Shadows [Deep Blue]",
-          "difficulty": 0,
+          "difficulty": 10.3,
           "beatmapId": 4170232,
-          "beatmapsetId": 2005217
+          "beatmapsetId": 2005217,
+          "difficultyLn": 10.2
         },
         {
           "slot": "AC1",
           "type": "RC",
           "realType": "TC",
           "name": "RIOT - In Your House [Hiding]",
-          "difficulty": 0,
+          "difficulty": 5.8,
           "beatmapId": 4724118,
           "beatmapsetId": 2226881
         },
@@ -1158,7 +1161,7 @@
           "type": "LN",
           "realType": "RE",
           "name": "FIELD OF VIEW - DAN DAN Kokoro Hikareteku (TV Size) [Falling Slowly Into You]",
-          "difficulty": 0,
+          "difficulty": 5.2,
           "beatmapId": 5267977,
           "beatmapsetId": 2421533
         },
@@ -1167,7 +1170,7 @@
           "type": "RC",
           "realType": "WTC",
           "name": "Camellia - Suoh Divine Raiment [Insane]",
-          "difficulty": 0,
+          "difficulty": 13.58,
           "beatmapId": 5267972,
           "beatmapsetId": 2403041
         },
@@ -1176,7 +1179,7 @@
           "type": "LN",
           "realType": "LNMX",
           "name": "xi - XaleidoscopiX [Phantasmagorical Sekai]",
-          "difficulty": 0,
+          "difficulty": 13,
           "beatmapId": 5237880,
           "beatmapsetId": 2412025
         },
@@ -1194,17 +1197,28 @@
           "type": "TB",
           "realType": "TB",
           "name": "Kou! - A.O.E::area_of_effect [P.F.C::ptct_final_challenger]",
-          "difficulty": 0,
+          "difficulty": 12.6,
           "beatmapId": 5268018,
-          "beatmapsetId": 2421541
+          "beatmapsetId": 2421541,
+          "difficultyLn": 12.8
         }
       ],
       "typeDifficulties": {
-        "RC": {},
-        "HB": {},
-        "LN": {},
+        "RC": {
+          "rf": 10.68
+        },
+        "HB": {
+          "rf": 10.57,
+          "ln": 10.5
+        },
+        "LN": {
+          "ln": 10.28
+        },
         "SV": {},
-        "TB": {}
+        "TB": {
+          "rf": 12.6,
+          "ln": 12.8
+        }
       }
     }
   ],

@@ -9,7 +9,7 @@ export interface PublicChartsEnv extends RawChartEnv {
   CHART_QUOTA?: DurableObjectNamespace
 }
 type CacheLike = Pick<Cache, 'match' | 'put'>
-interface Deps { cache?: CacheLike; reader?: typeof readRawChart; now?: () => Date }
+interface Deps { cache?: CacheLike; reader?: typeof readRawChart; now?: () => Date; waitUntil?: (task: Promise<unknown>) => void }
 const inFlight = new Map<string, Promise<Response>>()
 const MAX_INFLIGHT_PER_ISOLATE = 2
 
@@ -112,6 +112,15 @@ export async function publicChart(request: Request, env: PublicChartsEnv, catalo
     return new Response(response.body, { status: response.status, headers })
   } catch { return failure('CHART_UNAVAILABLE', 503, 60) }
   finally {
-    if (cold) try { await call({ kind: 'release', ipHash, id, day: decision.day }) } catch { /* lease expires; never refund spent quota */ }
+    if (cold) {
+      // 释放租约是尽力而为（租约 90 秒后自己过期），所以不能让它挡在响应前面：
+      // 冷请求本来已经等过一次 reserve 的 DO 往返，再串行等一次 release，等于
+      // 把最慢的那条路径又拉长一个 DO 往返。交给 ctx.waitUntil 后台完成即可。
+      // 没有 ctx 时（单测）退回原来的原地 await。
+      const release = call({ kind: 'release', ipHash, id, day: decision.day })
+        .catch(() => { /* lease expires; never refund spent quota */ })
+      if (deps.waitUntil) deps.waitUntil(release)
+      else await release
+    }
   }
 }

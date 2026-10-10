@@ -8,7 +8,9 @@
 //   - 未发布的后台谱面仍由 admin 专用的 `/api/osu/raw` 读取
 //
 // 三级缓存(网络层统一按 ETag 失效):
-//   1. 30 秒内重复打开直接命中,完全不发请求(换图后最多滞后 30 秒)
+//   1. 5 分钟内重复打开直接命中,完全不发请求。窗口取 300 秒,和服务端 Cache API
+//      的 max-age=300 同档 —— 客户端再久也不会比服务端本身更新,却省掉了每次都
+//      绕不开的那趟往返(缓存命中在服务端也要走一次 DO 配额预留,约半秒)
 //   2. 超时后走 ETag 再校验，未变化时返回 304，不重复传输正文
 //   3. 解析 + 分页布局结果按 text 引用缓存,重复打开零计算
 
@@ -46,7 +48,7 @@ interface TextEntry {
   fetchedAt: number
 }
 
-const TRUST_TTL_MS = 30_000
+const TRUST_TTL_MS = 300_000
 const MAX_TEXT_CACHE = 12
 const MAX_MODEL_CACHE = 16
 const REQUEST_TIMEOUT_MS = 25_000

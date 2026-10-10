@@ -719,6 +719,382 @@
           "ln": 12.6
         }
       }
+    },
+    {
+      "id": "round-6",
+      "name": "Finals",
+      "abbreviation": "F",
+      "order": 6,
+      "difficulty": {
+        "min": 11,
+        "max": 13.03,
+        "average": 12.05
+      },
+      "maps": [
+        {
+          "slot": "RC1",
+          "type": "RC",
+          "realType": "SS",
+          "name": "t+pazolite with siromaru - Chambarising (Cut Ver.) [omegaY_'s Speed Beta (edit) 1.15x (184bpm)]",
+          "difficulty": 12.99,
+          "beatmapId": 5895329,
+          "beatmapsetId": 2624481
+        },
+        {
+          "slot": "RC2",
+          "type": "RC",
+          "realType": "JS",
+          "name": "ZEMETH - Shatter The World [Destruction (VNMC ver)]",
+          "difficulty": 12.7,
+          "beatmapId": 5895089,
+          "beatmapsetId": 2624414
+        },
+        {
+          "slot": "RC3",
+          "type": "RC",
+          "realType": "SA",
+          "name": "Sakamirito - Airengokuka [Hellfire]",
+          "difficulty": 13,
+          "beatmapId": 5802260,
+          "beatmapsetId": 2596832
+        },
+        {
+          "slot": "RC4",
+          "type": "RC",
+          "realType": "FCJ",
+          "name": "WREN EVANS feat. itsnk - To Te Ti [To forget melancholic days]",
+          "difficulty": 12.46,
+          "beatmapId": 5895342,
+          "beatmapsetId": 2624488
+        },
+        {
+          "slot": "RC5",
+          "type": "RC",
+          "realType": "TC",
+          "name": "Camellia - d:for the DELTA (Akira Complex Remix) [Polarin's DYSTOPIA]",
+          "difficulty": 12.68,
+          "beatmapId": 5895394,
+          "beatmapsetId": 2624508
+        },
+        {
+          "slot": "RC6",
+          "type": "RC",
+          "realType": "DP",
+          "name": "Inundaremos - 3300 [claron]",
+          "difficulty": 11.24,
+          "beatmapId": 5895585,
+          "beatmapsetId": 2624571
+        },
+        {
+          "slot": "RC7",
+          "type": "RC",
+          "realType": "JTC",
+          "name": "Parannoul - Excuse (Cut Ver.) [Oxygenthief 1.1x]",
+          "difficulty": 13.03,
+          "beatmapId": 4496274,
+          "beatmapsetId": 2136645
+        },
+        {
+          "slot": "RC8",
+          "type": "RC",
+          "realType": "MX",
+          "name": "Meowii - ANGEL-GORE2008 [HEAVENLY DEATH]",
+          "difficulty": 12.67,
+          "beatmapId": 5895314,
+          "beatmapsetId": 2624474
+        },
+        {
+          "slot": "LN1",
+          "type": "LN",
+          "realType": "TE",
+          "name": "Matsushita - Hey Darling! [My Darling]",
+          "difficulty": 11.8,
+          "beatmapId": 5894664,
+          "beatmapsetId": 2624255
+        },
+        {
+          "slot": "LN2",
+          "type": "LN",
+          "realType": "DE",
+          "name": "DJ Sharpnel - WE LUV LAMA [WE LUV DENSITY | 1.1x]",
+          "difficulty": 12,
+          "beatmapId": 5789658,
+          "beatmapsetId": 2593053
+        },
+        {
+          "slot": "LN3",
+          "type": "LN",
+          "realType": "LNWC",
+          "name": "Innerpartysystem - Die Tonight, Live Forever [You've got no rice left (cut) 1.1x]",
+          "difficulty": 11,
+          "beatmapId": 5765399,
+          "beatmapsetId": 2585010
+        },
+        {
+          "slot": "LN4",
+          "type": "LN",
+          "realType": "LNMX",
+          "name": "Kurage-P feat. Otomachi Una - Beast Dance (Akiri's \"Gao Gao Gao Gao Gao Gao!\" Bootleg) [TheFunk's LN LN LN LN LN LN! 1.05x (242bpm)]",
+          "difficulty": 12,
+          "beatmapId": 5896532,
+          "beatmapsetId": 2624819
+        },
+        {
+          "slot": "HB1",
+          "type": "HB",
+          "realType": "HB1",
+          "name": "Rabbit House - Gehenna [Pandemonium [1.1x Rate]]",
+          "difficulty": 12.2,
+          "beatmapId": 4021018,
+          "beatmapsetId": 1943750,
+          "difficultyLn": 12.4
+        },
+        {
+          "slot": "HB2",
+          "type": "HB",
+          "realType": "HB2",
+          "name": "seatrus - Tabula Rasa [Mirage]",
+          "difficulty": 11.8,
+          "beatmapId": 5802210,
+          "beatmapsetId": 2596803,
+          "difficultyLn": 11.6
+        },
+        {
+          "slot": "HB3",
+          "type": "HB",
+          "realType": "HB3",
+          "name": "leroy - the joke is on you [travis scott mode]",
+          "difficulty": 11.6,
+          "beatmapId": 5757333,
+          "beatmapsetId": 2582387,
+          "difficultyLn": 11.8
+        },
+        {
+          "slot": "HB4",
+          "type": "HB",
+          "realType": "HB4",
+          "name": "Kagura - Mare Nectaris (Camellia's \"Ingenii\" Remix) (Cut ver.) [53ww 1.05]",
+          "difficulty": 11.6,
+          "beatmapId": 5895234,
+          "beatmapsetId": 2624441,
+          "difficultyLn": 11.6
+        },
+        {
+          "slot": "TB",
+          "type": "TB",
+          "realType": "TB",
+          "name": "DanGrips vs fleyii vs Double-U vs BlastiX - Sanguine Khopesh [Bloodlusted Revenge]",
+          "difficulty": 12.8,
+          "beatmapId": 5895685,
+          "beatmapsetId": 2624607,
+          "difficultyLn": 13.2
+        }
+      ],
+      "typeDifficulties": {
+        "RC": {
+          "rf": 12.6
+        },
+        "HB": {
+          "rf": 11.8,
+          "ln": 11.85
+        },
+        "LN": {
+          "ln": 11.7
+        },
+        "SV": {},
+        "TB": {
+          "rf": 12.8,
+          "ln": 13.2
+        }
+      }
+    },
+    {
+      "id": "round-7",
+      "name": "Grand Finals",
+      "abbreviation": "GF",
+      "order": 7,
+      "difficulty": {
+        "min": 12.1,
+        "max": 14.4,
+        "average": 13.29
+      },
+      "maps": [
+        {
+          "slot": "RC1",
+          "type": "RC",
+          "realType": "SS",
+          "name": "jun feat. Schanita - TRUE LOVE [a2 x1.05_P]",
+          "difficulty": 13.4,
+          "beatmapId": 5271683,
+          "beatmapsetId": 2422669
+        },
+        {
+          "slot": "RC2",
+          "type": "RC",
+          "realType": "JS",
+          "name": "Kommisar - Chromosphere [Incandescent Plasma Region]",
+          "difficulty": 13.52,
+          "beatmapId": 5922820,
+          "beatmapsetId": 2632395
+        },
+        {
+          "slot": "RC3",
+          "type": "RC",
+          "realType": "SA",
+          "name": "azure - Stages of XIA [Battle of XVI]",
+          "difficulty": 13.39,
+          "beatmapId": 5922971,
+          "beatmapsetId": 2632458
+        },
+        {
+          "slot": "RC4",
+          "type": "RC",
+          "realType": "CJ",
+          "name": "Drazically - OMEGA [OMEGA PARTS]",
+          "difficulty": 13.38,
+          "beatmapId": 5924550,
+          "beatmapsetId": 2632907
+        },
+        {
+          "slot": "RC5",
+          "type": "RC",
+          "realType": "ADP",
+          "name": "Frums - NEERWUISSALEARNTD [Znow & S1SW's MHIYAEBFETLTRS]",
+          "difficulty": 12.94,
+          "beatmapId": 5802307,
+          "beatmapsetId": 2596850
+        },
+        {
+          "slot": "RC6",
+          "type": "RC",
+          "realType": "TC",
+          "name": "Ulagumo - Can't Steal my voice [Embodiment]",
+          "difficulty": 12.3,
+          "beatmapId": 5922860,
+          "beatmapsetId": 2632413
+        },
+        {
+          "slot": "RC7",
+          "type": "RC",
+          "realType": "MTC",
+          "name": "linear ring - lalabai call me [LALA LAND]",
+          "difficulty": 12.1,
+          "beatmapId": 5925709,
+          "beatmapsetId": 2328741
+        },
+        {
+          "slot": "RC8",
+          "type": "RC",
+          "realType": "MX",
+          "name": "EndCat-Zhongmao - Inverse Imprint [Traces :: Pressed Into the Unseen]",
+          "difficulty": 13.52,
+          "beatmapId": 5921371,
+          "beatmapsetId": 2631951
+        },
+        {
+          "slot": "LN1",
+          "type": "LN",
+          "realType": "TE",
+          "name": "Yousei Teikoku - The Creator [Twisted Reality [1.1x Rate]]",
+          "difficulty": 13.2,
+          "beatmapId": 5919045,
+          "beatmapsetId": 2405378
+        },
+        {
+          "slot": "LN2",
+          "type": "LN",
+          "realType": "DE",
+          "name": "Uetsu Shi - Firmament Castle \"Velier\" [Enter 1.1x]",
+          "difficulty": 13.8,
+          "beatmapId": 5842902,
+          "beatmapsetId": 2609558
+        },
+        {
+          "slot": "LN3",
+          "type": "LN",
+          "realType": "LNTC",
+          "name": "Quartzone & L.M. - Inutilia [Nothing (OD7.5)]",
+          "difficulty": 13,
+          "beatmapId": 5341642,
+          "beatmapsetId": 2175016
+        },
+        {
+          "slot": "LN4",
+          "type": "LN",
+          "realType": "LNMX",
+          "name": "trailmix37 - Echo of Stellmere [Dissonant//Transmission]",
+          "difficulty": 13,
+          "beatmapId": 5922857,
+          "beatmapsetId": 2632410
+        },
+        {
+          "slot": "HB1",
+          "type": "HB",
+          "realType": "HB1",
+          "name": "Melorikka - SYMBIOSIS [Intertwined World]",
+          "difficulty": 13.4,
+          "beatmapId": 5922867,
+          "beatmapsetId": 2632416,
+          "difficultyLn": 13.8
+        },
+        {
+          "slot": "HB2",
+          "type": "HB",
+          "realType": "HB2",
+          "name": "Aoi - Welkius [Plana]",
+          "difficulty": 13.2,
+          "beatmapId": 5922917,
+          "beatmapsetId": 2632427,
+          "difficultyLn": 13.4
+        },
+        {
+          "slot": "HB3",
+          "type": "HB",
+          "realType": "HB4",
+          "name": "Salty Salt - Hologram of Sakura [Ycloki's 'phony projection' (edit)]",
+          "difficulty": 12.4,
+          "beatmapId": 5289903,
+          "beatmapsetId": 2429271,
+          "difficultyLn": 12.6
+        },
+        {
+          "slot": "HB4",
+          "type": "HB",
+          "realType": "HB3",
+          "name": "Camellia - NUCLEAR-STAR (Cut Ver.) [Deduce 1.1x]",
+          "difficulty": 14,
+          "beatmapId": 5551249,
+          "beatmapsetId": 2516795,
+          "difficultyLn": 14.4
+        },
+        {
+          "slot": "TB",
+          "type": "TB",
+          "realType": "TB",
+          "name": "Drazically vs. Connexio. vs. Asatsumei feat. Daidai Alice - Temperance: A Fate More Wretched Than Resistance [Fate: Rebirth]",
+          "difficulty": 13.4,
+          "beatmapId": 5922949,
+          "beatmapsetId": 2632431,
+          "difficultyLn": 13.8
+        }
+      ],
+      "typeDifficulties": {
+        "RC": {
+          "rf": 13.07
+        },
+        "HB": {
+          "rf": 13.25,
+          "ln": 13.55
+        },
+        "LN": {
+          "ln": 13.25
+        },
+        "SV": {},
+        "TB": {
+          "rf": 13.4,
+          "ln": 13.8
+        }
+      }
     }
   ],
   "customTypes": [],

@@ -1776,11 +1776,11 @@ function MapUploadCell({
   const [reuploading, setReuploading] = useState(false)
 
   // 重传完成后(uploadStatus 变 success 且不再 uploading)自动收回到 ✓ 状态。
-  useEffect(() => {
-    if (reuploading && uploadStatus === 'success' && !isUploading) {
-      setReuploading(false)
-    }
-  }, [reuploading, uploadStatus, isUploading])
+  // 这是纯派生:条件成立时它就该是 false,渲染期直接调整即可(React 官方的
+  // "adjusting state when a prop changes"),不必走 effect —— 放 effect 里反而多一次级联渲染。
+  if (reuploading && uploadStatus === 'success' && !isUploading) {
+    setReuploading(false)
+  }
 
   const inputId = `osz-${roundId}-${slot}-${isNsv ? 'nsv' : 'main'}`
   const radioName = `diff-${roundId}-${slot}-${isNsv ? 'nsv' : 'main'}`

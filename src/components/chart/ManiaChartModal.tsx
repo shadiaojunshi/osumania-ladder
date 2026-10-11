@@ -56,10 +56,12 @@ export function ManiaChartModal({
 
   const { beatmapId, tournamentId, roundId, slot } = target
 
-  const request = useCallback((retry: boolean) => {
+  // 取数本体:本函数体内不出现同步 setState —— 调用全部落在 .then/.catch 回调里。
+  // react-hooks/set-state-in-effect 不建模 promise:只要函数体里直接出现 setState 调用,
+  // 整个函数就会被判成「在 effect 里同步 setState」。挂载时 status/errorKind 的初值本来
+  // 就是 'loading'/'unavailable',那一次置位可以省;重试路径由下面的 request 补上。
+  const runRequest = useCallback((retry: boolean) => {
     const generation = ++generationRef.current
-    setStatus('loading')
-    setErrorKind('unavailable')
     loadManiaChart({ beatmapId, tournamentId, roundId, slot }, retry)
       .then((value) => {
         if (generation !== generationRef.current) return
@@ -75,11 +77,18 @@ export function ManiaChartModal({
       })
   }, [beatmapId, tournamentId, roundId, slot])
 
+  // 重试按钮用:先把状态置回 loading 再发请求(事件处理器里同步 setState 是允许的)。
+  const request = useCallback((retry: boolean) => {
+    setStatus('loading')
+    setErrorKind('unavailable')
+    runRequest(retry)
+  }, [runRequest])
+
   useEffect(() => {
-    request(false)
+    runRequest(false)
     // 换谱面时旧请求的结果必须作废。
     return () => { generationRef.current += 1 }
-  }, [request])
+  }, [runRequest])
 
   const requestClose = useCallback(() => {
     if (closingRef.current) return
@@ -192,6 +201,8 @@ export function ManiaChartModal({
       >
         <FloatingFocusManager context={context} initialFocus={closeBtnRef} returnFocus={false} modal>
           <div
+            // Floating UI exposes a callback setter here, not a read of ref.current.
+            // eslint-disable-next-line react-hooks/refs
             ref={refs.setFloating}
             {...getFloatingProps()}
             role="dialog"

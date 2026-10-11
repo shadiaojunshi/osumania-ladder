@@ -183,16 +183,30 @@ export function MapSlotEditor({ map, onChange, onRemove, getMapHistory, enableEs
       })
   }, [canEstimate, estimateStatus, map.beatmapId, map.slot, tournamentId, roundId])
 
-  useEffect(() => {
+  // 换谱面/槽位时把估算状态清回 idle。这是纯派生(身份变了就该重置),渲染期直接调整即可
+  // (React 官方的 "adjusting state when a prop changes");effect 只留下作废在途请求的清理。
+  const slotIdentity = `${tournamentId}::${roundId}::${map.slot}::${map.beatmapId}::${map.category}`
+  const [prevSlotIdentity, setPrevSlotIdentity] = useState(slotIdentity)
+  if (prevSlotIdentity !== slotIdentity) {
+    setPrevSlotIdentity(slotIdentity)
     setEstimate(null)
     setEstimateStatus('idle')
     setEstimateErrorKey(undefined)
-    // Late responses must not fill another slot after editing/removing a row.
-    return () => { estimateGeneration.current++ }
-  }, [map.beatmapId, map.category, map.slot, tournamentId, roundId])
+  }
 
   useEffect(() => {
-    if (estimateSignal > 0) runEstimate(false)
+    // Late responses must not fill another slot after editing/removing a row.
+    return () => { estimateGeneration.current++ }
+  }, [slotIdentity])
+
+  useEffect(() => {
+    if (estimateSignal > 0) {
+      // 父组件用 estimateSignal 下发「批量重算」指令。runEstimate 进去就会同步置 loading,
+      // 但这里是在响应外部事件,不是由自身状态推导出的级联渲染;规则建议的替代方案
+      // (事件回调 / useSyncExternalStore)都要改父组件接口,不在本次 lint 收敛范围内。
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- 响应父组件下发的指令，非级联渲染
+      runEstimate(false)
+    }
     // Request state changes must not restart a batch signal.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [estimateSignal])

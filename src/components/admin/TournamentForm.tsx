@@ -56,10 +56,15 @@ export function TournamentForm({ onUpdate, initialData, saveSignal, onDirtyChang
   const skipDraftCleanupSave = useRef(false)
   // 用 ref 保存当前基准:草稿写入时读它,避免把 baseSha 塞进依赖导致 effect 反复重建
   const baseShaRef = useRef<string | null>(baseSha)
-  baseShaRef.current = baseSha
   // 回调也走 ref:恢复草稿时调用它不能触发这个 effect 重跑(否则刚恢复的内容会被重置掉)
   const onBaseShaChangeRef = useRef(onBaseShaChange)
-  onBaseShaChangeRef.current = onBaseShaChange
+  // 同步这两个 ref 放到 effect 里,而不是渲染期直接赋值 —— 渲染期改 ref 在并发渲染下不安全
+  // (react-hooks/refs 报的就是这个)。本 effect 声明在下面那个草稿 effect 之前,同一次提交里
+  // 先执行,所以那边读到的必然是本轮最新值。两者只被事件处理器和后续 effect 读取,不参与渲染。
+  useEffect(() => {
+    baseShaRef.current = baseSha
+    onBaseShaChangeRef.current = onBaseShaChange
+  })
   const draftKey = `osumania-ladder:tournament-draft:v${TOURNAMENT_DRAFT_VERSION}:${initialData ? `edit:${initialData.id}` : 'create'}`
 
   // dirty 变化时向上通知(用于跨栏切换拦截)
@@ -78,6 +83,9 @@ export function TournamentForm({ onUpdate, initialData, saveSignal, onDirtyChang
     const baseTournament = initialData || EMPTY_TOURNAMENT
     const baseRounds = initialData ? initialData.rounds.map(roundToMeta) : []
     const baseStep = initialData ? 1 : 0
+    // 这段无法改成「渲染期派生状态」:同一段逻辑还要读 localStorage 并弹 window.confirm,
+    // 渲染期不能执行副作用。所以只能在 effect 里做,属于该规则的已知边界。
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- 与 localStorage/confirm 同段，无法移出 effect
     setTournament(baseTournament)
     setRounds(baseRounds)
     setStep(baseStep)
@@ -122,6 +130,8 @@ export function TournamentForm({ onUpdate, initialData, saveSignal, onDirtyChang
   useEffect(() => {
     if (saveSignal) {
       skipDraftCleanupSave.current = true
+      // 同段还要清掉 localStorage 里的草稿,渲染期不能做副作用,同样无法移出 effect。
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- 与 localStorage 清理同段，无法移出 effect
       setIsDirty(false)
       try { window.localStorage.removeItem(draftKey) } catch { /* storage may be disabled */ }
     }

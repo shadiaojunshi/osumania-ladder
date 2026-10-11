@@ -117,17 +117,23 @@ export function RoundRefPicker({ roundAbbr, siblingAbbrs, roundIndex, onApply, e
     return { key: best.key, roundId: best.roundId, roundAbbr: best.roundAbbr, offset: myRank - best.rank, exact: false, isFallback: best.isFallback }
   }, [baseRounds, roundAbbr, siblingAbbrs, roundIndex])
 
-  useEffect(() => {
-    if (!open) return
-    if (baseRounds.length === 0) { setBaseRoundKey(''); return }
-    if (!baseRounds.find((r) => r.key === baseRoundKey)) {
+  // 打开时把 baseRoundKey 纠正到合法值(列表空 → '',对不上 → 自动匹配值 / 第一项)。
+  // 纯派生,渲染期直接调整即可(React 官方的 "adjusting state when a prop changes");
+  // 放 effect 里会先渲染一帧错基准再纠正,反而更差。
+  if (open) {
+    if (baseRounds.length === 0) {
+      if (baseRoundKey !== '') setBaseRoundKey('')
+    } else if (!baseRounds.find((r) => r.key === baseRoundKey)) {
       setBaseRoundKey(autoMatch?.key || baseRounds[0].key)
       // 非精确匹配时把推断出的偏移预填进去(如 RO64 → RO32 -1)
       if (autoMatch && !autoMatch.exact) setOffset(String(autoMatch.offset))
     }
-  }, [open, baseRounds, autoMatch, baseRoundKey])
+  }
 
   useEffect(() => {
+    // 同 DifficultyRefPicker:位置靠 buttonRef.current.getBoundingClientRect() 量出来,
+    // 渲染期没有 DOM 可量,只能在这个 effect 里做。属于该规则的已知边界,不是级联渲染。
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- 量 DOM 后定位，渲染期无法计算
     if (!open) { setPopoverPos(null); return }
     const btn = buttonRef.current
     if (!btn) return

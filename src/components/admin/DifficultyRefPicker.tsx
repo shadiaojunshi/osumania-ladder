@@ -105,7 +105,11 @@ export function DifficultyRefPicker({ value, onChange, type, field, excludeRef }
   }, [])
 
   useEffect(() => {
+    // 这个 effect 是「量 DOM → 存进 state」:位置由 buttonRef.current.getBoundingClientRect()
+    // 算出,渲染期根本没有 DOM 可量,只能在这里做。规则建议的替代方案(事件回调 /
+    // useSyncExternalStore)在此都不适用,属于该规则的已知边界,不是级联渲染。
     if (!open) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- 量 DOM 后定位，渲染期无法计算
       setPopoverPos(null)
       return
     }
@@ -151,17 +155,16 @@ export function DifficultyRefPicker({ value, onChange, type, field, excludeRef }
     [ladder]
   )
 
-  // 打开时初始化默认锚点:第一个有数据的项
-  useEffect(() => {
-    if (!open) return
+  // 打开时初始化默认锚点:第一个有数据的项。这是纯派生(当前 anchorKey 与候选列表对不上
+  // 就回落到第一个),渲染期直接调整即可(React 官方的 "adjusting state when a prop changes")。
+  // 放 effect 里反而更差:会先渲染一帧错锚点再纠正。
+  if (open) {
     if (anchorOptions.length === 0) {
-      setAnchorKey('')
-      return
-    }
-    if (!anchorOptions.find((o) => String(o.idx) === anchorKey)) {
+      if (anchorKey !== '') setAnchorKey('')
+    } else if (!anchorOptions.find((o) => String(o.idx) === anchorKey)) {
       setAnchorKey(String(anchorOptions[0].idx))
     }
-  }, [open, anchorOptions, anchorKey])
+  }
 
   useEffect(() => {
     if (!open) return

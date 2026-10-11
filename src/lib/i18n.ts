@@ -18,23 +18,22 @@ function format(s: string, vars?: Record<string, string | number>): string {
   })
 }
 
-// 模块级当前语言。useT 每次 render 同步 lang 进来。
-// t 函数在闭包里读 langRef.current,所以函数引用永远稳定,
-// 任何 useCallback(fn, [t]) / useEffect(fn, [..., t]) 都不会因 t 变而重跑。
-// 切语言时组件按 zustand 订阅正常 rerender,t 拿到新 lang,但函数引用不变。
-const langRef: { current: 'zh' | 'en' } = { current: 'zh' }
-
+// 语言的事实来源就是 zustand store(prefsStore),t 在**调用时**直接读它。
+// STABLE_T 是模块级常量,引用永远不变 —— 放进任何依赖数组都安全;
+// 切语言时组件按 zustand 订阅正常 rerender,t 自然读到新的 lang。
+//
+// 早先这里是一个模块级可变对象 `langRef`,由 useT() 在**渲染期**写入:
+// 那既属于"渲染期改外部可变状态"(react-hooks/immutability 报的就是这个),
+// 也让每次 render 都在偷偷改一份共享变量。store 本来就能直接读,这个中间层是多余的。
 const STABLE_T = (key: MessageKey, vars?: Record<string, string | number>): string => {
-  const raw = dict[langRef.current][key] ?? messagesZh[key] ?? key
+  const raw = dict[usePrefsStore.getState().lang][key] ?? messagesZh[key] ?? key
   return format(raw, vars)
 }
 
 // 主路径: 在组件里 const t = useT();t('key')。
-// 选择器订阅 lang 一字段,主题切换不会触发翻译重渲染。
-// 返回的 STABLE_T 是模块级常量,引用永远不变 —— 放进任何依赖数组都安全。
+// 这里只需**订阅** lang 一字段(主题切换不会触发翻译重渲染);取值由 STABLE_T 自己做。
 export function useT() {
-  const lang = usePrefsStore((s) => s.lang)
-  langRef.current = lang
+  usePrefsStore((s) => s.lang)
   return STABLE_T
 }
 

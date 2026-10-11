@@ -52,6 +52,9 @@ export function RefLadderEditor() {
   // 取数函数必须先声明、再在 effect 里引用（否则命中 react-hooks/immutability
   // 的 "Cannot access variable before it is declared"）。行为不变。
   useEffect(() => {
+    // 挂载取数。react-hooks/set-state-in-effect 不建模 await，会把 await 之后的 setState
+    // 也算成「同步 setState」，此处属误报（同类先例见 ladder/RoundDetailModal.tsx:122）。
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- await 之后的 setState 不是同步 setState
     fetchData()
   }, [])
   const sortedTournaments = useMemo(

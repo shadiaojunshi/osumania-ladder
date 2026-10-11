@@ -95,6 +95,9 @@ export function AuditLog() {
   }, [t])
 
   useEffect(() => {
+    // 挂载取数。react-hooks/set-state-in-effect 不建模 await，会把 await 之后的 setState
+    // 也算成「同步 setState」，此处属误报（同类先例见 ladder/RoundDetailModal.tsx:122）。
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- await 之后的 setState 不是同步 setState
     fetchAudit()
   }, [fetchAudit])
 

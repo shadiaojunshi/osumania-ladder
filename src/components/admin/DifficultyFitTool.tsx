@@ -245,10 +245,19 @@ export function DifficultyFitTool() {
   const addKnownPosition = addKey ? positionMap.get(addKey) : undefined
   const addReading = addRound ? getRoundDifficulty(addRound, dimensionId) : null
 
-  useEffect(() => {
-    if (addKnownPosition !== undefined) setAddPosition(String(addKnownPosition))
-    else setAddPosition('')
-  }, [addKnownPosition, addRoundId])
+  // addPosition 是「用标尺推出的默认值 + 用户可手改」的受控输入:选中的轮次(或该轮次的
+  // 已知位置)一变就重置回默认值。这是纯派生,渲染期直接调整即可(React 官方的
+  // "adjusting state when a prop changes"),放 effect 里只会多一次级联渲染。
+  // seed 取值与原来的依赖数组完全一致,行为不变。
+  // prev 用 null 起步而不是 seed 初值:原来的 effect 在挂载时也会跑一次,若直接用 seed 当
+  // 初值,挂载那一次重置就被跳过了 —— 现在恰好因为 addTournamentId/addRoundId 初值都是 '',
+  // 两种写法结果相同,但那是巧合。用 null 强制首次渲染也走一遍,行为与旧 effect 逐字对应。
+  const addPositionSeed = `${addRoundId}::${addKnownPosition ?? ''}`
+  const [prevAddPositionSeed, setPrevAddPositionSeed] = useState<string | null>(null)
+  if (prevAddPositionSeed !== addPositionSeed) {
+    setPrevAddPositionSeed(addPositionSeed)
+    setAddPosition(addKnownPosition !== undefined ? String(addKnownPosition) : '')
+  }
 
   const toggleSample = (key: string) => {
     setSelectedKeys((current) => {

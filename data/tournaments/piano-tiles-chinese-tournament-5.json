@@ -49,9 +49,10 @@
           "slot": "LN1",
           "type": "LN",
           "realType": "LNMX",
-          "name": "",
+          "name": "Zekk - The King's Return [Stage 4: Revolution]",
           "difficulty": 0,
-          "beatmapId": 4682492
+          "beatmapId": 4682492,
+          "beatmapsetId": 210573
         },
         {
           "slot": "HB1",
@@ -286,9 +287,10 @@
           "slot": "RC2",
           "type": "RC",
           "realType": "SA",
-          "name": "",
+          "name": "Rabbit House - Ad astra per aspera [Beyond 1.05x]",
           "difficulty": 0,
-          "beatmapId": 4703713
+          "beatmapId": 4703713,
+          "beatmapsetId": 219068
         },
         {
           "slot": "RC3",
@@ -413,9 +415,10 @@
           "slot": "HR1",
           "type": "HR",
           "realType": "PDEX",
-          "name": "",
+          "name": "phonon - assembly [:fish:]",
           "difficulty": 0,
-          "beatmapId": 4713464
+          "beatmapId": 4713464,
+          "beatmapsetId": 222831
         },
         {
           "slot": "HR2",
@@ -493,9 +496,10 @@
           "slot": "LN3",
           "type": "LN",
           "realType": "PDLN",
-          "name": "",
+          "name": "Trina Lydia - The Blank Canvas [Palette]",
           "difficulty": 0,
-          "beatmapId": 4713493
+          "beatmapId": 4713493,
+          "beatmapsetId": 222844
         },
         {
           "slot": "HB1",
@@ -719,9 +723,10 @@
           "slot": "SV1",
           "type": "SV",
           "realType": "PDSV",
-          "name": "",
+          "name": "Ray Volpe - Laserbeam (Eliminate remix) (Cut & Speed Up Ver.) [Lasers]",
           "difficulty": 0,
-          "beatmapId": 4723419
+          "beatmapId": 4723419,
+          "beatmapsetId": 226599
         },
         {
           "slot": "TB",
@@ -774,9 +779,10 @@
           "slot": "RC1",
           "type": "RC",
           "realType": "PDRC",
-          "name": "",
+          "name": "Comame - Big Boss [The United Bamboo Gang (PTCT edit)]",
           "difficulty": 0,
-          "beatmapId": 4734393
+          "beatmapId": 4734393,
+          "beatmapsetId": 230820
         },
         {
           "slot": "RC2",
@@ -1018,9 +1024,10 @@
           "slot": "LN1",
           "type": "LN",
           "realType": "PDLN",
-          "name": "",
+          "name": "Primary - Inai Sekai [Departure]",
           "difficulty": 0,
-          "beatmapId": 4747791
+          "beatmapId": 4747791,
+          "beatmapsetId": 235054
         },
         {
           "slot": "LN2",

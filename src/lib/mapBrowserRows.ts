@@ -134,7 +134,10 @@ export interface BrowserOptionGroup {
 }
 
 /**
- * 键型下拉的分组：标准五类 + 「自定义」组（数据里出现过、但不在目录里的键型）。
+ * 键型下拉的分组：标准五类 + 「自定义」组（数据里出现过、但**五类分组都不认**的键型）。
+ * 注意这个桶不等于"目录外的键型"：`PDEX` 在目录里（`REAL_TYPES.SPECIAL`），但 SPECIAL
+ * 刻意不进 `BROWSER_CATEGORY_ORDER`（特殊槽位不做筛选归类），所以它同样落在这里 ——
+ * 它必须有落脚处，否则这些行在"永远带一个值"的键型筛选下不可达。
  * `customLabel` 由调用方注入（i18n 在组件层）。
  */
 export function browserOptionGroups(rows: MapBrowserRow[], customLabel: string): BrowserOptionGroup[] {

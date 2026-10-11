@@ -207,14 +207,37 @@ test('键型下拉：五个标准大类分组 + 自定义组；自定义为空�
   for (const g of standard) {
     assert.deepEqual(g.options.map((o) => o.id), REAL_TYPES[g.category].map((o) => o.id))
   }
-  assert.equal(groups.length, BROWSER_CATEGORY_ORDER.length, '现有全库没有目录外键型，不该多出分组')
+  // 「自定义」桶要恰好装下所有没被五类目录覆盖的键型 —— 全库现在有一个：PDEX。
+  // 它是 SPECIAL 的 Pending 占位：**在目录里**（REAL_TYPES.SPECIAL），但 SPECIAL 刻意
+  // 不进 BROWSER_CATEGORY_ORDER（见上面「大类判定与目录一致」用例），所以只能落在这个桶里。
+  // 这个桶不是"多出来的分组"，是必须的：浏览页的键型筛选永远带一个值
+  // （RealTypeMapBrowser 的 selectedRealType 初值就是 SS），没进下拉的键型在界面上
+  // 完全不可达 —— 那 18 张 PDEX 图就只剩翻全表一条路。
+  const covered = new Set(BROWSER_CATEGORY_ORDER.flatMap((c) => REAL_TYPES[c].map((i) => i.id)))
+  const catalog = new Set(Object.values(REAL_TYPES).flatMap((list) => list.map((i) => i.id)))
+  // 排序用 localeCompare，与 browserOptionGroups 内部一致（默认 sort 的码点序在带大小写/符号的
+  // 值上会和它分叉，将来多出几个自定义键型时会变成假失败）
+  const uncovered = [...new Set(rows.map((r) => r.realType))]
+    .filter((id) => !covered.has(id))
+    .sort((a, b) => a.localeCompare(b))
+  assert.deepEqual(
+    uncovered.filter((id) => !catalog.has(id)),
+    [],
+    '全库不该有目录外的 realType（写错的键型会静悄悄混进自定义桶）',
+  )
+  assert.deepEqual(
+    groups.slice(BROWSER_CATEGORY_ORDER.length),
+    uncovered.length ? [{ category: '自定义', options: uncovered.map((id) => ({ id, name: id })) }] : [],
+    '五类之外只允许一个「自定义」组，且它必须覆盖全部没被五类收录的键型',
+  )
 
   // 造一行目录外的键型（历史上真的出现过，比如改名前的旧键型）→ 必须出现在自定义组里，
   // 否则那些行会从界面上"消失"（用户没法把它们改回目录里的值）。
   const withCustom = [...rows, { ...rows[0], key: 'custom:1', realType: 'MADEUP' }]
   const custom = browserOptionGroups(withCustom, '自定义').find((g) => g.category === '自定义')
   assert.ok(custom, '有目录外键型时必须出现自定义组')
-  assert.deepEqual(custom.options.map((o) => o.id), ['MADEUP'])
+  // 期望值 = 全库本来就有的未覆盖键型 + 这一条造的 MADEUP（同 localeCompare 序）
+  assert.deepEqual(custom.options.map((o) => o.id), [...uncovered, 'MADEUP'].sort((a, b) => a.localeCompare(b)))
   const known = new Set(BROWSER_CATEGORY_ORDER.flatMap((c) => REAL_TYPES[c].map((i) => i.id)))
   for (const option of custom.options) assert.equal(known.has(option.id), false)
 

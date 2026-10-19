@@ -1,0 +1,893 @@
+{
+  "id": "cute-female-vocal-4k",
+  "name": "Cute Female Vocal 4k",
+  "abbreviation": "CFV4K",
+  "keyCount": 4,
+  "year": 2026,
+  "tags": [],
+  "rounds": [
+    {
+      "id": "round-1",
+      "name": "Qualifiers",
+      "abbreviation": "Qual",
+      "order": 1,
+      "isQualifier": true,
+      "difficulty": {
+        "min": 0,
+        "max": 0,
+        "average": 0
+      },
+      "maps": [
+        {
+          "slot": "ST1",
+          "type": "SV",
+          "realType": "PDSV",
+          "name": "Nanahira - Chikatto Chika Chika [Stage 1: Don!]",
+          "difficulty": 0,
+          "beatmapId": 4392493,
+          "beatmapsetId": 2094902
+        },
+        {
+          "slot": "ST2",
+          "type": "RC",
+          "realType": "MX",
+          "name": "ave;new feat. Sakura Saori - Pure My Voices [Stage 2: LaLaLaLaLa]",
+          "difficulty": 0,
+          "beatmapId": 4392482,
+          "beatmapsetId": 2094897
+        },
+        {
+          "slot": "ST3",
+          "type": "LN",
+          "realType": "LNWC",
+          "name": "LABYRINTHS - Yumeji Labyrinth (TV Size) [Stage 3: KUROU?]",
+          "difficulty": 0,
+          "beatmapId": 4392462,
+          "beatmapsetId": 2094883
+        },
+        {
+          "slot": "ST4",
+          "type": "RC",
+          "realType": "JS",
+          "name": "*namirin - Amatsu Kitsune (Sped Up Ver.) [Stage 4: Fox]",
+          "difficulty": 0,
+          "beatmapId": 4392468,
+          "beatmapsetId": 2094889
+        },
+        {
+          "slot": "ST5",
+          "type": "LN",
+          "realType": "DE",
+          "name": "DJ Sharpnel feat. Ozera Ai - monochromed (Cut Ver.) [Stage 5: Koi]",
+          "difficulty": 0,
+          "beatmapId": 4392484,
+          "beatmapsetId": 2094899
+        },
+        {
+          "slot": "ST6",
+          "type": "HB",
+          "realType": "HB4",
+          "name": "Capchii feat. Hatsune Miku - What's up? Pop! [Stage 6: Append]",
+          "difficulty": 0,
+          "beatmapId": 4392506,
+          "beatmapsetId": 2094914
+        }
+      ],
+      "typeDifficulties": {
+        "RC": {},
+        "HB": {},
+        "LN": {},
+        "SV": {},
+        "TB": {}
+      }
+    },
+    {
+      "id": "round-2",
+      "name": "Round of 32",
+      "abbreviation": "RO32",
+      "order": 2,
+      "difficulty": {
+        "min": 0,
+        "max": 0,
+        "average": 0
+      },
+      "maps": [
+        {
+          "slot": "RC1",
+          "type": "RC",
+          "realType": "STC",
+          "name": "HappyHappyTwin - ankira!?kyousoukyoku [Happy Stream]",
+          "difficulty": 0,
+          "beatmapId": 3252949,
+          "beatmapsetId": 1592753
+        },
+        {
+          "slot": "RC2",
+          "type": "RC",
+          "realType": "JS",
+          "name": "Ayaka Saotome (CV: Yui Nakajima) - What color... [Jumpstream Rave! 1.1x]",
+          "difficulty": 0,
+          "beatmapId": 3341615,
+          "beatmapsetId": 1637394
+        },
+        {
+          "slot": "RC3",
+          "type": "RC",
+          "realType": "SJ",
+          "name": "Suou Patra - I am Number 1 Patra-chan-sama [Hard]",
+          "difficulty": 0,
+          "beatmapId": 4402173,
+          "beatmapsetId": 2098657
+        },
+        {
+          "slot": "RC4",
+          "type": "RC",
+          "realType": "MX",
+          "name": "Watashi (CV: Yuuki Aoi) - Ganbare! Kumoko-san no Thema (TV Size) [11Bit's Hard]",
+          "difficulty": 0,
+          "beatmapId": 2884973,
+          "beatmapsetId": 1398110
+        },
+        {
+          "slot": "HB1",
+          "type": "HB",
+          "realType": "HB1",
+          "name": "NayutalieN - Dance Robot Dance (feat. Emu Otori & Kusanagi Nene & Hatsune Miku) [L(OwO)7]",
+          "difficulty": 0,
+          "beatmapId": 2831933,
+          "beatmapsetId": 1369553
+        },
+        {
+          "slot": "HB2",
+          "type": "HB",
+          "realType": "LNmainHB",
+          "name": "himmel feat. YooSanHyakurei - Maple Wind [Autumn]",
+          "difficulty": 0,
+          "beatmapId": 2806478,
+          "beatmapsetId": 1356026
+        },
+        {
+          "slot": "LN1",
+          "type": "LN",
+          "realType": "DE",
+          "name": "Prim - Haochi~ kung-fu musume no tekken full course!! [Yummy / 1.05]",
+          "difficulty": 0,
+          "beatmapId": 4368038,
+          "beatmapsetId": 2085119
+        },
+        {
+          "slot": "LN2",
+          "type": "LN",
+          "realType": "CO",
+          "name": "Mayu Sakuma (CV:Yui Makino), Sae Kobayakawa (CV:Ricca Tachibana) - Aikurushii [nerf (cut)]",
+          "difficulty": 0,
+          "beatmapId": 4350920,
+          "beatmapsetId": 2077886
+        },
+        {
+          "slot": "SV",
+          "type": "SV",
+          "realType": "SVMX",
+          "name": "Datenshi Kokoeru, Aruku - Muteki! Chou Ero App! -remix- [oppai[CFV edit]]",
+          "difficulty": 0,
+          "beatmapId": 4397883,
+          "beatmapsetId": 2015435
+        },
+        {
+          "slot": "TB",
+          "type": "TB",
+          "realType": "TB",
+          "name": "sana - Sunset March [Sunset Sky]",
+          "difficulty": 0,
+          "beatmapId": 3678175,
+          "beatmapsetId": 1794544
+        }
+      ],
+      "typeDifficulties": {
+        "RC": {},
+        "HB": {},
+        "LN": {},
+        "SV": {},
+        "TB": {}
+      }
+    },
+    {
+      "id": "round-3",
+      "name": "Round of 16",
+      "abbreviation": "RO16",
+      "order": 3,
+      "difficulty": {
+        "min": 0,
+        "max": 0,
+        "average": 0
+      },
+      "maps": [
+        {
+          "slot": "RC1",
+          "type": "RC",
+          "realType": "SS",
+          "name": "Dempagumi.inc - Back! to the Future (Cut Ver.) [Back! to the YuDong]",
+          "difficulty": 0,
+          "beatmapId": 4368305,
+          "beatmapsetId": 2085221
+        },
+        {
+          "slot": "RC2",
+          "type": "RC",
+          "realType": "PDRC",
+          "name": "Murasaki Shion - Mage of Violet [Magic Stream]",
+          "difficulty": 0,
+          "beatmapId": 4307312,
+          "beatmapsetId": 2060556
+        },
+        {
+          "slot": "RC3",
+          "type": "RC",
+          "realType": "PDRC",
+          "name": "Hiina - Aishite [I Love You (edit) (115bpm)]",
+          "difficulty": 0,
+          "beatmapId": 4387561,
+          "beatmapsetId": 2092845
+        },
+        {
+          "slot": "RC4",
+          "type": "RC",
+          "realType": "PDRC",
+          "name": "Mili - Paper Bouquet (TV Size) [Insane]",
+          "difficulty": 0,
+          "beatmapId": 3794138,
+          "beatmapsetId": 1841442
+        },
+        {
+          "slot": "RC5",
+          "type": "RC",
+          "realType": "PDRC",
+          "name": "Gawr Gura - REFLECT (Assertive Hardcore Bootleg) [4K Minnow]",
+          "difficulty": 0,
+          "beatmapId": 3083188,
+          "beatmapsetId": 1505157
+        },
+        {
+          "slot": "HB1",
+          "type": "HB",
+          "realType": "PDHB",
+          "name": "Nanahira - Monosugoi Ikioi de Keine ga Monosugoi Uta [Rhezie's Lunatic]",
+          "difficulty": 0,
+          "beatmapId": 3384433,
+          "beatmapsetId": 1656541
+        },
+        {
+          "slot": "HB2",
+          "type": "HB",
+          "realType": "PDHB",
+          "name": "Nachoneko - Cat Loving [Love me]",
+          "difficulty": 0,
+          "beatmapId": 4322636,
+          "beatmapsetId": 2066219
+        },
+        {
+          "slot": "LN1",
+          "type": "LN",
+          "realType": "PDLN",
+          "name": "tezuka feat. Onishi Amimi - Bokura no Jikan [ln]",
+          "difficulty": 0,
+          "beatmapId": 4317433,
+          "beatmapsetId": 2064200
+        },
+        {
+          "slot": "LN2",
+          "type": "LN",
+          "realType": "PDLN",
+          "name": "TUYU - Itsuka Otona ni Nareru to Ii ne. [Sparsity]",
+          "difficulty": 0,
+          "beatmapId": 4409732,
+          "beatmapsetId": 2102028
+        },
+        {
+          "slot": "LN3",
+          "type": "LN",
+          "realType": "PDLN",
+          "name": "Tezuka feat. Amimi Oonishi - Suisou no kujira [LN]",
+          "difficulty": 0,
+          "beatmapId": 2434585,
+          "beatmapsetId": 1167144
+        },
+        {
+          "slot": "SV",
+          "type": "SV",
+          "realType": "PDSV",
+          "name": "Rissyuu feat. Choko - Paa ~PaPaPaPaa ver~ [d-_-b]",
+          "difficulty": 0,
+          "beatmapId": 2854762,
+          "beatmapsetId": 1381649
+        },
+        {
+          "slot": "TB",
+          "type": "TB",
+          "realType": "TB",
+          "name": "Amamiya Kokoro, Eli Conifer, Ratna Petit - Hitorigoto [Soliloquium]",
+          "difficulty": 0,
+          "beatmapId": 4409733,
+          "beatmapsetId": 2102029
+        }
+      ],
+      "typeDifficulties": {
+        "RC": {},
+        "HB": {},
+        "LN": {},
+        "SV": {},
+        "TB": {}
+      }
+    },
+    {
+      "id": "round-4",
+      "name": "Quarterfinals",
+      "abbreviation": "QF",
+      "order": 4,
+      "difficulty": {
+        "min": 0,
+        "max": 0,
+        "average": 0
+      },
+      "maps": [
+        {
+          "slot": "RC1",
+          "type": "RC",
+          "realType": "PDRC",
+          "name": "Yunomi - Akenai yoru, samenai yume (feat. nicamoq) (Cut Ver.) [....Dream.]",
+          "difficulty": 0,
+          "beatmapId": 4417767,
+          "beatmapsetId": 2105457
+        },
+        {
+          "slot": "RC2",
+          "type": "RC",
+          "realType": "PDRC",
+          "name": "yuikonnu & ayaponzu* - Super Nuko World [Nyao Nyao Nyao o~o]",
+          "difficulty": 0,
+          "beatmapId": 4417819,
+          "beatmapsetId": 2105480
+        },
+        {
+          "slot": "RC3",
+          "type": "RC",
+          "realType": "PDRC",
+          "name": "Xomu, Hyurin & Mitsune - Gloxinia (Kumi-P Remix) [Move along with leaves [1.05x Rate]]",
+          "difficulty": 0,
+          "beatmapId": 4417780,
+          "beatmapsetId": 2105461
+        },
+        {
+          "slot": "RC4",
+          "type": "RC",
+          "realType": "PDRC",
+          "name": "Freezer feat. Kiichigo - Berry Go!! [Ichigo! Go!! Go!!!]",
+          "difficulty": 0,
+          "beatmapId": 3217683,
+          "beatmapsetId": 1576006
+        },
+        {
+          "slot": "RC5",
+          "type": "RC",
+          "realType": "PDRC",
+          "name": "Rika Komatsu - My Sweet Heart [<3 -cut-]",
+          "difficulty": 0,
+          "beatmapId": 3923485,
+          "beatmapsetId": 1902980
+        },
+        {
+          "slot": "HB1",
+          "type": "HB",
+          "realType": "PDHB",
+          "name": "Ponchi feat. Haxchi - Love Chance!! [CUPID]",
+          "difficulty": 0,
+          "beatmapId": 3157012,
+          "beatmapsetId": 1544508
+        },
+        {
+          "slot": "HB2",
+          "type": "HB",
+          "realType": "PDHB",
+          "name": "Coconatsu - Himitsu Dial [Secret (x1.05)]",
+          "difficulty": 0,
+          "beatmapId": 4417788,
+          "beatmapsetId": 2057698
+        },
+        {
+          "slot": "LN1",
+          "type": "LN",
+          "realType": "PDLN",
+          "name": "Sayuri - Hana no Tou [edit]",
+          "difficulty": 0,
+          "beatmapId": 4417768,
+          "beatmapsetId": 2064201
+        },
+        {
+          "slot": "LN2",
+          "type": "LN",
+          "realType": "PDLN",
+          "name": "Naomi Oozora, Nozomi Yamamoto, Ruriko Aoki - Angel Dream [Heaven ~ Cute Vocal '23 edit]",
+          "difficulty": 0,
+          "beatmapId": 4417766,
+          "beatmapsetId": 2105456
+        },
+        {
+          "slot": "LN3",
+          "type": "LN",
+          "realType": "PDLN",
+          "name": "Pastel*Palettes - Zettai Sengen ~Recital~ [LN or Escape!]",
+          "difficulty": 0,
+          "beatmapId": 2295130,
+          "beatmapsetId": 1098509
+        },
+        {
+          "slot": "SV",
+          "type": "SV",
+          "realType": "PDSV",
+          "name": "solfa feat. Chata - Miracle infinity [SV Miracle]",
+          "difficulty": 0,
+          "beatmapId": 4417762,
+          "beatmapsetId": 2105455
+        },
+        {
+          "slot": "TB",
+          "type": "TB",
+          "realType": "TB",
+          "name": "you feat. nayuta - Diamond Smile [Shiny Smile!]",
+          "difficulty": 0,
+          "beatmapId": 4417746,
+          "beatmapsetId": 2105444
+        }
+      ],
+      "typeDifficulties": {
+        "RC": {},
+        "HB": {},
+        "LN": {},
+        "SV": {},
+        "TB": {}
+      }
+    },
+    {
+      "id": "round-5",
+      "name": "Semifinals",
+      "abbreviation": "SF",
+      "order": 5,
+      "difficulty": {
+        "min": 0,
+        "max": 0,
+        "average": 0
+      },
+      "maps": [
+        {
+          "slot": "RC1",
+          "type": "RC",
+          "realType": "PDRC",
+          "name": "MOMOIRO CLOVER Z - SANTA SAN (Cut Ver.) [KOKOKO]",
+          "difficulty": 0,
+          "beatmapId": 4426824,
+          "beatmapsetId": 2085220
+        },
+        {
+          "slot": "RC2",
+          "type": "RC",
+          "realType": "PDRC",
+          "name": "Neko Hacker - People People feat. Nanahira [Pipo Pipo Popipo]",
+          "difficulty": 0,
+          "beatmapId": 4426828,
+          "beatmapsetId": 2109072
+        },
+        {
+          "slot": "RC3",
+          "type": "RC",
+          "realType": "PDRC",
+          "name": "Camellia feat. Nanahira - Bikkurisasetara Okoru yo! [Jumpstream not scaring]",
+          "difficulty": 0,
+          "beatmapId": 4426761,
+          "beatmapsetId": 2109050
+        },
+        {
+          "slot": "RC4",
+          "type": "RC",
+          "realType": "PDRC",
+          "name": "Momone Chinoi - Okusuri Nonde Neyou [laziness / 1.05x]",
+          "difficulty": 0,
+          "beatmapId": 4426817,
+          "beatmapsetId": 2109067
+        },
+        {
+          "slot": "RC5",
+          "type": "RC",
+          "realType": "PDRC",
+          "name": "MikitoP feat.Matsushita - Kunoichi demo Koi ga Shitai [x1.00]",
+          "difficulty": 0,
+          "beatmapId": 4426831,
+          "beatmapsetId": 2109074
+        },
+        {
+          "slot": "RC6",
+          "type": "RC",
+          "realType": "PDRC",
+          "name": "Kyary Pamyu Pamyu - Ninja Re Bang Bang [Dump Fashion 1.05x (136bpm) OD8]",
+          "difficulty": 0,
+          "beatmapId": 4127010,
+          "beatmapsetId": 1986775
+        },
+        {
+          "slot": "HB1",
+          "type": "HB",
+          "realType": "PDHB",
+          "name": "Camellia feat. Nanahira - POLKAMANIA [Sya's BLACK ANOTHER]",
+          "difficulty": 0,
+          "beatmapId": 3234094,
+          "beatmapsetId": 1580868
+        },
+        {
+          "slot": "HB2",
+          "type": "HB",
+          "realType": "PDHB",
+          "name": "Rish feat. Choko - Waaa [x1.05]",
+          "difficulty": 0,
+          "beatmapId": 4426833,
+          "beatmapsetId": 2109075
+        },
+        {
+          "slot": "HB3",
+          "type": "HB",
+          "realType": "PDHB",
+          "name": "Camellia feat. Nanahira - Valanga!!!! [MAXIMUM!!!!]",
+          "difficulty": 0,
+          "beatmapId": 3048852,
+          "beatmapsetId": 1487045
+        },
+        {
+          "slot": "LN1",
+          "type": "LN",
+          "realType": "PDLN",
+          "name": "Ju Mao Shao Diao Yu[Nightcore] - Shan Cha Hua Du Bu Dong Bai Mei Gui [4k Release]",
+          "difficulty": 0,
+          "beatmapId": 4117774,
+          "beatmapsetId": 1982803
+        },
+        {
+          "slot": "LN2",
+          "type": "LN",
+          "realType": "PDLN",
+          "name": "t+pazolite&Nanahira - Party in the HOLLOWood [Happy!]",
+          "difficulty": 0,
+          "beatmapId": 4421051,
+          "beatmapsetId": 1774706
+        },
+        {
+          "slot": "LN3",
+          "type": "LN",
+          "realType": "PDLN",
+          "name": "AI Glodenglow - Shukufuku [CFV4K Edit]",
+          "difficulty": 0,
+          "beatmapId": 4426810,
+          "beatmapsetId": 2109063
+        },
+        {
+          "slot": "SV",
+          "type": "SV",
+          "realType": "PDSV",
+          "name": "YUC'e - Sengoku HOP (c/f Athenarium) [CFV Edit]",
+          "difficulty": 0,
+          "beatmapId": 4426808,
+          "beatmapsetId": 1633686
+        },
+        {
+          "slot": "TB",
+          "type": "TB",
+          "realType": "TB",
+          "name": "Massive New Krew & RoughSketch - Extreme Ongaku School feat. Nanahira [HARD STYLE PUNCH!!]",
+          "difficulty": 0,
+          "beatmapId": 4424787,
+          "beatmapsetId": 2108331
+        }
+      ],
+      "typeDifficulties": {
+        "RC": {},
+        "HB": {},
+        "LN": {},
+        "SV": {},
+        "TB": {}
+      }
+    },
+    {
+      "id": "round-6",
+      "name": "Finals",
+      "abbreviation": "F",
+      "order": 6,
+      "difficulty": {
+        "min": 0,
+        "max": 0,
+        "average": 0
+      },
+      "maps": [
+        {
+          "slot": "RC1",
+          "type": "RC",
+          "realType": "PDRC",
+          "name": "Momobako & Aihara Kaori - Senbonzakura [(edit)]",
+          "difficulty": 0,
+          "beatmapId": 4437108,
+          "beatmapsetId": 2113303
+        },
+        {
+          "slot": "RC2",
+          "type": "RC",
+          "realType": "PDRC",
+          "name": "Camellia feat. Nanahira - Ningen vs Kyuunage Robot Tama-chan no Catch Ball Taiketsu [Cut Duel 1.05x (247bpm) OD8]",
+          "difficulty": 0,
+          "beatmapId": 4433058,
+          "beatmapsetId": 2111707
+        },
+        {
+          "slot": "RC3",
+          "type": "RC",
+          "realType": "PDRC",
+          "name": "Nanamori-chu * Goraku-bu - Happy Time wa Owaranai (Cut Ver.) [happy x1.2]",
+          "difficulty": 0,
+          "beatmapId": 3222491,
+          "beatmapsetId": 1578142
+        },
+        {
+          "slot": "RC4",
+          "type": "RC",
+          "realType": "PDRC",
+          "name": "Shan Bao - Ji Ming Yue [Extra]",
+          "difficulty": 0,
+          "beatmapId": 4436121,
+          "beatmapsetId": 2112871
+        },
+        {
+          "slot": "RC5",
+          "type": "RC",
+          "realType": "PDRC",
+          "name": "Watahana Ame - Yurushite Nyan!! [Kawaii DIVE!!]",
+          "difficulty": 0,
+          "beatmapId": 4436204,
+          "beatmapsetId": 2112888
+        },
+        {
+          "slot": "RC6",
+          "type": "RC",
+          "realType": "PDRC",
+          "name": "Camellia feat. Nanahira - Amor De Vero [Summer Love]",
+          "difficulty": 0,
+          "beatmapId": 4373668,
+          "beatmapsetId": 2087224
+        },
+        {
+          "slot": "HB1",
+          "type": "HB",
+          "realType": "PDHB",
+          "name": "HHHxMMxST - Follow Tomorrow (STARLiGHT Mix) [Eternity 1.05x (147bpm) OD7.5]",
+          "difficulty": 0,
+          "beatmapId": 4432969,
+          "beatmapsetId": 2111675
+        },
+        {
+          "slot": "HB2",
+          "type": "HB",
+          "realType": "PDHB",
+          "name": "Shigure Ui (9-sai) - Shukusei!! Loli-kami Requiem* [cut]",
+          "difficulty": 0,
+          "beatmapId": 4437109,
+          "beatmapsetId": 2113304
+        },
+        {
+          "slot": "HB3",
+          "type": "HB",
+          "realType": "PDHB",
+          "name": "",
+          "difficulty": 0,
+          "beatmapId": 4436203
+        },
+        {
+          "slot": "LN1",
+          "type": "LN",
+          "realType": "PDLN",
+          "name": "Nanawo Akari - One Room Sugar Life [Sweet Dream]",
+          "difficulty": 0,
+          "beatmapId": 4301636,
+          "beatmapsetId": 2058193
+        },
+        {
+          "slot": "LN2",
+          "type": "LN",
+          "realType": "PDLN",
+          "name": "rejection - Signal (feat. Such) (Mameyudoufu Remix) [Interference [1.1x Rate]]",
+          "difficulty": 0,
+          "beatmapId": 4436155,
+          "beatmapsetId": 2112875
+        },
+        {
+          "slot": "LN3",
+          "type": "LN",
+          "realType": "PDLN",
+          "name": "Momone Chinoi - Kissin' nenryo de chiyu shitai [Chiyu 2 U!!!]",
+          "difficulty": 0,
+          "beatmapId": 4435941,
+          "beatmapsetId": 2112830
+        },
+        {
+          "slot": "SV",
+          "type": "SV",
+          "realType": "PDSV",
+          "name": "Mican* - Sensitive Crisis [Stage 3: Ichigo]",
+          "difficulty": 0,
+          "beatmapId": 3435276,
+          "beatmapsetId": 1681559
+        },
+        {
+          "slot": "TB",
+          "type": "TB",
+          "realType": "TB",
+          "name": "Camellia feat. Nanahira - Bassdrop Freaks (2018 \"Redrop\" ver.) [2023 \"ReEast\" ver.]",
+          "difficulty": 0,
+          "beatmapId": 4437106,
+          "beatmapsetId": 1235659
+        }
+      ],
+      "typeDifficulties": {
+        "RC": {},
+        "HB": {},
+        "LN": {},
+        "SV": {},
+        "TB": {}
+      }
+    },
+    {
+      "id": "round-7",
+      "name": "Grand Finals",
+      "abbreviation": "GF",
+      "order": 7,
+      "difficulty": {
+        "min": 0,
+        "max": 0,
+        "average": 0
+      },
+      "maps": [
+        {
+          "slot": "RC1",
+          "type": "RC",
+          "realType": "PDRC",
+          "name": "Petit Rabbit's - Hitosaji no Ohimesama Monogatari (Cut Ver.) [Cappuccino (151bpm)]",
+          "difficulty": 0,
+          "beatmapId": 4444509,
+          "beatmapsetId": 2116397
+        },
+        {
+          "slot": "RC2",
+          "type": "RC",
+          "realType": "PDRC",
+          "name": "sasakure.UK feat. Shirakami Fubuki - KINGWORLD [x1.00]",
+          "difficulty": 0,
+          "beatmapId": 4444549,
+          "beatmapsetId": 2116417
+        },
+        {
+          "slot": "RC3",
+          "type": "RC",
+          "realType": "PDRC",
+          "name": "DJ Sharpnel - URAPARA CORE [Jumpstreams save the world! 1.1x (220bpm)]",
+          "difficulty": 0,
+          "beatmapId": 4444606,
+          "beatmapsetId": 2116442
+        },
+        {
+          "slot": "RC4",
+          "type": "RC",
+          "realType": "PDRC",
+          "name": "fhana - Hello!My World!! [Hello World]",
+          "difficulty": 0,
+          "beatmapId": 4444516,
+          "beatmapsetId": 2116400
+        },
+        {
+          "slot": "RC5",
+          "type": "RC",
+          "realType": "PDRC",
+          "name": "YUC'e - intro-duck-tion!! [Quack!!]",
+          "difficulty": 0,
+          "beatmapId": 4125646,
+          "beatmapsetId": 1945583
+        },
+        {
+          "slot": "RC6",
+          "type": "RC",
+          "realType": "PDRC",
+          "name": "Aiobahn feat. KOTOKO - INTERNET OVERDOSE (short ver.) [Expert]",
+          "difficulty": 0,
+          "beatmapId": 4444512,
+          "beatmapsetId": 2050122
+        },
+        {
+          "slot": "HB1",
+          "type": "HB",
+          "realType": "PDHB",
+          "name": "ARM x Komso feat. Nanahira - Onegai! Kon Kon Oinarisama [Matsuri of Furfill (short) [1.05x Rate]]",
+          "difficulty": 0,
+          "beatmapId": 3874146,
+          "beatmapsetId": 1546157
+        },
+        {
+          "slot": "HB2",
+          "type": "HB",
+          "realType": "PDHB",
+          "name": "rejection - Aimai Attitude (feat. Nakamura Sanso) (Cut Ver.) [AlleySan's Attitude]",
+          "difficulty": 0,
+          "beatmapId": 4444539,
+          "beatmapsetId": 2116410
+        },
+        {
+          "slot": "HB3",
+          "type": "HB",
+          "realType": "PDHB",
+          "name": "Aiobahn feat. KOTOKO - INTERNET YAMERO [hyahya's Extra]",
+          "difficulty": 0,
+          "beatmapId": 4135596,
+          "beatmapsetId": 1962727
+        },
+        {
+          "slot": "LN1",
+          "type": "LN",
+          "realType": "PDLN",
+          "name": "Aiobahn - Towa no Utage (w/ YUC'e) [Timing Feast]",
+          "difficulty": 0,
+          "beatmapId": 3976497,
+          "beatmapsetId": 1925805
+        },
+        {
+          "slot": "LN2",
+          "type": "LN",
+          "realType": "PDLN",
+          "name": "t+pazolite feat. Shama (CV: Tanezaki Atsumi) & Milk (CV: Ito Asuka) - TOBIDASE! TO THE COSMIC!! [TO THE NOODLES!! 1.05x (194bpm) OD7]",
+          "difficulty": 0,
+          "beatmapId": 4440566,
+          "beatmapsetId": 2114701
+        },
+        {
+          "slot": "LN3",
+          "type": "LN",
+          "realType": "PDLN",
+          "name": "Ayase - Last Resort [My Utopia]",
+          "difficulty": 0,
+          "beatmapId": 4133288,
+          "beatmapsetId": 1102316
+        },
+        {
+          "slot": "SV",
+          "type": "SV",
+          "realType": "PDSV",
+          "name": "Yunomi (feat. Momobako) - Miracle Sugar Land (Cut Ver) [Sweet]",
+          "difficulty": 0,
+          "beatmapId": 3289575,
+          "beatmapsetId": 1611199
+        },
+        {
+          "slot": "TB",
+          "type": "TB",
+          "realType": "TB",
+          "name": "Camellia feat. Nanahira - FULLFLAVOR ONDO [Matsuri]",
+          "difficulty": 0,
+          "beatmapId": 4444553,
+          "beatmapsetId": 2116420
+        }
+      ],
+      "typeDifficulties": {
+        "RC": {},
+        "HB": {},
+        "LN": {},
+        "SV": {},
+        "TB": {}
+      }
+    }
+  ],
+  "customTypes": [],
+  "priority": 2.5,
+  "sheetUrl": "https://docs.google.com/spreadsheets/d/1hMB4Oaqfrdnrjsy12IsvJXoarEJAtQgeQBQPWfhBWg0/edit?usp=sharing",
+  "forumUrl": "https://osu.ppy.sh/community/forums/topics/1842757",
+  "wikiUrl": "https://tourneymethod.com/tournaments/4553"
+}

@@ -158,7 +158,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "SA",
+          "realType": "FCJ",
           "name": "ParagonX9 - Infiltration [X]",
           "difficulty": 11.22,
           "beatmapId": 5776149,

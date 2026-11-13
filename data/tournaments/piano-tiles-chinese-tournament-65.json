@@ -214,7 +214,7 @@
         {
           "slot": "RC1",
           "type": "RC",
-          "realType": "PDRC",
+          "realType": "FCJ",
           "name": "rejection - White Canvas (feat. Aitsuki Nakuru) (osu! edit) [acception]",
           "difficulty": 0,
           "beatmapId": 5906973,
@@ -223,7 +223,7 @@
         {
           "slot": "RC2",
           "type": "RC",
-          "realType": "PDRC",
+          "realType": "SA",
           "name": "Ayalis - Ai o Chikaishi Hime Kazari [Shattered Vow 1.1x]",
           "difficulty": 0,
           "beatmapId": 5907034,
@@ -232,7 +232,7 @@
         {
           "slot": "RC3",
           "type": "RC",
-          "realType": "PDRC",
+          "realType": "MTC",
           "name": "EBIMAYO - Firefly City (Short edit) [Light Swarm]",
           "difficulty": 0,
           "beatmapId": 1210020,
@@ -241,7 +241,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "PDRC",
+          "realType": "TC",
           "name": "Nhato - Nhato Serum Bass Essentials [4500JPY (Edit)]",
           "difficulty": 0,
           "beatmapId": 4723347,
@@ -250,7 +250,7 @@
         {
           "slot": "LN1",
           "type": "LN",
-          "realType": "PDLN",
+          "realType": "CO",
           "name": "ShinRa-Bansho - Gachikoi Labyrinth [Infatuation]",
           "difficulty": 0,
           "beatmapId": 5907003,
@@ -259,7 +259,7 @@
         {
           "slot": "LN2",
           "type": "LN",
-          "realType": "PDLN",
+          "realType": "DE",
           "name": "BlackY - Black Rose [:wilted_rose: x1.05]",
           "difficulty": 0,
           "beatmapId": 5907041,
@@ -268,7 +268,7 @@
         {
           "slot": "LN3",
           "type": "LN",
-          "realType": "PDLN",
+          "realType": "LNWC",
           "name": "Kairiki Bear  x Nou - Roller feat. Hatsune Miku [Dox 'em all!]",
           "difficulty": 0,
           "beatmapId": 4227327,
@@ -277,7 +277,7 @@
         {
           "slot": "HB1",
           "type": "HB",
-          "realType": "PDHB",
+          "realType": "HB1",
           "name": "Laur - Alteregoism [Another Me]",
           "difficulty": 0,
           "beatmapId": 5907031,
@@ -286,7 +286,7 @@
         {
           "slot": "HB2",
           "type": "HB",
-          "realType": "PDHB",
+          "realType": "HB2",
           "name": "Zekk - Libertas [Ikarus]",
           "difficulty": 0,
           "beatmapId": 1962631,
@@ -303,8 +303,8 @@
         },
         {
           "slot": "EX1",
-          "type": "EX",
-          "realType": "PDEX",
+          "type": "RC",
+          "realType": "DP",
           "name": "Iyowa - Momoiro no Kagi (Ajiro cover) [i'm by your side.]",
           "difficulty": 0,
           "beatmapId": 5815241,
@@ -312,8 +312,8 @@
         },
         {
           "slot": "EX2",
-          "type": "EX",
-          "realType": "PDEX",
+          "type": "LN",
+          "realType": "LNMX",
           "name": "katagiri - L4.8TS [Leave for the sky. [1.05x Rate]]",
           "difficulty": 0,
           "beatmapId": 3357471,
@@ -322,7 +322,7 @@
         {
           "slot": "SV1",
           "type": "SV",
-          "realType": "PDSV",
+          "realType": "ME",
           "name": "PSYQUI - Decay [Sandbag]",
           "difficulty": 0,
           "beatmapId": 3302183,
@@ -360,7 +360,7 @@
         {
           "slot": "RC1",
           "type": "RC",
-          "realType": "PDRC",
+          "realType": "FCJ",
           "name": "XenjeS - Neverending Dreams [Take Up the Gauntlet]",
           "difficulty": 0,
           "beatmapId": 5921144,
@@ -369,7 +369,7 @@
         {
           "slot": "RC2",
           "type": "RC",
-          "realType": "PDRC",
+          "realType": "SA",
           "name": "YONEDA - KAERU [Frog Regrets]",
           "difficulty": 0,
           "beatmapId": 3463278,
@@ -378,7 +378,7 @@
         {
           "slot": "RC3",
           "type": "RC",
-          "realType": "PDRC",
+          "realType": "ADP",
           "name": "sabi - Oktavia_Mauvaise_Fin [I will stay with you]",
           "difficulty": 0,
           "beatmapId": 4734117,
@@ -387,7 +387,7 @@
         {
           "slot": "RC4",
           "type": "RC",
-          "realType": "PDRC",
+          "realType": "DP",
           "name": "ELFENSJoN - ECLIPSE [Wavering of the Illuminant]",
           "difficulty": 0,
           "beatmapId": 5921153,
@@ -396,7 +396,7 @@
         {
           "slot": "RC5",
           "type": "RC",
-          "realType": "PDRC",
+          "realType": "SS",
           "name": "mitssi feat. SeeU - You [edit [1.05x Rate]]",
           "difficulty": 0,
           "beatmapId": 4178099,
@@ -405,7 +405,7 @@
         {
           "slot": "LN1",
           "type": "LN",
-          "realType": "PDLN",
+          "realType": "CO",
           "name": "Moon Symphony - Aegisfortia [Fleur-de-lis (PTCT edit)]",
           "difficulty": 0,
           "beatmapId": 5921147,
@@ -414,7 +414,7 @@
         {
           "slot": "LN2",
           "type": "LN",
-          "realType": "PDLN",
+          "realType": "DE",
           "name": "xi - Per Aspera Ad Astra [PTCT edit]",
           "difficulty": 0,
           "beatmapId": 5921101,
@@ -423,7 +423,7 @@
         {
           "slot": "LN3",
           "type": "LN",
-          "realType": "PDLN",
+          "realType": "LNMX",
           "name": "MiddleIsland - Phantom Dancer [Stage 4: Illusionist]",
           "difficulty": 0,
           "beatmapId": 5741109,
@@ -432,7 +432,7 @@
         {
           "slot": "LN4",
           "type": "LN",
-          "realType": "PDLN",
+          "realType": "LNTC",
           "name": "Feryquitous - Dille [() => { return }]",
           "difficulty": 0,
           "beatmapId": 2640148,
@@ -441,7 +441,7 @@
         {
           "slot": "HB1",
           "type": "HB",
-          "realType": "PDHB",
+          "realType": "HB1",
           "name": "\"Shikkoku\" no Datenshi \"Gram\" vs. \"Seikoku\" no Shitenshi \"Gram\" - eden [extreme hill]",
           "difficulty": 0,
           "beatmapId": 5921131,
@@ -450,7 +450,7 @@
         {
           "slot": "HB2",
           "type": "HB",
-          "realType": "PDHB",
+          "realType": "HB2",
           "name": "Camellia - Body F10ating in the Zero Gravity Space (Cut Ver.) [Dans la mer de son (nerf)]",
           "difficulty": 0,
           "beatmapId": 5921103,
@@ -459,7 +459,7 @@
         {
           "slot": "HB3",
           "type": "HB",
-          "realType": "PDHB",
+          "realType": "HB3",
           "name": "Feryquitous - Ordirehv [Indulgentiam]",
           "difficulty": 0,
           "beatmapId": 5053590,
@@ -467,8 +467,8 @@
         },
         {
           "slot": "EX1",
-          "type": "EX",
-          "realType": "PDEX",
+          "type": "RC",
+          "realType": "WTC",
           "name": "onumi - PERSONALITY [MIRAGE OD 8]",
           "difficulty": 0,
           "beatmapId": 3739939,
@@ -476,8 +476,8 @@
         },
         {
           "slot": "EX2",
-          "type": "EX",
-          "realType": "PDEX",
+          "type": "LN",
+          "realType": "LNMX",
           "name": "DJ Raisei - SHIRO [The blooming azure meets the white, blending and dissolving]",
           "difficulty": 0,
           "beatmapId": 5921141,
@@ -486,7 +486,7 @@
         {
           "slot": "SV1",
           "type": "SV",
-          "realType": "PDSV",
+          "realType": "SVMX",
           "name": "Igorrr - Fryzura Konika [Chronostatis [Reversal Collabo]]",
           "difficulty": 0,
           "beatmapId": 2203285,

@@ -1,3 +1,5 @@
+import { runManiaEstimator } from './maniaEstimator.ts'
+
 export interface ManiaAnalysisEstimate {
   beatmapId: number
   estDiff: string
@@ -24,15 +26,6 @@ export class ManiaAnalysisError extends Error {
   }
 }
 
-type MixedEstimatorModule = {
-  runMixedEstimatorFromText: (osuText: string, options?: Record<string, unknown>) => {
-    estDiff?: string
-    numericDifficulty?: number | null
-    lnRatio?: number
-    columnCount?: number
-  }
-}
-
 type QueueItem<T> = {
   run: () => Promise<T>
   resolve: (value: T) => void
@@ -45,7 +38,6 @@ const analysisQueue: QueueItem<ManiaAnalysisEstimate>[] = []
 let queueRunning = false
 let serviceUnavailableUntil = 0
 let lastRequestStartedAt = 0
-let estimatorModulePromise: Promise<MixedEstimatorModule> | null = null
 
 // The raw-map proxy and parser may need a few seconds on a cold request, but
 // never allow a stalled upstream to hold the serial queue forever.
@@ -173,17 +165,7 @@ async function fetchEstimate(target: ManiaAnalysisTarget, query: string, retry: 
   }
 
   if (!osuText) throw lastError || new Error('empty beatmap response')
-  if (!estimatorModulePromise) {
-    estimatorModulePromise = (import('../vendor/mania-analyser/estimator/mixedEstimator.js') as Promise<MixedEstimatorModule>)
-      .catch((error) => { estimatorModulePromise = null; throw error })
-  }
-  const { runMixedEstimatorFromText } = await estimatorModulePromise
-  const data = runMixedEstimatorFromText(osuText, {
-    estimatorAlgorithm: 'Mixed',
-    speedRate: 1,
-    cvtFlag: '',
-    withGraph: false,
-  })
+  const data = await runManiaEstimator(osuText)
   const labels = splitDifficulty(data.estDiff)
   const numeric = data.numericDifficulty === null || data.numericDifficulty === undefined
     ? null

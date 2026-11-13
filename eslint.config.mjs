@@ -20,6 +20,9 @@ const config = [
       'build/**',
       'output/**',
       'src/generated/**',
+      // Unmodified third-party Emscripten/ONNX runtime bundles served as native ESM.
+      'public/mania-analyser/**/ett/versions/minaclac-*.js',
+      'public/mania-analyser/**/estimator/companella/ort/**',
       'reports/**',
       // 本地/工具临时目录
       '.workbuddy/**',

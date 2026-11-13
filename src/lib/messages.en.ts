@@ -383,7 +383,7 @@ export const messagesEn: Record<keyof typeof messagesZh, string> = {
   'mapSlot.estimate.run': 'Mixed estimate',
   'mapSlot.estimate.prefix': 'Estimate',
   'mapSlot.estimate.apply': 'Apply',
-  'mapSlot.estimate.source': 'Reference from the LeoBlackMT/osumania_map_analyser Mixed estimator; it never overwrites entered difficulty automatically',
+  'mapSlot.estimate.source': 'Reference from LeoBlackMT/osumania_map_analyser 2.0.0 (Mixed + SunnyWindow); it never overwrites entered difficulty automatically',
   'mapSlot.estimate.unavailableShort': 'Estimate unavailable',
   'mapSlot.estimate.refresh': 'Recalculate',
   'mapSlot.estimate.uploadedSource': 'Uses the uploaded tournament chart.',

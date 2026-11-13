@@ -1,7 +1,10 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import JSZip from 'jszip'
+import { register } from 'node:module'
 import { onRequestGet as handler } from '../functions/api/osu/raw.ts'
+
+register(new URL('./_analyser-loader.mjs', import.meta.url))
 
 const onRequestGet = (context) => handler({ ...context, data: { user: { uid: 'test', username: 'test', role: 'contributor' } } })
 

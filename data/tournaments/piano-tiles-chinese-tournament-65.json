@@ -1,0 +1,519 @@
+{
+  "id": "piano-tiles-chinese-tournament-65",
+  "name": "Piano Tiles Chinese Tournament 6.5",
+  "abbreviation": "PTCT6.5",
+  "keyCount": 4,
+  "year": 2026,
+  "tags": [],
+  "rounds": [
+    {
+      "id": "round-1",
+      "name": "Qualifiers",
+      "abbreviation": "Qual",
+      "order": 1,
+      "isQualifier": true,
+      "difficulty": {
+        "min": 0,
+        "max": 0,
+        "average": 0
+      },
+      "maps": [
+        {
+          "slot": "RC1",
+          "type": "RC",
+          "realType": "JS",
+          "name": "Yoshimoto Ojisan feat. Ui - Still Waiting for Your Reply... Ojisan Style Text! [Stage 1: (^-^)]",
+          "difficulty": 0,
+          "beatmapId": 5881759,
+          "beatmapsetId": 2620562
+        },
+        {
+          "slot": "RC2",
+          "type": "RC",
+          "realType": "TC",
+          "name": "Kozakai Yurie, Oomori Nichika, Hasegawa Rena - ULTRARHYTHM (Prod. Hylen) [Stage 2: ULTRAASMR]",
+          "difficulty": 0,
+          "beatmapId": 5881767,
+          "beatmapsetId": 2620566
+        },
+        {
+          "slot": "LN1",
+          "type": "LN",
+          "realType": "CO",
+          "name": "ShinRa-Bansho - I [Stage 3: Coordination]",
+          "difficulty": 0,
+          "beatmapId": 5881754,
+          "beatmapsetId": 2620559
+        },
+        {
+          "slot": "LN2",
+          "type": "LN",
+          "realType": "DE",
+          "name": "Getty vs. DJ DiA - Grayed Out -Antifront- [Stage 4: Relativism]",
+          "difficulty": 0,
+          "beatmapId": 5881775,
+          "beatmapsetId": 2620571
+        },
+        {
+          "slot": "HB1",
+          "type": "HB",
+          "realType": "HB3",
+          "name": "Kronii - IM THE GOD OF BASS [Stage 5: MAYHEM]",
+          "difficulty": 0,
+          "beatmapId": 5881765,
+          "beatmapsetId": 2620564
+        }
+      ],
+      "typeDifficulties": {
+        "RC": {},
+        "HB": {},
+        "LN": {},
+        "SV": {},
+        "TB": {}
+      }
+    },
+    {
+      "id": "round-2",
+      "name": "Week 1",
+      "abbreviation": "R1",
+      "order": 2,
+      "difficulty": {
+        "min": 0,
+        "max": 0,
+        "average": 0
+      },
+      "maps": [
+        {
+          "slot": "RC1",
+          "type": "RC",
+          "realType": "FCJ",
+          "name": "Arash - Suddenly (feat. Rebecca) (Nightcore Mix) [Flying Chords]",
+          "difficulty": 0,
+          "beatmapId": 5894744,
+          "beatmapsetId": 2624292
+        },
+        {
+          "slot": "RC2",
+          "type": "RC",
+          "realType": "SA",
+          "name": "Yuikonnu & Ayaponzu - Super Nuko World [x1.12]",
+          "difficulty": 0,
+          "beatmapId": 3143216,
+          "beatmapsetId": 1537281
+        },
+        {
+          "slot": "RC3",
+          "type": "RC",
+          "realType": "JTC",
+          "name": "Camellia - potential curve [Path of the Misfortune God]",
+          "difficulty": 0,
+          "beatmapId": 5894722,
+          "beatmapsetId": 2624284
+        },
+        {
+          "slot": "LN1",
+          "type": "LN",
+          "realType": "RE",
+          "name": "Hiina - Spinning Sky Rabbit [Spinning LN]",
+          "difficulty": 0,
+          "beatmapId": 2380033,
+          "beatmapsetId": 1139417
+        },
+        {
+          "slot": "LN2",
+          "type": "LN",
+          "realType": "DE",
+          "name": "rejection - Signal feat. Such (Mameyudoufu Remix) (osu! edit) [SignaLN]",
+          "difficulty": 0,
+          "beatmapId": 5427311,
+          "beatmapsetId": 2475627
+        },
+        {
+          "slot": "LN3",
+          "type": "LN",
+          "realType": "LNWC",
+          "name": "ShinRa-Bansho - Sayonara Monstre [Teratology]",
+          "difficulty": 0,
+          "beatmapId": 5894731,
+          "beatmapsetId": 2624286
+        },
+        {
+          "slot": "HB1",
+          "type": "HB",
+          "realType": "HB1",
+          "name": "technoplanet - Megastructure [Hard]",
+          "difficulty": 0,
+          "beatmapId": 4236236,
+          "beatmapsetId": 2032275
+        },
+        {
+          "slot": "HB2",
+          "type": "HB",
+          "realType": "HB4",
+          "name": "seatrus - O [Gravitational Collapse (PTCT edit)]",
+          "difficulty": 0,
+          "beatmapId": 3931231,
+          "beatmapsetId": 1814436
+        },
+        {
+          "slot": "EX1",
+          "type": "RC",
+          "realType": "DP",
+          "name": "Outsider - Acquaintance [Skwid's Challenge]",
+          "difficulty": 0,
+          "beatmapId": 2981901,
+          "beatmapsetId": 1450363
+        },
+        {
+          "slot": "EX2",
+          "type": "LN",
+          "realType": "LNWC",
+          "name": "DJ Myosuke - Winter Death [Agony]",
+          "difficulty": 0,
+          "beatmapId": 5894737,
+          "beatmapsetId": 2624290
+        },
+        {
+          "slot": "SV1",
+          "type": "SV",
+          "realType": "SVMX",
+          "name": "YUC'e - CHOCOLATE BOMB!!!! [SVVeetness]",
+          "difficulty": 0,
+          "beatmapId": 5234623,
+          "beatmapsetId": 2410725
+        },
+        {
+          "slot": "TB",
+          "type": "TB",
+          "realType": "TB",
+          "name": "polysha - Endverse [Reverse]",
+          "difficulty": 0,
+          "beatmapId": 5894719,
+          "beatmapsetId": 2624282
+        }
+      ],
+      "typeDifficulties": {
+        "RC": {},
+        "HB": {},
+        "LN": {},
+        "SV": {},
+        "TB": {}
+      }
+    },
+    {
+      "id": "round-3",
+      "name": "Week 2",
+      "abbreviation": "R2",
+      "order": 3,
+      "difficulty": {
+        "min": 0,
+        "max": 0,
+        "average": 0
+      },
+      "maps": [
+        {
+          "slot": "RC1",
+          "type": "RC",
+          "realType": "PDRC",
+          "name": "rejection - White Canvas (feat. Aitsuki Nakuru) (osu! edit) [acception]",
+          "difficulty": 0,
+          "beatmapId": 5906973,
+          "beatmapsetId": 2627996
+        },
+        {
+          "slot": "RC2",
+          "type": "RC",
+          "realType": "PDRC",
+          "name": "Ayalis - Ai o Chikaishi Hime Kazari [Shattered Vow 1.1x]",
+          "difficulty": 0,
+          "beatmapId": 5907034,
+          "beatmapsetId": 2628008
+        },
+        {
+          "slot": "RC3",
+          "type": "RC",
+          "realType": "PDRC",
+          "name": "EBIMAYO - Firefly City (Short edit) [Light Swarm]",
+          "difficulty": 0,
+          "beatmapId": 1210020,
+          "beatmapsetId": 570904
+        },
+        {
+          "slot": "RC4",
+          "type": "RC",
+          "realType": "PDRC",
+          "name": "Nhato - Nhato Serum Bass Essentials [4500JPY (Edit)]",
+          "difficulty": 0,
+          "beatmapId": 4723347,
+          "beatmapsetId": 2226576
+        },
+        {
+          "slot": "LN1",
+          "type": "LN",
+          "realType": "PDLN",
+          "name": "ShinRa-Bansho - Gachikoi Labyrinth [Infatuation]",
+          "difficulty": 0,
+          "beatmapId": 5907003,
+          "beatmapsetId": 2628003
+        },
+        {
+          "slot": "LN2",
+          "type": "LN",
+          "realType": "PDLN",
+          "name": "BlackY - Black Rose [:wilted_rose: x1.05]",
+          "difficulty": 0,
+          "beatmapId": 5907041,
+          "beatmapsetId": 2628009
+        },
+        {
+          "slot": "LN3",
+          "type": "LN",
+          "realType": "PDLN",
+          "name": "Kairiki Bear  x Nou - Roller feat. Hatsune Miku [Dox 'em all!]",
+          "difficulty": 0,
+          "beatmapId": 4227327,
+          "beatmapsetId": 2028671
+        },
+        {
+          "slot": "HB1",
+          "type": "HB",
+          "realType": "PDHB",
+          "name": "Laur - Alteregoism [Another Me]",
+          "difficulty": 0,
+          "beatmapId": 5907031,
+          "beatmapsetId": 2628007
+        },
+        {
+          "slot": "HB2",
+          "type": "HB",
+          "realType": "PDHB",
+          "name": "Zekk - Libertas [Ikarus]",
+          "difficulty": 0,
+          "beatmapId": 1962631,
+          "beatmapsetId": 939629
+        },
+        {
+          "slot": "HB3",
+          "type": "HB",
+          "realType": "PDHB",
+          "name": "Magnetude - Entr'acte (Cut Ver.) [Berserker]",
+          "difficulty": 0,
+          "beatmapId": 5907024,
+          "beatmapsetId": 2628005
+        },
+        {
+          "slot": "EX1",
+          "type": "EX",
+          "realType": "PDEX",
+          "name": "Iyowa - Momoiro no Kagi (Ajiro cover) [i'm by your side.]",
+          "difficulty": 0,
+          "beatmapId": 5815241,
+          "beatmapsetId": 2601064
+        },
+        {
+          "slot": "EX2",
+          "type": "EX",
+          "realType": "PDEX",
+          "name": "katagiri - L4.8TS [Leave for the sky. [1.05x Rate]]",
+          "difficulty": 0,
+          "beatmapId": 3357471,
+          "beatmapsetId": 1644848
+        },
+        {
+          "slot": "SV1",
+          "type": "SV",
+          "realType": "PDSV",
+          "name": "PSYQUI - Decay [Sandbag]",
+          "difficulty": 0,
+          "beatmapId": 3302183,
+          "beatmapsetId": 1617304
+        },
+        {
+          "slot": "TB",
+          "type": "TB",
+          "realType": "TB",
+          "name": "ikaruga_nex vs. Kagetora. - Grabinschrift der Goetter [Fallen Thrones]",
+          "difficulty": 0,
+          "beatmapId": 5246195,
+          "beatmapsetId": 2414431
+        }
+      ],
+      "typeDifficulties": {
+        "RC": {},
+        "HB": {},
+        "LN": {},
+        "SV": {},
+        "TB": {}
+      }
+    },
+    {
+      "id": "round-4",
+      "name": "Week 3",
+      "abbreviation": "R3",
+      "order": 4,
+      "difficulty": {
+        "min": 0,
+        "max": 0,
+        "average": 0
+      },
+      "maps": [
+        {
+          "slot": "RC1",
+          "type": "RC",
+          "realType": "PDRC",
+          "name": "XenjeS - Neverending Dreams [Take Up the Gauntlet]",
+          "difficulty": 0,
+          "beatmapId": 5921144,
+          "beatmapsetId": 2631868
+        },
+        {
+          "slot": "RC2",
+          "type": "RC",
+          "realType": "PDRC",
+          "name": "YONEDA - KAERU [Frog Regrets]",
+          "difficulty": 0,
+          "beatmapId": 3463278,
+          "beatmapsetId": 1666553
+        },
+        {
+          "slot": "RC3",
+          "type": "RC",
+          "realType": "PDRC",
+          "name": "sabi - Oktavia_Mauvaise_Fin [I will stay with you]",
+          "difficulty": 0,
+          "beatmapId": 4734117,
+          "beatmapsetId": 2230697
+        },
+        {
+          "slot": "RC4",
+          "type": "RC",
+          "realType": "PDRC",
+          "name": "ELFENSJoN - ECLIPSE [Wavering of the Illuminant]",
+          "difficulty": 0,
+          "beatmapId": 5921153,
+          "beatmapsetId": 2631872
+        },
+        {
+          "slot": "RC5",
+          "type": "RC",
+          "realType": "PDRC",
+          "name": "mitssi feat. SeeU - You [edit [1.05x Rate]]",
+          "difficulty": 0,
+          "beatmapId": 4178099,
+          "beatmapsetId": 1961993
+        },
+        {
+          "slot": "LN1",
+          "type": "LN",
+          "realType": "PDLN",
+          "name": "Moon Symphony - Aegisfortia [Fleur-de-lis (PTCT edit)]",
+          "difficulty": 0,
+          "beatmapId": 5921147,
+          "beatmapsetId": 2631870
+        },
+        {
+          "slot": "LN2",
+          "type": "LN",
+          "realType": "PDLN",
+          "name": "xi - Per Aspera Ad Astra [PTCT edit]",
+          "difficulty": 0,
+          "beatmapId": 5921101,
+          "beatmapsetId": 2631840
+        },
+        {
+          "slot": "LN3",
+          "type": "LN",
+          "realType": "PDLN",
+          "name": "MiddleIsland - Phantom Dancer [Stage 4: Illusionist]",
+          "difficulty": 0,
+          "beatmapId": 5741109,
+          "beatmapsetId": 2577110
+        },
+        {
+          "slot": "LN4",
+          "type": "LN",
+          "realType": "PDLN",
+          "name": "Feryquitous - Dille [() => { return }]",
+          "difficulty": 0,
+          "beatmapId": 2640148,
+          "beatmapsetId": 1270439
+        },
+        {
+          "slot": "HB1",
+          "type": "HB",
+          "realType": "PDHB",
+          "name": "\"Shikkoku\" no Datenshi \"Gram\" vs. \"Seikoku\" no Shitenshi \"Gram\" - eden [extreme hill]",
+          "difficulty": 0,
+          "beatmapId": 5921131,
+          "beatmapsetId": 2631861
+        },
+        {
+          "slot": "HB2",
+          "type": "HB",
+          "realType": "PDHB",
+          "name": "Camellia - Body F10ating in the Zero Gravity Space (Cut Ver.) [Dans la mer de son (nerf)]",
+          "difficulty": 0,
+          "beatmapId": 5921103,
+          "beatmapsetId": 2631841
+        },
+        {
+          "slot": "HB3",
+          "type": "HB",
+          "realType": "PDHB",
+          "name": "Feryquitous - Ordirehv [Indulgentiam]",
+          "difficulty": 0,
+          "beatmapId": 5053590,
+          "beatmapsetId": 1917525
+        },
+        {
+          "slot": "EX1",
+          "type": "EX",
+          "realType": "PDEX",
+          "name": "onumi - PERSONALITY [MIRAGE OD 8]",
+          "difficulty": 0,
+          "beatmapId": 3739939,
+          "beatmapsetId": 1234328
+        },
+        {
+          "slot": "EX2",
+          "type": "EX",
+          "realType": "PDEX",
+          "name": "DJ Raisei - SHIRO [The blooming azure meets the white, blending and dissolving]",
+          "difficulty": 0,
+          "beatmapId": 5921141,
+          "beatmapsetId": 2631867
+        },
+        {
+          "slot": "SV1",
+          "type": "SV",
+          "realType": "PDSV",
+          "name": "Igorrr - Fryzura Konika [Chronostatis [Reversal Collabo]]",
+          "difficulty": 0,
+          "beatmapId": 2203285,
+          "beatmapsetId": 1039012
+        },
+        {
+          "slot": "TB",
+          "type": "TB",
+          "realType": "TB",
+          "name": "AXiS & JinoBeats - RE:Synchronicity [FINAL:Resonance]",
+          "difficulty": 0,
+          "beatmapId": 5921149,
+          "beatmapsetId": 2631871
+        }
+      ],
+      "typeDifficulties": {
+        "RC": {},
+        "HB": {},
+        "LN": {},
+        "SV": {},
+        "TB": {}
+      }
+    }
+  ],
+  "customTypes": [],
+  "priority": 2.6,
+  "forumUrl": "https://osu.ppy.sh/community/forums/topics/2238111",
+  "sheetUrl": "https://docs.google.com/spreadsheets/d/1Gyykrg5zqiZCPhckMQ8FDfnDSSaHCeVm2_tMzb59MUQ/edit?gid=2068379045#gid=2068379045",
+  "wikiUrl": "https://tourneymethod.com/tournaments/7453"
+}

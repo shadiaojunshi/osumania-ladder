@@ -383,7 +383,7 @@ export const messagesZh = {
   'mapSlot.estimate.run': 'Mixed 估算',
   'mapSlot.estimate.prefix': '估算',
   'mapSlot.estimate.apply': '应用',
-  'mapSlot.estimate.source': 'LeoBlackMT/osumania_map_analyser 2.0.0（Mixed＋SunnyWindow）的参考结果，不会自动覆盖已填难度',
+  'mapSlot.estimate.source': 'LeoBlackMT/osumania_map_analyser 3.0.0（Mixed＋SunnyWindow）的参考结果，不会自动覆盖已填难度',
   'mapSlot.estimate.unavailableShort': '估算不可用',
   'mapSlot.estimate.refresh': '重估',
   'mapSlot.estimate.uploadedSource': '使用已上传的比赛谱面。',

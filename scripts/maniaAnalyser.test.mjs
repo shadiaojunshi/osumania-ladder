@@ -4,24 +4,27 @@ import { register } from 'node:module'
 
 register(new URL('./_analyser-loader.mjs', import.meta.url))
 
-const sampleChart = (holdPercent = 0, keyCount = 4) => [
+const sampleChart = (holdPercent = 0, keyCount = 4, { count = 240, spacing = 125, varied = false } = {}) => [
   'osu file format v14', '[General]', 'Mode:3', '[Difficulty]',
   `CircleSize:${keyCount}`, 'OverallDifficulty:8', '[TimingPoints]',
   '0,500,4,2,1,100,1,0', '[HitObjects]',
-  ...Array.from({ length: 240 }, (_, index) => {
-    const time = index * 125
-    const x = Math.floor((index % keyCount + 0.5) * 512 / keyCount)
+  ...Array.from({ length: count }, (_, index) => {
+    const time = index * spacing
+    const column = varied ? (index * 7 + Math.floor(index / 11)) % keyCount : index % keyCount
+    const x = Math.floor((column + 0.5) * 512 / keyCount)
     return index % 10 < holdPercent * 10
       ? `${x},192,${time},128,0,${time + 375}:0:0:0:0:`
       : `${x},192,${time},1,0,0:0:0:0:`
   }),
 ].join('\n')
 
-test('RC estimates retain Mixed output without loading the optional model', async () => {
-  const { runDefaultEstimatorFromText } = await import('../public/mania-analyser/2026-11-13/estimate.js')
-  const { runMixedEstimatorFromText } = await import('../public/mania-analyser/2026-11-13/estimator/mixedEstimator.js')
-  const text = sampleChart()
+test('3.0.0 RC routing uses XDC1 without loading the optional neural model', async () => {
+  const { runDefaultEstimatorFromText } = await import('../public/mania-analyser/3.0.0/estimate.js')
+  const { runMixedEstimatorFromText } = await import('../public/mania-analyser/3.0.0/estimator/mixedEstimator.js')
+  const text = sampleChart(0, 4, { count: 600, spacing: 30, varied: true })
   const expected = runMixedEstimatorFromText(text)
+  assert.equal(expected.actualEstimatorAlgorithm, 'XDC1')
+  assert.equal(expected.mixedCompanellaPlan, null)
   const result = await runDefaultEstimatorFromText(text, {}, {
     loadCompanella: () => assert.fail('RC must not load the neural model'),
   })
@@ -30,9 +33,25 @@ test('RC estimates retain Mixed output without loading the optional model', asyn
   assert.equal(result.lnStar, 0)
 })
 
+test('3.0.0 low RC completes the new Azusa/Companella fusion plan', async () => {
+  const { runDefaultEstimatorFromText } = await import('../public/mania-analyser/3.0.0/estimate.js')
+  const { runMixedEstimatorFromText, applyCompanellaToMixedResult } = await import('../public/mania-analyser/3.0.0/estimator/mixedEstimator.js')
+  const text = sampleChart()
+  const base = runMixedEstimatorFromText(text)
+  assert.equal(base.mixedCompanellaPlan.fuseRc, true)
+  const prediction = { estDiff: 'Reform 4 mid', numericDifficulty: 4, numericDifficultyHint: null }
+  const expected = applyCompanellaToMixedResult(base, prediction)
+  const result = await runDefaultEstimatorFromText(text, {}, {
+    loadCompanella: async () => ({ estimateCompanella: async () => prediction }),
+  })
+  assert.equal(result.numericDifficulty, expected.numericDifficulty)
+  assert.equal(result.estDiff, expected.estDiff)
+  assert.equal(result.mixedCompanellaPlan, null)
+})
+
 test('HB and LN finish the deferred model stage and preserve the SunnyWindow LN label', async () => {
-  const { runDefaultEstimatorFromText } = await import('../public/mania-analyser/2026-11-13/estimate.js')
-  const { runSunnyWindowEstimatorFromText } = await import('../public/mania-analyser/2026-11-13/estimator/sunnyWindowEstimator.js')
+  const { runDefaultEstimatorFromText } = await import('../public/mania-analyser/3.0.0/estimate.js')
+  const { runSunnyWindowEstimatorFromText } = await import('../public/mania-analyser/3.0.0/estimator/sunnyWindowEstimator.js')
   for (const ratio of [0.3, 0.7, 1]) {
     const text = sampleChart(ratio)
     const window = runSunnyWindowEstimatorFromText(text)
@@ -56,7 +75,7 @@ test('HB and LN finish the deferred model stage and preserve the SunnyWindow LN 
 })
 
 test('a failed optional stage is reported and can be retried without returning a partial estimate', async () => {
-  const { runDefaultEstimatorFromText } = await import('../public/mania-analyser/2026-11-13/estimate.js')
+  const { runDefaultEstimatorFromText } = await import('../public/mania-analyser/3.0.0/estimate.js')
   let calls = 0
   const dependencies = { loadCompanella: async () => ({ estimateCompanella: async () => {
     if (++calls === 1) throw new Error('model download failed')
@@ -77,7 +96,12 @@ test('the browser worker recovers after failure, reuses successful workers, and 
   const workers = []
   class TestWorker extends EventTarget {
     terminated = false
-    constructor() { super(); workers.push(this) }
+    constructor(url, options) {
+      super()
+      assert.equal(url, '/mania-analyser/3.0.0/worker.js')
+      assert.equal(options.type, 'module')
+      workers.push(this)
+    }
     terminate() { this.terminated = true }
     postMessage({ id }) {
       queueMicrotask(() => this.dispatchEvent(new MessageEvent('message', {
@@ -100,11 +124,11 @@ test('the browser worker recovers after failure, reuses successful workers, and 
   }
 })
 
-test('browser Mixed estimator bundle analyses a small 4K mania chart', async () => {
-  const { runDefaultEstimatorFromText } = await import('../public/mania-analyser/2026-11-13/estimate.js')
+test('browser Mixed estimator bundle analyses a 4K mania chart', async () => {
+  const { runDefaultEstimatorFromText } = await import('../public/mania-analyser/3.0.0/estimate.js')
   const rows = Array.from(
-    { length: 120 },
-    (_, index) => `${64 + (index % 4) * 128},192,${index * 100},1,0,0:0:0:0:`,
+    { length: 600 },
+    (_, index) => `${64 + ((index * 7 + Math.floor(index / 11)) % 4) * 128},192,${index * 30},1,0,0:0:0:0:`,
   )
   const osuText = [
     'osu file format v14',

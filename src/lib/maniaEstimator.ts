@@ -9,7 +9,7 @@ type EstimatorModule = {
   runDefaultEstimatorFromText: (osuText: string) => Promise<EstimatorResult>
 }
 
-const RUNTIME_ROOT = '/mania-analyser/2026-11-13'
+const RUNTIME_ROOT = '/mania-analyser/3.0.0'
 const ANALYSIS_TIMEOUT_MS = 60_000
 let estimatorModulePromise: Promise<EstimatorModule> | null = null
 let worker: Worker | null = null

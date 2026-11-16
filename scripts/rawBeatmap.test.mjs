@@ -8,11 +8,11 @@ register(new URL('./_analyser-loader.mjs', import.meta.url))
 
 const onRequestGet = (context) => handler({ ...context, data: { user: { uid: 'test', username: 'test', role: 'contributor' } } })
 
-const chart = (id = 123, spacing = 100) => [
+const chart = (id = 123, spacing = 100, { count = 120, varied = false } = {}) => [
   'osu file format v14', '[General]', 'Mode: 3', '[Metadata]', `BeatmapID:${id}`,
   '[Difficulty]', 'CircleSize:4', 'OverallDifficulty:8', '[TimingPoints]',
   '0,500,4,2,1,100,1,0', '[HitObjects]',
-  ...Array.from({ length: 120 }, (_, i) => `${64 + i % 4 * 128},192,${i * spacing},1,0,0:0:0:0:`),
+  ...Array.from({ length: count }, (_, i) => `${64 + (varied ? (i * 7 + Math.floor(i / 11)) % 4 : i % 4) * 128},192,${i * spacing},1,0,0:0:0:0:`),
 ].join('\n')
 
 async function archive(text = chart(), compression = 'DEFLATE') {
@@ -156,7 +156,8 @@ test('an SV slot uploaded as <slot>.nsv.osz is served from R2 instead of falling
 
 test('the browser client revalidates each slot and recalculates after an upload replacement', async (t) => {
   globalThis.window = { setTimeout, clearTimeout }
-  let currentBucket = bucket(await archive())
+  // Cache tests use a model-free XDC1 route; low RC now legitimately needs ONNX.
+  let currentBucket = bucket(await archive(chart(123, 30, { count: 600, varied: true })))
   let textResponses = 0
   t.mock.method(globalThis, 'fetch', async (url, options) => {
     const response = await onRequestGet({
@@ -174,7 +175,7 @@ test('the browser client revalidates each slot and recalculates after an upload 
   const unchanged = await estimateBeatmapDifficulty(target)
   assert.equal(unchanged, first)
   assert.equal(textResponses, 1)
-  currentBucket = bucket(await archive(chart(123, 50)), 'version-2')
+  currentBucket = bucket(await archive(chart(123, 15, { count: 600, varied: true })), 'version-2')
   const replaced = await estimateBeatmapDifficulty(target)
   assert.notEqual(replaced.rcNumeric, first.rcNumeric)
   assert.equal(textResponses, 2)
@@ -186,7 +187,7 @@ test('two uploaded versions with one BID never share an estimate', async (t) => 
   t.mock.method(globalThis, 'fetch', async (url) => {
     const slot = new URL(url, 'https://ladder.test').searchParams.get('slot')
     calls.push(slot)
-    return new Response(chart(789, slot === 'RC1' ? 100 : 50), { headers: { ETag: `"${slot}"`, 'X-Beatmap-Source': 'r2' } })
+    return new Response(chart(789, slot === 'RC1' ? 30 : 15, { count: 600, varied: true }), { headers: { ETag: `"${slot}"`, 'X-Beatmap-Source': 'r2' } })
   })
   const { estimateBeatmapDifficulty } = await import('../src/lib/maniaAnalyserClient.ts')
   const target = { beatmapId: 789, tournamentId: 'test-cup', roundId: 'round-2' }
